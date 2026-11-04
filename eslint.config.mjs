@@ -21,6 +21,8 @@ export default [
     },
   },
   { files: ['web/**/*.mjs'], languageOptions: { globals: globals.browser } },
+  // the website (site/): a classic browser script, no modules
+  { files: ['site/**/*.js'], languageOptions: { ecmaVersion: 2024, sourceType: 'script', globals: globals.browser }, rules: { eqeqeq: ['error', 'always', { null: 'ignore' }], 'no-var': 'error', 'prefer-const': 'error' } },
   // AudioWorkletGlobalScope (not in this version of `globals`)
   { files: ['web/lib/turboaudio-worklet.mjs'], languageOptions: { globals: { sampleRate: 'readonly', currentTime: 'readonly', AudioWorkletProcessor: 'readonly', registerProcessor: 'readonly' } } },
   { files: ['server/**/*.mjs', 'electron/**/*.mjs', 'scripts/**/*.mjs', 'test/**/*.mjs', 'eslint.config.mjs'], languageOptions: { globals: globals.node } },

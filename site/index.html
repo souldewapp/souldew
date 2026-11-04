@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>souldew – Pokémon SoulLinks & Nuzlockes, live tracked</title>
+<meta name="description" content="Free desktop app for Pokémon SoulLinks with 2–4 players and solo Nuzlockes: built-in emulator, live tracking from game memory, randomizer, real-time sync and OBS overlays.">
+<link rel="canonical" href="https://souldewapp.github.io/souldew/">
+<link rel="alternate" hreflang="en" href="https://souldewapp.github.io/souldew/">
+<link rel="alternate" hreflang="de" href="https://souldewapp.github.io/souldew/de/">
+<link rel="alternate" hreflang="x-default" href="https://souldewapp.github.io/souldew/">
+<meta name="theme-color" content="#121116">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="souldew">
+<meta property="og:title" content="souldew – Catch together. Lose together.">
+<meta property="og:description" content="Pokémon SoulLinks for 2–4 players and solo Nuzlockes – emulator, live tracking and sync in one free app.">
+<meta property="og:url" content="https://souldewapp.github.io/souldew/">
+<meta property="og:image" content="https://souldewapp.github.io/souldew/assets/img/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/PixelifySans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css">
+<script>document.documentElement.classList.replace('no-js', 'js');</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"SoftwareApplication","name":"souldew","applicationCategory":"GameApplication","operatingSystem":"macOS, Windows","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"license":"https://www.gnu.org/licenses/gpl-3.0.html","url":"https://souldewapp.github.io/souldew/","downloadUrl":"https://github.com/souldewapp/souldew/releases/latest","codeRepository":"https://github.com/souldewapp/souldew","description":"Pokémon SoulLinks for 2–4 players and solo Nuzlockes: emulator, live tracking from game memory, randomizer, real-time sync and OBS overlays in one app."},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is souldew free?","acceptedAnswer":{"@type":"Answer","text":"Yes. souldew is free and open source under the GNU GPL v3.0 or later."}},
+  {"@type":"Question","name":"Does souldew include any games?","acceptedAnswer":{"@type":"Answer","text":"No. You play your own, legally obtained ROMs. souldew includes and downloads no games."}},
+  {"@type":"Question","name":"Do I need a server or an account?","acceptedAnswer":{"@type":"Answer","text":"No. The apps find each other through public relays and connect directly; the fallback relay only sees encrypted data."}},
+  {"@type":"Question","name":"Do my friends need the same ROM?","acceptedAnswer":{"@type":"Answer","text":"Everyone uses their own copy of the same game. For randomized runs souldew builds byte-identical games for every player and compares the checksums."}},
+  {"@type":"Question","name":"Which systems does it run on?","acceptedAnswer":{"@type":"Answer","text":"macOS on Apple silicon and Windows 10/11 (x64)."}}
+ ]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" data-nav>
+  <div class="nav-in">
+    <a class="brand" href="./" aria-label="souldew home"><img src="assets/img/icon.svg" alt="" width="34" height="34"><span>souldew</span></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#link">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#stream">Streaming</a>
+      <a href="#download">Download</a>
+    </nav>
+    <div class="nav-end">
+      <a class="lang" href="de/" hreflang="de" lang="de" aria-label="Deutsch">DE</a>
+      <a class="nav-gh" href="https://github.com/souldewapp/souldew" aria-label="souldew on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <a class="btn btn-play btn-sm" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="primary"><span data-dl-label>Download</span></a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- 1 · Hero: headline over the full width, the app as a wide picture below -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <h1 id="hero-title" class="display" data-reveal>
+      <span class="line">Catch <em class="p1">together.</em></span>
+      <span class="line">Lose <em class="p2">together.</em></span>
+    </h1>
+    <div class="hero-row">
+      <p class="hero-lead" data-reveal>A free app for Pokémon SoulLinks with two to four players and for solo Nuzlockes. It runs the game, reads your team straight from memory and keeps everyone’s run in sync – no server, no account, no spreadsheet.</p>
+      <div class="hero-cta" data-reveal>
+        <a class="btn btn-play" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="primary"><svg class="ic" aria-hidden="true"><use href="assets/img/icons.svg#i-download"/></svg><span data-dl-label>Download</span></a>
+        <a class="tlink" href="https://github.com/souldewapp/souldew" data-dl="secondary"><span data-dl-label>View on GitHub</span></a>
+        <p class="hero-meta" data-dl-meta>Free · open source (GPL-3.0) · macOS &amp; Windows</p>
+      </div>
+    </div>
+  </div>
+  <div class="hero-stage" aria-hidden="false">
+    <figure class="app-window hero-window">
+      <div class="win-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <img src="assets/img/shots/board-1440.webp" srcset="assets/img/shots/board-1440.webp 1440w, assets/img/shots/board.webp 2880w" sizes="(max-width: 900px) 100vw, 1180px" width="1440" height="900" alt="The souldew board: Robin and Kim’s linked Pokémon side by side with live HP bars, levels and the route each pair was caught on." fetchpriority="high">
+    </figure>
+    <img class="hero-ov hero-ov-where" src="assets/img/overlays/where.webp" width="547" height="136" alt="" aria-hidden="true">
+  </div>
+</section>
+
+<!-- 2 · Signature: the link cable snaps (pinned on desktop, plays in place on mobile) -->
+<section class="pin" id="link" data-pin aria-labelledby="pin-title">
+  <div class="pin-stage">
+    <div class="wrap pin-grid">
+      <div class="pin-copy">
+        <p class="chapter"><span>01</span> The rule</p>
+        <h2 id="pin-title" class="display-2"><span class="pin-h pin-h1">One route.<br>One fate.</span><span class="pin-h pin-h2" aria-hidden="true">One faints.<br><span class="dead">Both are gone.</span></span></h2>
+        <p class="pin-text">In a SoulLink, whatever you catch on a route is bound to what your partner catches there. souldew links the pair, watches both games – and when one of them goes down, it takes the other one with it.</p>
+        <button class="tlink pin-replay" type="button" data-pin-replay hidden>Play it again</button>
+      </div>
+      <div class="cable-scene" aria-hidden="true">
+        <div class="mon-card p1" data-mon="a">
+          <span class="who">Robin · Route 29</span>
+          <span class="sprite" style="--x:292;--y:378"></span>
+          <b>Ember</b><span class="lv">Lv 18 Cyndaquil</span>
+          <span class="hp"><i data-hp-bar></i></span><span class="hp-num"><span data-hp>34</span>/44</span>
+        </div>
+        <div class="cable">
+          <svg viewBox="0 0 120 24" preserveAspectRatio="none" class="cable-l"><path d="M0 11h52v2H0z" fill="#8cb0ff"/><path d="M52 8h8v8h-8z" fill="#8cb0ff"/></svg>
+          <svg viewBox="0 0 120 24" preserveAspectRatio="none" class="cable-r"><path d="M68 11h52v2H68z" fill="#ff8fdc"/><path d="M60 8h8v8h-8z" fill="#ff8fdc"/></svg>
+          <span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>
+        </div>
+        <div class="mon-card p2" data-mon="b">
+          <span class="who">Kim · Route 29</span>
+          <span class="sprite" style="--x:920;--y:378"></span>
+          <b>Chomp</b><span class="lv">Lv 17 Totodile</span>
+          <span class="hp"><i></i></span><span class="hp-num">34/44</span>
+        </div>
+        <p class="pin-status" data-pin-status>Linked on Route 29</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · LCD: linking up is a six-digit code -->
+<section class="lcd-sec" aria-labelledby="code-title">
+  <div class="wrap lcd-grid">
+    <div>
+      <p class="chapter"><span>02</span> Linking up</p>
+      <h2 id="code-title" class="display-2" data-reveal>Link up in<br>a minute.</h2>
+    </div>
+    <div class="code-block" data-reveal>
+      <p class="code" aria-label="Example invite code 482 917"><span>4</span><span>8</span><span>2</span><span class="gap"></span><span>9</span><span>1</span><span>7</span></p>
+      <ol class="steps">
+        <li><b>Host a run.</b> Pick the game, an optional ROM hack and randomizer settings – everyone builds the exact same game from their own ROM.</li>
+        <li><b>Share the code.</b> Friends join with six digits, and you approve each one. Valid for 15 minutes, one person per code.</li>
+        <li><b>Play.</b> Teams, levels and HP sync live. New catches land on the right route by themselves.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · The board, annotated -->
+<section class="board-sec" aria-labelledby="board-title">
+  <div class="wrap board-grid">
+    <div class="board-copy">
+      <p class="chapter"><span>03</span> The board</p>
+      <h2 id="board-title" class="display-2" data-reveal>Side by<br>side.</h2>
+      <p class="sec-lead" data-reveal>Linked Pokémon share one row – with live HP, level, status and the route they’re from, read straight from both games.</p>
+    </div>
+    <figure class="annotated" data-reveal style="--c:#8cb0ff">
+      <div class="app-window">
+        <div class="win-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="shot-box">
+          <img src="assets/img/shots/board-1440.webp" srcset="assets/img/shots/board-1440.webp 1440w, assets/img/shots/board.webp 2880w" sizes="(max-width: 900px) 100vw, 70vw" width="1440" height="900" alt="The board with five linked pairs; marked are Robin’s Ember with its live HP and the run counters: 5 alive, 1 dead, 0 waiting." loading="lazy">
+          <span class="mark" style="--x:256;--y:332;--w:506;--h:94"></span>
+          <span class="mark" style="--x:700;--y:86;--w:245;--h:68"></span>
+        </div>
+      </div>
+      <div class="lens lens-a" style="--x:256;--y:326;--w:506;--h:104;--z:1.05" aria-hidden="true"><span class="lens-tag">Live from Robin’s game</span><span class="lens-img" style="--src:url(../img/shots/board.webp)"></span></div>
+      <div class="lens lens-b" style="--x:700;--y:86;--w:245;--h:68;--z:1.3" aria-hidden="true"><span class="lens-tag">One fate</span><span class="lens-img" style="--src:url(../img/shots/board.webp)"></span></div>
+    </figure>
+  </div>
+</section>
+
+<!-- 5 · Feature index -->
+<section class="index-sec" id="features" aria-labelledby="features-title">
+  <div class="wrap index-grid">
+    <div class="index-head">
+      <p class="chapter"><span>04</span> In the box</p>
+      <h2 id="features-title" class="display-2" data-reveal>One app.<br>No second window.</h2>
+      <p class="sec-lead" data-reveal>Emulator, tracker, rules, randomizer and sync live in the same place – and they talk to each other.</p>
+    </div>
+    <ol class="findex" data-findex>
+      <li><button type="button" aria-expanded="true"><span class="fx-n">01</span><span class="fx-t">Built-in emulator</span></button><p>DS, GBA, Game Boy and Game Boy Color. 1–4× speed, eight save states, PlayStation, Xbox and Switch pads – and the game keeps running in a mini window while you check the board.</p></li>
+      <li><button type="button" aria-expanded="false"><span class="fx-n">02</span><span class="fx-t">Live tracking</span></button><p>Species, nickname, level, HP, status and where it was caught – read from the running game’s memory. New catches file themselves under their route.</p></li>
+      <li><button type="button" aria-expanded="false"><span class="fx-n">03</span><span class="fx-t">Battle panel</span></button><p>The opponent’s types and weaknesses, how your moves land – and whether your rules even allow the catch, including type clashes with your partners.</p></li>
+      <li><button type="button" aria-expanded="false"><span class="fx-n">04</span><span class="fx-t">Real-time sync</span></button><p>Up to four players, directly over WebRTC or through an encrypted relay. Your partner’s game shows up as a small live picture next to yours.</p></li>
+      <li><button type="button" aria-expanded="false"><span class="fx-n">05</span><span class="fx-t">Randomizer &amp; ROM hacks</span></button><p>Universal Pokémon Randomizer ZX is built in, Java included. xdelta, BPS, UPS and IPS patches are applied for you, with 31 known hacks ready to go.</p></li>
+      <li><button type="button" aria-expanded="false"><span class="fx-n">06</span><span class="fx-t">Turbo without chipmunk music</span></button><p>Fast-forward through the grind while the music keeps its normal speed. For DS games souldew plays the current song from your ROM’s own sound archive.</p></li>
+      <li><button type="button" aria-expanded="false"><span class="fx-n">07</span><span class="fx-t">“You are here”</span></button><p>A sign next to the game shows each player’s area, read live – and what it means for them: first encounter open, caught, used up or dead.</p></li>
+      <li><button type="button" aria-expanded="false"><span class="fx-n">08</span><span class="fx-t">Made for everyone</span></button><p>English, German, French, Spanish and Italian. Colour-blind safe schemes, full keyboard control and reduced motion.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 6 · Streaming on a pixel route -->
+<section class="stream-sec" id="stream" aria-labelledby="stream-title">
+  <div class="wrap stream-head">
+    <p class="chapter"><span>05</span> Streaming</p>
+    <h2 id="stream-title" class="display-2" data-reveal>Built for<br>going live.</h2>
+    <ul class="stream-facts">
+      <li><b>Drag into OBS.</b> Every widget lands as a browser source in exactly the right size.</li>
+      <li><b>Streamer mode.</b> One switch hides invite codes, file paths and randomizer spoilers.</li>
+      <li><b>Pokélink bridge.</b> Your existing Pokélink themes can show souldew’s data.</li>
+      <li><b>Overlay API.</b> A documented JSON snapshot and live event stream – <a href="https://github.com/souldewapp/souldew/blob/main/docs/STREAMING.md">streaming guide</a>.</li>
+    </ul>
+  </div>
+  <div class="wrap wide">
+    <div class="scene" data-scene role="img" aria-label="Example stream layout over a pixel-art route: where both players are at the top left, Robin’s team card at the top right, the linked team strip and the run counters at the bottom.">
+      <canvas width="320" height="180" data-route></canvas>
+      <img class="ov ov-where" src="assets/img/overlays/where.webp" width="547" height="136" alt="" loading="lazy">
+      <img class="ov ov-card" src="assets/img/overlays/card.webp" width="884" height="247" alt="" loading="lazy">
+      <img class="ov ov-team" src="assets/img/overlays/team.webp" width="661" height="314" alt="" loading="lazy">
+      <img class="ov ov-count" src="assets/img/overlays/counters.webp" width="744" height="72" alt="" loading="lazy">
+      <span class="live" aria-hidden="true">LIVE</span>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · Solo Nuzlocke -->
+<section class="solo-sec" aria-labelledby="solo-title">
+  <div class="wrap solo-grid">
+    <figure class="solo-shot app-window" data-reveal>
+      <div class="win-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <img src="assets/img/shots/nuzlocke-1440.webp" srcset="assets/img/shots/nuzlocke-1440.webp 1440w, assets/img/shots/nuzlocke.webp 2880w" sizes="(max-width: 900px) 100vw, 60vw" width="1440" height="900" alt="Kim’s solo Nuzlocke: four Pokémon with HP, counters for caught, missed, open areas, alive and dead, and the next level cap 17 for Bugsy." loading="lazy">
+    </figure>
+    <div class="solo-copy">
+      <p class="chapter"><span>06</span> Solo Nuzlocke</p>
+      <h2 id="solo-title" class="display-2" data-reveal>Your rules,<br>enforced.</h2>
+      <div class="cap" data-reveal><span class="cap-n">17</span><span class="cap-l">Next level cap<br><b>Bugsy</b></span></div>
+      <p class="sec-lead" data-reveal>Classic, Hardcore or your own rules. Level caps, dupes and shiny clause, deaths and blackouts are detected for you – and the graveyard remembers who did it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · Supported games as an index -->
+<section class="games-sec" aria-labelledby="games-title">
+  <div class="wrap">
+    <div class="sec-head row">
+      <div>
+        <p class="chapter"><span>07</span> Supported games</p>
+        <h2 id="games-title" class="display-2" data-reveal>Red to White 2.</h2>
+      </div>
+      <p class="sec-lead" data-reveal>Every main-series game from Generation 1 to 5 plays in souldew. Team and HP are read live in all of them; the battle panel and “You are here” in Gen 1–4.</p>
+    </div>
+    <ul class="gens">
+      <li data-reveal><span class="g">Gen 1</span><span class="gg">Red · Blue · Yellow</span></li>
+      <li data-reveal><span class="g">Gen 2</span><span class="gg">Gold · Silver · Crystal</span></li>
+      <li data-reveal><span class="g">Gen 3</span><span class="gg">Ruby · Sapphire · Emerald · FireRed · LeafGreen</span></li>
+      <li data-reveal><span class="g">Gen 4</span><span class="gg">Diamond · Pearl · Platinum · HeartGold · SoulSilver</span></li>
+      <li data-reveal><span class="g">Gen 5</span><span class="gg">Black · White · Black 2 · White 2</span></li>
+    </ul>
+    <p class="fine">English and German versions are supported for the team. For other languages and ROM hacks with a changed memory layout souldew searches for the team – and you can always enter catches by hand.</p>
+  </div>
+</section>
+
+<!-- 9 · Statement -->
+<section class="statement-sec" aria-label="Privacy">
+  <div class="wrap">
+    <p class="statement" data-words>Your games stay on your computer. Only tracker data travels between players, encrypted with the key from your invite. No account, no telemetry, no ROMs – ever.</p>
+  </div>
+</section>
+
+<!-- 10 · Download -->
+<section class="dl-sec" id="download" aria-labelledby="dl-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="chapter"><span>08</span> Download</p>
+      <h2 id="dl-title" class="display-2" data-reveal>Ready for your<br>next SoulLink?</h2>
+    </div>
+    <div class="platforms">
+      <article class="platform" data-platform="mac">
+        <h3>macOS</h3>
+        <p class="req">Apple silicon (M1 or newer)</p>
+        <a class="btn btn-play" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="mac"><svg class="ic" aria-hidden="true"><use href="assets/img/icons.svg#i-download"/></svg><span data-dl-label>Download for macOS</span></a>
+        <p class="dl-meta" data-dl-meta="mac">.dmg from GitHub Releases</p>
+        <ol>
+          <li>Open the .dmg and drag souldew into Applications.</li>
+          <li>souldew isn’t notarized by Apple yet: open it once, then go to <b>System Settings › Privacy &amp; Security</b> and click <b>Open Anyway</b>.</li>
+        </ol>
+      </article>
+      <article class="platform" data-platform="win">
+        <h3>Windows</h3>
+        <p class="req">Windows 10 or 11, 64-bit</p>
+        <a class="btn btn-play" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="win"><svg class="ic" aria-hidden="true"><use href="assets/img/icons.svg#i-download"/></svg><span data-dl-label>Download for Windows</span></a>
+        <p class="dl-meta" data-dl-meta="win">Installer from GitHub Releases</p>
+        <ol>
+          <li>Run the installer – souldew installs for your user, no admin rights needed.</li>
+          <li>The installer isn’t code-signed yet: if SmartScreen appears, click <b>More info › Run anyway</b>.</li>
+        </ol>
+      </article>
+    </div>
+    <p class="fine">souldew updates itself: it checks for a new version at start and every four hours, verifies the signature and installs it on the next restart. Your runs and saves stay where they are.</p>
+  </div>
+</section>
+
+<!-- 11 · FAQ + support -->
+<section class="faq-sec" aria-labelledby="faq-title">
+  <div class="wrap faq-grid">
+    <div>
+      <p class="chapter"><span>09</span> Questions</p>
+      <h2 id="faq-title" class="display-2" data-reveal>Good<br>to know.</h2>
+      <div class="support">
+        <p>souldew is free and stays free. If it made your runs more fun, you can buy me a coffee – or help build it.</p>
+        <p class="support-links"><a class="tlink coffee" href="https://buymeacoffee.com/souldew">Buy me a coffee</a><a class="tlink" href="https://github.com/souldewapp/souldew/blob/main/CONTRIBUTING.md">Contribute on GitHub</a></p>
+      </div>
+    </div>
+    <div class="faq">
+      <details><summary>Is souldew free?</summary><p>Yes – free and open source under the GNU GPL v3.0 or later. No ads, no in-app purchases.</p></details>
+      <details><summary>Does souldew include any games?</summary><p>No. You play your own, legally obtained ROMs. souldew recognises them by header and checksum, also inside zips, and when it searches your computer it only reads file names and headers.</p></details>
+      <details><summary>Do I need a server or an account?</summary><p>No. The apps find each other through public relays and then connect directly. If a router blocks that, data goes through an encrypted public relay instead – no port forwarding needed.</p></details>
+      <details><summary>Do my friends need the same ROM?</summary><p>Everyone uses their own copy of the same game – a different language version works too. For randomized runs souldew builds the identical game for every player and compares the checksums.</p></details>
+      <details><summary>Which emulators can I use?</summary><p>The built-in one (recommended), or melonDS and mGBA as external emulators – mGBA with live data through a Lua script, melonDS after every in-game save.</p></details>
+      <details><summary>Something went wrong – what should I send?</summary><p>Right after it happens, use <b>Save diagnostics</b> in the app’s help and attach the file to a <a href="https://github.com/souldewapp/souldew/issues/new/choose">bug report</a>. It contains what the app read and decided – no ROM, save or invite data.</p></details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="foot-mark" aria-hidden="true">souldew</p>
+    <div class="foot-row">
+      <nav class="foot-links" aria-label="Footer">
+        <a href="https://github.com/souldewapp/souldew">GitHub</a>
+        <a href="https://github.com/souldewapp/souldew/releases">Releases</a>
+        <a href="https://github.com/souldewapp/souldew/issues/new/choose">Report a bug</a>
+        <a href="https://buymeacoffee.com/souldew">Buy me a coffee</a>
+        <a href="impressum.html" lang="de">Impressum</a>
+        <a href="datenschutz.html" lang="de">Datenschutz</a>
+      </nav>
+      <p class="foot-legal">souldew is a fan project, free software under the GPL-3.0. It is not affiliated with, endorsed or sponsored by Nintendo, Game Freak, Creatures Inc. or The Pokémon Company. Pokémon and all related names are trademarks of their respective owners. souldew includes and downloads no games. This site sets no cookies and uses no trackers.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/site.js" defer></script>
+</body>
+</html>
