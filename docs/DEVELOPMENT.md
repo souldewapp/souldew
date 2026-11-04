@@ -10,7 +10,7 @@ Requirements: macOS for the app and the DMG (the server and the tests are plain 
 npm ci                 # install dependencies
 npm run app            # Electron app in development mode (data in the Electron profile)
 npm start              # server only, UI in the browser (data in the project folder: runs/, library/)
-npm test               # all tests (node --test test/)
+npm test               # all tests (node --test "test/*.test.mjs")
 npm run lint           # ESLint (eslint.config.mjs)
 node scripts/extract-i18n.mjs   # sync UI strings, list missing/stale translations
 npm run dist           # build the DMG (fetches the Java runtime on first run)

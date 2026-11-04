@@ -17,7 +17,7 @@
   "scripts": {
     "start": "node server/index.mjs",
     "app": "electron .",
-    "test": "node --test test/",
+    "test": "node --test \"test/*.test.mjs\"",
     "lint": "eslint .",
     "jre": "node scripts/fetch-jre.mjs arm64",
     "dist": "node scripts/fetch-jre.mjs arm64 && CUSTOM_DMGBUILD_PATH=scripts/dmgbuild-wrapper.mjs electron-builder --mac dmg --arm64",

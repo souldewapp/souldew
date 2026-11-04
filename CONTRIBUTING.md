@@ -35,7 +35,7 @@ Use separate folders for testing – never point a test instance at your real da
 
 ```sh
 npm run lint                     # ESLint, must be clean
-npm test                         # node --test test/
+npm test                         # node --test "test/*.test.mjs"
 node scripts/extract-i18n.mjs    # must end with "0 missing, 0 stale" for every language
 ```
 
