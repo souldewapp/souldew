@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         # macOS runners never started for this repository (jobs cancelled after 15 min in the queue); the tests are
-        # plain Node, so Linux covers them. Add macos-latest back once macOS runners are available.
-        os: [ubuntu-latest]
+        # plain Node, so Linux and Windows cover them. Add macos-latest back once macOS runners are available.
+        os: [ubuntu-latest, windows-latest]
         node: [22, 24]
     env:
       # the tests don't need the Electron binary (≈100 MB per job)
