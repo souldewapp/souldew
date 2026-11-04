@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint & test (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [22, 24]
+    env:
+      # the tests don't need the Electron binary (≈100 MB per job)
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - name: Translations complete
+        shell: bash
+        run: |
+          node scripts/extract-i18n.mjs | tee i18n.txt
+          # every language must report "0 missing, 0 stale", and en.json must already contain every string
+          if grep -E ': [1-9][0-9]* missing|, [1-9][0-9]* stale' i18n.txt; then exit 1; fi
+          git diff --exit-code -- web/i18n/en.json

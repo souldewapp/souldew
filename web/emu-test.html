@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EmulatorJS Test</title>
+<!--
+  Minimal EmulatorJS 4.2.3 test page (offline, vendored files only, no ROMs shipped).
+  Usage:  emu-test.html?rom=<url>&core=<melonds|desmume2015|desmume|mgba|gambatte|nds|gba|gb>
+  Optional: &threads=1 (needs COOP/COEP -> crossOriginIsolated), &debug=1 (loads src/*.js, verbose core log),
+            &ui=1 (keep EmulatorJS's own menu bar), &name=<save base name>
+  Console: await __emu.locateRam(); __emu.ram(); __emu.read32(0x02000000) ...
+  API notes: research/emulatorjs_api.md
+-->
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #111; color: #ddd; font: 13px/1.4 system-ui, sans-serif; }
+  #wrap { display: flex; flex-direction: column; height: 100%; }
+  #game { flex: 1; min-height: 0; }
+  #bar { padding: 6px 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-top: 1px solid #333; }
+  #bar button { background: #222; color: #ddd; border: 1px solid #444; border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+  #status { opacity: .75; font-family: ui-monospace, monospace; }
+  /* Hide EmulatorJS chrome unless ?ui=1 (the right-click context menu cannot be disabled via EJS_Buttons). */
+  body.noui .ejs_menu_bar, body.noui .ejs_context_menu { display: none !important; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="game"></div>
+  <div id="bar">
+    <button data-a="toggle">Pause/Resume</button>
+    <button data-a="ff">Fast-forward x4</button>
+    <button data-a="save">Quick save (slot 1)</button>
+    <button data-a="load">Quick load (slot 1)</button>
+    <button data-a="ram">Locate RAM</button>
+    <span id="status">idle</span>
+  </div>
+</div>
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const rom = q.get('rom');
+  const core = q.get('core') || 'melonds';
+  const status = (t) => { document.getElementById('status').textContent = t; };
+  if (!q.get('ui')) document.body.classList.add('noui');
+  if (!rom) { status('missing ?rom=<url>&core=<core>'); return; }
+
+  // ---- EmulatorJS configuration (read once by vendor/emulatorjs/loader.js) ----
+  window.EJS_player = '#game';
+  window.EJS_pathtodata = 'vendor/emulatorjs/';
+  window.EJS_core = core;                        // core name or system alias ("nds"->melonds, "gba"->mgba, "gb"->gambatte)
+  window.EJS_gameUrl = rom;                      // URL string, or File/Blob/ArrayBuffer/Uint8Array
+  if (q.get('name')) window.EJS_gameName = q.get('name'); // base name for .sav/.state + settings key
+  window.EJS_startOnLoaded = true;               // no "Start Game" button
+  window.EJS_threads = q.get('threads') === '1';
+  window.EJS_DEBUG_XX = q.get('debug') === '1';
+  window.EJS_language = 'en-US';
+  window.EJS_disableAutoLang = false;            // loader.js skips browser-language detection only when this is exactly false
+  window.EJS_volume = 0.5;
+  window.EJS_color = '#4a7cff';
+  window.EJS_backgroundColor = '#111';
+  if (!q.get('ui')) {
+    // every default button can be hidden with false (contextMenu is the exception -> CSS above)
+    window.EJS_Buttons = {
+      playPause: false, restart: false, mute: false, settings: false, fullscreen: false,
+      saveState: false, loadState: false, screenRecord: false, gamepad: false, cheat: false,
+      volume: false, saveSavFiles: false, loadSavFiles: false, quickSave: false, quickLoad: false,
+      screenshot: false, cacheManager: false, exitEmulation: false, netplay: false, diskButton: false,
+    };
+  }
+  // Core options applied at boot (exact keys/values from gameManager.getCoreOptions()).
+  window.EJS_defaultOptions = {
+    'melonds_screen_layout': 'Top/Bottom',       // Top/Bottom|Bottom/Top|Left/Right|Right/Left|Top Only|Bottom Only|Hybrid Top|Hybrid Bottom
+    'desmume_screens_layout': 'top/bottom',      // desmume + desmume2015
+    'save-save-interval': '30',                  // flush battery save to IDBFS every 30 s (EmulatorJS default 300)
+  };
+
+  // ---- helpers ----
+  const E = () => window.EJS_emulator;
+  const GM = () => E() && E().gameManager;
+  const M = () => GM() && GM().Module;           // === EJS_emulator.Module
+  const heap = () => M().HEAPU8;                 // always re-read: wasm memory growth replaces the ArrayBuffer
+
+  function indexOfBytes(hay, needle, from = 0) {
+    const n0 = needle[0], nl = needle.length, end = hay.length - nl;
+    for (let i = hay.indexOf(n0, from); i !== -1 && i <= end; i = hay.indexOf(n0, i + 1)) {
+      let k = 1;
+      while (k < nl && hay[i + k] === needle[k]) k++;
+      if (k === nl) return i;
+    }
+    return -1;
+  }
+  function findAll(needle, max = 64, hay = heap()) {
+    const out = [];
+    for (let p = indexOfBytes(hay, needle); p !== -1 && out.length < max; p = indexOfBytes(hay, needle, p + 1)) out.push(p);
+    return out;
+  }
+
+  // Emulated system. getCore(true) is "gba" for every ROM run on mgba, so GB/GBC on mgba is detected
+  // from the ROM extension / 160 px video width.
+  function system() {
+    const sys = E().getCore(true);
+    if (sys !== 'gba') return sys;
+    const ext = (E().fileName || '').split('.').pop().toLowerCase();
+    return (['gb', 'gbc', 'dmg', 'sgb'].includes(ext) || GM().getVideoDimensions('width') === 160) ? 'gb' : 'gba';
+  }
+
+  // Located RAM block: byte offset into Module.HEAPU8 + size. Stable for the whole session.
+  const ram = { base: -1, size: 0, core: null, system: null, method: null };
+
+  // NDS (melonds / desmume / desmume2015): after boot the cartridge header is copied into main RAM at
+  // 0x027FFA80 and 0x027FFE00. Other header copies exist in the heap (ROM buffer, cart struct), so we
+  // require both copies 0x380 bytes apart. Verified 2026-10-17 against the RAM block inside the savestate.
+  function locateNds() {
+    const hdr = GM().FS.readFile('/' + E().fileName).subarray(0, 0x20);
+    const hits = findAll(hdr);
+    for (const p of hits) {
+      if (p >= 0x3FFE00 && hits.includes(p - 0x380)) return { base: p - 0x3FFE00, size: 0x400000, method: 'nds header pair @0x027FFA80/0x027FFE00' };
+    }
+    return { base: -1, size: 0, method: 'nds header pair not found (game not booted yet?)' };
+  }
+
+  // Savestate-based locator: the RAM copy inside the state is searched in the heap and confirmed byte-for-byte.
+  //   mgba GBA: state = 16-byte RASTATE header + GBASerializedState; IWRAM @+0x19000 (32 KB), EWRAM @+0x21000 (256 KB).
+  //             In the heap EWRAM and IWRAM are one block (EWRAM first) -> base = EWRAM, size 0x48000.
+  //   mgba GB : WRAM (32 KB) @ state +16+0x4400.
+  //   gambatte: tagged state; WRAM follows the label "wram\0" + 3-byte big-endian length.
+  function stateRamSpec(st) {
+    const c = E().getCore(), sys = system();
+    if (c === 'mgba' && sys === 'gba') return { off: 16 + 0x21000, len: 0x40000, size: 0x48000 };
+    if (c === 'mgba') return { off: 16 + 0x4400, len: 0x8000, size: 0x8000 };
+    if (c === 'gambatte') {
+      const p = indexOfBytes(st, new TextEncoder().encode('wram\0'));
+      if (p < 0) return null;
+      const len = (st[p + 5] << 16) | (st[p + 6] << 8) | st[p + 7];
+      return { off: p + 8, len, size: len };
+    }
+    return null;
+  }
+  function locateFromState() {
+    const st = GM().getState();
+    const spec = stateRamSpec(st);
+    if (!spec) return { base: -1, size: 0, method: 'no savestate layout known for ' + E().getCore() };
+    const region = st.subarray(spec.off, spec.off + spec.len);
+    for (let off = 0; off + 64 <= region.length; off += 256) {
+      const chunk = region.subarray(off, off + 64);
+      if (new Set(chunk).size < 4) continue;   // skip empty areas (whole region is verified below)
+      for (const h of findAll(chunk, 8)) {
+        const base = h - off, hv = heap().subarray(base, base + region.length);
+        let same = hv.length === region.length;
+        for (let i = 0; same && i < region.length; i++) same = hv[i] === region[i];
+        if (same) return { base, size: spec.size, method: `savestate match (state+0x${spec.off.toString(16)})` };
+      }
+    }
+    return { base: -1, size: 0, method: 'savestate match failed (RAM still empty? retry later)' };
+  }
+
+  function locateRam() {
+    const wasPaused = E().paused;
+    if (!wasPaused) E().pause(true);             // freeze RAM while comparing
+    let r;
+    try { r = system() === 'nds' ? locateNds() : locateFromState(); }
+    finally { if (!wasPaused) E().play(true); }
+    Object.assign(ram, r, { core: E().getCore(), system: system() });
+    status(`RAM ${ram.core}: base=0x${ram.base.toString(16)} size=0x${ram.size.toString(16)} (${ram.method})`);
+    return { ...ram };
+  }
+
+  const view = () => (ram.base >= 0 ? heap().subarray(ram.base, ram.base + ram.size) : null);
+  // console address -> offset in the RAM view
+  function toOff(a) {
+    if (ram.system === 'nds') return (a - 0x02000000) & 0x3FFFFF;                     // main RAM (mirrored)
+    if (ram.system === 'gba') return (a >>> 24) === 3 ? 0x40000 + (a & 0x7FFF) : a & 0x3FFFF; // IWRAM / EWRAM
+    if (ram.system === 'gb') return a >= 0xC000 && a < 0xE000 ? a - 0xC000 : a;      // WRAM bank 0/1 (CGB banks 2-7 at +0x1000*n)
+    return a;
+  }
+
+  window.__emu = {
+    emulator: E, gameManager: GM, Module: M, heap,
+    /** Uint8Array view of system RAM (NDS 4 MB main RAM / GBA EWRAM+IWRAM / GB WRAM). Re-call each read. */
+    ram() { if (ram.base < 0) locateRam(); return view(); },
+    ramInfo: () => ({ ...ram }),
+    locateRam, findAll, indexOfBytes, toOff,
+    read8: (a) => view()[toOff(a)],
+    read16: (a) => { const v = view(), o = toOff(a); return v[o] | (v[o + 1] << 8); },
+    read32: (a) => { const v = view(), o = toOff(a); return (v[o] | (v[o + 1] << 8) | (v[o + 2] << 16) | (v[o + 3] << 24)) >>> 0; },
+    pause: () => E().pause(),
+    resume: () => E().play(),
+    togglePause: () => E().togglePlaying(),
+    restart: () => GM().restart(),
+    fastForward(on, ratio) { if (ratio != null) GM().setFastForwardRatio(ratio); E().isFastForward = !!on; GM().toggleFastForward(on ? 1 : 0); },
+    slowMotion(on, ratio) { if (ratio != null) GM().setSlowMotionRatio(ratio); E().isSlowMotion = !!on; GM().toggleSlowMotion(on ? 1 : 0); },
+    quickSave: (slot = 1) => GM().quickSave(slot),  // true/false; state file "/<slot>-quick.state" in MEMFS
+    quickLoad: (slot = 1) => GM().quickLoad(slot),
+    getState: () => GM().getState(),               // Uint8Array ("RASTATE" container)
+    loadState: (u8) => GM().loadState(u8),
+    screenshot: () => GM().screenshot(),           // Promise<Uint8Array PNG> of the core framebuffer
+    getSave: () => GM().getSaveFile(),             // flushes, then reads the battery save (Uint8Array | null)
+    saveFilePath: () => GM().getSaveFilePath(),
+    coreOptions: () => GM().getCoreOptions(),
+    setOption: (k, v) => E().menuOptionChanged(k, v), // = handleSpecialOptions + gameManager.setVariable
+    press(btn, ms = 80, player = 0) { GM().simulateInput(player, btn, 1); setTimeout(() => GM().simulateInput(player, btn, 0), ms); },
+    setVolume(v) { E().volume = v; E().setVolume(v); },
+    frame: () => GM().getFrameNum(),
+  };
+
+  const act = {
+    toggle: () => __emu.togglePause(),
+    ff: () => __emu.fastForward(!E().isFastForward, 4),
+    save: () => status('quickSave -> ' + __emu.quickSave(1)),
+    load: () => { __emu.quickLoad(1); status('quickLoad(1)'); },
+    ram: () => locateRam(),
+  };
+  document.getElementById('bar').addEventListener('click', (e) => {
+    const a = e.target.dataset && e.target.dataset.a;
+    if (a && E() && E().started) act[a]();
+  });
+
+  window.EJS_ready = () => status('ready');
+  window.EJS_onGameStart = () => {
+    status('started: ' + E().getCore() + ' / ' + E().fileName);
+    window.__emuStarted = true;
+  };
+  const s = document.createElement('script');
+  s.src = 'vendor/emulatorjs/loader.js';
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>

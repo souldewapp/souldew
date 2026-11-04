@@ -1,0 +1,39 @@
+EmulatorJS (vendored for SoulLink Studio, offline use)
+=====================================================
+Vendored: 2026-10-17 from npm (installed with --ignore-scripts into a scratch dir, then copied here)
+
+Packages (all exact 4.2.3, the current stable; 4.3.x is pre-release and NOT used)
+  @emulatorjs/emulatorjs        4.2.3   GPL-3.0    https://github.com/EmulatorJS/EmulatorJS
+  @emulatorjs/core-melonds      4.2.3   GPL-3.0    https://github.com/EmulatorJS/melonDS        (core build 2.0.2, built 2025-06-14)
+  @emulatorjs/core-desmume2015  4.2.3   GPL-2.0+   https://github.com/EmulatorJS/desmume2015    (core build 2.0.2)
+  @emulatorjs/core-desmume      4.2.3   GPL-2.0+   https://github.com/EmulatorJS/desmume        (core build 2.0.2)
+  @emulatorjs/core-mgba         4.2.3   MPL-2.0    https://github.com/EmulatorJS/mgba           (core build 2.0.2)
+  @emulatorjs/core-gambatte     4.2.3   GPL-2.0    https://github.com/EmulatorJS/gambatte-libretro (core build 2.0.2)
+  Cores also statically link the EmulatorJS RetroArch fork (GPL-3.0).
+  compression/extract7z.js, extractzip.js (Emscripten builds of 7-Zip/zip, shipped by EmulatorJS),
+  compression/libunrar.js/.wasm (RARLab unrar license, https://github.com/tnikolai2/libunrar-js).
+  License texts: licenses/ (desmume/desmume2015 packages ship no license file; DeSmuME is GPL-2.0-or-later).
+  GPL obligations: when distributing the app, offer the corresponding source (links above + this file).
+
+Layout (what data/loader.js expects; point EJS_pathtodata at this folder)
+  loader.js                 entry script (unchanged)
+  emulator.min.js/.css      NOT in the npm package; rebuilt here with terser 5.36 / clean-css 5.3 from src/
+                            in the same order as loader.js (emulator, nipplejs, shaders, storage, gamepad,
+                            GameManager, socket.io.min, compression). Upstream equivalent of `npm run minify`.
+  emulator.css, src/*.js    unminified sources (loaded instead when EJS_DEBUG_XX = true)
+  compression/              zip/7z/rar extractors (7z is needed to unpack the cores themselves)
+  localization/*.json       UI translations (en-US, de-GER, ...)
+  cores/<core>[-thread][-legacy]-wasm.data   7z archives: <core>_libretro.js + .wasm + core.json + build.json (+license.txt)
+  cores/reports/<core>.json build timestamp (used as IndexedDB cache key) + options.defaultWebGL2
+  version.json              {"version":"4.2.3"}
+
+Core file variants (selected in emulator.js downloadGameCore(), src/emulator.js:593-605)
+  <core>-wasm.data                 default: WebGL2 build, single-threaded
+  <core>-legacy-wasm.data          WebGL1 build. Chosen when WebGL2 is missing OR the core's report has no
+                                   defaultWebGL2:true -> mgba and gambatte ALWAYS load "-legacy" by default.
+  <core>-thread-wasm.data          pthreads build; chosen only if EJS_threads=true AND SharedArrayBuffer
+                                   exists (page must be crossOriginIsolated: COOP same-origin + COEP require-corp)
+  <core>-thread-legacy-wasm.data   both of the above
+  None of melonds/desmume/desmume2015/mgba/gambatte requires threads (only ppsspp and dosbox_pure do).
+
+Sizes: cores ~1.0-1.25 MB each (20 files, ~21 MB), everything else ~2 MB.

@@ -1,0 +1,602 @@
+{
+ "customNames": {
+  "type": "CustomNamesSet"
+ },
+ "romName": {
+  "type": "String"
+ },
+ "updatedFromOldVersion": {
+  "type": "boolean"
+ },
+ "currentRestrictions": {
+  "type": "GenRestrictions"
+ },
+ "currentMiscTweaks": {
+  "type": "int"
+ },
+ "changeImpossibleEvolutions": {
+  "type": "boolean"
+ },
+ "makeEvolutionsEasier": {
+  "type": "boolean"
+ },
+ "removeTimeBasedEvolutions": {
+  "type": "boolean"
+ },
+ "raceMode": {
+  "type": "boolean"
+ },
+ "blockBrokenMoves": {
+  "type": "boolean"
+ },
+ "limitPokemon": {
+  "type": "boolean"
+ },
+ "banIrregularAltFormes": {
+  "type": "boolean"
+ },
+ "dualTypeOnly": {
+  "type": "boolean"
+ },
+ "baseStatisticsMod": {
+  "type": "BaseStatisticsMod",
+  "values": [
+   "UNCHANGED",
+   "SHUFFLE",
+   "RANDOM"
+  ]
+ },
+ "baseStatsFollowEvolutions": {
+  "type": "boolean"
+ },
+ "baseStatsFollowMegaEvolutions": {
+  "type": "boolean"
+ },
+ "assignEvoStatsRandomly": {
+  "type": "boolean"
+ },
+ "updateBaseStats": {
+  "type": "boolean"
+ },
+ "updateBaseStatsToGeneration": {
+  "type": "int"
+ },
+ "standardizeEXPCurves": {
+  "type": "boolean"
+ },
+ "selectedEXPCurve": {
+  "type": "ExpCurve",
+  "values": [
+   "SLOW",
+   "MEDIUM_SLOW",
+   "MEDIUM_FAST",
+   "FAST",
+   "ERRATIC",
+   "FLUCTUATING"
+  ]
+ },
+ "expCurveMod": {
+  "type": "ExpCurveMod",
+  "values": [
+   "LEGENDARIES",
+   "STRONG_LEGENDARIES",
+   "ALL"
+  ]
+ },
+ "abilitiesMod": {
+  "type": "AbilitiesMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOMIZE"
+  ]
+ },
+ "allowWonderGuard": {
+  "type": "boolean"
+ },
+ "abilitiesFollowEvolutions": {
+  "type": "boolean"
+ },
+ "abilitiesFollowMegaEvolutions": {
+  "type": "boolean"
+ },
+ "banTrappingAbilities": {
+  "type": "boolean"
+ },
+ "banNegativeAbilities": {
+  "type": "boolean"
+ },
+ "banBadAbilities": {
+  "type": "boolean"
+ },
+ "weighDuplicateAbilitiesTogether": {
+  "type": "boolean"
+ },
+ "ensureTwoAbilities": {
+  "type": "boolean"
+ },
+ "startersMod": {
+  "type": "StartersMod",
+  "values": [
+   "UNCHANGED",
+   "CUSTOM",
+   "COMPLETELY_RANDOM",
+   "RANDOM_WITH_TWO_EVOLUTIONS"
+  ]
+ },
+ "allowStarterAltFormes": {
+  "type": "boolean"
+ },
+ "customStarters": {
+  "type": "int[]"
+ },
+ "randomizeStartersHeldItems": {
+  "type": "boolean"
+ },
+ "limitMainGameLegendaries": {
+  "type": "boolean"
+ },
+ "limit600": {
+  "type": "boolean"
+ },
+ "banBadRandomStarterHeldItems": {
+  "type": "boolean"
+ },
+ "typesMod": {
+  "type": "TypesMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM_FOLLOW_EVOLUTIONS",
+   "COMPLETELY_RANDOM"
+  ]
+ },
+ "typesFollowMegaEvolutions": {
+  "type": "boolean"
+ },
+ "evolutionsMod": {
+  "type": "EvolutionsMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM",
+   "RANDOM_EVERY_LEVEL"
+  ]
+ },
+ "evosSimilarStrength": {
+  "type": "boolean"
+ },
+ "evosSameTyping": {
+  "type": "boolean"
+ },
+ "evosMaxThreeStages": {
+  "type": "boolean"
+ },
+ "evosForceChange": {
+  "type": "boolean"
+ },
+ "evosAllowAltFormes": {
+  "type": "boolean"
+ },
+ "randomizeMovePowers": {
+  "type": "boolean"
+ },
+ "randomizeMoveAccuracies": {
+  "type": "boolean"
+ },
+ "randomizeMovePPs": {
+  "type": "boolean"
+ },
+ "randomizeMoveTypes": {
+  "type": "boolean"
+ },
+ "randomizeMoveCategory": {
+  "type": "boolean"
+ },
+ "updateMoves": {
+  "type": "boolean"
+ },
+ "updateMovesToGeneration": {
+  "type": "int"
+ },
+ "updateMovesLegacy": {
+  "type": "boolean"
+ },
+ "movesetsMod": {
+  "type": "MovesetsMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM_PREFER_SAME_TYPE",
+   "COMPLETELY_RANDOM",
+   "METRONOME_ONLY"
+  ]
+ },
+ "startWithGuaranteedMoves": {
+  "type": "boolean"
+ },
+ "guaranteedMoveCount": {
+  "type": "int"
+ },
+ "reorderDamagingMoves": {
+  "type": "boolean"
+ },
+ "movesetsForceGoodDamaging": {
+  "type": "boolean"
+ },
+ "movesetsGoodDamagingPercent": {
+  "type": "int"
+ },
+ "blockBrokenMovesetMoves": {
+  "type": "boolean"
+ },
+ "evolutionMovesForAll": {
+  "type": "boolean"
+ },
+ "trainersMod": {
+  "type": "TrainersMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM",
+   "DISTRIBUTED",
+   "MAINPLAYTHROUGH",
+   "TYPE_THEMED",
+   "TYPE_THEMED_ELITE4_GYMS"
+  ]
+ },
+ "rivalCarriesStarterThroughout": {
+  "type": "boolean"
+ },
+ "trainersUsePokemonOfSimilarStrength": {
+  "type": "boolean"
+ },
+ "trainersMatchTypingDistribution": {
+  "type": "boolean"
+ },
+ "trainersBlockLegendaries": {
+  "type": "boolean"
+ },
+ "trainersBlockEarlyWonderGuard": {
+  "type": "boolean"
+ },
+ "trainersEnforceDistribution": {
+  "type": "boolean"
+ },
+ "trainersEnforceMainPlaythrough": {
+  "type": "boolean"
+ },
+ "randomizeTrainerNames": {
+  "type": "boolean"
+ },
+ "randomizeTrainerClassNames": {
+  "type": "boolean"
+ },
+ "trainersForceFullyEvolved": {
+  "type": "boolean"
+ },
+ "trainersForceFullyEvolvedLevel": {
+  "type": "int"
+ },
+ "trainersLevelModified": {
+  "type": "boolean"
+ },
+ "trainersLevelModifier": {
+  "type": "int"
+ },
+ "eliteFourUniquePokemonNumber": {
+  "type": "int"
+ },
+ "allowTrainerAlternateFormes": {
+  "type": "boolean"
+ },
+ "swapTrainerMegaEvos": {
+  "type": "boolean"
+ },
+ "additionalBossTrainerPokemon": {
+  "type": "int"
+ },
+ "additionalImportantTrainerPokemon": {
+  "type": "int"
+ },
+ "additionalRegularTrainerPokemon": {
+  "type": "int"
+ },
+ "randomizeHeldItemsForBossTrainerPokemon": {
+  "type": "boolean"
+ },
+ "randomizeHeldItemsForImportantTrainerPokemon": {
+  "type": "boolean"
+ },
+ "randomizeHeldItemsForRegularTrainerPokemon": {
+  "type": "boolean"
+ },
+ "consumableItemsOnlyForTrainerPokemon": {
+  "type": "boolean"
+ },
+ "sensibleItemsOnlyForTrainerPokemon": {
+  "type": "boolean"
+ },
+ "highestLevelOnlyGetsItemsForTrainerPokemon": {
+  "type": "boolean"
+ },
+ "doubleBattleMode": {
+  "type": "boolean"
+ },
+ "shinyChance": {
+  "type": "boolean"
+ },
+ "betterTrainerMovesets": {
+  "type": "boolean"
+ },
+ "wildPokemonMod": {
+  "type": "WildPokemonMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM",
+   "AREA_MAPPING",
+   "GLOBAL_MAPPING"
+  ]
+ },
+ "wildPokemonRestrictionMod": {
+  "type": "WildPokemonRestrictionMod",
+  "values": [
+   "NONE",
+   "SIMILAR_STRENGTH",
+   "CATCH_EM_ALL",
+   "TYPE_THEME_AREAS"
+  ]
+ },
+ "useTimeBasedEncounters": {
+  "type": "boolean"
+ },
+ "blockWildLegendaries": {
+  "type": "boolean"
+ },
+ "useMinimumCatchRate": {
+  "type": "boolean"
+ },
+ "minimumCatchRateLevel": {
+  "type": "int"
+ },
+ "randomizeWildPokemonHeldItems": {
+  "type": "boolean"
+ },
+ "banBadRandomWildPokemonHeldItems": {
+  "type": "boolean"
+ },
+ "balanceShakingGrass": {
+  "type": "boolean"
+ },
+ "wildLevelsModified": {
+  "type": "boolean"
+ },
+ "wildLevelModifier": {
+  "type": "int"
+ },
+ "allowWildAltFormes": {
+  "type": "boolean"
+ },
+ "staticPokemonMod": {
+  "type": "StaticPokemonMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM_MATCHING",
+   "COMPLETELY_RANDOM",
+   "SIMILAR_STRENGTH"
+  ]
+ },
+ "allowStaticAltFormes": {
+  "type": "boolean"
+ },
+ "swapStaticMegaEvos": {
+  "type": "boolean"
+ },
+ "staticLevelModified": {
+  "type": "boolean"
+ },
+ "staticLevelModifier": {
+  "type": "int"
+ },
+ "correctStaticMusic": {
+  "type": "boolean"
+ },
+ "totemPokemonMod": {
+  "type": "TotemPokemonMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM",
+   "SIMILAR_STRENGTH"
+  ]
+ },
+ "allyPokemonMod": {
+  "type": "AllyPokemonMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM",
+   "SIMILAR_STRENGTH"
+  ]
+ },
+ "auraMod": {
+  "type": "AuraMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM",
+   "SAME_STRENGTH"
+  ]
+ },
+ "randomizeTotemHeldItems": {
+  "type": "boolean"
+ },
+ "totemLevelsModified": {
+  "type": "boolean"
+ },
+ "totemLevelModifier": {
+  "type": "int"
+ },
+ "allowTotemAltFormes": {
+  "type": "boolean"
+ },
+ "tmsMod": {
+  "type": "TMsMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM"
+  ]
+ },
+ "tmLevelUpMoveSanity": {
+  "type": "boolean"
+ },
+ "keepFieldMoveTMs": {
+  "type": "boolean"
+ },
+ "fullHMCompat": {
+  "type": "boolean"
+ },
+ "tmsForceGoodDamaging": {
+  "type": "boolean"
+ },
+ "tmsGoodDamagingPercent": {
+  "type": "int"
+ },
+ "blockBrokenTMMoves": {
+  "type": "boolean"
+ },
+ "tmsFollowEvolutions": {
+  "type": "boolean"
+ },
+ "tmsHmsCompatibilityMod": {
+  "type": "TMsHMsCompatibilityMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM_PREFER_TYPE",
+   "COMPLETELY_RANDOM",
+   "FULL"
+  ]
+ },
+ "moveTutorMovesMod": {
+  "type": "MoveTutorMovesMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM"
+  ]
+ },
+ "tutorLevelUpMoveSanity": {
+  "type": "boolean"
+ },
+ "keepFieldMoveTutors": {
+  "type": "boolean"
+ },
+ "tutorsForceGoodDamaging": {
+  "type": "boolean"
+ },
+ "tutorsGoodDamagingPercent": {
+  "type": "int"
+ },
+ "blockBrokenTutorMoves": {
+  "type": "boolean"
+ },
+ "tutorFollowEvolutions": {
+  "type": "boolean"
+ },
+ "moveTutorsCompatibilityMod": {
+  "type": "MoveTutorsCompatibilityMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM_PREFER_TYPE",
+   "COMPLETELY_RANDOM",
+   "FULL"
+  ]
+ },
+ "inGameTradesMod": {
+  "type": "InGameTradesMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOMIZE_GIVEN",
+   "RANDOMIZE_GIVEN_AND_REQUESTED"
+  ]
+ },
+ "randomizeInGameTradesNicknames": {
+  "type": "boolean"
+ },
+ "randomizeInGameTradesOTs": {
+  "type": "boolean"
+ },
+ "randomizeInGameTradesIVs": {
+  "type": "boolean"
+ },
+ "randomizeInGameTradesItems": {
+  "type": "boolean"
+ },
+ "fieldItemsMod": {
+  "type": "FieldItemsMod",
+  "values": [
+   "UNCHANGED",
+   "SHUFFLE",
+   "RANDOM",
+   "RANDOM_EVEN"
+  ]
+ },
+ "banBadRandomFieldItems": {
+  "type": "boolean"
+ },
+ "shopItemsMod": {
+  "type": "ShopItemsMod",
+  "values": [
+   "UNCHANGED",
+   "SHUFFLE",
+   "RANDOM"
+  ]
+ },
+ "banBadRandomShopItems": {
+  "type": "boolean"
+ },
+ "banRegularShopItems": {
+  "type": "boolean"
+ },
+ "banOPShopItems": {
+  "type": "boolean"
+ },
+ "balanceShopPrices": {
+  "type": "boolean"
+ },
+ "guaranteeEvolutionItems": {
+  "type": "boolean"
+ },
+ "guaranteeXItems": {
+  "type": "boolean"
+ },
+ "pickupItemsMod": {
+  "type": "PickupItemsMod",
+  "values": [
+   "UNCHANGED",
+   "RANDOM"
+  ]
+ },
+ "banBadRandomPickupItems": {
+  "type": "boolean"
+ },
+ "@miscTweaks": {
+  "type": "list",
+  "values": [
+   "BW_EXP_PATCH",
+   "NERF_X_ACCURACY",
+   "FIX_CRIT_RATE",
+   "FASTEST_TEXT",
+   "RUNNING_SHOES_INDOORS",
+   "RANDOMIZE_PC_POTION",
+   "ALLOW_PIKACHU_EVOLUTION",
+   "NATIONAL_DEX_AT_START",
+   "UPDATE_TYPE_EFFECTIVENESS",
+   "FORCE_CHALLENGE_MODE",
+   "LOWER_CASE_POKEMON_NAMES",
+   "RANDOMIZE_CATCHING_TUTORIAL",
+   "BAN_LUCKY_EGG",
+   "NO_FREE_LUCKY_EGG",
+   "BAN_BIG_MANIAC_ITEMS",
+   "SOS_BATTLES_FOR_ALL",
+   "BALANCE_STATIC_LEVELS",
+   "RETAIN_ALT_FORMES",
+   "RUN_WITHOUT_RUNNING_SHOES",
+   "FASTER_HP_AND_EXP_BARS",
+   "FAST_DISTORTION_WORLD",
+   "UPDATE_ROTOM_FORME_TYPING",
+   "DISABLE_LOW_HP_MUSIC"
+  ]
+ }
+}

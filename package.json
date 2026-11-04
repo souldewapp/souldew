@@ -1,0 +1,135 @@
+{
+  "name": "souldew",
+  "version": "2.0.0",
+  "private": true,
+  "description": "souldew – Pokémon SoulLinks (2–4 players) and Nuzlockes with a built-in emulator, live sync and a game library",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/souldewapp/souldew",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/souldewapp/souldew.git"
+  },
+  "bugs": {
+    "url": "https://github.com/souldewapp/souldew/issues"
+  },
+  "funding": "https://buymeacoffee.com/souldew",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.mjs",
+    "app": "electron .",
+    "test": "node --test test/",
+    "lint": "eslint .",
+    "jre": "node scripts/fetch-jre.mjs arm64",
+    "dist": "node scripts/fetch-jre.mjs arm64 && CUSTOM_DMGBUILD_PATH=scripts/dmgbuild-wrapper.mjs electron-builder --mac dmg --arm64",
+    "release": "node scripts/release.mjs"
+  },
+  "updates": {
+    "repo": "souldewapp/souldew",
+    "feed": "https://github.com/{repo}/releases/latest/download/latest.json",
+    "publicKey": "MCowBQYDK2VwAyEANG4Ng/ROJT1UWYJ0XQ0k3ZfY3mYKKmiiF0tunuAzlBA="
+  },
+  "engines": {
+    "node": ">=22.15"
+  },
+  "dependencies": {
+    "engine.io": "6.6.11",
+    "htm": "3.1.1",
+    "mqtt": "5.16.1",
+    "socket.io": "4.8.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.4",
+    "electron": "43.7.0",
+    "electron-builder": "26.15.3",
+    "eslint": "9.39.4",
+    "globals": "14.0.0"
+  },
+  "main": "electron/main.mjs",
+  "author": "souldew",
+  "build": {
+    "appId": "studio.soullink.app",
+    "productName": "souldew",
+    "copyright": "souldew",
+    "asar": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**",
+      "server/**",
+      "shared/**",
+      "web/**",
+      "package.json",
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
+      "!web/emu-test.html",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "tools/upr",
+        "to": "tools/upr",
+        "filter": [
+          "PokeRandoZX.jar",
+          "UPR-README.txt"
+        ]
+      },
+      {
+        "from": "tools/upr-bridge",
+        "to": "tools/upr-bridge",
+        "filter": [
+          "*.class",
+          "*.java"
+        ]
+      },
+      {
+        "from": "tools/jre/darwin-arm64",
+        "to": "tools/jre/darwin-arm64"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.games",
+      "icon": "build/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "identity": "-",
+      "hardenedRuntime": false,
+      "darkModeSupport": true,
+      "extendInfo": {
+        "NSDownloadsFolderUsageDescription": "souldew sucht hier nach deinen Spieldateien (ROMs), wenn du in der Bibliothek „Mac durchsuchen“ wählst. Es werden nur Dateinamen und Datei-Header gelesen – nichts verlässt deinen Mac.",
+        "NSDesktopFolderUsageDescription": "souldew sucht hier nach deinen Spieldateien (ROMs), wenn du in der Bibliothek „Mac durchsuchen“ wählst. Es werden nur Dateinamen und Datei-Header gelesen – nichts verlässt deinen Mac.",
+        "NSDocumentsFolderUsageDescription": "souldew sucht hier nach deinen Spieldateien (ROMs), wenn du in der Bibliothek „Mac durchsuchen“ wählst. Es werden nur Dateinamen und Datei-Header gelesen – nichts verlässt deinen Mac."
+      }
+    },
+    "dmg": {
+      "title": "souldew",
+      "background": "build/background.png",
+      "iconSize": 96,
+      "window": {
+        "width": 660,
+        "height": 420
+      },
+      "contents": [
+        {
+          "x": 180,
+          "y": 214,
+          "type": "file"
+        },
+        {
+          "x": 480,
+          "y": 214,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "publish": null
+  }
+}

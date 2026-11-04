@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>souldew overlay</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/assets/fonts/fonts.css" />
+  <style>
+    /* Stream overlay (OBS browser source). One widget per URL – ?w=team|card|counters|where|alerts|stats – built in
+       the app under Stream. Transparent by default; souldew's palette and type, readable over any game. */
+    :root {
+      --ink: #ebe6da; --ink-2: #b9b5ab; --ink-3: #8f8b83; --tri: #6fb39b; --cir: #dc7268; --warn: #e1b05a; --gold: #f0c75e;
+      --p1: #7f9ddb; --p2: #c98bbf; --p3: #b3c770; --p4: #a993e6;
+      --panel: #16151bd1; --edge: #ffffff1c; --hi: #ffffff14; --sh: 0 14px 34px -14px #000d, 0 2px 0 #0008;
+      --sp: 80px; --r: 14px;
+      --pixel: 'Pixel Digits', 'Pixelify Sans', ui-monospace, monospace;
+      --body: 'IBM Plex Sans', system-ui, sans-serif;
+    }
+    html, body { margin: 0; overflow: hidden; background: transparent; color: var(--ink); font-family: var(--body); -webkit-font-smoothing: antialiased; }
+    body.bg-dark { background: #121116; }
+    body.bg-green { background: #00b140; }
+    body.bg-light { background: #e9e4d8; }
+    * { box-sizing: border-box; }
+    #root { display: inline-flex; flex-direction: column; gap: 10px; padding: 12px; transform-origin: 0 0; }
+    .px { font-family: 'Pixelify Sans', var(--pixel); }
+    .num { font-family: var(--pixel); font-variant-numeric: tabular-nums; }
+    img.spr { width: var(--sp); height: var(--sp); image-rendering: pixelated; display: block; }
+
+    /* ---- the box every widget sits in: glass (default), solid plate, or nothing at all ---- */
+    .box {
+      position: relative; border-radius: var(--r); padding: 12px 14px;
+      background: linear-gradient(180deg, var(--hi), transparent 40%), var(--panel);
+      border: 1px solid var(--edge); box-shadow: var(--sh), inset 0 1px 0 #ffffff17;
+      -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15);
+    }
+    .t-solid .box {
+      --panel: #1d1c22; -webkit-backdrop-filter: none; backdrop-filter: none; border-color: #0d0c10;
+      background: linear-gradient(180deg, #ffffff10, transparent 50%), repeating-linear-gradient(90deg, transparent 0 3px, #ffffff06 3px 4px), var(--panel);
+      box-shadow: inset 0 1px 0 #ffffff14, inset 0 -2px 0 #0006, 0 3px 0 #0009, 0 10px 24px -10px #000;
+    }
+    .t-minimal .box { background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; padding: 4px; }
+    .t-minimal { text-shadow: 0 2px 0 #000, 0 0 8px #000c, 1px 0 0 #000, -1px 0 0 #000; }
+    .t-minimal img.spr { filter: drop-shadow(0 2px 0 #000a) drop-shadow(0 0 6px #0008); }
+
+    /* ---- one Pokémon ---- */
+    .mon { position: relative; width: calc(var(--sp) + 8px); display: grid; justify-items: center; gap: 3px; transition: opacity .4s, filter .6s; }
+    .mon .sw { position: relative; width: var(--sp); height: var(--sp); }
+    .mon .lv { position: absolute; left: -2px; bottom: 0; font-size: 14px; line-height: 1; padding: 2px 5px 1px; border-radius: 6px; background: #0b0a0ecc; color: var(--ink); border: 1px solid #ffffff1f; }
+    .mon .lv i { font-style: normal; font-family: var(--body); font-size: 10px; color: var(--ink-3); margin-right: 2px; }
+    .mon .st { position: absolute; left: -3px; top: 0; font: 600 10px/1 var(--body); letter-spacing: .04em; padding: 3px 5px; border-radius: 5px; color: #fff; text-shadow: none; }
+    .st.slp { background: #7d829e; } .st.psn { background: #a45fc4; } .st.tox { background: #7b2f9e; } .st.brn { background: #db6a35; }
+    .st.frz { background: #4fb0d4; color: #06222c; } .st.par { background: #d6b92e; color: #2a2203; } .st.fnt { background: #55525c; }
+    .mon .shiny { position: absolute; right: -2px; top: -2px; color: var(--gold); font-size: 15px; filter: drop-shadow(0 0 4px #f0c75eaa); animation: twinkle 2.4s ease-in-out infinite; }
+    @keyframes twinkle { 0%, 100% { transform: scale(.85) rotate(0); opacity: .8; } 50% { transform: scale(1.15) rotate(20deg); opacity: 1; } }
+    .hpb { width: calc(var(--sp) - 8px); height: 5px; border-radius: 3px; background: #0009; box-shadow: inset 0 0 0 1px #ffffff14; overflow: hidden; }
+    .hpb.none { visibility: hidden; }
+    .hpf { display: block; height: 100%; width: 100%; border-radius: 3px; background: var(--tri); transition: width .7s cubic-bezier(.2, .8, .2, 1), background-color .4s; }
+    .hpf.mid { background: var(--warn); } .hpf.low { background: var(--cir); }
+    .mon .nick { max-width: calc(var(--sp) + 16px); font-size: 13px; font-weight: 500; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.15; }
+    .mon.fnt img.spr { filter: grayscale(.85) brightness(.75); }
+    .mon.boxed { opacity: .55; } /* not .box: that is the widget's panel */
+    .mon.boxed .tag { position: absolute; right: -2px; bottom: 0; font: 600 9px/1 var(--body); letter-spacing: .08em; padding: 3px 4px; border-radius: 4px; background: #0b0a0ecc; color: var(--ink-3); }
+    .mon.empty .sw { border: 2px dashed #ffffff26; border-radius: 12px; width: calc(var(--sp) - 16px); height: calc(var(--sp) - 16px); margin: 8px; }
+    .mon.lvup .lv { animation: lvup .9s ease-out; }
+    @keyframes lvup { 0% { transform: scale(1); background: #6fb39b; } 35% { transform: scale(1.35) translateY(-3px); background: #6fb39b; } 100% { transform: none; } }
+
+    /* ---- team strip: one column per linked group (SoulLink), the player names in front ---- */
+    .team { display: flex; gap: 8px; align-items: stretch; }
+    .team.v { flex-direction: column; }
+    .names, .grp { display: flex; flex-direction: column; gap: 6px; }
+    .team.v .names, .team.v .grp { flex-direction: row; }
+    .names { justify-content: space-around; min-width: 0; }
+    .team.v .names { justify-content: flex-start; }
+    .who { display: flex; flex-direction: column; justify-content: center; gap: 3px; height: var(--cell); padding-left: 9px; border-left: 3px solid var(--acc); min-width: 0; }
+    .team.v .who { height: auto; width: calc(var(--sp) + 8px); padding: 0 0 4px; border-left: 0; border-bottom: 3px solid var(--acc); align-items: center; }
+    .who b { font: 700 19px/1.05 'Pixelify Sans', sans-serif; color: var(--acc); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .team.v .who b { max-width: calc(var(--sp) + 8px); font-size: 15px; }
+    .who span { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+    .who span .num { color: var(--gold); }
+    .grp { position: relative; padding: 6px 4px 4px; border-radius: 12px; background: #ffffff09; box-shadow: inset 0 0 0 1px #ffffff0d; justify-content: space-around; }
+    .t-minimal .grp { background: none; box-shadow: none; }
+    .grp .mon { height: var(--cell); align-content: center; }
+    .team.v .grp .mon { height: auto; }
+    /* the soul link between the members of a column: souldew's two rings, in the colours of the two players */
+    .lk { position: relative; height: 0; align-self: stretch; flex: none; z-index: 1; }
+    .grp.multi { gap: 8px; }
+    .lk::before {
+      content: ''; position: absolute; left: 50%; top: -6px; width: 24px; height: 12px; margin-left: -12px;
+      background: linear-gradient(90deg, var(--a) 50%, var(--b) 50%);
+      -webkit-mask: var(--rings) center / contain no-repeat; mask: var(--rings) center / contain no-repeat; filter: drop-shadow(0 1px 0 #000a);
+    }
+    .team.v .lk { height: auto; width: 0; }
+    .team.v .lk::before { top: 50%; left: -3px; margin: -6px 0 0 -12px; }
+    :root { --rings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 16' shape-rendering='crispEdges'%3E%3Cpath d='M4 2h6v2H4zM2 4h2v8H2zM10 4h2v2h-2zM10 10h2v2h-2zM4 12h6v2H4zM22 2h6v2h-6zM28 4h2v8h-2zM20 4h2v2h-2zM20 10h2v2h-2zM22 12h6v2h-6zM12 6h8v4h-8z'/%3E%3C/svg%3E"); }
+    .grp .area { font-size: 11px; color: var(--ink-3); text-align: center; max-width: calc(var(--sp) + 12px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; }
+    .team.v .grp .area { writing-mode: vertical-rl; transform: rotate(180deg); max-width: none; max-height: var(--sp); }
+    .grp.dead { background: repeating-linear-gradient(135deg, #dc72681c 0 6px, #dc72680c 6px 12px); box-shadow: inset 0 0 0 1px #dc726840; }
+    .grp.dead .mon img.spr { filter: grayscale(1) brightness(.55) contrast(1.1); }
+    .grp.dead .lk::before { background: var(--cir); opacity: .8; }
+    .grp.dead .rip { position: absolute; right: -5px; top: -6px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; font: 700 14px/1 'Pixelify Sans', sans-serif;
+      color: #fff; background: var(--cir); box-shadow: 0 2px 0 #0008, 0 0 10px #dc726888; z-index: 2; }
+    .grp.dying { animation: dying 1.4s ease-out; }
+    @keyframes dying { 0% { transform: none; filter: brightness(2.2) saturate(2); } 12% { transform: translateX(-4px); } 24% { transform: translateX(4px); } 36% { transform: translateX(-3px); } 48% { transform: none; filter: brightness(1.3); } 100% { filter: none; } }
+    .grp.lead { box-shadow: inset 0 0 0 1px #ffffff2e, 0 0 0 1px #ffffff10; }
+    .grp.enter { animation: pop-in .5s cubic-bezier(.2, .9, .3, 1.3) both; }
+    @keyframes pop-in { from { transform: scale(.6) translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .empty-team { align-self: center; font-size: 14px; color: var(--ink-3); padding: 6px 2px; }
+
+    /* ---- team card: one player, every detail ---- */
+    .card-h { display: flex; align-items: baseline; gap: 10px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #ffffff14; }
+    .card-h b { font: 700 22px/1 'Pixelify Sans', sans-serif; color: var(--acc); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card-h .meta { display: flex; flex: none; gap: 12px; font-size: 13px; color: var(--ink-2); margin-left: auto; white-space: nowrap; }
+    .card-h .meta .num { color: var(--ink); font-size: 15px; }
+    .card-h .meta .gold { color: var(--gold); }
+    .slots { display: grid; grid-template-columns: repeat(6, auto); gap: 8px 10px; }
+    .slots.v { grid-template-columns: repeat(2, auto); }
+    .slot { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 4px; border-radius: 12px; background: #ffffff09; min-width: 0; }
+    .slots:not(.v) .slot { flex-direction: column; padding: 6px 6px 8px; gap: 4px; }
+    .slot .info { display: grid; gap: 3px; min-width: 0; }
+    .slots:not(.v) .slot .info { justify-items: center; }
+    .slot .nm { font-size: 14px; font-weight: 600; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .slot .row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
+    .slot .row .num { font-size: 14px; color: var(--ink); }
+    .slot .hpb { width: 76px; }
+    .slot .hpt { font-size: 11px; color: var(--ink-3); }
+    .slot .st { position: static; padding: 2px 5px; }
+    .slot.dead { background: repeating-linear-gradient(135deg, #dc72681c 0 6px, #dc72680c 6px 12px); }
+    .slot.dead img.spr, .slot.fnt img.spr { filter: grayscale(1) brightness(.6); }
+    .slot.empty { opacity: .45; }
+    .slot.empty .ball { width: var(--sp); height: var(--sp); display: grid; place-items: center; }
+    .slot.empty .ball i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ffffff40; background: linear-gradient(#ffffff1a 0 45%, #ffffff40 45% 55%, transparent 55%); }
+
+    /* ---- counters ---- */
+    .counters { display: flex; gap: 10px; align-items: stretch; }
+    .counters.v { flex-direction: column; }
+    .tile { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 10px; }
+    .tile .ic { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; font: 700 17px/1 'Pixelify Sans', sans-serif; }
+    .tile .ic svg { width: 16px; height: 16px; }
+    .tile .n { font-size: 30px; line-height: 1; }
+    .tile .l { font-size: 12.5px; color: var(--ink-2); line-height: 1.2; }
+    .tile.alive .ic { background: #6fb39b26; color: var(--tri); } .tile.alive .n { color: var(--tri); }
+    .tile.dead .ic { background: #dc726826; color: var(--cir); } .tile.dead .n { color: var(--cir); }
+    .tile.caught .ic { background: #ffffff14; color: var(--ink); }
+    .tile.badges .ic { background: #f0c75e24; color: var(--gold); } .tile.badges .n { color: var(--gold); }
+    .tile .per { display: flex; gap: 10px; }
+    .tile .l { white-space: nowrap; }
+    .tile .per span { display: flex; align-items: baseline; gap: 4px; font-size: 12px; color: var(--acc); white-space: nowrap; }
+    .counters.v .tile .per { flex-wrap: wrap; gap: 2px 10px; max-width: 160px; }
+    .tile .per i { font-style: normal; max-width: 76px; overflow: hidden; text-overflow: ellipsis; }
+    .tile .per .num { font-size: 22px; color: var(--gold); }
+    .n.bump, .num.bump { animation: bump .6s cubic-bezier(.2, .9, .3, 1.4); }
+    @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.4); } 100% { transform: none; } }
+
+    /* ---- "You are here" (the games' place-name pop-up) ---- */
+    .where { display: flex; gap: 10px; }
+    .where.v { flex-direction: column; }
+    .plate { position: relative; overflow: hidden; display: grid; gap: 5px; padding: 11px 16px 13px 20px; min-width: 240px; max-width: 330px; align-content: start; }
+    .where.v .plate { max-width: 376px; }
+    .plate::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--acc, var(--tri)); box-shadow: 1px 0 0 #0006; }
+    .t-minimal .plate { padding-left: 14px; }
+    .plate .k { display: flex; align-items: center; gap: 7px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+    .plate .k b { color: var(--acc); letter-spacing: .06em; font-size: 12px; }
+    .plate .place { font: 500 30px/1.06 'Pixelify Sans', sans-serif; letter-spacing: .01em; text-shadow: 0 2px 0 #0009; overflow-wrap: anywhere;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+    .plate .place.long { font-size: 22px; }
+    .plate .place.none { font: 400 15px/1.3 var(--body); color: var(--ink-3); text-shadow: none; } /* the preview's stand-in */
+    .plate .k b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .plate .fight { display: inline-flex; align-items: center; gap: 7px; justify-self: start; font-size: 13px; padding: 3px 10px 3px 4px; border-radius: 99px; background: #dc726826; color: #f4b0a8; border: 1px solid #dc726855; }
+    .plate .fight img { width: 28px; height: 28px; image-rendering: pixelated; margin: -4px 0; }
+    .plate .fight .num { color: var(--ink); }
+    .plate.fresh { animation: plate-in .45s cubic-bezier(.2, .8, .25, 1) both; }
+    .plate.fresh .shine { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, transparent 35%, #ffffff2e 50%, transparent 65%) no-repeat; background-size: 250% 100%; animation: shine .9s .12s ease-out both; }
+    @keyframes shine { from { background-position: 120% 0; } to { background-position: -40% 0; } }
+    @keyframes plate-in { 0% { transform: translateX(-16px); opacity: 0; filter: brightness(1.8); } 55% { opacity: 1; } 100% { transform: none; opacity: 1; filter: none; } }
+    .post { width: 16px; height: 16px; color: var(--acc, var(--tri)); flex: none; }
+
+    /* ---- stats bar ---- */
+    .stats { display: flex; align-items: center; gap: 18px; padding: 9px 16px; white-space: nowrap; }
+    .stats.v { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .stats .run { display: flex; align-items: center; gap: 9px; font: 700 18px/1 'Pixelify Sans', sans-serif; min-width: 0; }
+    .stats .run b { font: inherit; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+    .stats .run svg { width: 30px; height: 15px; }
+    .stats .it { display: flex; align-items: baseline; gap: 6px; font-size: 13px; color: var(--ink-2); }
+    .stats .it .num { font-size: 20px; color: var(--ink); }
+    .stats .it.alive .num { color: var(--tri); } .stats .it.dead .num { color: var(--cir); } .stats .it.badges .num { color: var(--gold); }
+    .stats .sep { width: 1px; align-self: stretch; background: #ffffff1c; }
+    .stats.v .sep { display: none; }
+    .stats .pt { display: flex; gap: 10px; }
+    .stats .pt > span { display: flex; align-items: baseline; color: var(--acc); font-size: 12px; }
+    .stats.v .run b { max-width: 240px; }
+    .stats.v .pt { flex-wrap: wrap; gap: 4px 10px; max-width: 270px; }
+    .stats .pt i { font-style: normal; max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+    .stats .pt .num { font-size: 18px; margin-left: 3px; }
+
+    /* ---- alerts ---- */
+    .alerts { position: fixed; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px; pointer-events: none; }
+    .alerts.top { top: 0; } .alerts.bottom { bottom: 0; flex-direction: column-reverse; }
+    .alert { --c: var(--tri); display: flex; align-items: center; gap: 14px; min-width: 380px; max-width: 760px; padding: 12px 22px 12px 14px; overflow: hidden;
+      border-color: color-mix(in srgb, var(--c) 55%, transparent); animation: alert-in .55s cubic-bezier(.2, .9, .25, 1.15) both; }
+    .alert.out { animation: alert-out .45s ease-in both; }
+    .alert::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--c) 35%, transparent) 50%, transparent 70%) no-repeat; background-size: 250% 100%; animation: shine 1.1s .25s ease-out both; }
+    .alert .ics { display: flex; gap: 2px; flex: none; }
+    .alert .ics img { width: 72px; height: 72px; image-rendering: pixelated; }
+    .alert .ics .arrow { align-self: center; font: 700 22px/1 'Pixelify Sans', sans-serif; color: var(--c); }
+    .alert .tx { display: grid; gap: 4px; min-width: 0; }
+    .alert .kick { font: 700 13px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--c); }
+    .alert .big { font: 700 26px/1.08 'Pixelify Sans', sans-serif; }
+    .alert .small { font-size: 14px; color: var(--ink-2); }
+    .alert .chip { justify-self: start; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: color-mix(in srgb, var(--c) 22%, transparent); color: var(--c); }
+    .alert.death { --c: var(--cir); }
+    .alert.death .ics img { filter: grayscale(1) brightness(.7); animation: fade-gray 1.6s ease-out both; }
+    @keyframes fade-gray { from { filter: none; } to { filter: grayscale(1) brightness(.7); } }
+    .alert.catch { --c: var(--tri); }
+    .alert.catch .ics img { animation: caught .9s cubic-bezier(.2, .9, .3, 1.4) both; }
+    @keyframes caught { 0% { transform: scale(.2) translateY(20px); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
+    .alert.badge { --c: var(--gold); } .alert.level { --c: #8fd6a8; } .alert.evolve { --c: #b9a0f2; } .alert.run { --c: var(--warn); }
+    .alert.run.won { --c: var(--gold); }
+    .alert .badge-ic { width: 60px; height: 60px; display: grid; place-items: center; font: 700 30px/1 var(--pixel); color: #2a1f05; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff6c9, var(--gold) 45%, #b8892a); box-shadow: 0 0 18px #f0c75e88; animation: spin-in .8s cubic-bezier(.2, .9, .3, 1.3) both; }
+    @keyframes spin-in { from { transform: rotate(-200deg) scale(.3); } to { transform: none; } }
+    @keyframes alert-in { 0% { transform: translateY(-18px) scale(.94); opacity: 0; } 100% { transform: none; opacity: 1; } }
+    @keyframes alert-out { to { transform: translateY(-10px) scale(.97); opacity: 0; } }
+    .alerts.bottom .alert { animation-name: alert-in-b; }
+    @keyframes alert-in-b { 0% { transform: translateY(18px) scale(.94); opacity: 0; } 100% { transform: none; opacity: 1; } }
+
+    body:has(#alerts .alert) #root .msg { visibility: hidden; } /* the preview's hint gives way to a real alert */
+    /* status lines (loading, no run, the preview's hint) sit on a dark pill: readable on a bright game, too */
+    .msg { display: inline-block; margin: 10px; font-size: 14px; color: var(--ink-2, #c9c5d3); padding: 8px 12px; border-radius: 10px; background: #141318d9; }
+    .net { position: fixed; right: 8px; bottom: 8px; font: 500 11px/1 var(--body); padding: 5px 9px 5px 8px; border-radius: 99px; background: #0b0a0edd; color: var(--ink-3); border: 1px solid #ffffff1c; display: flex; gap: 6px; align-items: center; }
+    .net::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); animation: blink 1s steps(2, jump-none) infinite; }
+    @keyframes blink { 50% { opacity: .2; } }
+    [hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; } }
+    body.no-anim *, body.no-anim *::before, body.no-anim *::after { animation: none !important; transition: none !important; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="alerts" class="alerts top" aria-live="polite"></div>
+  <div id="net" class="net" hidden></div>
+  <script type="module">
+    import { teamOf, groupsOf, countersOf, alertsBetween, pickSlots, playTimeText, WIDGETS } from '/shared/overlay.mjs';
+
+    // A standalone page in OBS: no app bundle here, so the few strings live in a small dictionary.
+    const STRINGS = {
+      en: { alertsHere: 'Alerts appear here – send a test alert', lv: 'Lv', loading: 'Loading …', noRun: 'No run found', offline: 'reconnecting …', noTeam: 'no team yet', box: 'BOX', here: 'You are here', nowhere: 'Location shows once the game runs',
+        alive: 'alive', alivePairs: 'pairs alive', aliveGroups: 'groups alive', dead: 'in the graveyard', caught: 'caught', badges: 'badges', playTime: 'play time',
+        wild: 'Wild battle', trainer: 'Trainer battle', deathK: 'Died', deathOne: '{a} died', deathMany: '{a} died together', against: 'against {enemy} Lv {lv}',
+        catchK: 'Caught', catchT: '{who} caught {name}', complete: 'Pair complete', completeG: 'Group complete', badgeK: 'Badge', badgeT: '{who} earned badge #{n}',
+        evolveK: 'Evolution', evolveT: '{from} became {to}', levelK: 'Level {n}', levelT: '{name} reached level {n}', runK: 'Run over', runFailed: 'The run has failed', runWon: 'Run complete!', runEnded: 'The run has ended',
+        st: { slp: 'SLP', psn: 'PSN', tox: 'TOX', brn: 'BRN', frz: 'FRZ', par: 'PAR', fnt: 'FNT' } },
+      de: { alertsHere: 'Hier erscheinen die Alerts – schick einen Test-Alert', lv: 'Lv', loading: 'Lade …', noRun: 'Kein Run gefunden', offline: 'verbinde neu …', noTeam: 'noch kein Team', box: 'BOX', here: 'Du bist hier', nowhere: 'Der Ort erscheint, sobald das Spiel läuft',
+        alive: 'leben', alivePairs: 'Paare leben', aliveGroups: 'Gruppen leben', dead: 'auf dem Friedhof', caught: 'gefangen', badges: 'Orden', playTime: 'Spielzeit',
+        wild: 'Wilder Kampf', trainer: 'Trainerkampf', deathK: 'Gestorben', deathOne: '{a} ist gestorben', deathMany: '{a} sind gemeinsam gestorben', against: 'gegen {enemy} Lv {lv}',
+        catchK: 'Gefangen', catchT: '{who} fängt {name}', complete: 'Paar komplett', completeG: 'Gruppe komplett', badgeK: 'Orden', badgeT: '{who} holt Orden #{n}',
+        evolveK: 'Entwicklung', evolveT: '{from} wird zu {to}', levelK: 'Level {n}', levelT: '{name} erreicht Level {n}', runK: 'Run vorbei', runFailed: 'Der Run ist gescheitert', runWon: 'Run geschafft!', runEnded: 'Der Run ist beendet',
+        st: { slp: 'SLF', psn: 'GIF', tox: 'GIF+', brn: 'BRT', frz: 'GFR', par: 'PAR', fnt: 'K.O.' } },
+      fr: { alertsHere: 'Les alertes apparaissent ici – envoie une alerte de test', lv: 'N.', loading: 'Chargement …', noRun: 'Aucune partie trouvée', offline: 'reconnexion …', noTeam: 'pas encore d’équipe', box: 'BOÎTE', here: 'Tu es ici', nowhere: 'Le lieu s’affiche dès que le jeu tourne',
+        alive: 'en vie', alivePairs: 'paires en vie', aliveGroups: 'groupes en vie', dead: 'au cimetière', caught: 'capturés', badges: 'badges', playTime: 'temps de jeu',
+        wild: 'Combat sauvage', trainer: 'Combat de dresseur', deathK: 'Mort', deathOne: '{a} est mort', deathMany: '{a} sont morts ensemble', against: 'contre {enemy} N. {lv}',
+        catchK: 'Capturé', catchT: '{who} capture {name}', complete: 'Paire complète', completeG: 'Groupe complet', badgeK: 'Badge', badgeT: '{who} obtient le badge n° {n}',
+        evolveK: 'Évolution', evolveT: '{from} devient {to}', levelK: 'Niveau {n}', levelT: '{name} atteint le niveau {n}', runK: 'Fin de partie', runFailed: 'La partie a échoué', runWon: 'Partie réussie !', runEnded: 'La partie est terminée',
+        st: { slp: 'SOM', psn: 'PSN', tox: 'PSN+', brn: 'BRL', frz: 'GEL', par: 'PAR', fnt: 'K.O.' } },
+      es: { alertsHere: 'Aquí aparecen las alertas – envía una alerta de prueba', lv: 'Nv.', loading: 'Cargando …', noRun: 'No se encontró la partida', offline: 'reconectando …', noTeam: 'aún sin equipo', box: 'CAJA', here: 'Estás aquí', nowhere: 'El lugar aparece cuando el juego está en marcha',
+        alive: 'vivos', alivePairs: 'parejas vivas', aliveGroups: 'grupos vivos', dead: 'en el cementerio', caught: 'capturados', badges: 'medallas', playTime: 'tiempo de juego',
+        wild: 'Combate salvaje', trainer: 'Combate contra entrenador', deathK: 'Murió', deathOne: '{a} ha muerto', deathMany: '{a} han muerto juntos', against: 'contra {enemy} Nv. {lv}',
+        catchK: 'Capturado', catchT: '{who} captura a {name}', complete: 'Pareja completa', completeG: 'Grupo completo', badgeK: 'Medalla', badgeT: '{who} consigue la medalla n.º {n}',
+        evolveK: 'Evolución', evolveT: '{from} evoluciona a {to}', levelK: 'Nivel {n}', levelT: '{name} alcanza el nivel {n}', runK: 'Partida terminada', runFailed: 'La partida ha fracasado', runWon: '¡Partida superada!', runEnded: 'La partida ha terminado',
+        st: { slp: 'DOR', psn: 'ENV', tox: 'ENV+', brn: 'QUE', frz: 'CON', par: 'PAR', fnt: 'DEB' } },
+      it: { alertsHere: 'Qui compaiono gli avvisi – invia un avviso di prova', lv: 'Lv.', loading: 'Caricamento …', noRun: 'Nessuna partita trovata', offline: 'riconnessione …', noTeam: 'ancora nessuna squadra', box: 'BOX', here: 'Sei qui', nowhere: 'Il luogo appare quando il gioco è avviato',
+        alive: 'in vita', alivePairs: 'coppie in vita', aliveGroups: 'gruppi in vita', dead: 'al cimitero', caught: 'catturati', badges: 'medaglie', playTime: 'tempo di gioco',
+        wild: 'Lotta selvatica', trainer: 'Lotta con allenatore', deathK: 'Morto', deathOne: '{a} è morto', deathMany: '{a} sono morti insieme', against: 'contro {enemy} Lv. {lv}',
+        catchK: 'Catturato', catchT: '{who} cattura {name}', complete: 'Coppia completa', completeG: 'Gruppo completo', badgeK: 'Medaglia', badgeT: '{who} ottiene la medaglia n. {n}',
+        evolveK: 'Evoluzione', evolveT: '{from} si evolve in {to}', levelK: 'Livello {n}', levelT: '{name} raggiunge il livello {n}', runK: 'Partita finita', runFailed: 'La partita è fallita', runWon: 'Partita completata!', runEnded: 'La partita è terminata',
+        st: { slp: 'SON', psn: 'AVV', tox: 'AVV+', brn: 'SCO', frz: 'CON', par: 'PAR', fnt: 'ESA' } },
+    };
+    const SPRITE = { 1: [56, 'gen1', 'gen1'], 2: [56, 'gen2', 'gen2shiny'], 3: [64, 'gen3', 'gen3shiny'], 4: [80, 'gen4', 'gen4shiny'] };
+    const MAX = [0, 151, 251, 386, 493];
+
+    const params = new URLSearchParams(location.search);
+    const run = params.get('run');
+    const flag = (k, def) => (params.has(k) ? !['0', 'false', 'no', 'off'].includes(params.get(k)) : def);
+    const opt = {
+      w: WIDGETS.includes(params.get('w')) ? params.get('w') : 'team',
+      legacy: !params.has('w'), // the old single-box overlay URL: team plus the numbers underneath
+      layout: params.get('layout') === 'v' ? 'v' : 'h',
+      p: (params.get('p') || '').split(',').filter((s) => /^p[1-4]$/.test(s)),
+      theme: ['glass', 'solid', 'minimal'].includes(params.get('theme')) ? params.get('theme') : 'glass',
+      scale: Math.min(3, Math.max(0.4, Number(params.get('scale')) || 1)),
+      bg: ['dark', 'green', 'light'].includes(params.get('bg')) ? params.get('bg') : '',
+      pos: params.get('pos') === 'bottom' ? 'bottom' : 'top',
+      sound: flag('sound', false), vol: Math.min(100, Math.max(0, Number(params.get('vol') ?? 60))) / 100,
+      hp: flag('hp', true), nick: params.has('nick') ? flag('nick', true) : null, area: flag('area', true), net: flag('net', true), preview: flag('preview', false),
+    };
+    document.body.className = [`t-${opt.theme}`, opt.bg && `bg-${opt.bg}`, !flag('anim', true) && 'no-anim'].filter(Boolean).join(' ');
+    const root = document.getElementById('root');
+    const alertsEl = document.getElementById('alerts');
+    const net = document.getElementById('net');
+    root.style.zoom = String(opt.scale);
+    alertsEl.style.zoom = String(opt.scale);
+    alertsEl.className = `alerts ${opt.pos}`;
+
+    const pick = (l) => (l && STRINGS[String(l).slice(0, 2).toLowerCase()] ? String(l).slice(0, 2).toLowerCase() : null);
+    const getJson = async (url) => {
+      try {
+        const r = await fetch(url, { cache: 'no-store' });
+        return r.ok ? await r.json() : null;
+      } catch {
+        return null;
+      }
+    };
+    const status = params.get('lang') ? null : await getJson('/api/status');
+    const lang = pick(params.get('lang')) || pick(status?.config?.lang) || pick(navigator.language) || 'en';
+    const L = STRINGS[lang];
+    document.documentElement.lang = lang;
+    const fill = (s, vars) => s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] ?? m));
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    let S = null; // the latest snapshot
+    const spriteSrc = (id, shiny) => {
+      const g = S?.gen || 4;
+      if (!id) return '';
+      if (id > MAX[g]) return `/sprites/${shiny ? 'shiny' : 'default'}/${id}.png`;
+      return `/sprites/${SPRITE[g][shiny ? 2 : 1]}/${id}.png`;
+    };
+    const species = (id) => S?.species?.[id] || (id ? `#${id}` : '');
+    const monName = (m) => m.nick || species(m.species);
+    const nameOf = (slot) => S?.players?.[slot]?.name || String(slot || '').toUpperCase();
+    const acc = (slot) => `var(--${slot || 'p1'})`;
+    const hpClass = (p) => (p > 50 ? '' : p > 20 ? 'mid' : 'low');
+
+    // ---- keyed updates: a cell is only rebuilt when what it shows changed (HP bars glide, animations keep running) ----
+    function patch(box, items) {
+      const old = new Map([...box.children].filter((c) => c.dataset.k).map((c) => [c.dataset.k, c]));
+      let at = 0;
+      for (const it of items) {
+        let el = old.get(it.key);
+        if (el && el.dataset.sig !== it.sig) {
+          const fresh = document.createElement('div');
+          fresh.innerHTML = it.html;
+          const next = fresh.firstElementChild;
+          it.changed?.(el, next);
+          el.replaceWith(next);
+          el = next;
+        } else if (!el) {
+          const fresh = document.createElement('div');
+          fresh.innerHTML = it.html;
+          el = fresh.firstElementChild;
+          if (S && painted) el.classList.add('enter');
+        }
+        el.dataset.k = it.key;
+        el.dataset.sig = it.sig;
+        old.delete(it.key);
+        if (box.children[at] !== el) box.insertBefore(el, box.children[at] || null);
+        it.after?.(el);
+        at++;
+      }
+      for (const el of old.values()) el.remove();
+    }
+    // HP bars live outside the signature: set after every update, so they slide instead of jumping
+    const setHp = (el) => {
+      for (const f of el.querySelectorAll('.hpf[data-p]')) {
+        const p = Number(f.dataset.p);
+        f.style.width = `${p}%`;
+        f.className = `hpf ${hpClass(p)}`;
+      }
+    };
+    const hpPct = (m) => (m && m.maxHp ? Math.max(0, Math.min(100, Math.round((m.hp / m.maxHp) * 100))) : null);
+
+    function monCell(m, { slot, showNick }) {
+      if (!m) return `<div class="mon empty" style="--acc:${acc(slot)}"><div class="sw"></div>${opt.hp ? '<span class="hpb none"></span>' : ''}${showNick ? '<span class="nick">&nbsp;</span>' : ''}</div>`;
+      const p = hpPct(m);
+      const st = m.status && !(m.status === 'fnt' && m.dead) ? `<span class="st ${m.status}">${esc(L.st[m.status] || '')}</span>` : '';
+      return `<div class="mon${m.box ? ' boxed' : ''}${m.status === 'fnt' ? ' fnt' : ''}" style="--acc:${acc(slot)}">
+        <div class="sw"><img class="spr" src="${spriteSrc(m.species, m.shiny)}" alt="" />${st}${m.shiny ? '<span class="shiny">✦</span>' : ''}
+          ${m.level ? `<span class="lv num"><i>${esc(L.lv)}</i>${m.level}</span>` : ''}${m.box ? `<span class="tag">${esc(L.box)}</span>` : ''}</div>
+        ${opt.hp ? `<span class="hpb${p === null || m.box || m.dead ? ' none' : ''}"><i class="hpf" data-p="${p ?? 0}"></i></span>` : ''}
+        ${showNick ? `<span class="nick">${esc(monName(m))}</span>` : ''}</div>`;
+    }
+    const monSig = (m) => (m ? [m.species, m.nick, m.level, m.status, m.shiny, m.box, m.dead, species(m.species)].join('|') : '-');
+    const levelUp = (oldEl, newEl, oldM, newM) => {
+      // a level gained since the last update: the level tag hops once
+      if (oldM && newM && oldM.level && newM.level > oldM.level && oldM.species === newM.species) newEl.classList.add('lvup');
+    };
+
+    // ---- widgets ----
+    const shell = (cls, inner) => `<div class="box ${cls}">${inner}</div>`;
+    const ensure = (cls) => {
+      let el = root.querySelector(`:scope > .${cls.split(' ')[0]}-wrap`);
+      if (!el) {
+        root.innerHTML = '';
+        el = document.createElement('div');
+        el.className = `${cls.split(' ')[0]}-wrap`;
+        root.append(el);
+      }
+      return el;
+    };
+    const lastMons = new Map(); // key → mon, for the level-up hop
+
+    function renderTeam(wrap, slots) {
+      const groups = groupsOf(S, slots).slice(0, 6 * slots.length);
+      const showNick = opt.nick ?? slots.length <= 2;
+      const solo = slots.length === 1;
+      wrap.style.setProperty('--cell', `calc(var(--sp) + ${opt.hp ? 9 : 0}px + ${showNick ? 19 : 0}px)`);
+      let box = wrap.querySelector('.team');
+      if (!box) {
+        wrap.innerHTML = shell(`team-box${solo ? ' solo' : ''}`, `<div class="team ${opt.layout}"><div class="names"></div><div class="cols" style="display:contents"></div></div>`);
+        box = wrap.querySelector('.team');
+      }
+      box.className = `team ${opt.layout}`;
+      const names = box.querySelector('.names');
+      names.innerHTML = slots.map((s) => {
+        const b = S.doc[`live:${s}`]?.badges;
+        return `<div class="who" style="--acc:${acc(s)}"><b>${esc(nameOf(s))}</b>${Number.isInteger(b) ? `<span>★ <span class="num">${b}</span></span>` : ''}</div>`;
+      }).join('');
+      const cols = box.querySelector('.cols');
+      if (!groups.length) {
+        cols.innerHTML = `<div class="empty-team">${esc(L.noTeam)}</div>`;
+        return;
+      }
+      if (cols.querySelector('.empty-team')) cols.innerHTML = '';
+      // the lead: the first group whose members are all still standing
+      const lead = groups.findIndex((g) => !g.dead && slots.every((s) => g.members[s] && g.members[s].status !== 'fnt' && !g.members[s].box));
+      patch(cols, groups.map((g, i) => {
+        const key = g.area || `x:${slots.find((s) => g.members[s])}:${g.members[slots.find((s) => g.members[s])]?.key}`;
+        const sig = [g.dead, opt.area && g.label, i === lead, ...slots.map((s) => monSig(g.members[s]))].join('#');
+        const multi = slots.length > 1;
+        return {
+          key, sig,
+          html: `<div class="grp${multi ? ' multi' : ''}${g.dead ? ' dead' : ''}${i === lead && !solo ? ' lead' : ''}">
+            ${slots.map((s, j) => (j ? `<i class="lk" style="--a:${acc(slots[j - 1])};--b:${acc(s)}"></i>` : '') + monCell(g.members[s], { slot: s, showNick })).join('')}
+            ${opt.area && g.label && !solo ? `<span class="area">${esc(g.label)}</span>` : ''}${g.dead ? `<span class="rip">${CROSS}</span>` : ''}</div>`,
+          changed: (oldEl, newEl) => {
+            if (g.dead && !oldEl.classList.contains('dead')) newEl.classList.add('dying');
+            slots.forEach((s, j) => {
+              const before = lastMons.get(`${key}:${s}`);
+              const cell = newEl.querySelectorAll('.mon')[j];
+              if (cell) levelUp(null, cell, before, g.members[s]);
+            });
+          },
+          after: (el) => {
+            setHp(el);
+            slots.forEach((s) => lastMons.set(`${key}:${s}`, g.members[s]));
+          },
+        };
+      }));
+    }
+
+    function renderCard(wrap, slot) {
+      const team = teamOf(S, slot);
+      const live = S.doc[`live:${slot}`];
+      let box = wrap.querySelector('.slots');
+      if (!box) {
+        wrap.innerHTML = shell('card-box', `<div class="card-h" style="--acc:${acc(slot)}"></div><div class="slots"></div>`);
+        box = wrap.querySelector('.slots');
+      }
+      box.className = `slots ${opt.layout}`;
+      const pt = playTimeText(live?.playTime);
+      wrap.querySelector('.card-h').innerHTML = `<b>${esc(nameOf(slot))}</b><span class="meta">
+        ${Number.isInteger(live?.badges) ? `<span><span class="num gold">★ ${live.badges}</span> ${esc(L.badges)}</span>` : ''}
+        ${pt ? `<span><span class="num">${pt}</span> ${esc(L.playTime)}</span>` : ''}</span>`;
+      const cells = Array.from({ length: 6 }, (_, i) => team[i] || null);
+      patch(box, cells.map((m, i) => {
+        const key = m ? m.key || `i${i}` : `e${i}`;
+        const p = hpPct(m);
+        return {
+          key, sig: monSig(m) + (opt.hp ? '' : '|nohp'),
+          html: !m ? '<div class="slot empty"><span class="ball"><i></i></span></div>'
+            : `<div class="slot${m.dead ? ' dead' : ''}${m.status === 'fnt' ? ' fnt' : ''}" style="--acc:${acc(slot)}">
+              <div class="mon" style="width:auto"><div class="sw"><img class="spr" src="${spriteSrc(m.species, m.shiny)}" alt="" />${m.shiny ? '<span class="shiny">✦</span>' : ''}</div></div>
+              <div class="info"><span class="nm">${esc(monName(m))}</span>
+                <span class="row">${m.level ? `<span>${esc(L.lv)} <span class="num">${m.level}</span></span>` : ''}${m.status ? `<span class="st ${m.status}">${esc(L.st[m.status] || '')}</span>` : ''}</span>
+                ${opt.hp && p !== null ? `<span class="row"><span class="hpb"><i class="hpf" data-p="${p}"></i></span><span class="hpt num">${m.hp}/${m.maxHp}</span></span>` : ''}</div></div>`,
+          changed: (oldEl, newEl) => levelUp(null, newEl, lastMons.get(`c:${key}`), m),
+          after: (el) => {
+            setHp(el);
+            lastMons.set(`c:${key}`, m);
+          },
+        };
+      }));
+    }
+
+    let lastCounts = {};
+    function renderCounters(wrap, slots) {
+      const c = countersOf(S);
+      const solo = S.mode === 'nuzlocke';
+      const aliveL = solo ? L.alive : slots.length > 2 || S.slots.length > 2 ? L.aliveGroups : L.alivePairs;
+      const badgeSlots = slots.filter((s) => Number.isInteger(c.badges[s]));
+      const tiles = [
+        ['alive', '♥', c.alive, aliveL], ['dead', CROSS, c.dead, L.dead], ['caught', '◓', c.caught, L.caught],
+      ];
+      wrap.innerHTML = `<div class="counters ${opt.layout}">${tiles.map(([k, ic, n, l]) => shell(`tile ${k}`, `<span class="ic">${ic}</span><span class="n num${lastCounts[k] !== undefined && lastCounts[k] !== n ? ' bump' : ''}">${n}</span><span class="l">${esc(l)}</span>`)).join('')}
+        ${badgeSlots.length ? shell('tile badges', `<span class="ic">★</span>${badgeSlots.length === 1 ? `<span class="n num">${c.badges[badgeSlots[0]]}</span>`
+          : `<span class="per">${badgeSlots.map((s) => `<span style="--acc:${acc(s)}"><i>${esc(nameOf(s))}</i> <span class="num">${c.badges[s]}</span></span>`).join('')}</span>`}<span class="l">${esc(L.badges)}</span>`) : ''}</div>`;
+      lastCounts = { alive: c.alive, dead: c.dead, caught: c.caught };
+    }
+
+    const CROSS = '<svg viewBox="0 0 16 16" width="12" height="12" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M7 1h2v4h4v2H9v8H7V7H3V5h4z" /></svg>';
+    const POST = '<svg class="post" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M7 9h2v7H7z" /><path fill="currentColor" d="M2 2h10l3 3-3 3H2z" /><path fill="#16151b" d="M4 4h6v2H4z" /></svg>';
+    function renderWhere(wrap, slots) {
+      let box = wrap.querySelector('.where');
+      if (!box) {
+        wrap.innerHTML = '<div class="where"></div>';
+        box = wrap.querySelector('.where');
+      }
+      box.className = `where ${opt.layout}`;
+      const items = slots.map((s) => [s, S.doc[`where:${s}`]]).filter(([, w]) => w?.name || opt.preview);
+      const one = slots.length === 1;
+      patch(box, items.map(([s, w]) => {
+        const f = w?.fight;
+        return {
+          key: s, sig: [w?.gen, w?.id, w?.name, f?.kind, f?.species, f?.level].join('|'),
+          html: `<div class="box plate" style="--acc:${acc(s)}"><i class="shine"></i>
+            <span class="k">${POST}${one ? esc(L.here) : `<b>${esc(nameOf(s))}</b>`}</span>
+            <span class="place${!w?.name ? ' none' : w.name.length > 16 ? ' long' : ''}">${esc(w?.name || L.nowhere)}</span>
+            ${f ? `<span class="fight">${f.species ? `<img src="${spriteSrc(f.species)}" alt="" />` : '⚔'}${esc(f.kind === 'trainer' ? L.trainer : L.wild)}${f.species ? ` · ${esc(species(f.species))}${f.level ? ` <span class="num">${esc(L.lv)} ${f.level}</span>` : ''}` : ''}</span>` : ''}</div>`,
+          // a new place slides in with a light sweep, like the games' place-name pop-up (not for a battle starting)
+          changed: (oldEl, newEl) => {
+            if (oldEl.querySelector('.place')?.textContent !== newEl.querySelector('.place')?.textContent) newEl.classList.add('fresh');
+          },
+        };
+      }));
+      for (const el of box.children) if (!painted) el.classList.add('fresh');
+    }
+
+    const MARK = '<svg viewBox="0 0 32 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="#8cb0ff" d="M4 2h6v2H4zM2 4h2v8H2zM10 4h2v2h-2zM10 10h2v2h-2zM4 12h6v2H4z" /><path fill="#ff8fdc" d="M22 2h6v2h-6zM28 4h2v8h-2zM20 4h2v2h-2zM20 10h2v2h-2zM22 12h6v2h-6z" /><path fill="#f2ffdc" d="M12 6h8v4h-8z" /></svg>';
+    function renderStats(wrap, slots) {
+      const c = countersOf(S);
+      const solo = S.mode === 'nuzlocke';
+      const times = slots.map((s) => [s, playTimeText(S.doc[`live:${s}`]?.playTime)]).filter(([, x]) => x);
+      const badges = slots.map((s) => c.badges[s]).filter(Number.isInteger);
+      wrap.innerHTML = shell(`stats ${opt.layout}`, `<span class="run">${MARK}<b>${esc(S.name)}</b></span><span class="sep"></span>
+        ${times.length ? `<span class="it pt">${times.length === 1 ? `<span class="num">${times[0][1]}</span> ${esc(L.playTime)}` : times.map(([s, x]) => `<span style="--acc:${acc(s)}"><i>${esc(nameOf(s))}</i><span class="num">${x}</span></span>`).join('')}</span><span class="sep"></span>` : ''}
+        ${badges.length ? `<span class="it badges"><span class="num">★ ${Math.max(...badges)}</span> ${esc(L.badges)}</span>` : ''}
+        <span class="it alive"><span class="num">${c.alive}</span> ${esc(solo ? L.alive : S.slots.length > 2 ? L.aliveGroups : L.alivePairs)}</span>
+        <span class="it dead"><span class="num">${c.dead}</span> ${esc(L.dead)}</span>
+        <span class="it"><span class="num">${c.caught}</span> ${esc(L.caught)}</span>`);
+    }
+
+    let painted = false;
+    function render() {
+      if (!S) return;
+      const slots = pickSlots(S, opt.p);
+      if (opt.w === 'alerts') {
+        // nothing on screen between alerts – in the app's preview a hint where they will appear
+        root.innerHTML = opt.preview ? `<div class="msg">${esc(L.alertsHere)}</div>` : '';
+        return;
+      }
+      if (opt.w === 'team') {
+        const wrap = ensure('team');
+        renderTeam(wrap, slots);
+        if (opt.legacy) {
+          let foot = root.querySelector(':scope > .legacy-foot');
+          if (!foot) {
+            foot = document.createElement('div');
+            foot.className = 'legacy-foot';
+            root.append(foot);
+          }
+          renderCounters(foot, slots);
+        }
+      } else if (opt.w === 'card') renderCard(ensure('card'), slots[0]);
+      else if (opt.w === 'counters') renderCounters(ensure('counters'), slots);
+      else if (opt.w === 'where') renderWhere(ensure('where'), slots);
+      else if (opt.w === 'stats') renderStats(ensure('stats'), slots);
+      painted = true;
+    }
+
+    // ---- alerts: one at a time per kind of news, up to three on screen, each for a few seconds ----
+    const queue = [];
+    let showing = 0;
+    function alertHtml(a) {
+      const who = esc(nameOf(a.slot));
+      const img = (id, shiny) => (id ? `<img src="${spriteSrc(id, shiny)}" alt="" />` : '');
+      if (a.type === 'death') {
+        const names = a.members.map((m) => esc(m.nick || species(m.species)));
+        const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} & ${names.at(-1)}` : names[0] || esc(a.label);
+        const k = a.killer?.species ? fill(L.against, { enemy: esc(species(a.killer.species)), lv: a.killer.level ?? '?' }) : '';
+        return ['death', `<span class="ics">${a.members.map((m) => img(m.species)).join('')}</span><span class="tx"><span class="kick">† ${esc(L.deathK)}</span>
+          <span class="big">${fill(a.members.length > 1 ? L.deathMany : L.deathOne, { a: list })}</span><span class="small">${[esc(a.label), k].filter(Boolean).join(' · ')}</span></span>`];
+      }
+      if (a.type === 'catch') {
+        return ['catch', `<span class="ics">${img(a.species)}</span><span class="tx"><span class="kick">◓ ${esc(L.catchK)}</span>
+          <span class="big">${fill(L.catchT, { who, name: esc(a.nick || species(a.species)) })}</span><span class="small">${esc(a.label)}</span>
+          ${a.complete ? `<span class="chip">${esc(S.slots.length > 2 ? L.completeG : L.complete)}</span>` : ''}</span>`];
+      }
+      if (a.type === 'badge') {
+        return ['badge', `<span class="badge-ic">${a.n ?? '★'}</span><span class="tx"><span class="kick">★ ${esc(L.badgeK)}</span><span class="big">${fill(L.badgeT, { who, n: a.n ?? '?' })}</span></span>`];
+      }
+      if (a.type === 'evolve') {
+        return ['evolve', `<span class="ics">${img(a.from)}<span class="arrow">›</span>${img(a.to)}</span><span class="tx"><span class="kick">✦ ${esc(L.evolveK)}</span>
+          <span class="big">${fill(L.evolveT, { from: esc(species(a.from)), to: esc(species(a.to)) })}</span><span class="small">${who}</span></span>`];
+      }
+      if (a.type === 'level') {
+        return ['level', `<span class="ics">${img(a.species)}</span><span class="tx"><span class="kick">▲ ${fill(esc(L.levelK), { n: a.level })}</span>
+          <span class="big">${fill(L.levelT, { name: esc(a.nick || species(a.species)), n: a.level })}</span><span class="small">${who}</span></span>`];
+      }
+      const won = a.state === 'won';
+      return [`run${won ? ' won' : ''}`, `<span class="tx"><span class="kick">${esc(L.runK)}</span><span class="big">${esc(won ? L.runWon : a.state === 'failed' ? L.runFailed : L.runEnded)}</span><span class="small">${esc(S.name)}</span></span>`];
+    }
+    function nextAlert() {
+      if (showing >= 3 || !queue.length) return;
+      const a = queue.shift();
+      const [cls, inner] = alertHtml(a);
+      const el = document.createElement('div');
+      el.className = `box alert ${cls}`;
+      el.innerHTML = inner;
+      alertsEl.append(el);
+      showing++;
+      chime(a.type);
+      const stay = a.type === 'death' || a.type === 'run' ? 8000 : 5500;
+      setTimeout(() => {
+        el.classList.add('out');
+        setTimeout(() => {
+          el.remove();
+          showing--;
+          nextAlert();
+        }, 450);
+      }, stay);
+      setTimeout(nextAlert, 700);
+    }
+    const showsAlerts = opt.w === 'alerts' || flag('alerts', false);
+    const announce = (list) => {
+      if (!showsAlerts) return;
+      queue.push(...list);
+      nextAlert();
+    };
+
+    // little chiptune cues (only with ?sound=1 – the streamer decides whether alerts make noise)
+    let ac = null;
+    function chime(type) {
+      if (!opt.sound) return;
+      try {
+        ac ||= new AudioContext();
+        const out = ac.createGain();
+        out.gain.value = opt.vol * 0.22;
+        out.connect(ac.destination);
+        const seq = {
+          catch: [[523, 0, 0.08], [659, 0.08, 0.08], [784, 0.16, 0.08], [1047, 0.24, 0.22]],
+          death: [[392, 0, 0.22], [311, 0.22, 0.22], [262, 0.44, 0.26], [196, 0.7, 0.6]],
+          badge: [[523, 0, 0.1], [659, 0.1, 0.1], [784, 0.2, 0.1], [1047, 0.3, 0.12], [784, 0.42, 0.08], [1047, 0.5, 0.4]],
+          evolve: [[440, 0, 0.07], [554, 0.07, 0.07], [659, 0.14, 0.07], [880, 0.21, 0.07], [1109, 0.28, 0.07], [1319, 0.35, 0.3]],
+          level: [[659, 0, 0.08], [988, 0.09, 0.2]],
+          run: [[294, 0, 0.3], [277, 0.3, 0.3], [262, 0.6, 0.3], [247, 0.9, 0.8]],
+        }[type] || [];
+        const t0 = ac.currentTime + 0.02;
+        for (const [f, at, len] of seq) {
+          const o = ac.createOscillator();
+          const g = ac.createGain();
+          o.type = type === 'death' || type === 'run' ? 'triangle' : 'square';
+          o.frequency.value = f;
+          g.gain.setValueAtTime(0, t0 + at);
+          g.gain.linearRampToValueAtTime(1, t0 + at + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + at + len);
+          o.connect(g).connect(out);
+          o.start(t0 + at);
+          o.stop(t0 + at + len + 0.05);
+        }
+      } catch {
+        // no audio here – the alert still shows
+      }
+    }
+
+    // "Send a test alert" from the app: a sample made of this run's own Pokémon
+    function sample(type) {
+      const slot = S?.slots?.[0] || 'p1';
+      const mons = (S?.slots || []).map((s) => [s, teamOf(S, s)[0]]).filter(([, m]) => m);
+      const m = mons[0]?.[1] || { species: 25, nick: '' };
+      const base = { id: `test:${Date.now()}`, slot, label: m.area ? S.areas?.[m.area] || '' : 'Route 29' };
+      if (type === 'death') return { ...base, type, members: mons.length ? mons.map(([s, x]) => ({ slot: s, species: x.species, nick: x.nick })) : [{ slot, species: 25, nick: '' }], killer: { species: 241, level: 19 } };
+      if (type === 'badge') return { ...base, type, n: (S?.doc?.[`live:${slot}`]?.badges || 0) + 1 };
+      if (type === 'evolve') return { ...base, type, from: 133, to: 197 };
+      if (type === 'level') return { ...base, type, species: m.species, nick: m.nick, level: 30 };
+      if (type === 'run') return { ...base, type, state: 'won' };
+      return { ...base, type: 'catch', species: m.species, nick: m.nick, complete: (S?.slots?.length || 0) > 1 };
+    }
+
+    // ---- live data: pushed over SSE, polled when that isn't possible ----
+    const seen = new Set();
+    let prev = null;
+    function apply(snap) {
+      if (!snap?.doc) return;
+      const fresh = alertsBetween(prev, snap, seen);
+      S = snap;
+      prev = snap;
+      render();
+      if (fresh.length) announce(fresh);
+    }
+    if (!run) root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
+    else {
+      root.innerHTML = `<div class="msg">${esc(L.loading)}</div>`;
+      const q = `lang=${lang}&w=${opt.legacy ? 'team' : opt.w}${showsAlerts && opt.w !== 'alerts' ? '&alerts=1' : ''}${opt.preview ? '&preview=1' : ''}`;
+      let downSince = 0;
+      let opened = false;
+      let fails = 0;
+      let poll = null;
+      const showNet = () => { net.hidden = !opt.net || !downSince || Date.now() - downSince < 4000; };
+      net.textContent = L.offline;
+      setInterval(showNet, 1000);
+      const startPolling = () => {
+        if (poll) return;
+        const tick = async () => {
+          const snap = await getJson(`/api/runs/${encodeURIComponent(run)}/overlay?${q}`);
+          if (snap) {
+            downSince = 0;
+            apply(snap);
+          } else downSince ||= Date.now();
+          showNet();
+        };
+        tick();
+        poll = setInterval(tick, opt.preview ? 2500 : 2000);
+      };
+      // The app's previews ask every few seconds instead of holding a stream: a browser keeps only six connections
+      // per server open, and the app and OBS need theirs.
+      if (typeof EventSource === 'undefined' || opt.preview) startPolling();
+      else {
+        const es = new EventSource(`/api/runs/${encodeURIComponent(run)}/overlay/events?${q}`);
+        es.addEventListener('snapshot', (e) => {
+          opened = true;
+          fails = 0;
+          downSince = 0;
+          showNet();
+          try {
+            apply(JSON.parse(e.data));
+          } catch {
+            // a broken message – the next one comes with the next change
+          }
+        });
+        es.addEventListener('test', (e) => {
+          try {
+            const t = JSON.parse(e.data);
+            if (S && t.species) S.species = { ...t.species, ...S.species };
+            announce([sample(t.type)]);
+          } catch {
+            // ignore
+          }
+        });
+        es.addEventListener('gone', () => {
+          root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
+        });
+        // a stream that never answers (all of the browser's connections to the app are taken – many overlays in one
+        // OBS): ask every few seconds instead
+        setTimeout(() => {
+          if (opened) return;
+          es.close();
+          startPolling();
+        }, 6000);
+        es.onerror = () => {
+          downSince ||= Date.now();
+          showNet();
+          // never connected (an old server, a proxy that cuts streams): fall back to asking every few seconds
+          if (!opened && ++fails >= 3) {
+            es.close();
+            startPolling();
+          }
+        };
+      }
+      // the app's builder preview: a test alert without the server round trip
+      window.addEventListener('message', (e) => {
+        if (e.origin === location.origin && e.data?.souldewTest) announce([sample(e.data.souldewTest)]);
+      });
+    }
+  </script>
+</body>
+</html>

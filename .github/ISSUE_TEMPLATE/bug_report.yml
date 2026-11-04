@@ -1,0 +1,75 @@
+name: Bug report
+description: Something in souldew doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please **never attach ROMs, saves or patched games** – they can't be shared.
+        A diagnostics file helps a lot: right after the problem, use **Save diagnostics** (Help › Questions or the volume menu in the game) and attach the file. It contains what the app read and decided, but no ROM, save or invite data.
+  - type: input
+    id: version
+    attributes:
+      label: souldew version
+      description: Settings › About
+      placeholder: "2.0.0"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: macOS version and Mac
+      placeholder: "macOS 15.4, MacBook Air M2"
+    validations:
+      required: true
+  - type: input
+    id: game
+    attributes:
+      label: Game, language and hack/randomizer
+      placeholder: "HeartGold (US), randomized; or Definitive HeartGold"
+    validations:
+      required: true
+  - type: dropdown
+    id: core
+    attributes:
+      label: Emulator
+      options:
+        - Built-in (DeSmuME – HeartGold/SoulSilver, Black/White)
+        - Built-in (melonDS – other DS games)
+        - Built-in (mGBA – GBA)
+        - Built-in (Gambatte – GB/GBC)
+        - External melonDS
+        - External mGBA
+        - Not game-related
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - SoulLink (2 players)
+        - SoulLink (3–4 players)
+        - Solo Nuzlocke
+        - Free play
+        - Not run-related
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics file / screenshots
+      description: Drag the saved diagnostics file (souldew-diagnostics-….json) and screenshots in here.

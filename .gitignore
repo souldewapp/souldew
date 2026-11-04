@@ -1,0 +1,38 @@
+# Dependencies and build output
+node_modules/
+dist/
+_extract/
+_ref/
+
+# Local data – never in the repo (ROMs, saves and runs are the player's own)
+runs/
+library/
+*.nds
+*.gb
+*.gbc
+*.gba
+*.zip
+*.7z
+*.sav
+*.dsv
+*.srm
+*.state
+*.ips
+*.bps
+*.xdelta
+souldew-diagnostics-*.json
+
+# Downloaded or built tools (fetched by scripts/fetch-jre.mjs / the app)
+tools/emulator/
+tools/emulators/
+tools/jre/
+
+# Source material that lives elsewhere (the app uses web/assets/sounds/*)
+/*.wav
+
+# Local editor / OS / assistant files
+.DS_Store
+.claude/
+.vscode/
+.idea/
+*.log

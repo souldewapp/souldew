@@ -1,0 +1,1429 @@
+{
+ "_doc": "Per-game RAM locations for the player's party. Hex strings: parse with Number(). GB/GBC/GBA entries come straight from pret .sym files (see 'sources', file:line). NDS entries are pointer chains: party = read_u32(saveDataPtrAddr) + partyMonsOffset. See research/live_ram.md for struct layouts and validation.",
+ "_generated": "2026-10-17",
+ "games": [
+  {
+   "id": "red_us",
+   "name": "Pokémon Red (USA/Europe, English)",
+   "gen": 1,
+   "platform": "gb",
+   "match": {
+    "title": "POKEMON RED",
+    "titleOffset": "0x134",
+    "maskRomVersionOffset": "0x14C",
+    "maskRomVersion": 0
+   },
+   "memory": {
+    "region": "WRAM",
+    "busBase": "0xC000",
+    "note": "Addresses are GB bus addresses. Offset into an emulator's WRAM array = addr - 0xC000 (for CGB 32 KiB WRAM this lands in bank 1, which is where the party lives)."
+   },
+   "partyCountAddr": "0xD163",
+   "partySpeciesAddr": "0xD164",
+   "partyAddr": "0xD16B",
+   "structSize": 44,
+   "maxParty": 6,
+   "otNamesAddr": "0xD273",
+   "nicknamesAddr": "0xD2B5",
+   "nameLength": 11,
+   "charset": "charset_gen1.json",
+   "speciesTable": "gen1_index_to_dex.json",
+   "inBattle": {
+    "addr": "0xD057",
+    "type": "u8",
+    "values": {
+     "0": "no battle",
+     "1": "wild",
+     "2": "trainer",
+     "255": "lost battle (-1)"
+    },
+    "source": "pokered.sym:18783"
+   },
+   "liveBattleHp": {
+    "activePartyIndexAddr": "0xCC2F",
+    "activePartyIndexSource": "pokered.sym:18331",
+    "hpAddr": "0xD015",
+    "hpType": "u16be",
+    "source": "pokered.sym:18758",
+    "speciesAddr": "0xD014",
+    "maxHpAddr": "0xD023",
+    "levelAddr": "0xD022",
+    "statusAddr": "0xD018",
+    "statusSource": "pokered battle_struct: Species, HP(2), BoxLevel, Status"
+   },
+   "sources": {
+    "partyCountAddr": "pokered.sym:18975",
+    "partyAddr": "pokered.sym:18980",
+    "otNamesAddr": "pokered.sym:19136",
+    "nicknamesAddr": "pokered.sym:19143",
+    "partySpeciesAddr": "pokered.sym:18977"
+   },
+   "verified": "pret symbols branch .sym",
+   "battleEnemy": {
+    "speciesAddr": "0xCFE5",
+    "hpAddr": "0xCFE6",
+    "maxHpAddr": "0xCFF4",
+    "levelAddr": "0xCFF3",
+    "dvsAddr": "0xCFF1",
+    "source": "pokered.sym:18733 (wEnemyMon struct, pret symbols branch)"
+   },
+   "badges": {
+    "addr": "0xD356",
+    "bytes": 1,
+    "source": "pokered.sym wObtainedBadges (bit per badge)"
+   }
+  },
+  {
+   "id": "blue_us",
+   "name": "Pokémon Blue (USA/Europe, English)",
+   "gen": 1,
+   "platform": "gb",
+   "match": {
+    "title": "POKEMON BLUE",
+    "titleOffset": "0x134",
+    "maskRomVersion": 0
+   },
+   "memory": {
+    "region": "WRAM",
+    "busBase": "0xC000",
+    "note": "Addresses are GB bus addresses. Offset into an emulator's WRAM array = addr - 0xC000 (for CGB 32 KiB WRAM this lands in bank 1, which is where the party lives)."
+   },
+   "partyCountAddr": "0xD163",
+   "partySpeciesAddr": "0xD164",
+   "partyAddr": "0xD16B",
+   "structSize": 44,
+   "maxParty": 6,
+   "otNamesAddr": "0xD273",
+   "nicknamesAddr": "0xD2B5",
+   "nameLength": 11,
+   "charset": "charset_gen1.json",
+   "speciesTable": "gen1_index_to_dex.json",
+   "inBattle": {
+    "addr": "0xD057",
+    "type": "u8",
+    "values": {
+     "0": "no battle",
+     "1": "wild",
+     "2": "trainer",
+     "255": "lost battle (-1)"
+    },
+    "source": "pokeblue.sym:18783"
+   },
+   "liveBattleHp": {
+    "activePartyIndexAddr": "0xCC2F",
+    "activePartyIndexSource": "pokeblue.sym:18331",
+    "hpAddr": "0xD015",
+    "hpType": "u16be",
+    "source": "pokeblue.sym:18758",
+    "speciesAddr": "0xD014",
+    "maxHpAddr": "0xD023",
+    "levelAddr": "0xD022",
+    "statusAddr": "0xD018",
+    "statusSource": "pokered battle_struct: Species, HP(2), BoxLevel, Status"
+   },
+   "sources": {
+    "partyCountAddr": "pokeblue.sym:18975",
+    "partyAddr": "pokeblue.sym:18980",
+    "otNamesAddr": "pokeblue.sym:19136",
+    "nicknamesAddr": "pokeblue.sym:19143",
+    "partySpeciesAddr": "pokeblue.sym:18977"
+   },
+   "verified": "pret symbols branch .sym",
+   "battleEnemy": {
+    "speciesAddr": "0xCFE5",
+    "hpAddr": "0xCFE6",
+    "maxHpAddr": "0xCFF4",
+    "levelAddr": "0xCFF3",
+    "dvsAddr": "0xCFF1",
+    "source": "pokeblue.sym:18733 (wEnemyMon struct, pret symbols branch)"
+   },
+   "badges": {
+    "addr": "0xD356",
+    "bytes": 1,
+    "source": "pokeblue.sym wObtainedBadges (bit per badge)"
+   }
+  },
+  {
+   "id": "yellow_us",
+   "name": "Pokémon Yellow (USA/Europe, English)",
+   "gen": 1,
+   "platform": "gb",
+   "match": {
+    "title": "POKEMON YELLOW",
+    "titleOffset": "0x134",
+    "maskRomVersion": 0
+   },
+   "memory": {
+    "region": "WRAM",
+    "busBase": "0xC000",
+    "note": "Addresses are GB bus addresses. Offset into an emulator's WRAM array = addr - 0xC000 (for CGB 32 KiB WRAM this lands in bank 1, which is where the party lives)."
+   },
+   "partyCountAddr": "0xD162",
+   "partySpeciesAddr": "0xD163",
+   "partyAddr": "0xD16A",
+   "structSize": 44,
+   "maxParty": 6,
+   "otNamesAddr": "0xD272",
+   "nicknamesAddr": "0xD2B4",
+   "nameLength": 11,
+   "charset": "charset_gen1.json",
+   "speciesTable": "gen1_index_to_dex.json",
+   "inBattle": {
+    "addr": "0xD056",
+    "type": "u8",
+    "values": {
+     "0": "no battle",
+     "1": "wild",
+     "2": "trainer",
+     "255": "lost battle (-1)"
+    },
+    "source": "pokeyellow.sym:22006"
+   },
+   "liveBattleHp": {
+    "activePartyIndexAddr": "0xCC2F",
+    "activePartyIndexSource": "pokeyellow.sym:21544",
+    "hpAddr": "0xD014",
+    "hpType": "u16be",
+    "source": "pokeyellow.sym:21981",
+    "speciesAddr": "0xD013",
+    "maxHpAddr": "0xD022",
+    "levelAddr": "0xD021",
+    "statusAddr": "0xD017",
+    "statusSource": "pokeyellow battle_struct: Species, HP(2), BoxLevel, Status"
+   },
+   "sources": {
+    "partyCountAddr": "pokeyellow.sym:22201",
+    "partyAddr": "pokeyellow.sym:22206",
+    "otNamesAddr": "pokeyellow.sym:22362",
+    "nicknamesAddr": "pokeyellow.sym:22369",
+    "partySpeciesAddr": "pokeyellow.sym:22203"
+   },
+   "verified": "pret symbols branch .sym",
+   "battleEnemy": {
+    "speciesAddr": "0xCFE4",
+    "hpAddr": "0xCFE5",
+    "maxHpAddr": "0xCFF3",
+    "levelAddr": "0xCFF2",
+    "dvsAddr": "0xCFF0",
+    "source": "pokeyellow.sym:21956 (wEnemyMon struct, pret symbols branch)"
+   },
+   "badges": {
+    "addr": "0xD355",
+    "bytes": 1,
+    "source": "pokeyellow.sym wObtainedBadges (bit per badge)"
+   }
+  },
+  {
+   "id": "gold_us",
+   "name": "Pokémon Gold (USA/Europe, English)",
+   "gen": 2,
+   "platform": "gbc",
+   "match": {
+    "title": "POKEMON_GLD",
+    "titleOffset": "0x134",
+    "manufacturerCode": "AAUE",
+    "manufacturerCodeOffset": "0x13F"
+   },
+   "memory": {
+    "region": "WRAM",
+    "busBase": "0xC000",
+    "note": "Addresses are GB bus addresses. Offset into an emulator's WRAM array = addr - 0xC000 (for CGB 32 KiB WRAM this lands in bank 1, which is where the party lives)."
+   },
+   "partyCountAddr": "0xDA22",
+   "partySpeciesAddr": "0xDA23",
+   "partyAddr": "0xDA2A",
+   "structSize": 48,
+   "maxParty": 6,
+   "otNamesAddr": "0xDB4A",
+   "nicknamesAddr": "0xDB8C",
+   "nameLength": 11,
+   "charset": "charset_gen2.json",
+   "speciesTable": "identity (species byte = National Dex)",
+   "inBattle": {
+    "addr": "0xD116",
+    "type": "u8",
+    "values": {
+     "0": "overworld",
+     "1": "wild",
+     "2": "trainer"
+    },
+    "source": "pokegold.sym:41528"
+   },
+   "liveBattleHp": {
+    "activePartyIndexAddr": "0xCFC6",
+    "activePartyIndexSource": "pokegold.sym:41255",
+    "hpAddr": "0xCB1C",
+    "hpType": "u16be",
+    "source": "pokegold.sym:40695",
+    "speciesAddr": "0xCB0C",
+    "maxHpAddr": "0xCB1E",
+    "levelAddr": "0xCB19",
+    "statusAddr": "0xCB1A",
+    "statusSource": "pokegold.sym 00:cb1a wBattleMonStatus"
+   },
+   "sources": {
+    "partyCountAddr": "pokegold.sym:42524",
+    "partyAddr": "pokegold.sym:42530",
+    "otNamesAddr": "pokegold.sym:42716",
+    "nicknamesAddr": "pokegold.sym:42723",
+    "partySpeciesAddr": "pokegold.sym:42526"
+   },
+   "verified": "pret symbols branch .sym",
+   "battleEnemy": {
+    "speciesAddr": "0xD0EF",
+    "hpAddr": "0xD0FF",
+    "maxHpAddr": "0xD101",
+    "levelAddr": "0xD0FC",
+    "dvsAddr": "0xD0F5",
+    "source": "pokegold.sym:41504 (wEnemyMon struct, pret symbols branch)"
+   },
+   "badges": {
+    "addr": "0xD57C",
+    "bytes": 2,
+    "source": "pokegold.sym wJohtoBadges/wKantoBadges (bit per badge)"
+   }
+  },
+  {
+   "id": "silver_us",
+   "name": "Pokémon Silver (USA/Europe, English)",
+   "gen": 2,
+   "platform": "gbc",
+   "match": {
+    "title": "POKEMON_SLV",
+    "titleOffset": "0x134",
+    "manufacturerCode": "AAXE",
+    "manufacturerCodeOffset": "0x13F"
+   },
+   "memory": {
+    "region": "WRAM",
+    "busBase": "0xC000",
+    "note": "Addresses are GB bus addresses. Offset into an emulator's WRAM array = addr - 0xC000 (for CGB 32 KiB WRAM this lands in bank 1, which is where the party lives)."
+   },
+   "partyCountAddr": "0xDA22",
+   "partySpeciesAddr": "0xDA23",
+   "partyAddr": "0xDA2A",
+   "structSize": 48,
+   "maxParty": 6,
+   "otNamesAddr": "0xDB4A",
+   "nicknamesAddr": "0xDB8C",
+   "nameLength": 11,
+   "charset": "charset_gen2.json",
+   "speciesTable": "identity (species byte = National Dex)",
+   "inBattle": {
+    "addr": "0xD116",
+    "type": "u8",
+    "values": {
+     "0": "overworld",
+     "1": "wild",
+     "2": "trainer"
+    },
+    "source": "pokesilver.sym:41527"
+   },
+   "liveBattleHp": {
+    "activePartyIndexAddr": "0xCFC6",
+    "activePartyIndexSource": "pokesilver.sym:41254",
+    "hpAddr": "0xCB1C",
+    "hpType": "u16be",
+    "source": "pokesilver.sym:40694",
+    "speciesAddr": "0xCB0C",
+    "maxHpAddr": "0xCB1E",
+    "levelAddr": "0xCB19",
+    "statusAddr": "0xCB1A",
+    "statusSource": "pokesilver.sym 00:cb1a wBattleMonStatus"
+   },
+   "sources": {
+    "partyCountAddr": "pokesilver.sym:42523",
+    "partyAddr": "pokesilver.sym:42529",
+    "otNamesAddr": "pokesilver.sym:42715",
+    "nicknamesAddr": "pokesilver.sym:42722",
+    "partySpeciesAddr": "pokesilver.sym:42525"
+   },
+   "verified": "pret symbols branch .sym",
+   "battleEnemy": {
+    "speciesAddr": "0xD0EF",
+    "hpAddr": "0xD0FF",
+    "maxHpAddr": "0xD101",
+    "levelAddr": "0xD0FC",
+    "dvsAddr": "0xD0F5",
+    "source": "pokesilver.sym:41503 (wEnemyMon struct, pret symbols branch)"
+   },
+   "badges": {
+    "addr": "0xD57C",
+    "bytes": 2,
+    "source": "pokesilver.sym wJohtoBadges/wKantoBadges (bit per badge)"
+   }
+  },
+  {
+   "id": "crystal_us",
+   "name": "Pokémon Crystal 1.0 / 1.1 (USA/Europe) and AU",
+   "gen": 2,
+   "platform": "gbc",
+   "match": {
+    "title": "PM_CRYSTAL",
+    "titleOffset": "0x134",
+    "manufacturerCode": [
+     "BYTE",
+     "BYTU"
+    ],
+    "manufacturerCodeOffset": "0x13F",
+    "maskRomVersionOffset": "0x14C",
+    "maskRomVersion": [
+     0,
+     1
+    ]
+   },
+   "memory": {
+    "region": "WRAM",
+    "busBase": "0xC000",
+    "note": "Addresses are GB bus addresses. Offset into an emulator's WRAM array = addr - 0xC000 (for CGB 32 KiB WRAM this lands in bank 1, which is where the party lives)."
+   },
+   "partyCountAddr": "0xDCD7",
+   "partySpeciesAddr": "0xDCD8",
+   "partyAddr": "0xDCDF",
+   "structSize": 48,
+   "maxParty": 6,
+   "otNamesAddr": "0xDDFF",
+   "nicknamesAddr": "0xDE41",
+   "nameLength": 11,
+   "charset": "charset_gen2.json",
+   "speciesTable": "identity (species byte = National Dex)",
+   "inBattle": {
+    "addr": "0xD22D",
+    "type": "u8",
+    "values": {
+     "0": "overworld",
+     "1": "wild",
+     "2": "trainer"
+    },
+    "source": "pokecrystal.sym:56026"
+   },
+   "liveBattleHp": {
+    "activePartyIndexAddr": "0xD0D4",
+    "activePartyIndexSource": "pokecrystal.sym:55736",
+    "hpAddr": "0xC63C",
+    "hpType": "u16be",
+    "source": "pokecrystal.sym:53552",
+    "speciesAddr": "0xC62C",
+    "maxHpAddr": "0xC63E",
+    "levelAddr": "0xC639",
+    "statusAddr": "0xC63A",
+    "statusSource": "pokecrystal.sym 00:c63a wBattleMonStatus"
+   },
+   "sources": {
+    "partyCountAddr": "pokecrystal.sym:57314",
+    "partyAddr": "pokecrystal.sym:57320",
+    "otNamesAddr": "pokecrystal.sym:57524",
+    "nicknamesAddr": "pokecrystal.sym:57531",
+    "partySpeciesAddr": "pokecrystal.sym:57316"
+   },
+   "verified": "pret symbols branch .sym",
+   "caughtData": {
+    "offsetInStruct": "0x1D",
+    "format": "byte 0x1D: bits7-6 time of day (1 morn,2 day,3 night), bits5-0 level; byte 0x1E: bit7 OT gender (1=female), bits6-0 landmark id (locations_gen2_crystal.json)"
+   },
+   "note": "pokecrystal.sym, pokecrystal11.sym and pokecrystal_au.sym give identical WRAM addresses for every symbol used here.",
+   "battleEnemy": {
+    "speciesAddr": "0xD206",
+    "hpAddr": "0xD216",
+    "maxHpAddr": "0xD218",
+    "levelAddr": "0xD213",
+    "dvsAddr": "0xD20C",
+    "source": "pokecrystal.sym:56002 (wEnemyMon struct, pret symbols branch)"
+   },
+   "badges": {
+    "addr": "0xD857",
+    "bytes": 2,
+    "source": "pokecrystal.sym wJohtoBadges/wKantoBadges (bit per badge)"
+   }
+  },
+  {
+   "id": "ruby_us",
+   "name": "Pokémon Ruby (USA) rev 0/1/2",
+   "gen": 3,
+   "platform": "gba",
+   "language": "en",
+   "match": {
+    "gameCode": [
+     "AXVE"
+    ],
+    "gameCodeOffset": "0xAC",
+    "softwareVersionOffset": "0xBC",
+    "softwareVersion": [
+     0,
+     1,
+     2
+    ]
+   },
+   "memory": {
+    "note": "Absolute GBA bus addresses. EWRAM 0x02000000 (256 KiB), IWRAM 0x03000000 (32 KiB). Offset into the region array = addr & 0xFFFFFF."
+   },
+   "partyCountAddr": "0x03004350",
+   "partyCountRegion": "IWRAM",
+   "partyCountType": "u8",
+   "partyAddr": "0x03004360",
+   "partyRegion": "IWRAM",
+   "structSize": 100,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x08 (10 bytes)",
+    "otName": "struct+0x14 (7 bytes)"
+   },
+   "charset": "charset_gen3.json",
+   "speciesTable": "gen3_index_to_dex.json",
+   "enemyPartyAddr": "0x030045C0",
+   "inBattle": {
+    "addr": "0x03001BAD",
+    "type": "u8",
+    "mask": "0x02",
+    "meaning": "gMain.inBattle bitfield (bit 1 of the byte after gMain.state)",
+    "source": "pokeruby.sym:526 (gMain) + include/main.h struct Main offset 0x43D"
+   },
+   "battleTypeFlagsAddr": "0x020239F8",
+   "liveBattleHp": {
+    "battleMonsAddr": "0x02024A80",
+    "battleMonSize": "0x58",
+    "hpOffset": "0x28",
+    "maxHpOffset": "0x2C",
+    "battlerPartyIndexesAddr": "0x02024A6A",
+    "note": "Player battler 0 (and 2 in doubles); gBattlerPartyIndexes is u16[4]. gPlayerParty HP is also written live (Cmd_datahpupdate -> REQUEST_HP_BATTLE).",
+    "source": "pokeruby.sym:37, pokeruby.sym:31"
+   },
+   "sources": {
+    "partyCountAddr": "pokeruby.sym:613",
+    "partyAddr": "pokeruby.sym:614"
+   },
+   "verified": "pret symbols branch .sym"
+  },
+  {
+   "id": "sapphire_us",
+   "name": "Pokémon Sapphire (USA) rev 0/1/2",
+   "gen": 3,
+   "platform": "gba",
+   "language": "en",
+   "match": {
+    "gameCode": [
+     "AXPE"
+    ],
+    "gameCodeOffset": "0xAC",
+    "softwareVersionOffset": "0xBC",
+    "softwareVersion": [
+     0,
+     1,
+     2
+    ]
+   },
+   "memory": {
+    "note": "Absolute GBA bus addresses. EWRAM 0x02000000 (256 KiB), IWRAM 0x03000000 (32 KiB). Offset into the region array = addr & 0xFFFFFF."
+   },
+   "partyCountAddr": "0x03004350",
+   "partyCountRegion": "IWRAM",
+   "partyCountType": "u8",
+   "partyAddr": "0x03004360",
+   "partyRegion": "IWRAM",
+   "structSize": 100,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x08 (10 bytes)",
+    "otName": "struct+0x14 (7 bytes)"
+   },
+   "charset": "charset_gen3.json",
+   "speciesTable": "gen3_index_to_dex.json",
+   "enemyPartyAddr": "0x030045C0",
+   "inBattle": {
+    "addr": "0x03001BAD",
+    "type": "u8",
+    "mask": "0x02",
+    "meaning": "gMain.inBattle bitfield (bit 1 of the byte after gMain.state)",
+    "source": "pokesapphire.sym:526 (gMain) + include/main.h struct Main offset 0x43D"
+   },
+   "battleTypeFlagsAddr": "0x020239F8",
+   "liveBattleHp": {
+    "battleMonsAddr": "0x02024A80",
+    "battleMonSize": "0x58",
+    "hpOffset": "0x28",
+    "maxHpOffset": "0x2C",
+    "battlerPartyIndexesAddr": "0x02024A6A",
+    "note": "Player battler 0 (and 2 in doubles); gBattlerPartyIndexes is u16[4]. gPlayerParty HP is also written live (Cmd_datahpupdate -> REQUEST_HP_BATTLE).",
+    "source": "pokesapphire.sym:37, pokesapphire.sym:31"
+   },
+   "sources": {
+    "partyCountAddr": "pokesapphire.sym:613",
+    "partyAddr": "pokesapphire.sym:614"
+   },
+   "verified": "pret symbols branch .sym"
+  },
+  {
+   "id": "ruby_de",
+   "name": "Pokémon Rubin (Germany) rev 0/1",
+   "gen": 3,
+   "platform": "gba",
+   "language": "de",
+   "match": {
+    "gameCode": [
+     "AXVD"
+    ],
+    "gameCodeOffset": "0xAC",
+    "softwareVersionOffset": "0xBC",
+    "softwareVersion": [
+     0,
+     1
+    ]
+   },
+   "memory": {
+    "note": "Absolute GBA bus addresses. EWRAM 0x02000000 (256 KiB), IWRAM 0x03000000 (32 KiB). Offset into the region array = addr & 0xFFFFFF."
+   },
+   "partyCountAddr": "0x03004360",
+   "partyCountRegion": "IWRAM",
+   "partyCountType": "u8",
+   "partyAddr": "0x03004370",
+   "partyRegion": "IWRAM",
+   "structSize": 100,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x08 (10 bytes)",
+    "otName": "struct+0x14 (7 bytes)"
+   },
+   "charset": "charset_gen3.json",
+   "speciesTable": "gen3_index_to_dex.json",
+   "enemyPartyAddr": "0x030045D0",
+   "inBattle": {
+    "addr": "0x03001BAD",
+    "type": "u8",
+    "mask": "0x02",
+    "meaning": "gMain.inBattle bitfield (bit 1 of the byte after gMain.state)",
+    "source": "pokeruby_de.sym:526 (gMain) + include/main.h struct Main offset 0x43D"
+   },
+   "battleTypeFlagsAddr": "0x020239F8",
+   "liveBattleHp": {
+    "battleMonsAddr": "0x02024A80",
+    "battleMonSize": "0x58",
+    "hpOffset": "0x28",
+    "maxHpOffset": "0x2C",
+    "battlerPartyIndexesAddr": "0x02024A6A",
+    "note": "Player battler 0 (and 2 in doubles); gBattlerPartyIndexes is u16[4]. gPlayerParty HP is also written live (Cmd_datahpupdate -> REQUEST_HP_BATTLE).",
+    "source": "pokeruby_de.sym:37, pokeruby_de.sym:31"
+   },
+   "sources": {
+    "partyCountAddr": "pokeruby_de.sym:615",
+    "partyAddr": "pokeruby_de.sym:616"
+   },
+   "verified": "pret symbols branch .sym"
+  },
+  {
+   "id": "sapphire_de",
+   "name": "Pokémon Saphir (Germany) rev 0/1",
+   "gen": 3,
+   "platform": "gba",
+   "language": "de",
+   "match": {
+    "gameCode": [
+     "AXPD"
+    ],
+    "gameCodeOffset": "0xAC",
+    "softwareVersionOffset": "0xBC",
+    "softwareVersion": [
+     0,
+     1
+    ]
+   },
+   "memory": {
+    "note": "Absolute GBA bus addresses. EWRAM 0x02000000 (256 KiB), IWRAM 0x03000000 (32 KiB). Offset into the region array = addr & 0xFFFFFF."
+   },
+   "partyCountAddr": "0x03004360",
+   "partyCountRegion": "IWRAM",
+   "partyCountType": "u8",
+   "partyAddr": "0x03004370",
+   "partyRegion": "IWRAM",
+   "structSize": 100,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x08 (10 bytes)",
+    "otName": "struct+0x14 (7 bytes)"
+   },
+   "charset": "charset_gen3.json",
+   "speciesTable": "gen3_index_to_dex.json",
+   "enemyPartyAddr": "0x030045D0",
+   "inBattle": {
+    "addr": "0x03001BAD",
+    "type": "u8",
+    "mask": "0x02",
+    "meaning": "gMain.inBattle bitfield (bit 1 of the byte after gMain.state)",
+    "source": "pokesapphire_de.sym:526 (gMain) + include/main.h struct Main offset 0x43D"
+   },
+   "battleTypeFlagsAddr": "0x020239F8",
+   "liveBattleHp": {
+    "battleMonsAddr": "0x02024A80",
+    "battleMonSize": "0x58",
+    "hpOffset": "0x28",
+    "maxHpOffset": "0x2C",
+    "battlerPartyIndexesAddr": "0x02024A6A",
+    "note": "Player battler 0 (and 2 in doubles); gBattlerPartyIndexes is u16[4]. gPlayerParty HP is also written live (Cmd_datahpupdate -> REQUEST_HP_BATTLE).",
+    "source": "pokesapphire_de.sym:37, pokesapphire_de.sym:31"
+   },
+   "sources": {
+    "partyCountAddr": "pokesapphire_de.sym:615",
+    "partyAddr": "pokesapphire_de.sym:616"
+   },
+   "verified": "pret symbols branch .sym"
+  },
+  {
+   "id": "emerald_us",
+   "name": "Pokémon Emerald (USA/Europe)",
+   "gen": 3,
+   "platform": "gba",
+   "language": "en",
+   "match": {
+    "gameCode": [
+     "BPEE"
+    ],
+    "gameCodeOffset": "0xAC",
+    "softwareVersionOffset": "0xBC",
+    "softwareVersion": [
+     0
+    ]
+   },
+   "memory": {
+    "note": "Absolute GBA bus addresses. EWRAM 0x02000000 (256 KiB), IWRAM 0x03000000 (32 KiB). Offset into the region array = addr & 0xFFFFFF."
+   },
+   "partyCountAddr": "0x020244E9",
+   "partyCountRegion": "EWRAM",
+   "partyCountType": "u8",
+   "partyAddr": "0x020244EC",
+   "partyRegion": "EWRAM",
+   "structSize": 100,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x08 (10 bytes)",
+    "otName": "struct+0x14 (7 bytes)"
+   },
+   "charset": "charset_gen3.json",
+   "speciesTable": "gen3_index_to_dex.json",
+   "enemyPartyAddr": "0x02024744",
+   "inBattle": {
+    "addr": "0x030026F9",
+    "type": "u8",
+    "mask": "0x02",
+    "meaning": "gMain.inBattle bitfield (bit 1 of the byte after gMain.state)",
+    "source": "pokeemerald.sym:894 (gMain) + include/main.h struct Main offset 0x439"
+   },
+   "battleTypeFlagsAddr": "0x02022FEC",
+   "liveBattleHp": {
+    "battleMonsAddr": "0x02024084",
+    "battleMonSize": "0x58",
+    "hpOffset": "0x28",
+    "maxHpOffset": "0x2C",
+    "battlerPartyIndexesAddr": "0x0202406E",
+    "note": "Player battler 0 (and 2 in doubles); gBattlerPartyIndexes is u16[4]. gPlayerParty HP is also written live (Cmd_datahpupdate -> REQUEST_HP_BATTLE).",
+    "source": "pokeemerald.sym:124, pokeemerald.sym:118"
+   },
+   "sources": {
+    "partyCountAddr": "pokeemerald.sym:200",
+    "partyAddr": "pokeemerald.sym:202"
+   },
+   "verified": "pret symbols branch .sym"
+  },
+  {
+   "id": "firered_us",
+   "name": "Pokémon FireRed (USA/Europe) rev 0/1",
+   "gen": 3,
+   "platform": "gba",
+   "language": "en",
+   "match": {
+    "gameCode": [
+     "BPRE"
+    ],
+    "gameCodeOffset": "0xAC",
+    "softwareVersionOffset": "0xBC",
+    "softwareVersion": [
+     0,
+     1
+    ]
+   },
+   "memory": {
+    "note": "Absolute GBA bus addresses. EWRAM 0x02000000 (256 KiB), IWRAM 0x03000000 (32 KiB). Offset into the region array = addr & 0xFFFFFF."
+   },
+   "partyCountAddr": "0x02024029",
+   "partyCountRegion": "EWRAM",
+   "partyCountType": "u8",
+   "partyAddr": "0x02024284",
+   "partyRegion": "EWRAM",
+   "structSize": 100,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x08 (10 bytes)",
+    "otName": "struct+0x14 (7 bytes)"
+   },
+   "charset": "charset_gen3.json",
+   "speciesTable": "gen3_index_to_dex.json",
+   "enemyPartyAddr": "0x0202402C",
+   "inBattle": {
+    "addr": "0x03003529",
+    "type": "u8",
+    "mask": "0x02",
+    "meaning": "gMain.inBattle bitfield (bit 1 of the byte after gMain.state)",
+    "source": "pokefirered.sym:745 (gMain) + include/main.h struct Main offset 0x439"
+   },
+   "battleTypeFlagsAddr": "0x02022B4C",
+   "liveBattleHp": {
+    "battleMonsAddr": "0x02023BE4",
+    "battleMonSize": "0x58",
+    "hpOffset": "0x28",
+    "maxHpOffset": "0x2C",
+    "battlerPartyIndexesAddr": "0x02023BCE",
+    "note": "Player battler 0 (and 2 in doubles); gBattlerPartyIndexes is u16[4]. gPlayerParty HP is also written live (Cmd_datahpupdate -> REQUEST_HP_BATTLE).",
+    "source": "pokefirered.sym:86, pokefirered.sym:80"
+   },
+   "sources": {
+    "partyCountAddr": "pokefirered.sym:158",
+    "partyAddr": "pokefirered.sym:161"
+   },
+   "verified": "pret symbols branch .sym"
+  },
+  {
+   "id": "leafgreen_us",
+   "name": "Pokémon LeafGreen (USA/Europe) rev 0/1",
+   "gen": 3,
+   "platform": "gba",
+   "language": "en",
+   "match": {
+    "gameCode": [
+     "BPGE"
+    ],
+    "gameCodeOffset": "0xAC",
+    "softwareVersionOffset": "0xBC",
+    "softwareVersion": [
+     0,
+     1
+    ]
+   },
+   "memory": {
+    "note": "Absolute GBA bus addresses. EWRAM 0x02000000 (256 KiB), IWRAM 0x03000000 (32 KiB). Offset into the region array = addr & 0xFFFFFF."
+   },
+   "partyCountAddr": "0x02024029",
+   "partyCountRegion": "EWRAM",
+   "partyCountType": "u8",
+   "partyAddr": "0x02024284",
+   "partyRegion": "EWRAM",
+   "structSize": 100,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x08 (10 bytes)",
+    "otName": "struct+0x14 (7 bytes)"
+   },
+   "charset": "charset_gen3.json",
+   "speciesTable": "gen3_index_to_dex.json",
+   "enemyPartyAddr": "0x0202402C",
+   "inBattle": {
+    "addr": "0x03003529",
+    "type": "u8",
+    "mask": "0x02",
+    "meaning": "gMain.inBattle bitfield (bit 1 of the byte after gMain.state)",
+    "source": "pokeleafgreen.sym:745 (gMain) + include/main.h struct Main offset 0x439"
+   },
+   "battleTypeFlagsAddr": "0x02022B4C",
+   "liveBattleHp": {
+    "battleMonsAddr": "0x02023BE4",
+    "battleMonSize": "0x58",
+    "hpOffset": "0x28",
+    "maxHpOffset": "0x2C",
+    "battlerPartyIndexesAddr": "0x02023BCE",
+    "note": "Player battler 0 (and 2 in doubles); gBattlerPartyIndexes is u16[4]. gPlayerParty HP is also written live (Cmd_datahpupdate -> REQUEST_HP_BATTLE).",
+    "source": "pokeleafgreen.sym:86, pokeleafgreen.sym:80"
+   },
+   "sources": {
+    "partyCountAddr": "pokeleafgreen.sym:158",
+    "partyAddr": "pokeleafgreen.sym:161"
+   },
+   "verified": "pret symbols branch .sym"
+  },
+  {
+   "id": "heartgold_us",
+   "name": "Pokémon HeartGold (USA)",
+   "gen": 4,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "IPKE",
+    "title": "POKEMON HG",
+    "titleNote": "verified"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 236,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "research/gen4_chars.json (Gen 4 proprietary u16 table)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "saveDataPtrAddr": "0x02111880",
+   "saveDataPtrSource": "pret/pokeheartgold xmap branch heartgoldus.xMAP line 57882: '02111868 0000001C .bss _02111868 (src_main.c.o)'; include/main.h + src/main.c: struct {mainOverlayId; overlayManager; queuedMainOverlayId; queuedMainOverlayTemplate; {unk_00; unk_04; SaveData *saveData}} -> saveData at +0x18. Cross-check: ROM arm9 word at 0x02000BA8 = 0x02111860 (NitroSDK module params, read from the user's HeartGold ROM) and NDS-Ironmon-Tracker uses *(0x02000BA8)+0x20.",
+   "partyCoreOffset": "0xA0",
+   "partyCountOffset": "0xA4",
+   "partyMonsOffset": "0xA8",
+   "partyOffsetsSource": "SaveData.dynamic_region at +0x10 (pokeheartgold include/save.h:65-70) + General-block Party 0x98 / count 0x94 (PKHeX SAV4HGSS.cs:70-71, SAV4.cs:253 'General[Party - 4]'). NDS-Ironmon-Tracker playerBase = 0xA8.",
+   "legacyPointer": {
+    "addr": "0x0211186C",
+    "what": "_02111868.overlayManager (current main app)",
+    "partyMonsOffset": "0xD088",
+    "tidOffset": "0xD064",
+    "source": "MKDasher, tasvideos.org/Forum/Topics/9485 (2014-01-06); offsets consistent with saveData = overlayManager + 0xCFE0 but only valid while the field app is running."
+   },
+   "inBattle": {
+    "addr": "0x02246F48",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "notInBattleValues": [
+     "0x2800"
+    ],
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua GLOBAL.battleStatus + BattleHandlerBase.lua:5-9 (community, unverified)",
+    "verified": "runtime-checked on Definitive HeartGold (IPKE) 2026-10-17: 0x2800 overworld, 0x2100 in a wild battle, back to 0x2800 after fleeing"
+   },
+   "liveBattleParty": {
+    "monsOffsetFromSaveDataPtr": "0x4EA98",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "xMAP + ROM bytes (pointer); PKHeX (offsets); runtime not tested",
+   "badges": {
+    "generalOffsetFromSaveBase": "0x10",
+    "johtoOffset": "0x7E",
+    "kantoOffset": "0x83",
+    "source": "save general block in RAM (saveBase+0x10, same layout as the .sav: shared/gen4save.mjs)"
+   },
+   "battleActive": {
+    "pidOffsetFromSaveBase": "0x49E7C",
+    "speciesDelta": "-0x68",
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua playerBattleMonPID (offset from *(*(0x02000BA8)+0x20), the saveData pointer) + BattleHandlerGen4.lua _getBattleMonPID (community). Field = BattleMon.personality of player battler 0: pokeheartgold include/battle/battle.h struct BattleMon has species at +0x00 and personality at +0x68 (checked against the struct layout); enemy battler 0 follows at +0xC0 (Ironmon enemyBattleMonPID 0x49F3C).",
+    "validation": "only trusted when the PID is one of the player's party PIDs (and the species at -0x68 matches); otherwise the HP-change heuristic applies"
+   },
+   "battleMons": {
+    "offsetFromSaveBase": "0x49E14",
+    "size": "0xC0",
+    "fields": "species u16 +0x00, moves 4×u16 +0x0C, level u8 +0x34, hp u32 +0x4C, maxHp u32 +0x50, personality u32 +0x68, status u32 +0x6C, otId u32 +0x74",
+    "battlers": "0 player, 1 opponent, 2 player's second, 3 opponent's second (double battles)",
+    "source": "battleActive − 0x68 (BattleMon.species); layout pokeheartgold include/battle/battle.h BattleMon",
+    "verified": "live in DeSmuME, HeartGold US and Definitive HeartGold (IPKE), 2026-10-21: zeroed at battle start, filled when the mons are out, kept after the battle"
+   }
+  },
+  {
+   "id": "soulsilver_us",
+   "name": "Pokémon SoulSilver (USA)",
+   "gen": 4,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "IPGE",
+    "title": null,
+    "titleNote": "not verified; match on gameCode"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 236,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "research/gen4_chars.json (Gen 4 proprietary u16 table)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "saveDataPtrAddr": "0x02111880",
+   "saveDataPtrSource": "pret/pokeheartgold xmap branch soulsilverus.xMAP line 57882: same _02111868 address as HeartGold; see heartgold_us",
+   "partyCoreOffset": "0xA0",
+   "partyCountOffset": "0xA4",
+   "partyMonsOffset": "0xA8",
+   "partyOffsetsSource": "SaveData.dynamic_region at +0x10 (pokeheartgold include/save.h:65-70) + General-block Party 0x98 / count 0x94 (PKHeX SAV4HGSS.cs:70-71, SAV4.cs:253 'General[Party - 4]'). NDS-Ironmon-Tracker playerBase = 0xA8.",
+   "legacyPointer": {
+    "addr": "0x0211186C",
+    "what": "_02111868.overlayManager (current main app)",
+    "partyMonsOffset": "0xD088",
+    "tidOffset": "0xD064",
+    "source": "MKDasher, tasvideos.org/Forum/Topics/9485 (2014-01-06); offsets consistent with saveData = overlayManager + 0xCFE0 but only valid while the field app is running."
+   },
+   "inBattle": {
+    "addr": "0x02246F48",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "notInBattleValues": [
+     "0x2800"
+    ],
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua GLOBAL.battleStatus + BattleHandlerBase.lua:5-9 (community, unverified)",
+    "verified": "runtime-checked on Definitive HeartGold (IPKE) 2026-10-17: 0x2800 overworld, 0x2100 in a wild battle, back to 0x2800 after fleeing"
+   },
+   "liveBattleParty": {
+    "monsOffsetFromSaveDataPtr": "0x4EA98",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "xMAP (pointer); PKHeX (offsets); runtime not tested",
+   "badges": {
+    "generalOffsetFromSaveBase": "0x10",
+    "johtoOffset": "0x7E",
+    "kantoOffset": "0x83",
+    "source": "save general block in RAM (saveBase+0x10, same layout as the .sav: shared/gen4save.mjs)"
+   },
+   "battleActive": {
+    "pidOffsetFromSaveBase": "0x49E7C",
+    "speciesDelta": "-0x68",
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua playerBattleMonPID (offset from *(*(0x02000BA8)+0x20), the saveData pointer) + BattleHandlerGen4.lua _getBattleMonPID (community). Field = BattleMon.personality of player battler 0: pokeheartgold include/battle/battle.h struct BattleMon has species at +0x00 and personality at +0x68 (checked against the struct layout); enemy battler 0 follows at +0xC0 (Ironmon enemyBattleMonPID 0x49F3C).",
+    "validation": "only trusted when the PID is one of the player's party PIDs (and the species at -0x68 matches); otherwise the HP-change heuristic applies"
+   },
+   "battleMons": {
+    "offsetFromSaveBase": "0x49E14",
+    "size": "0xC0",
+    "fields": "species u16 +0x00, moves 4×u16 +0x0C, level u8 +0x34, hp u32 +0x4C, maxHp u32 +0x50, personality u32 +0x68, status u32 +0x6C, otId u32 +0x74",
+    "battlers": "0 player, 1 opponent, 2 player's second, 3 opponent's second (double battles)",
+    "source": "battleActive − 0x68 (BattleMon.species); layout pokeheartgold include/battle/battle.h BattleMon",
+    "verified": "live in DeSmuME, HeartGold US and Definitive HeartGold (IPKE), 2026-10-21: zeroed at battle start, filled when the mons are out, kept after the battle"
+   }
+  },
+  {
+   "id": "platinum_us",
+   "name": "Pokémon Platinum (USA)",
+   "gen": 4,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "CPUE",
+    "title": "POKEMON PL",
+    "titleNote": "verified"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 236,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "research/gen4_chars.json (Gen 4 proprietary u16 table)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "saveDataPtrAddr": "0x02101D40",
+   "saveDataPtrSource": "pret/pokeplatinum xmap branch platinumus.xMAP line 68182: '02101D28 0000001C .bss sApplication (src_main.c.o)'; src/main.c:41-47 Application {currOverlayID; currApplication; nextOverlayID; nextApplication; ApplicationArgs {unk_00; error; SaveData *saveData}} -> +0x18. NDS-Ironmon-Tracker: *(0x02000BA8)+0x20.",
+   "partyCoreOffset": "0xAC",
+   "partyCountOffset": "0xB0",
+   "partyMonsOffset": "0xB4",
+   "partyOffsetsSource": "SaveData.body at +0x14 (pokeplatinum include/savedata.h:49-55) + Party 0xA0 (PKHeX SAV4Pt.cs:63). NDS-Ironmon-Tracker playerBase = 0xB4.",
+   "legacyPointer": {
+    "addr": "0x02101D2C",
+    "what": "sApplication.currApplication",
+    "partyMonsOffset": "0xD094",
+    "tidOffset": "0xD06C",
+    "source": "MKDasher pearl_plat_rng lua (tasvideos.org/UserFiles/Info/45747701013813013) pointerAddr[2] + TIDAddrOffset; party offset derived (TID 0x78 -> Party 0xA0)."
+   },
+   "inBattle": {
+    "addr": "0x0224A55A",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "source": "NDS-Ironmon-Tracker (community, unverified)"
+   },
+   "liveBattleParty": {
+    "monsOffsetFromSaveDataPtr": "0x4B8AC",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "xMAP (pointer); PKHeX (offsets); runtime not tested",
+   "battleActive": {
+    "pidOffsetFromSaveBase": "0x47620",
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua playerBattleMonPID (offset from *(*(0x02000BA8)+0x20), the saveData pointer) + BattleHandlerGen4.lua _getBattleMonPID (community) – Platinum value, not checked against a decomp.",
+    "validation": "only trusted when the PID is one of the player's party PIDs"
+   }
+  },
+  {
+   "id": "diamond_us",
+   "name": "Pokémon Diamond (USA)",
+   "gen": 4,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "ADAE",
+    "title": "POKEMON D",
+    "titleNote": "verified"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 236,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "research/gen4_chars.json (Gen 4 proprietary u16 table)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "saveDataPtrAddr": "0x02106FC0",
+   "saveDataPtrSource": "INFERRED: pokediamond include/main.h:74-82 struct UnkStruct_02016FA8 {mainOverlayId; overlayManager; queued...; template; unk10; unk14; SaveData *save} (+0x18). No DP xMAP exists; struct address 0x02106FA8 inferred from MKDasher pointer 0x02106FAC (= +4 overlayManager, same pattern as Pt/HGSS) and NDS-Ironmon-Tracker *(0x02000B70)+0x20.",
+   "partyCoreOffset": "0x2A4",
+   "partyCountOffset": "0x2A8",
+   "partyMonsOffset": "0x2AC",
+   "partyOffsetsSource": "SaveData.dynamic_region at +0x214 (pokediamond include/save.h:61-68) + Party 0x98 (PKHeX SAV4DP.cs:59). NDS-Ironmon-Tracker playerBase = 0x2AC.",
+   "legacyPointer": {
+    "addr": "0x02106FAC",
+    "what": "overlayManager",
+    "partyMonsOffset": "0xD2AC",
+    "tidOffset": "0xD288",
+    "source": "MKDasher pearl_plat_rng lua pointerAddr[1]; party offset derived."
+   },
+   "inBattle": {
+    "addr": "0x0223BB38",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "source": "NDS-Ironmon-Tracker (community, unverified)"
+   },
+   "liveBattleParty": {
+    "monsOffsetFromSaveDataPtr": "0x4C7D8",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "inferred; runtime not tested",
+   "battleActive": {
+    "pidOffsetFromSaveBase": "0x485E8",
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua playerBattleMonPID (offset from *(*(0x02000B70)+0x20), the saveData pointer) + BattleHandlerGen4.lua _getBattleMonPID (community) – Diamond/Pearl value, not checked against a decomp.",
+    "validation": "only trusted when the PID is one of the player's party PIDs"
+   }
+  },
+  {
+   "id": "pearl_us",
+   "name": "Pokémon Pearl (USA)",
+   "gen": 4,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "APAE",
+    "title": "POKEMON P",
+    "titleNote": "verified"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 236,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "research/gen4_chars.json (Gen 4 proprietary u16 table)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "saveDataPtrAddr": "0x02106FC0",
+   "saveDataPtrSource": "INFERRED: pokediamond include/main.h:74-82 struct UnkStruct_02016FA8 {mainOverlayId; overlayManager; queued...; template; unk10; unk14; SaveData *save} (+0x18). No DP xMAP exists; struct address 0x02106FA8 inferred from MKDasher pointer 0x02106FAC (= +4 overlayManager, same pattern as Pt/HGSS) and NDS-Ironmon-Tracker *(0x02000B70)+0x20.",
+   "partyCoreOffset": "0x2A4",
+   "partyCountOffset": "0x2A8",
+   "partyMonsOffset": "0x2AC",
+   "partyOffsetsSource": "SaveData.dynamic_region at +0x214 (pokediamond include/save.h:61-68) + Party 0x98 (PKHeX SAV4DP.cs:59). NDS-Ironmon-Tracker playerBase = 0x2AC.",
+   "legacyPointer": {
+    "addr": "0x02106FAC",
+    "what": "overlayManager",
+    "partyMonsOffset": "0xD2AC",
+    "tidOffset": "0xD288",
+    "source": "MKDasher pearl_plat_rng lua pointerAddr[1]; party offset derived."
+   },
+   "inBattle": {
+    "addr": "0x0223BB38",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "source": "NDS-Ironmon-Tracker (community, unverified)"
+   },
+   "liveBattleParty": {
+    "monsOffsetFromSaveDataPtr": "0x4C7D8",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "inferred; runtime not tested",
+   "battleActive": {
+    "pidOffsetFromSaveBase": "0x485E8",
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua playerBattleMonPID (offset from *(*(0x02000B70)+0x20), the saveData pointer) + BattleHandlerGen4.lua _getBattleMonPID (community) – Diamond/Pearl value, not checked against a decomp.",
+    "validation": "only trusted when the PID is one of the player's party PIDs"
+   }
+  },
+  {
+   "id": "black_us",
+   "name": "Pokémon Black (USA/Europe)",
+   "gen": 5,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "IRBO",
+    "title": null,
+    "titleNote": "not verified; match on gameCode"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 220,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "UTF-16LE (0xFFFF terminator)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "partyCountAddr": "0x022349B0",
+   "partyAddr": "0x022349B4",
+   "partyAddrSource": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua (BLACK playerBase 0x2349B4, WHITE +0x20); corroborated by Action Replay codes writing a PKM at 0x022349B4 (supercheats). Count = PKHeX SAV5.cs:75 'Data[Party + 4]' layout, i.e. 4 bytes before mons.",
+   "inBattle": {
+    "addr": "0x021D0798",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "source": "NDS-Ironmon-Tracker (community, unverified)"
+   },
+   "liveBattleParty": {
+    "monsAddr": "0x0226A794",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "community only; no decomp/symbols for Gen 5",
+   "battleActive": {
+    "pidAddr": "0x022A7E14",
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua BLACK playerBattleMonPID 0x2A7E14 (community, static)",
+    "validation": "only trusted when the PID is one of the player's party PIDs"
+   }
+  },
+  {
+   "id": "white_us",
+   "name": "Pokémon White (USA/Europe)",
+   "gen": 5,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "IRAO",
+    "title": null,
+    "titleNote": "not verified; match on gameCode"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 220,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "UTF-16LE (0xFFFF terminator)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "partyCountAddr": "0x022349D0",
+   "partyAddr": "0x022349D4",
+   "partyAddrSource": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua (BLACK playerBase 0x2349B4, WHITE +0x20); corroborated by Action Replay codes writing a PKM at 0x022349B4 (supercheats). Count = PKHeX SAV5.cs:75 'Data[Party + 4]' layout, i.e. 4 bytes before mons.",
+   "inBattle": {
+    "addr": "0x021D07B8",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "source": "NDS-Ironmon-Tracker (community, unverified)"
+   },
+   "liveBattleParty": {
+    "monsAddr": "0x0226A7B4",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "community only; no decomp/symbols for Gen 5",
+   "battleActive": {
+    "pidAddr": "0x022A7E34",
+    "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua WHITE playerBattleMonPID 0x2A7E14 + 0x20 (community, static)",
+    "validation": "only trusted when the PID is one of the player's party PIDs"
+   }
+  },
+  {
+   "id": "black2_us",
+   "name": "Pokémon Black 2 (USA/Europe)",
+   "gen": 5,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "IREO",
+    "title": null,
+    "titleNote": "not verified; match on gameCode"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 220,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "UTF-16LE (0xFFFF terminator)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "partyPtrAddr": "0x02000024",
+   "partyMonsOffsetFromPtr": "0x19728",
+   "partyCountOffsetFromPtr": "0x19724",
+   "partyAddrSource": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua BLACK2/WHITE2 MAIN_POINTER=0x24, playerBase=0x19728 (pointer masked with 0xFFFFFF). Older static values in the same file's comments: B2 0x0221E42C, W2 0x0221E4AC.",
+   "inBattle": {
+    "addr": "0x021B5138",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "source": "NDS-Ironmon-Tracker (community, unverified)"
+   },
+   "liveBattleParty": {
+    "monsOffsetFromPtr": "0x53610",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "community only; no decomp/symbols for Gen 5"
+  },
+  {
+   "id": "white2_us",
+   "name": "Pokémon White 2 (USA/Europe)",
+   "gen": 5,
+   "platform": "nds",
+   "language": "en",
+   "match": {
+    "headerCopyAddr": "0x027FFE00",
+    "headerCopyMainRamOffset": "0x3FFE00",
+    "titleOffset": "0x00",
+    "gameCodeOffset": "0x0C",
+    "gameCode": "IRDO",
+    "title": null,
+    "titleNote": "not verified; match on gameCode"
+   },
+   "memory": {
+    "region": "Main RAM",
+    "base": "0x02000000",
+    "size": "0x400000",
+    "note": "Offset into a 4 MiB main-RAM dump = addr - 0x02000000. Pointers read from RAM are absolute (0x02xxxxxx); mask with 0x3FFFFF for an offset."
+   },
+   "structSize": 220,
+   "maxParty": 6,
+   "otNamesAddr": null,
+   "nicknamesAddr": null,
+   "namesInline": {
+    "nickname": "struct+0x48 (11 u16, 0xFFFF-terminated)",
+    "otName": "struct+0x68 (8 u16)"
+   },
+   "charset": "UTF-16LE (0xFFFF terminator)",
+   "speciesTable": "identity (u16 species = National Dex)",
+   "fallback": "scan main RAM for PartyCore {u32 capacity=6; u32 count 1..6; mons[6]} and validate PK checksums (see live_ram.md)",
+   "partyPtrAddr": "0x02000024",
+   "partyMonsOffsetFromPtr": "0x19728",
+   "partyCountOffsetFromPtr": "0x19724",
+   "partyAddrSource": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua BLACK2/WHITE2 MAIN_POINTER=0x24, playerBase=0x19728 (pointer masked with 0xFFFFFF). Older static values in the same file's comments: B2 0x0221E42C, W2 0x0221E4AC.",
+   "inBattle": {
+    "addr": "0x021B5178",
+    "type": "u16",
+    "inBattleValues": [
+     "0x2100",
+     "0x2101"
+    ],
+    "source": "NDS-Ironmon-Tracker (community, unverified)"
+   },
+   "liveBattleParty": {
+    "monsOffsetFromPtr": "0x53610",
+    "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
+   },
+   "verified": "community only; no decomp/symbols for Gen 5"
+  }
+ ]
+}

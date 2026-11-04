@@ -1,0 +1,496 @@
+{
+ "_doc": "Crystal only: caught location = party struct byte 0x1E & 0x7F (a LANDMARK_* id). 0 = none/not recorded (Gold/Silver always 0), 0x7E = gift, 0x7F = event. Byte 0x1D: bits 7-6 time of day (1 morning, 2 day, 3 night), bits 5-0 caught level. Byte 0x1E bit 7 = OT gender (1 = female).",
+ "_source": "Names: PKHeX PKHeX.Core/Resources/text/locations/gen2/text_gsc_00000_en.txt / _de.txt. Ids: pret/pokecrystal constants/landmark_constants.asm; encoding: engine/pokemon/caught_data.asm SetBoxmonOrEggmonCaughtData + constants/pokemon_data_constants.asm CAUGHT_* masks.",
+ "map": {
+  "0": {
+   "en": "(None)",
+   "de": "(Keiner)",
+   "landmark": "LANDMARK_SPECIAL"
+  },
+  "1": {
+   "en": "New Bark Town",
+   "de": "Neuborkia",
+   "landmark": "LANDMARK_NEW_BARK_TOWN"
+  },
+  "2": {
+   "en": "Route 29",
+   "de": "Route 29",
+   "landmark": "LANDMARK_ROUTE_29"
+  },
+  "3": {
+   "en": "Cherrygrove City",
+   "de": "Rosalia City",
+   "landmark": "LANDMARK_CHERRYGROVE_CITY"
+  },
+  "4": {
+   "en": "Route 30",
+   "de": "Route 30",
+   "landmark": "LANDMARK_ROUTE_30"
+  },
+  "5": {
+   "en": "Route 31",
+   "de": "Route 31",
+   "landmark": "LANDMARK_ROUTE_31"
+  },
+  "6": {
+   "en": "Violet City",
+   "de": "Viola City",
+   "landmark": "LANDMARK_VIOLET_CITY"
+  },
+  "7": {
+   "en": "Sprout Tower",
+   "de": "Knofensa-Turm",
+   "landmark": "LANDMARK_SPROUT_TOWER"
+  },
+  "8": {
+   "en": "Route 32",
+   "de": "Route 32",
+   "landmark": "LANDMARK_ROUTE_32"
+  },
+  "9": {
+   "en": "Ruins of Alph",
+   "de": "Alph-Ruinen",
+   "landmark": "LANDMARK_RUINS_OF_ALPH"
+  },
+  "10": {
+   "en": "Union Cave",
+   "de": "Einheitstunnel",
+   "landmark": "LANDMARK_UNION_CAVE"
+  },
+  "11": {
+   "en": "Route 33",
+   "de": "Route 33",
+   "landmark": "LANDMARK_ROUTE_33"
+  },
+  "12": {
+   "en": "Azalea Town",
+   "de": "Azalea City",
+   "landmark": "LANDMARK_AZALEA_TOWN"
+  },
+  "13": {
+   "en": "Slowpoke Well",
+   "de": "Flegmon-Brunnen",
+   "landmark": "LANDMARK_SLOWPOKE_WELL"
+  },
+  "14": {
+   "en": "Ilex Forest",
+   "de": "Steineichenwald",
+   "landmark": "LANDMARK_ILEX_FOREST"
+  },
+  "15": {
+   "en": "Route 34",
+   "de": "Route 34",
+   "landmark": "LANDMARK_ROUTE_34"
+  },
+  "16": {
+   "en": "Goldenrod City",
+   "de": "Dukatia City",
+   "landmark": "LANDMARK_GOLDENROD_CITY"
+  },
+  "17": {
+   "en": "Radio Tower",
+   "de": "Radioturm",
+   "landmark": "LANDMARK_RADIO_TOWER"
+  },
+  "18": {
+   "en": "Route 35",
+   "de": "Route 35",
+   "landmark": "LANDMARK_ROUTE_35"
+  },
+  "19": {
+   "en": "National Park",
+   "de": "Nationalpark",
+   "landmark": "LANDMARK_NATIONAL_PARK"
+  },
+  "20": {
+   "en": "Route 36",
+   "de": "Route 36",
+   "landmark": "LANDMARK_ROUTE_36"
+  },
+  "21": {
+   "en": "Route 37",
+   "de": "Route 37",
+   "landmark": "LANDMARK_ROUTE_37"
+  },
+  "22": {
+   "en": "Ecruteak City",
+   "de": "Teak City",
+   "landmark": "LANDMARK_ECRUTEAK_CITY"
+  },
+  "23": {
+   "en": "Tin Tower",
+   "de": "Zinnturm",
+   "landmark": "LANDMARK_TIN_TOWER"
+  },
+  "24": {
+   "en": "Burned Tower",
+   "de": "Turmruine",
+   "landmark": "LANDMARK_BURNED_TOWER"
+  },
+  "25": {
+   "en": "Route 38",
+   "de": "Route 38",
+   "landmark": "LANDMARK_ROUTE_38"
+  },
+  "26": {
+   "en": "Route 39",
+   "de": "Route 39",
+   "landmark": "LANDMARK_ROUTE_39"
+  },
+  "27": {
+   "en": "Olivine City",
+   "de": "Oliviana City",
+   "landmark": "LANDMARK_OLIVINE_CITY"
+  },
+  "28": {
+   "en": "Lighthouse",
+   "de": "Leuchtturm",
+   "landmark": "LANDMARK_LIGHTHOUSE"
+  },
+  "29": {
+   "en": "Battle Tower",
+   "de": "Duellturm",
+   "landmark": "LANDMARK_BATTLE_TOWER"
+  },
+  "30": {
+   "en": "Route 40",
+   "de": "Route 40",
+   "landmark": "LANDMARK_ROUTE_40"
+  },
+  "31": {
+   "en": "Whirl Islands",
+   "de": "Strudelinseln",
+   "landmark": "LANDMARK_WHIRL_ISLANDS"
+  },
+  "32": {
+   "en": "Route 41",
+   "de": "Route 41",
+   "landmark": "LANDMARK_ROUTE_41"
+  },
+  "33": {
+   "en": "Cianwood City",
+   "de": "Anemonia City",
+   "landmark": "LANDMARK_CIANWOOD_CITY"
+  },
+  "34": {
+   "en": "Route 42",
+   "de": "Route 42",
+   "landmark": "LANDMARK_ROUTE_42"
+  },
+  "35": {
+   "en": "Mt. Mortar",
+   "de": "Kesselberg",
+   "landmark": "LANDMARK_MT_MORTAR"
+  },
+  "36": {
+   "en": "Mahogany Town",
+   "de": "Mahagonia City",
+   "landmark": "LANDMARK_MAHOGANY_TOWN"
+  },
+  "37": {
+   "en": "Route 43",
+   "de": "Route 43",
+   "landmark": "LANDMARK_ROUTE_43"
+  },
+  "38": {
+   "en": "Lake of Rage",
+   "de": "See des Zorns",
+   "landmark": "LANDMARK_LAKE_OF_RAGE"
+  },
+  "39": {
+   "en": "Route 44",
+   "de": "Route 44",
+   "landmark": "LANDMARK_ROUTE_44"
+  },
+  "40": {
+   "en": "Ice Path",
+   "de": "Eispfad",
+   "landmark": "LANDMARK_ICE_PATH"
+  },
+  "41": {
+   "en": "Blackthorn City",
+   "de": "Ebenholz City",
+   "landmark": "LANDMARK_BLACKTHORN_CITY"
+  },
+  "42": {
+   "en": "Dragon's Den",
+   "de": "Drachenhöhle",
+   "landmark": "LANDMARK_DRAGONS_DEN"
+  },
+  "43": {
+   "en": "Route 45",
+   "de": "Route 45",
+   "landmark": "LANDMARK_ROUTE_45"
+  },
+  "44": {
+   "en": "Dark Cave",
+   "de": "Dunkelhöhle",
+   "landmark": "LANDMARK_DARK_CAVE"
+  },
+  "45": {
+   "en": "Route 46",
+   "de": "Route 46",
+   "landmark": "LANDMARK_ROUTE_46"
+  },
+  "46": {
+   "en": "Silver Cave",
+   "de": "Silberhöhle",
+   "landmark": "LANDMARK_SILVER_CAVE"
+  },
+  "47": {
+   "en": "Pallet Town",
+   "de": "Alabastia",
+   "landmark": "LANDMARK_PALLET_TOWN"
+  },
+  "48": {
+   "en": "Route 1",
+   "de": "Route 1",
+   "landmark": "LANDMARK_ROUTE_1"
+  },
+  "49": {
+   "en": "Viridian City",
+   "de": "Vertania City",
+   "landmark": "LANDMARK_VIRIDIAN_CITY"
+  },
+  "50": {
+   "en": "Route 2",
+   "de": "Route 2",
+   "landmark": "LANDMARK_ROUTE_2"
+  },
+  "51": {
+   "en": "Pewter City",
+   "de": "Marmoria City",
+   "landmark": "LANDMARK_PEWTER_CITY"
+  },
+  "52": {
+   "en": "Route 3",
+   "de": "Route 3",
+   "landmark": "LANDMARK_ROUTE_3"
+  },
+  "53": {
+   "en": "Mt. Moon",
+   "de": "Mondberg",
+   "landmark": "LANDMARK_MT_MOON"
+  },
+  "54": {
+   "en": "Route 4",
+   "de": "Route 4",
+   "landmark": "LANDMARK_ROUTE_4"
+  },
+  "55": {
+   "en": "Cerulean City",
+   "de": "Azuria City",
+   "landmark": "LANDMARK_CERULEAN_CITY"
+  },
+  "56": {
+   "en": "Route 24",
+   "de": "Route 24",
+   "landmark": "LANDMARK_ROUTE_24"
+  },
+  "57": {
+   "en": "Route 25",
+   "de": "Route 25",
+   "landmark": "LANDMARK_ROUTE_25"
+  },
+  "58": {
+   "en": "Route 5",
+   "de": "Route 5",
+   "landmark": "LANDMARK_ROUTE_5"
+  },
+  "59": {
+   "en": "Underground",
+   "de": "Untergrund",
+   "landmark": "LANDMARK_UNDERGROUND_PATH"
+  },
+  "60": {
+   "en": "Route 6",
+   "de": "Route 6",
+   "landmark": "LANDMARK_ROUTE_6"
+  },
+  "61": {
+   "en": "Vermilion City",
+   "de": "Orania City",
+   "landmark": "LANDMARK_VERMILION_CITY"
+  },
+  "62": {
+   "en": "Diglett's Cave",
+   "de": "Digdas Höhle",
+   "landmark": "LANDMARK_DIGLETTS_CAVE"
+  },
+  "63": {
+   "en": "Route 7",
+   "de": "Route 7",
+   "landmark": "LANDMARK_ROUTE_7"
+  },
+  "64": {
+   "en": "Route 8",
+   "de": "Route 8",
+   "landmark": "LANDMARK_ROUTE_8"
+  },
+  "65": {
+   "en": "Route 9",
+   "de": "Route 9",
+   "landmark": "LANDMARK_ROUTE_9"
+  },
+  "66": {
+   "en": "Rock Tunnel",
+   "de": "Felstunnel",
+   "landmark": "LANDMARK_ROCK_TUNNEL"
+  },
+  "67": {
+   "en": "Route 10",
+   "de": "Route 10",
+   "landmark": "LANDMARK_ROUTE_10"
+  },
+  "68": {
+   "en": "Power Plant",
+   "de": "Kraftwerk",
+   "landmark": "LANDMARK_POWER_PLANT"
+  },
+  "69": {
+   "en": "Lavender Town",
+   "de": "Lavandia",
+   "landmark": "LANDMARK_LAVENDER_TOWN"
+  },
+  "70": {
+   "en": "Lav Radio Tower",
+   "de": "Radioturm Lav.",
+   "landmark": "LANDMARK_LAV_RADIO_TOWER"
+  },
+  "71": {
+   "en": "Celadon City",
+   "de": "Prismania City",
+   "landmark": "LANDMARK_CELADON_CITY"
+  },
+  "72": {
+   "en": "Saffron City",
+   "de": "Saffronia City",
+   "landmark": "LANDMARK_SAFFRON_CITY"
+  },
+  "73": {
+   "en": "Route 11",
+   "de": "Route 11",
+   "landmark": "LANDMARK_ROUTE_11"
+  },
+  "74": {
+   "en": "Route 12",
+   "de": "Route 12",
+   "landmark": "LANDMARK_ROUTE_12"
+  },
+  "75": {
+   "en": "Route 13",
+   "de": "Route 13",
+   "landmark": "LANDMARK_ROUTE_13"
+  },
+  "76": {
+   "en": "Route 14",
+   "de": "Route 14",
+   "landmark": "LANDMARK_ROUTE_14"
+  },
+  "77": {
+   "en": "Route 15",
+   "de": "Route 15",
+   "landmark": "LANDMARK_ROUTE_15"
+  },
+  "78": {
+   "en": "Route 16",
+   "de": "Route 16",
+   "landmark": "LANDMARK_ROUTE_16"
+  },
+  "79": {
+   "en": "Route 17",
+   "de": "Route 17",
+   "landmark": "LANDMARK_ROUTE_17"
+  },
+  "80": {
+   "en": "Route 18",
+   "de": "Route 18",
+   "landmark": "LANDMARK_ROUTE_18"
+  },
+  "81": {
+   "en": "Fuchsia City",
+   "de": "Fuchsania City",
+   "landmark": "LANDMARK_FUCHSIA_CITY"
+  },
+  "82": {
+   "en": "Route 19",
+   "de": "Route 19",
+   "landmark": "LANDMARK_ROUTE_19"
+  },
+  "83": {
+   "en": "Route 20",
+   "de": "Route 20",
+   "landmark": "LANDMARK_ROUTE_20"
+  },
+  "84": {
+   "en": "Seafoam Islands",
+   "de": "Seeschauminseln",
+   "landmark": "LANDMARK_SEAFOAM_ISLANDS"
+  },
+  "85": {
+   "en": "Cinnabar Island",
+   "de": "Zinnoberinsel",
+   "landmark": "LANDMARK_CINNABAR_ISLAND"
+  },
+  "86": {
+   "en": "Route 21",
+   "de": "Route 21",
+   "landmark": "LANDMARK_ROUTE_21"
+  },
+  "87": {
+   "en": "Route 22",
+   "de": "Route 22",
+   "landmark": "LANDMARK_ROUTE_22"
+  },
+  "88": {
+   "en": "Victory Road",
+   "de": "Siegesstrasse",
+   "landmark": "LANDMARK_VICTORY_ROAD"
+  },
+  "89": {
+   "en": "Route 23",
+   "de": "Route 23",
+   "landmark": "LANDMARK_ROUTE_23"
+  },
+  "90": {
+   "en": "Indigo Plateau",
+   "de": "Indigo Plateau",
+   "landmark": "LANDMARK_INDIGO_PLATEAU"
+  },
+  "91": {
+   "en": "Route 26",
+   "de": "Route 26",
+   "landmark": "LANDMARK_ROUTE_26"
+  },
+  "92": {
+   "en": "Route 27",
+   "de": "Route 27",
+   "landmark": "LANDMARK_ROUTE_27"
+  },
+  "93": {
+   "en": "Tohjo Falls",
+   "de": "Tohjo-Fälle",
+   "landmark": "LANDMARK_TOHJO_FALLS"
+  },
+  "94": {
+   "en": "Route 28",
+   "de": "Route 28",
+   "landmark": "LANDMARK_ROUTE_28"
+  },
+  "95": {
+   "en": "Fast Ship",
+   "de": "Schnellboot",
+   "landmark": "LANDMARK_FAST_SHIP"
+  },
+  "126": {
+   "en": "(Can't Tell)",
+   "de": "(Ich kann nicht sagen)",
+   "landmark": "LANDMARK_GIFT"
+  },
+  "127": {
+   "en": "(Event)",
+   "de": "(Event)",
+   "landmark": "LANDMARK_EVENT"
+  }
+ }
+}

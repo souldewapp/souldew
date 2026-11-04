@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>souldew player</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #game { position: absolute; inset: 0; }
+  /* hide EmulatorJS chrome – the app draws its own console UI */
+  .ejs_context_menu, .ejs_menu_bar, .ejs_virtualGamepad_parent, .ejs_message, .ejs_popup_container { display: none !important; }
+  .ejs_canvas { image-rendering: pixelated; }
+  /* the RetroArch core hides the cursor over the canvas (inline cursor:none) – keep it visible for DS touch */
+  .ejs_canvas, .ejs_canvas_parent { cursor: default !important; }
+  /* browsers keep audio – and with it the core – asleep until the first click into the frame */
+  #tap { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; background: #000a; border: 0; cursor: pointer; font: 600 15px/1.3 system-ui, sans-serif; color: #ebe6da; }
+  #tap span { padding: 10px 18px; border-radius: 999px; background: #18171cee; border: 1px solid #ffffff22; }
+</style>
+</head>
+<body>
+<div id="game"></div>
+<script>
+// Hosted inside the Play view (same origin). Boots EmulatorJS for one ROM and exposes a small
+// control/memory API on window.__emu. The parent page drives it; nothing here talks to the network
+// except fetching the ROM, the cores and the save file from the local server.
+(function () {
+  // The core asks for a screen wake lock, which Electron refuses (the app keeps the display awake itself while a game
+  // runs, electron/main.mjs). Hand it a stand-in lock instead of an unhandled rejection in the console.
+  if (navigator.wakeLock?.request) {
+    const request = navigator.wakeLock.request.bind(navigator.wakeLock);
+    navigator.wakeLock.request = (...args) => request(...args).catch(() => ({
+      type: 'screen', released: false, onrelease: null, release: () => Promise.resolve(), addEventListener() {}, removeEventListener() {},
+    }));
+  }
+  const q = new URLSearchParams(location.search);
+  const CORE ={ nds: 'melonds', gba: 'mgba', gbc: 'gambatte', gb: 'gambatte' };
+  const system = q.get('system');
+  window.EJS_player = '#game';
+  window.EJS_pathtodata = '/vendor/emulatorjs/';
+  window.EJS_core = q.get('core') || CORE[system] || system;
+  window.EJS_gameUrl = q.get('rom');
+  window.EJS_gameName = q.get('name') || 'game';
+  window.EJS_startOnLoaded = true;
+  window.EJS_CacheLimit = 0;            // don't keep a second copy of the ROM in IndexedDB
+  window.EJS_disableLocalStorage = true; // our options win over settings remembered by EmulatorJS
+  // Multi-threaded cores whenever the page may use threads (the server sends cross-origin isolation headers):
+  // DeSmuME holds 3× exactly and 4× in nearly every scene with them. ?threads=0 forces the single-threaded core.
+  window.EJS_threads = q.get('threads') !== '0' && !!self.crossOriginIsolated;
+  window.EJS_language = 'en-US';
+  window.EJS_disableAutoLang = true;
+  window.EJS_volume = Number(q.get('volume') || 0.6);
+  window.EJS_color = '#7f9ddb';
+  window.EJS_backgroundColor = '#000';
+  window.EJS_Buttons = {
+    playPause: false, restart: false, mute: false, settings: false, fullscreen: false, saveState: false, loadState: false,
+    screenRecord: false, gamepad: false, cheat: false, volume: false, saveSavFiles: false, loadSavFiles: false, quickSave: false,
+    quickLoad: false, screenshot: false, cacheManager: false, exitEmulation: false, netplay: false, diskButton: false,
+  };
+  window.EJS_defaultOptions = {
+    melonds_screen_layout: q.get('layout') || 'Top/Bottom',
+    melonds_touch_mode: 'Touch', // click = tap at that spot (default "Mouse" moves a relative cursor)
+    desmume_screens_layout: q.get('dlayout') || 'top/bottom',
+    desmume_pointer_type: 'touch', // click = tap at that spot
+    desmume_pointer_mouse: 'enabled',
+    // Bus-level timing costs ~10–15 % CPU in WASM and HGSS/BW don't need it; frameskip starts at 0 and the
+    // page raises it only when this computer can't hold 60 fps (see the speed check in play.mjs).
+    desmume_advanced_timing: 'disabled',
+    lockMouse: 'disabled', // melonDS/DeSmuME report supportsMouse → EmulatorJS would pointer-lock on every click
+    'save-save-interval': '15',
+  };
+  // No pointer lock at all in here (EmulatorJS' canvas click handler, RetroArch's mouse grab): the mouse must
+  // stay free so a click outside the game works and DS touch uses absolute coordinates.
+  Element.prototype.requestPointerLock = function () {};
+  document.addEventListener('pointerlockchange', () => document.pointerLockElement && document.exitPointerLock());
+  const E = () => window.EJS_emulator;
+  const GM = () => E() && E().gameManager;
+
+  // RetroArch settings EmulatorJS has no option for, appended to the retroarch.cfg it writes at boot:
+  // fast-forward plays the sound sped up (instead of dropping most of it), so the turbo mixer can slow it back
+  // down and still hear which music is playing; frames that fast-forward would throw away aren't drawn.
+  // DeSmuME is the exception: its sped-up sound comes out chopped (~45 % holes, sound lost in between – noise once
+  // slowed down, and noise in "original" too). Without the speed-up RetroArch plays the classic fast-forward sound
+  // instead: the song at normal pitch in pieces, skipping ahead – played as it is (see TurboMixer.skip).
+  const FF_SKIP = /^desmume/.test(window.EJS_core);
+  const RA_CFG = `audio_fastforward_speedup = "${FF_SKIP ? 'false' : 'true'}"\nfastforward_frameskip = "true"\n`;
+  let gmClass;
+  Object.defineProperty(window, 'EJS_GameManager', {
+    configurable: true,
+    get: () => gmClass,
+    set(C) {
+      gmClass = C;
+      const base = C?.prototype?.getRetroArchCfg;
+      if (base && !base.patched) {
+        C.prototype.getRetroArchCfg = function () { return base.call(this) + RA_CFG; };
+        C.prototype.getRetroArchCfg.patched = true;
+      }
+    },
+  });
+
+  // Battery save from the app (?save=<url>) goes into the core's save folder before the ROM boots, so
+  // the game starts with it like a real cartridge (loading it into a running core needs a reset).
+  const SAVE_DIRS = { melonds: 'melonDS', mgba: 'mGBA', gambatte: 'Gambatte', desmume: 'DeSmuME', desmume2015: 'DeSmuME 2015' };
+  const isDsv = () => /^desmume/.test(window.EJS_core);
+  // DeSmuME keeps battery saves as .dsv: the raw data plus a footer naming the chip. The app always
+  // stores the raw .sav, so convert on the way in and out.
+  const DSV_TXT = new TextEncoder().encode('|<--Snip above here to create a raw sav by excluding this DeSmuME savedata footer:');
+  const DSV_COOKIE = new TextEncoder().encode('|-DESMUME SAVE-|');
+  const DSV_CHIPS = { 0x200: [1, 1], 0x2000: [2, 2], 0x8000: [4, 2], 0x10000: [3, 2], 0x40000: [5, 3], 0x80000: [6, 3], 0x100000: [7, 3] }; // size → [type, address bytes]
+  // DeSmuME counts a save only up to the highest byte the game has written so far (a fresh HeartGold save: 256 KB + 1),
+  // the cartridge chip is always one of the sizes above – the rest of it reads as erased flash (0xFF).
+  const chipSize = (n) => Object.keys(DSV_CHIPS).map(Number).find((c) => c >= n) || n;
+  function padChip(raw, size = chipSize(raw.length)) {
+    if (raw.length >= size) return raw;
+    const out = new Uint8Array(size).fill(0xff);
+    out.set(raw);
+    return out;
+  }
+  function toDsv(raw) {
+    raw = padChip(raw);
+    const [type, addr] = DSV_CHIPS[raw.length] || [0, 0];
+    const out = new Uint8Array(raw.length + DSV_TXT.length + 24 + DSV_COOKIE.length);
+    out.set(raw, 0);
+    out.set(DSV_TXT, raw.length);
+    const dv = new DataView(out.buffer);
+    [raw.length, raw.length, type, addr, raw.length, 0].forEach((v, i) => dv.setUint32(raw.length + DSV_TXT.length + i * 4, v, true));
+    out.set(DSV_COOKIE, out.length - DSV_COOKIE.length);
+    return out;
+  }
+  function fromDsv(bytes) {
+    const tail = bytes.length - DSV_COOKIE.length;
+    // no footer = DeSmuME hasn't written a real save yet (fresh game) – there is nothing to keep
+    if (tail < 24 || !DSV_COOKIE.every((b, i) => bytes[tail + i] === b)) return null;
+    // footer: actual size, padded size, chip type, address bytes, chip size, version
+    const dv = new DataView(bytes.buffer, bytes.byteOffset);
+    const [size, pad, mem] = [0, 4, 16].map((o) => dv.getUint32(tail - 24 + o, true));
+    const region = tail - 24 - DSV_TXT.length;
+    const want = Math.max(size, pad, DSV_CHIPS[mem] ? mem : 0);
+    return padChip(bytes.slice(0, Math.min(want, region)), chipSize(want));
+  }
+  const saveUrl = q.get('save');
+  const savePromise = !saveUrl ? Promise.resolve(null) : fetch(saveUrl).then((r) => {
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.arrayBuffer().then((b) => new Uint8Array(b));
+  });
+  const romBase = new URL(window.EJS_gameUrl, location.href).pathname.split('/').pop().replace(/\.[^.]+$/, '');
+  let bootSave = saveUrl ? 'pending' : 'none'; // → 'loaded' | 'none' | 'failed' | 'missed'
+  let bootSavePath = null;
+  // Runs right before EmulatorJS fetches the ROM, i.e. after its file system exists and before the core starts.
+  // Hooked on the class itself as soon as emulator.min.js defines it: the 'ready' event can fire too late when
+  // the core comes from the browser cache.
+  let EJSClass;
+  Object.defineProperty(window, 'EmulatorJS', {
+    configurable: true,
+    get: () => EJSClass,
+    set(cls) {
+      EJSClass = cls;
+      const downloadRom = cls.prototype.downloadRom;
+      cls.prototype.downloadRom = async function () {
+        await beforeRom(this.gameManager);
+        return downloadRom.call(this);
+      };
+      // Offline only: no version check against cdn.emulatorjs.org (it runs on every localhost page) and no
+      // "core missing locally → fetch it from the CDN" fallback. The page's CSP blocks both anyway.
+      cls.prototype.checkForUpdates = function () {};
+      const downloadFile = cls.prototype.downloadFile;
+      cls.prototype.downloadFile = function (path, ...rest) {
+        try {
+          if (typeof path === 'string' && /^https?:/i.test(path) && new URL(path).origin !== location.origin) return Promise.resolve(-1);
+        } catch (err) { /* not a URL – local path */ }
+        return downloadFile.call(this, path, ...rest);
+      };
+    },
+  });
+  async function beforeRom(gm) {
+    // RetroArch draws its own notices ("Fast-Forward.", "Saved state …") into the picture – the app shows
+    // its own. The config is read when the core starts, right after this.
+    try {
+      const cfg = '/home/web_user/.config/retroarch/retroarch.cfg';
+      const text = new TextDecoder().decode(gm.FS.readFile(cfg));
+      gm.FS.writeFile(cfg, `${text}video_font_enable = "false"\nmenu_enable_widgets = "false"\nnotification_show_fast_forward = "false"\n`);
+    } catch (err) {
+      console.warn('retroarch.cfg not patched', err);
+    }
+    try {
+      const bytes = await savePromise;
+      const dir = `/data/saves/${SAVE_DIRS[window.EJS_core] || window.EJS_core}`;
+      bootSavePath = `${dir}/${romBase}.${isDsv() ? 'dsv' : 'sav'}`;
+      if (bytes?.length) {
+        try { gm.FS.mkdirTree ? gm.FS.mkdirTree(dir) : gm.FS.mkdir(dir); } catch (err) { /* exists */ }
+        gm.FS.writeFile(bootSavePath, isDsv() ? toDsv(bytes) : bytes);
+        bootSave = 'loaded';
+      } else if (saveUrl) {
+        // no save on disk → don't boot with a stale copy EmulatorJS kept in IndexedDB
+        try { gm.FS.unlink(bootSavePath); } catch (err) { /* none */ }
+        bootSave = 'none';
+      }
+    } catch (err) {
+      console.warn('save preload failed', err);
+      bootSave = 'failed';
+    }
+  }
+  const heap = () => GM().Module.HEAPU8;
+
+  function indexOfBytes(hay, needle, from = 0) {
+    const n0 = needle[0];
+    const nl = needle.length;
+    const end = hay.length - nl;
+    for (let i = hay.indexOf(n0, from); i !== -1 && i <= end; i = hay.indexOf(n0, i + 1)) {
+      let k = 1;
+      while (k < nl && hay[i + k] === needle[k]) k++;
+      if (k === nl) return i;
+    }
+    return -1;
+  }
+  function findAll(needle, max = 64, hay = heap()) {
+    const out = [];
+    for (let p = indexOfBytes(hay, needle); p !== -1 && out.length < max; p = indexOfBytes(hay, needle, p + 1)) out.push(p);
+    return out;
+  }
+
+  // ---- locating emulated RAM inside the WASM heap ----------------------------------------
+  const ram = { base: -1, size: 0, system: null, tried: 0 };
+  let ndsHeader = null; // first 0x20 bytes of the ROM – read out of MEMFS once, not on every attempt
+  function locateNds() {
+    // The cartridge header is copied to main RAM at 0x027FFA80 and 0x027FFE00 after boot;
+    // requiring both copies (0x380 apart) rules out the ROM buffer and other header copies.
+    if (!ndsHeader) ndsHeader = GM().FS.readFile('/' + E().fileName).slice(0, 0x20);
+    const hdr = ndsHeader;
+    const hits = findAll(hdr);
+    for (const p of hits) if (p >= 0x3ffe00 && hits.includes(p - 0x380)) return { base: p - 0x3ffe00, size: 0x400000 };
+    return null;
+  }
+  function stateRamSpec(st) {
+    const c = E().getCore();
+    const sys = E().getCore(true);
+    if (c === 'mgba' && sys === 'gba') return { off: 16 + 0x21000, len: 0x40000, size: 0x48000 };
+    if (c === 'mgba') return { off: 16 + 0x4400, len: 0x8000, size: 0x8000 };
+    if (c === 'gambatte') {
+      const p = indexOfBytes(st, new TextEncoder().encode('wram\0'));
+      if (p < 0) return null;
+      const len = (st[p + 5] << 16) | (st[p + 6] << 8) | st[p + 7];
+      return { off: p + 8, len, size: len };
+    }
+    return null;
+  }
+  function locateFromState() {
+    const st = GM().getState();
+    const spec = stateRamSpec(st);
+    if (!spec) return null;
+    const region = st.subarray(spec.off, spec.off + spec.len);
+    const h = heap();
+    for (let off = 0; off + 64 <= region.length; off += 256) {
+      const chunk = region.subarray(off, off + 64);
+      if (new Set(chunk).size < 12) continue;
+      for (const hit of findAll(chunk, 8, h)) {
+        const base = hit - off;
+        let same = true;
+        for (let i = 0; same && i < region.length; i += 1) same = h[base + i] === region[i];
+        if (same) return { base, size: spec.size };
+      }
+    }
+    return null;
+  }
+  function locateRam() {
+    const was = E().paused;
+    if (!was) E().pause(true);
+    let r = null;
+    try {
+      r = E().getCore(true) === 'nds' ? locateNds() : locateFromState();
+    } catch (e) {
+      r = null;
+    } finally {
+      if (!was) E().play(true);
+    }
+    ram.tried++;
+    if (r) Object.assign(ram, r, { system: E().getCore(true) });
+    return r;
+  }
+  function toOff(a) {
+    if (ram.system === 'nds') return (a - 0x02000000) & 0x3fffff;
+    if (ram.system === 'gba') return (a >>> 24) === 3 ? 0x40000 + (a & 0x7fff) : a & 0x3ffff;
+    // GB/GBC WRAM: 0xC000–0xCFFF bank 0, 0xD000–0xDFFF bank 1 (Pokémon never switches banks for party data)
+    return a >= 0xc000 && a < 0xe000 ? a - 0xc000 : -1;
+  }
+  /** Read `len` bytes at a console bus address. Returns a copy (safe across heap growth). */
+  function read(addr, len) {
+    if (ram.base < 0) return null;
+    const o = toOff(addr);
+    if (o < 0 || o + len > ram.size) return null;
+    return heap().slice(ram.base + o, ram.base + o + len);
+  }
+
+  // ---- picture for the partner's mini view ("partner screen") -----------------------------
+  const gameCanvas = () => E()?.canvas || document.querySelector('#game canvas') || null;
+  // The game area inside the canvas: RetroArch letterboxes the picture into the element. The play view
+  // already sizes the iframe to the console's aspect, so this only trims bars (e.g. in fullscreen).
+  let sideBySide = /left/i.test(q.get('layout') || ''); // DS screens next to each other (switchable while playing)
+  const GAME_AR = { gba: 3 / 2, gbc: 10 / 9, gb: 10 / 9 };
+  function gameRect(c) {
+    const ar = system === 'nds' ? (sideBySide ? 512 / 192 : 256 / 384) : GAME_AR[system];
+    let x = 0, y = 0, w = c.width, h = c.height;
+    if (ar && w && h) {
+      if (w / h > ar * 1.02) { const nw = h * ar; x = (w - nw) / 2; w = nw; }
+      else if (w / h < ar / 1.02) { const nh = w / ar; y = (h - nh) / 2; h = nh; }
+    }
+    return { x, y, w, h };
+  }
+  // WebGL canvases without preserveDrawingBuffer read back empty outside the frame that drew them.
+  // A rAF callback queued from outside a frame runs after EmulatorJS' own one in the same frame, so the
+  // buffer is still intact there. If that still reads black we fall back to RetroArch's own screenshot
+  // (PNG of the core framebuffer, a bit more CPU) and stick with it once it proves to work.
+  let shotMode = 'canvas'; // → 'core'
+  let canvasBlack = 0;
+  let shot = null;
+  const shotCtx = (w, h) => {
+    if (!shot) {
+      shot = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h });
+    }
+    if (shot.width !== w) shot.width = w;
+    if (shot.height !== h) shot.height = h;
+    return shot.getContext('2d', { alpha: false, willReadFrequently: true });
+  };
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r(null), ms))]);
+  const nextFrame = () => withTimeout(new Promise((r) => requestAnimationFrame(() => r(true))), 400);
+  function isBlack(ctx, w, h) {
+    const d = ctx.getImageData(0, 0, w, h).data;
+    for (let i = 0; i < d.length; i += 4 * 7) if (d[i] > 10 || d[i + 1] > 10 || d[i + 2] > 10) return false;
+    return true;
+  }
+  function encode(type, quality) {
+    return shot.convertToBlob ? shot.convertToBlob({ type, quality }) : new Promise((r) => shot.toBlob(r, type, quality));
+  }
+  async function coreShot() {
+    // GM().screenshot() polls forever if the core never writes the file – do it with a bounded poll.
+    const gm = GM();
+    try { gm.FS.unlink('screenshot.png'); } catch (e) { /* none */ }
+    gm.functions.screenshot();
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 40));
+      try {
+        gm.FS.stat('/screenshot.png');
+        return await createImageBitmap(new Blob([gm.FS.readFile('/screenshot.png')], { type: 'image/png' }));
+      } catch (e) { /* not written yet */ }
+    }
+    return null;
+  }
+  function drawScaled(src, sx, sy, sw, sh, maxW) {
+    const scale = Math.min(1, maxW / sw);
+    const w = Math.max(1, Math.round(sw * scale));
+    const h = Math.max(1, Math.round(sh * scale));
+    const ctx = shotCtx(w, h);
+    ctx.imageSmoothingEnabled = scale < 1; // smooth when shrinking, crisp pixels otherwise
+    ctx.imageSmoothingQuality = 'medium';
+    ctx.drawImage(src, sx, sy, sw, sh, 0, 0, w, h);
+    return { ctx, w, h };
+  }
+  /** Small JPEG/WebP of the current picture, ≤ maxW px wide. Resolves null when there is nothing to show. */
+  // One at a time: the partner share, save-state thumbnails and screenshots all draw into the same scratch
+  // canvas – overlapping calls used to overwrite each other's picture (black or torn frames for the partner).
+  let shotChain = Promise.resolve();
+  function snapshot(opts) {
+    const run = shotChain.then(() => snapshotNow(opts));
+    shotChain = run.catch(() => null);
+    return run;
+  }
+  async function snapshotNow({ maxW = 192, type = 'image/jpeg', quality = 0.5 } = {}) {
+    if (!window.__emu.ready || !GM()) return null;
+    // Fast-forward draws outside animation frames, so the canvas can't be read in step – take the core's picture.
+    const ff = !!E()?.isFastForward;
+    if (shotMode === 'canvas' && !ff) {
+      const c = gameCanvas();
+      if (!c || !c.width || !c.height) return null;
+      // Only read in an animation frame in which the core actually drew: on a 120 Hz screen the game draws in
+      // every other frame, and in the others the WebGL buffer is already cleared – the read comes back black or
+      // half drawn (that was the partner's "top screen missing / broken sprites").
+      const gm = GM();
+      let drawn = false;
+      for (let i = 0, last = gm.getFrameNum(); i < 6 && !drawn; i++) {
+        if (!(await nextFrame())) return null; // hidden iframe: no frames are drawn
+        const now = gm.getFrameNum();
+        drawn = now !== last;
+        last = now;
+      }
+      if (!drawn) return null; // paused – the partner keeps the last picture
+      const r = gameRect(c);
+      const { ctx, w, h } = drawScaled(c, r.x, r.y, r.w, r.h, maxW);
+      if (!isBlack(ctx, w, h)) {
+        canvasBlack = 0;
+        return encode(type, quality);
+      }
+      // A black picture can be a real fade – send it only when it holds; never a single stray one.
+      if (++canvasBlack < 3) return null;
+      if (canvasBlack < 6) return encode(type, quality);
+    }
+    let bmp = null;
+    try { bmp = await coreShot(); } catch (e) { bmp = null; }
+    if (!bmp) return null;
+    const { ctx, w, h } = drawScaled(bmp, 0, 0, bmp.width, bmp.height, maxW);
+    bmp.close?.();
+    // the core's picture has content while the canvas kept reading black → the canvas can't be read back here
+    if (shotMode === 'canvas' && !ff && !isBlack(ctx, w, h)) shotMode = 'core';
+    return encode(type, quality);
+  }
+
+  // ---- turbo audio ------------------------------------------------------------------------------
+  // Emscripten's OpenAL plays the core's sound through one gain node per source into the context's gain,
+  // which feeds the speakers directly. Once the core has audio, a mixer (/lib/turboaudio.mjs) and our own
+  // volume gain go between that context gain and the speakers: at 1× the mixer records the game's sound;
+  // while fast-forwarding it mutes the sped-up sound and, in "music" mode, loops the recorded music at
+  // normal speed. The volume moves to our gain then (EmulatorJS' per-source gains stay at 1), so the
+  // recording doesn't depend on the volume slider. Until it is attached, volume works as before.
+  const audio = { volume: window.EJS_volume, mode: 'music', speed: 1, key: null, paused: false, al: null, vol: null, post: null, kind: null, busy: false, failed: false, info: {}, log: [], seq: 0, subs: new Set() };
+  const tellAudio = (m) => audio.post?.(m);
+  // The core's sound never reaches the speakers on its own: every connection straight to an AudioContext's output
+  // goes through a gate. Until the mixer has taken a context's sound over (attachAudio), the gate holds what should
+  // be heard – the volume at 1×, nothing while fast-forwarding. Changing the DS screen layout (or any core
+  // restart) re-creates the OpenAL context, and without the gate its first moments played at full volume, muted
+  // game or not. Before the first attach EmulatorJS still sets the volume itself (source gains), so the gate is open.
+  const gates = new Set();
+  const ownNodes = new WeakSet();
+  const gateLevel = () => (!audio.attachedOnce || !Number.isFinite(audio.volume) ? 1 : audio.speed > 1 ? 0 : Math.max(0, Math.min(1, audio.volume)));
+  const refreshGates = () => {
+    // set outright: only sound the mixer doesn't handle yet passes here (automation on a context that isn't running
+    // yet was seen to never apply)
+    for (const g of gates) {
+      g.gain.cancelScheduledValues(0);
+      g.gain.value = gateLevel();
+    }
+  };
+  {
+    const nativeConnect = AudioNode.prototype.connect;
+    const gateOf = new WeakMap();
+    AudioNode.prototype.connect = function (dest, ...rest) {
+      if (!(dest instanceof AudioDestinationNode) || ownNodes.has(this)) return nativeConnect.call(this, dest, ...rest);
+      let g = gateOf.get(dest);
+      if (!g) {
+        g = dest.context.createGain();
+        g.gain.value = gateLevel();
+        ownNodes.add(g);
+        nativeConnect.call(g, dest);
+        gateOf.set(dest, g);
+        gates.add(g);
+      }
+      nativeConnect.call(this, g, ...rest);
+      return dest;
+    };
+  }
+  // DS games: the ROM's own music (lib/sdat-worker.mjs reads its sound archive) – the mixer synthesizes the song
+  // that plays, so fast-forward keeps the real music at normal speed from the first second on.
+  const sdat = { worker: null, ready: false, post: null };
+  const sdatSong = (key) => {
+    const id = /^m(\d+)$/.exec(key || '')?.[1];
+    if (sdat.ready && id) sdat.worker.postMessage({ type: 'pack', key, id: Number(id) });
+  };
+  function startSdat() {
+    if (system !== 'nds' || typeof Worker !== 'function') return;
+    if (sdat.worker) {
+      // a new mixer (the core rebuilt its audio): it has no samples yet
+      if (sdat.ready && sdat.post !== audio.post) {
+        sdat.post = audio.post;
+        sdat.worker.postMessage({ type: 'reset' });
+        tellAudio({ type: 'sdat-ready' });
+        sdatSong(audio.key);
+      }
+      return;
+    }
+    try {
+      // started from a blob: the page is cross-origin isolated (COEP), and a blob worker inherits that, while a
+      // worker script of its own would need the header itself
+      const src = `import ${JSON.stringify(new URL('/lib/sdat-worker.mjs', location.href).href)};`;
+      sdat.worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })), { type: 'module' });
+      sdat.worker.onerror = () => onAudioEvent({ type: 'sdat', ready: false, why: 'worker failed' });
+    } catch (err) {
+      console.warn('turbo audio: no music synthesizer', err);
+      return;
+    }
+    sdat.worker.onmessage = (e) => {
+      const m = e.data || {};
+      if (m.type === 'ready') {
+        sdat.ready = true;
+        sdat.post = audio.post;
+        onAudioEvent({ type: 'sdat', ready: true, seqs: m.seqs, path: m.path });
+        tellAudio({ type: 'sdat-ready' });
+        sdatSong(audio.key);
+      } else if (m.type === 'none') onAudioEvent({ type: 'sdat', ready: false, why: m.why });
+      else if (m.type === 'pack' && m.pack) {
+        if (sdat.post !== audio.post) return; // made for a mixer that is gone
+        tellAudio({ type: 'sdat', key: m.key, pack: m.pack });
+      }
+    };
+    sdat.worker.postMessage({ type: 'rom', url: new URL(window.EJS_gameUrl, location.href).href });
+  }
+  const onAudioEvent = (e) => {
+    if (e?.type === 'error') console.warn('turbo audio:', e.message);
+    if (e?.type) {
+      const x = { ...e, t: Math.round(performance.now()), n: ++audio.seq };
+      audio.info[e.type] = e;
+      audio.log.push(x); // the last events, for diagnosis
+      if (audio.log.length > 200) audio.log.shift();
+      for (const f of audio.subs) {
+        try {
+          f(x);
+        } catch {
+          // the page's problem
+        }
+      }
+    }
+  };
+  async function attachAudio() {
+    const al = GM()?.Module?.AL?.currentCtx;
+    if (!al?.audioCtx || !al.gain || al === audio.al || audio.busy || audio.failed) return;
+    audio.busy = true;
+    const ac = al.audioCtx;
+    try {
+      let node;
+      let post;
+      let kind = 'worklet';
+      try {
+        await ac.audioWorklet.addModule('/lib/turboaudio-worklet.mjs');
+        node = new AudioWorkletNode(ac, 'turbo-audio', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit', channelInterpretation: 'speakers' });
+        node.port.onmessage = (e) => onAudioEvent(e.data);
+        post = (m) => node.port.postMessage(m);
+      } catch (err) {
+        // no AudioWorklet: the same mixer in a ScriptProcessor (runs on this thread, in larger blocks)
+        console.warn('turbo audio: no AudioWorklet, using a ScriptProcessor', err);
+        const { TurboMixer } = await import('/lib/turboaudio.mjs');
+        const mixer = new TurboMixer(ac.sampleRate, { onEvent: onAudioEvent });
+        let broken = false;
+        node = ac.createScriptProcessor(2048, 2, 2);
+        node.onaudioprocess = (e) => {
+          const i = e.inputBuffer;
+          const o = e.outputBuffer;
+          const l = i.getChannelData(0);
+          const r = i.getChannelData(i.numberOfChannels > 1 ? 1 : 0);
+          if (!broken) {
+            try {
+              return mixer.process(l, r, o.getChannelData(0), o.getChannelData(1));
+            } catch (er) {
+              broken = true;
+              console.warn('turbo audio failed', er);
+            }
+          }
+          o.getChannelData(0).set(l);
+          o.getChannelData(1).set(r);
+        };
+        post = (m) => mixer.command(m);
+        kind = 'script';
+      }
+      if (GM()?.Module?.AL?.currentCtx !== al) return; // the core replaced its context meanwhile – next round
+      const vol = ac.createGain();
+      vol.gain.value = audio.volume;
+      ownNodes.add(vol);
+      node.connect(vol).connect(ac.destination);
+      E().volume = 1;
+      E().setVolume(1);
+      al.gain.disconnect();
+      al.gain.connect(node);
+      Object.assign(audio, { al, vol, post, kind, attachedOnce: true });
+      refreshGates(); // (from now on a context the mixer hasn't taken over yet holds its sound back)
+      post({ type: 'mode', mode: audio.mode });
+      post({ type: 'paused', paused: audio.paused });
+      post({ type: 'speed', ratio: audio.speed });
+      post({ type: 'skip', on: FF_SKIP });
+      if (audio.key) post({ type: 'song', key: audio.key });
+      startSdat();
+    } catch (err) {
+      console.warn('turbo audio not attached – plain sound', err);
+      audio.failed = true;
+    } finally {
+      audio.busy = false;
+    }
+  }
+  // Polled while the game runs: attach once the core has audio, and tell the mixer when the game stands
+  // still (paused, hidden tab) – that gap is no silence in the music and nothing should play meanwhile.
+  // The speed the emulator really reaches while fast-forwarding (a slow machine: 4× asked, ≈2.7× reached) – the
+  // sped-up sound is sped up that much, so the mixer slows it down by this, not by the step.
+  const rate = { t: 0, f: 0 };
+  function measureRate() {
+    const ff = !!E()?.isFastForward && audio.speed > 1;
+    const now = performance.now();
+    const f = ff ? GM().getFrameNum() : 0;
+    if (ff && rate.t && now - rate.t >= 450) {
+      const r = (f - rate.f) / ((now - rate.t) / 1000) / 60;
+      if (r > 0.5) tellAudio({ type: 'rate', ratio: Math.round(r * 100) / 100 });
+    }
+    if (!ff || !rate.t || now - rate.t >= 450) Object.assign(rate, { t: ff ? now : 0, f });
+  }
+  function syncAudio() {
+    attachAudio();
+    measureRate();
+    const paused = !!E()?.paused || document.visibilityState === 'hidden';
+    if (paused !== audio.paused) {
+      audio.paused = paused;
+      tellAudio({ type: 'paused', paused });
+    }
+  }
+  // the game jumped (state loaded, reset): the recorded music doesn't lead into what comes next
+  const cutAudio = () => {
+    audio.key = null; // the mixer forgets the song key too – the page's next reading (even the same one) is sent again
+    tellAudio({ type: 'cut' });
+  };
+
+  let speed = 1;
+  let ffRatio = 3; // ratio EmulatorJS uses when fast-forward is switched on (RetroArch default: 3)
+  let speedSeq = 0; // the latest setSpeed call wins
+  window.__emu = {
+    ready: false,
+    system: () => E()?.getCore(true),
+    locateRam,
+    ramInfo: () => ({ ...ram }),
+    read,
+    paused: () => !!E()?.paused,
+    pause: () => E().pause(),
+    resume: () => E().play(),
+    togglePause: () => E().togglePlaying(),
+    restart: () => {
+      cutAudio();
+      return GM().restart();
+    },
+    setSpeed(ratio) {
+      speed = ratio;
+      audio.speed = ratio;
+      refreshGates();
+      rate.t = 0; // measure the new step afresh
+      tellAudio({ type: 'speed', ratio });
+      const seq = ++speedSeq;
+      if (ratio > 1) {
+        const on = () => {
+          if (seq !== speedSeq) return;
+          ffRatio = ratio;
+          GM().setFastForwardRatio(ratio);
+          E().isFastForward = true;
+          GM().toggleFastForward(1);
+        };
+        // RetroArch latches the ratio when fast-forward switches on: changing it while it runs (2× → 4×)
+        // does nothing. So switch off, let a few frames pass, then on again with the new ratio.
+        if (E().isFastForward && ffRatio !== ratio) {
+          GM().toggleFastForward(0);
+          setTimeout(on, 60);
+        } else on();
+      } else {
+        E().isFastForward = false;
+        GM().toggleFastForward(0);
+      }
+    },
+    speed: () => speed,
+    /** Emulated frames so far – the page measures the real speed with it. */
+    frames: () => GM().getFrameNum(),
+    /** Actual fast-forward state (may also be switched by EmulatorJS itself) and the ratio it runs at. */
+    fastForward: () => !!E()?.isFastForward,
+    ffRatio: () => ffRatio,
+    quickSave: (slot = 1) => GM().quickSave(slot),
+    quickLoad: (slot = 1) => {
+      cutAudio();
+      return GM().quickLoad(slot);
+    },
+    getState: () => GM().getState(),
+    loadState: (u8) => {
+      cutAudio();
+      return GM().loadState(u8);
+    },
+    screenshot: () => GM().screenshot(),
+    /** EmulatorJS' output canvas (null until the core has started). */
+    canvas: () => (window.__emu.ready ? gameCanvas() : null),
+    /** Live video of the game (canvas.captureStream) for the partner's mini view, or null. */
+    captureStream(fps = 15) {
+      const c = window.__emu.ready ? gameCanvas() : null;
+      try { return c?.captureStream ? c.captureStream(fps) : null; } catch (e) { return null; }
+    },
+    /** Small still picture (Blob) for the partner's mini view: snapshot({ maxW, type, quality }). */
+    snapshot,
+    // Flush the core's SRAM to MEMFS and read it. Deliberately not GM().getSaveFile()/saveSaveFiles():
+    // those fire EmulatorJS' 'saveSaveFiles' event, which we report to the app as "the game saved"
+    // → the app flushes again → endless loop.
+    getSave() {
+      GM().functions.saveSaveFiles();
+      const bytes = GM().getSaveFile(false);
+      return bytes && isDsv() ? fromDsv(bytes) : bytes;
+    },
+    /** How the app's save reached the core at boot: 'loaded' | 'none' | 'failed' | 'missed' | 'pending'. */
+    bootSave: () => bootSave,
+    loadSave(bytes) {
+      const path = GM().getSaveFilePath();
+      const dir = path.slice(0, path.lastIndexOf('/'));
+      try { GM().FS.mkdirTree ? GM().FS.mkdirTree(dir) : GM().FS.mkdir(dir); } catch (e) { /* exists */ }
+      GM().FS.writeFile(path, isDsv() ? toDsv(bytes) : bytes);
+      GM().loadSaveFiles();
+      cutAudio();
+      GM().restart();
+    },
+    setVolume(v) {
+      audio.volume = v;
+      refreshGates();
+      if (audio.vol) audio.vol.gain.setTargetAtTime(v, audio.vol.context.currentTime, 0.015);
+      else {
+        E().volume = v;
+        E().setVolume(v);
+      }
+    },
+    muted: () => audio.volume === 0,
+    /** What happens to the sound while fast-forwarding: 'music' (the song at normal speed – synthesized from the ROM or recorded at 1×) | 'mute' | 'original'. */
+    setTurboAudio(mode) {
+      audio.mode = mode;
+      tellAudio({ type: 'mode', mode });
+    },
+    /** The music the game plays now (location.mjs musicKey; null = unknown): the turbo mixer follows it. */
+    songKey(key) {
+      if (!key || key === audio.key) return;
+      audio.key = key;
+      tellAudio({ type: 'song', key });
+      sdatSong(key);
+    },
+    /** Every mixer event from now on (the page keeps them for "Save diagnostics"); returns the unsubscribe. */
+    onAudio(f) {
+      audio.subs.add(f);
+      return () => audio.subs.delete(f);
+    },
+    /** Turbo audio state for checks from the console: how it is attached and the last search / switch. */
+    /** The nodes that feed the speakers (the gates and the volume) – for level checks. */
+    speakerNodes: () => [...gates, audio.vol].filter(Boolean),
+    turboAudio: () => ({ attached: audio.kind, current: !!audio.al && audio.al === GM()?.Module?.AL?.currentCtx, gates: [...gates].map((g) => +g.gain.value.toFixed(3)), gate: gateLevel(), once: !!audio.attachedOnce, failed: audio.failed, mode: audio.mode, speed: audio.speed, paused: audio.paused, volume: audio.volume, key: audio.key, sampleRate: audio.al?.audioCtx.sampleRate, ...audio.info, log: audio.log.slice() }),
+    setOption(k, v) {
+      if (/screens?_layout$/.test(k)) sideBySide = /left/i.test(v);
+      E().menuOptionChanged(k, v);
+    },
+    fullscreen: () => document.documentElement.requestFullscreen?.(),
+  };
+
+  // Chrome suspends the core's AudioContext until the user interacts with this frame; the core then waits
+  // on its audio and the picture stands still. Offer one click to start (not needed in the desktop app).
+  function wakeAudio() {
+    const ctx = GM()?.Module?.AL?.currentCtx?.audioCtx;
+    if (!ctx || ctx.state !== 'suspended') return;
+    const tap = document.createElement('button');
+    tap.id = 'tap';
+    tap.innerHTML = `<span>▶ ${(q.get('tap') || 'Click to start').replace(/[<&>]/g, '')}</span>`;
+    const go = () => {
+      ctx.resume().catch(() => {});
+      tap.remove();
+      removeEventListener('keydown', go, true);
+    };
+    tap.addEventListener('click', go);
+    addEventListener('keydown', go, true);
+    document.body.appendChild(tap);
+  }
+  window.EJS_onGameStart = () => {
+    setTimeout(wakeAudio, 400);
+    syncAudio();
+    setInterval(syncAudio, 250);
+    // the core looked somewhere else for its save → let the app fall back to loadSave()
+    if (bootSave === 'loaded' && GM().getSaveFilePath() !== bootSavePath) bootSave = 'missed';
+    window.__emu.ready = true;
+    // Only the 12 game buttons stay bound (EJS_defaultControls below). EmulatorJS' own extras – L2/R2 on Tab/R,
+    // sticks on T/F/G/H…, hotkeys 24–29 on 1/2/3 – would collide with the app's shortcuts, so drop them for good.
+    try {
+      for (const set of [E().controls, E().defaultControllers]) {
+        for (const p of Object.values(set || {})) if (p) for (const n of Object.keys(p)) if (Number(n) >= 12) delete p[n];
+      }
+      E().enableMouseLock = false;
+    } catch (e) { /* older API */ }
+    // EmulatorJS flushed the battery save on its own (periodic 'save-save-interval' or on exit) →
+    // let the app write it to disk right away. Our own __emu.getSave() doesn't fire this event.
+    try { E().on('saveSaveFiles', () => window.parent?.postMessage({ type: 'emu-saved' }, location.origin)); } catch (e) { /* older API */ }
+    window.parent?.postMessage({ type: 'emu-started', core: E().getCore(), system: E().getCore(true) }, location.origin);
+  };
+  const forwardKey = (e, down) => window.parent?.postMessage({
+    type: 'emu-key', key: e.key, code: e.code, shift: e.shiftKey, ctrl: e.ctrlKey, alt: e.altKey, meta: e.metaKey, down, repeat: e.repeat,
+  }, location.origin);
+  window.addEventListener('keydown', (e) => forwardKey(e, true));
+  window.addEventListener('keyup', (e) => forwardKey(e, false));
+  // Focus left the game while keys were held (alt-tab, a click outside): the keyups never come. End the turbo and
+  // let go of every game button – otherwise the player keeps walking in one direction when they come back.
+  let release = () => {};
+  window.addEventListener('blur', () => {
+    forwardKey({ key: 'Tab', code: 'Tab' }, false);
+    release();
+  });
+
+  // Controllers beyond what EmulatorJS does itself: the left stick works as the D-pad, ZR/RT/R2 toggles turbo,
+  // ZL/LT/L2 and the Home/PS/Guide button pause – those go to the page like the keyboard shortcuts.
+  function startPads(c) {
+    const idx = Object.fromEntries(c.BUTTONS.map((b) => [b.id, b.ejs]));
+    const stick = { up: false, down: false, left: false, right: false };
+    const held = {};
+    const set = (dir, on) => {
+      if (stick[dir] === on) return;
+      stick[dir] = on;
+      try { GM()?.simulateInput(0, idx[dir], on ? 1 : 0); } catch { /* core not ready */ }
+    };
+    release = () => {
+      for (const b of c.BUTTONS) try { GM()?.simulateInput(0, b.ejs, 0); } catch { /* core not ready */ }
+      for (const d of Object.keys(stick)) stick[d] = false;
+    };
+    const HOT = { 7: 'turbo', 6: 'pause', 16: 'pause' };
+    setInterval(() => {
+      if (!window.__emu?.ready || document.visibilityState === 'hidden') return;
+      const pad = [...(navigator.getGamepads?.() || [])].find((g) => g && g.connected);
+      if (!pad) return;
+      const [x = 0, y = 0] = pad.axes;
+      set('left', x < -0.5);
+      set('right', x > 0.5);
+      set('up', y < -0.5);
+      set('down', y > 0.5);
+      for (const [i, action] of Object.entries(HOT)) {
+        const on = !!pad.buttons[i]?.pressed;
+        if (on && !held[i]) window.parent?.postMessage({ type: 'emu-pad', action }, location.origin);
+        held[i] = on;
+      }
+    }, 16);
+  }
+  // Key mapping from Settings › Controls (config.controls) – read once before EmulatorJS boots.
+  Promise.all([import('/lib/controls.mjs'), fetch('/api/status').then((r) => r.json()).catch(() => null)])
+    .then(async ([c, st]) => {
+      await c.detectLayout(st?.config?.lang); // keyCodes follow the printed letters (QWERTZ, AZERTY …)
+      window.EJS_defaultControls = c.ejsControls(st?.config?.controls, undefined, st?.config?.pads);
+      startPads(c);
+    })
+    .catch((e) => console.warn('controls not applied', e))
+    .finally(() => {
+      const s = document.createElement('script');
+      s.src = '/vendor/emulatorjs/loader.js';
+      document.body.appendChild(s);
+    });
+})();
+</script>
+</body>
+</html>

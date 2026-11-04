@@ -1,0 +1,19 @@
+name: Feature request
+description: An idea for souldew
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe the situation – e.g. "When we play a SoulLink with 3 players, I want to …"
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could souldew help?
+  - type: input
+    id: games
+    attributes:
+      label: Which games or modes does it concern?
