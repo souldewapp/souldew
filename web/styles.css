@@ -1245,3 +1245,6 @@ html.platform-win32[data-theme='contrast'] { scrollbar-color: #6b6a75 transparen
 /* the sidebar toggle moves from the traffic-light row into the brand row, like in the browser */
 html.platform-win32 .rail .brand { padding-right: 36px; }
 html.platform-win32 .rail:not(.web) .rail-toggle { top: 25px; }
+/* the onboarding covers the whole window: its step bar starts below the window buttons */
+html.platform-win32 .onboard { padding-top: max(44px, min(8vh, 70px)); }
+@media (max-height: 840px) { html.platform-win32 .onboard { padding-top: 44px; } }

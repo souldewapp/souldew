@@ -3,6 +3,7 @@
 // takes a screenshot (Windows), then quits it. Exit code 0 = everything answered as it should.
 //
 // Usage: node scripts/smoke-app.mjs <path to souldew.exe / the app's binary> [--screenshot file.png] [--timeout 120]
+//          [--lang de]   (starts past the onboarding, in that language – for a screenshot of the library)
 // The app always tries port 47390 first – this refuses to run while something (e.g. your installed souldew)
 // already listens there, so it never talks to an app it didn't start.
 import { spawn, spawnSync } from 'node:child_process';
@@ -37,6 +38,7 @@ if (await portTaken()) {
 }
 
 const profile = mkdtempSync(join(tmpdir(), 'souldew-smoke-'));
+if (opt('lang')) writeFileSync(join(profile, 'config.json'), JSON.stringify({ onboarded: true, lang: opt('lang'), playerName: 'Smoke' }));
 const log = [];
 const child = spawn(exe, [`--user-data-dir=${profile}`], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1' } });
 child.stdout.on('data', (d) => log.push(String(d)));

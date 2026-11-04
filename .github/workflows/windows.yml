@@ -66,8 +66,29 @@ jobs:
           }
           $lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'souldew.lnk'
           if (-not (Test-Path $lnk)) { throw "no start menu shortcut ($lnk)" }
-          node scripts/smoke-app.mjs (Join-Path $dir 'souldew.exe') --screenshot smoke-installed.png
+          node scripts/smoke-app.mjs (Join-Path $dir 'souldew.exe') --screenshot smoke-installed.png --lang de
           if ($LASTEXITCODE -ne 0) { throw 'installed app failed the smoke test' }
+
+          # What the in-app updater does on "Restart now": start the installer with /S --updated --force-run, quit
+          # the app; the installer replaces it and starts the new version by itself.
+          function Wait-Server([int]$seconds) {
+            for ($i = 0; $i -lt $seconds; $i++) {
+              try { Invoke-RestMethod http://127.0.0.1:47390/api/status -TimeoutSec 2 | Out-Null; return $true } catch { Start-Sleep 1 }
+            }
+            return $false
+          }
+          $updProfile = Join-Path $env:RUNNER_TEMP 'update-profile'
+          $app = Start-Process -FilePath (Join-Path $dir 'souldew.exe') -ArgumentList "--user-data-dir=$updProfile" -PassThru
+          if (-not (Wait-Server 90)) { throw 'installed app did not start' }
+          $installer = Start-Process -FilePath $setup -ArgumentList '/S', '--updated', '--force-run' -PassThru
+          Stop-Process -Id $app.Id   # the app quits right after starting the installer
+          $installer.WaitForExit()
+          if ($installer.ExitCode -ne 0) { throw "update installer exited with $($installer.ExitCode)" }
+          if (-not (Wait-Server 90)) { throw 'the updated app was not started again (--force-run)' }
+          'update in place: installer replaced the running app and started it again'
+          Get-Process souldew -ErrorAction SilentlyContinue | Stop-Process -Force
+          Start-Sleep -Seconds 3
+
           Start-Process -FilePath (Join-Path $dir 'Uninstall souldew.exe') -ArgumentList '/S' -Wait
           Start-Sleep -Seconds 5
           if (Test-Path (Join-Path $dir 'souldew.exe')) { throw 'uninstaller left the app behind' }
