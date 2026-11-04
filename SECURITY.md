@@ -23,4 +23,4 @@ about:
   the announced version and checksum.
 - **Electron shell** (`electron/`): navigation, IPC or permission handling that lets web content escape the sandbox.
 
-Out of scope: problems that need an attacker who already controls your Mac, and anything inside the emulated games.
+Out of scope: problems that need an attacker who already controls your computer, and anything inside the emulated games.

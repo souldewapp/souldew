@@ -1,0 +1,11 @@
+# Line endings: LF in the repository and in every checkout, Windows included – the Windows build ships the same
+# bytes as the macOS one, and the tests see the same files everywhere.
+* text=auto eol=lf
+# Windows batch files need CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+# Test archives and vendored third-party files stay exactly as they are
+*.7z binary
+*.lzma2 binary
+web/vendor/** -text
+web/assets/fonts/*.txt -text

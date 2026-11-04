@@ -64,3 +64,15 @@ export function isTrustedIpcSender(event, webContents, appUrl) {
   const isMain = frame === main || (!frame.parent && !!main && frame.processId === main.processId && frame.routingId === main.routingId);
   return isMain && sameOrigin(frame.url, appUrl);
 }
+
+/**
+ * Colours for the Windows title bar buttons, sent by the page ({ color, symbolColor }): only plain #rrggbb values
+ * are passed on to win.setTitleBarOverlay – anything else is ignored (null).
+ */
+export function titleBarColors(colors) {
+  if (!colors || typeof colors !== 'object') return null;
+  const hex = (v) => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v.trim()) ? v.trim().toLowerCase() : null);
+  const color = hex(colors.color);
+  const symbolColor = hex(colors.symbolColor);
+  return color && symbolColor ? { color, symbolColor } : null;
+}

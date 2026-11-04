@@ -1,6 +1,6 @@
 {
   "name": "souldew",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "souldew – Pokémon SoulLinks (2–4 players) and Nuzlockes with a built-in emulator, live sync and a game library",
   "license": "GPL-3.0-or-later",
@@ -20,7 +20,9 @@
     "test": "node --test \"test/*.test.mjs\"",
     "lint": "eslint .",
     "jre": "node scripts/fetch-jre.mjs arm64",
+    "jre:win": "node scripts/fetch-jre.mjs x64",
     "dist": "node scripts/fetch-jre.mjs arm64 && CUSTOM_DMGBUILD_PATH=scripts/dmgbuild-wrapper.mjs electron-builder --mac dmg --arm64",
+    "dist:win": "node scripts/fetch-jre.mjs x64 && electron-builder --win nsis --x64",
     "release": "node scripts/release.mjs"
   },
   "updates": {
@@ -82,10 +84,6 @@
           "*.class",
           "*.java"
         ]
-      },
-      {
-        "from": "tools/jre/darwin-arm64",
-        "to": "tools/jre/darwin-arm64"
       }
     ],
     "mac": {
@@ -106,7 +104,13 @@
         "NSDownloadsFolderUsageDescription": "souldew sucht hier nach deinen Spieldateien (ROMs), wenn du in der Bibliothek „Mac durchsuchen“ wählst. Es werden nur Dateinamen und Datei-Header gelesen – nichts verlässt deinen Mac.",
         "NSDesktopFolderUsageDescription": "souldew sucht hier nach deinen Spieldateien (ROMs), wenn du in der Bibliothek „Mac durchsuchen“ wählst. Es werden nur Dateinamen und Datei-Header gelesen – nichts verlässt deinen Mac.",
         "NSDocumentsFolderUsageDescription": "souldew sucht hier nach deinen Spieldateien (ROMs), wenn du in der Bibliothek „Mac durchsuchen“ wählst. Es werden nur Dateinamen und Datei-Header gelesen – nichts verlässt deinen Mac."
-      }
+      },
+      "extraResources": [
+        {
+          "from": "tools/jre/darwin-arm64",
+          "to": "tools/jre/darwin-arm64"
+        }
+      ]
     },
     "dmg": {
       "title": "souldew",
@@ -129,6 +133,37 @@
           "path": "/Applications"
         }
       ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "souldew-${version}-win-${arch}-setup.${ext}",
+      "extraResources": [
+        {
+          "from": "tools/jre/win32-x64",
+          "to": "tools/jre/win32-x64"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "souldew",
+      "uninstallDisplayName": "souldew",
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "publish": null
   }

@@ -1,6 +1,6 @@
-// Path layout. Code (web/, shared/, bundled tools) can live read-only inside the .app bundle;
-// everything the app writes goes to the data directory (~/Library/Application Support/SoulLink
-// Studio when running as an app, the project folder in development).
+// Path layout. Code (web/, shared/, bundled tools) can live read-only inside the .app bundle / the install folder;
+// everything the app writes goes to the data directory (~/Library/Application Support/SoulLink Studio on macOS,
+// %APPDATA%\SoulLink Studio on Windows when running as an app, the project folder in development).
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 

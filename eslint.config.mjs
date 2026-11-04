@@ -24,6 +24,8 @@ export default [
   // AudioWorkletGlobalScope (not in this version of `globals`)
   { files: ['web/lib/turboaudio-worklet.mjs'], languageOptions: { globals: { sampleRate: 'readonly', currentTime: 'readonly', AudioWorkletProcessor: 'readonly', registerProcessor: 'readonly' } } },
   { files: ['server/**/*.mjs', 'electron/**/*.mjs', 'scripts/**/*.mjs', 'test/**/*.mjs', 'eslint.config.mjs'], languageOptions: { globals: globals.node } },
+  // the preload script (CommonJS, sandboxed: require + a limited process object)
+  { files: ['electron/**/*.cjs'], languageOptions: { sourceType: 'commonjs', globals: globals.node } },
   // file and player names are cleaned of control characters on purpose (/[\u0000-\u001f]/)
   { files: ['server/**/*.mjs'], rules: { 'no-control-regex': 'off' } },
   { files: ['shared/**/*.mjs'], languageOptions: { globals: { ...globals.browser, ...globals.node } } },

@@ -4,7 +4,7 @@ import { Icon, AppMark } from '../lib/icons.mjs';
 import { LANGS, t, setLang, currentLang } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
 import { PRESETS, presetMap, activePreset, keyLabel, padFamily, padLabel } from '../lib/controls.mjs';
-import { addGamesFlow, DropZone, DiscoverModal } from './library.mjs';
+import { addGamesFlow, DropZone, DiscoverModal, discoverLabel } from './library.mjs';
 import { ThemePicker, usePads, FAMILY_NAMES, PAD_POS } from './settings.mjs';
 
 /**
@@ -117,7 +117,7 @@ export function Onboarding({ onDone }) {
         <p class="muted">${t('onb.gamesText', 'Add the ROMs you own (.gb, .gbc, .gba, .nds or .zip) and any ROM-hack patches. They are copied into your souldew library.')}</p></div>
       <${DropZone} onAdded=${() => reloadLibrary()} />
       <div class="row">
-        <button class="btn go" onClick=${() => setDiscover(true)}><${Icon} name="search" size=${16} />${t('disc.button', 'Search my Mac')}</button>
+        <button class="btn go" onClick=${() => setDiscover(true)}><${Icon} name="search" size=${16} />${discoverLabel()}</button>
         <button class="btn" onClick=${() => addGamesFlow({ reloadLibrary, toast })}><${Icon} name="plus" size=${16} />${t('lib.addFiles', 'Add files')}</button>
         ${window.sls && html`<button class="btn ghost" onClick=${() => addGamesFlow({ reloadLibrary, folder: true, toast })}><${Icon} name="folder" size=${16} />${t('lib.addFolder', 'Use a folder')}</button>`}
         <span class="spacer"></span>

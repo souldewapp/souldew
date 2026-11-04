@@ -1,9 +1,12 @@
-// Prepares an app update for publishing on GitHub Releases (run after `npm run dist`):
-// hashes the DMG, writes the update feed latest.json and prints the `gh release create` command.
+// Prepares an app update for publishing on GitHub Releases (run after `npm run dist`, and with the Windows installer
+// from `npm run dist:win` / the Windows workflow in dist/): hashes the DMG and the Windows installer, writes the
+// update feed latest.json (one feed for both platforms) and prints the `gh release create` command.
 // It does not upload anything itself.
 //
-// Usage: npm run release -- [--notes "text" | --notes-file file] [--repo owner/name] [--dmg path] [--min-version x.y.z] [--out dir] [--key file]
+// Usage: npm run release -- [--notes "text" | --notes-file file] [--repo owner/name] [--dmg path] [--win-exe path | --no-win]
+//                           [--min-version x.y.z] [--out dir] [--key file]
 // Without --notes/--notes-file the notes come from the "## <version>" section of CHANGELOG.md.
+// Without --win-exe the installer is picked up from dist/souldew-<version>-win-x64-setup.exe when it is there.
 // latest.json is signed (Ed25519) with the private key from --key, $SLS_RELEASE_KEY or ~/.config/soullink-studio/release-key.pem.
 //
 // One-time setup: npm run release -- --init-key [--key file]
@@ -13,7 +16,7 @@ import { join, dirname, resolve, relative, sep } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { generateKeyPairSync, createPrivateKey } from 'node:crypto';
-import { parseVersion, validateFeed, feedUrlFrom, dmgAssetName } from '../shared/update.mjs';
+import { parseVersion, validateFeed, feedUrlFrom, dmgAssetName, winAssetName } from '../shared/update.mjs';
 import { sha256File, signFeed, publicKeyBase64, verifyFeedSignature } from '../electron/update-core.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -54,7 +57,28 @@ export function loadReleaseKey(keyPath, expectedPublicKey) {
   return { key, publicKey: pub };
 }
 
-const FLAGS = new Set(['init-key']);
+/**
+ * The unsigned feed: the DMG at the top level (all that souldew ≤ 2.0 reads), every other platform under `assets`.
+ * dmg / win: { sha256, size } of the files as they will be uploaded (named dmgAssetName / winAssetName).
+ */
+export function buildFeed({ version, notes, repo, dmg, win = null, minVersion = null, pubDate = new Date().toISOString() }) {
+  const base = `https://github.com/${repo}/releases/download/v${version}`;
+  const feed = validateFeed({
+    version,
+    notes,
+    url: `${base}/${dmgAssetName(version)}`,
+    sha256: dmg.sha256,
+    size: dmg.size,
+    ...(minVersion ? { minVersion } : {}),
+    page: `https://github.com/${repo}/releases/tag/v${version}`,
+    pubDate,
+    ...(win ? { assets: { 'win32-x64': { name: winAssetName(version), url: `${base}/${winAssetName(version)}`, sha256: win.sha256, size: win.size } } } : {}),
+  });
+  if (!Object.keys(feed.assets).length) delete feed.assets;
+  return Object.fromEntries(Object.entries(feed).filter(([, v]) => v !== null));
+}
+
+const FLAGS = new Set(['init-key', 'no-win']);
 
 function args(argv) {
   const out = {};
@@ -84,7 +108,17 @@ export function changelogSection(text, version) {
 
 const q = (s) => `"${String(s).replace(/(["\\$`])/g, '\\$1')}"`;
 // Paths inside the project are printed relative to it (the gh command is meant to be run from there).
-const show = (p) => (p.startsWith(root + '/') ? relative(root, p) : p);
+const show = (p) => (p.startsWith(root + sep) ? relative(root, p).split(sep).join('/') : p);
+
+/** Copies a build into the release folder under its asset name and hashes it. */
+async function stage(src, out, name) {
+  const asset = join(out, name);
+  rmSync(asset, { force: true });
+  console.log(`Copying ${show(src)} → ${show(asset)} …`);
+  copyFileSync(src, asset, constants.COPYFILE_FICLONE); // APFS clone: instant, no extra space
+  console.log('Hashing …');
+  return { path: asset, name, sha256: await sha256File(asset), size: statSync(asset).size };
+}
 
 async function main() {
   const a = args(process.argv.slice(2));
@@ -105,7 +139,8 @@ Apps built from now on only install updates signed with this key.`);
   let signing = null;
   if (existsSync(keyPath)) {
     signing = loadReleaseKey(keyPath, expectedPub);
-    if ((statSync(keyPath).mode & 0o077) !== 0) console.warn(`Warning: ${keyPath} is readable by other users – run: chmod 600 ${q(keyPath)}`);
+    // (Windows has no POSIX file modes – the key's protection there is the user profile's ACL.)
+    if (process.platform !== 'win32' && (statSync(keyPath).mode & 0o077) !== 0) console.warn(`Warning: ${keyPath} is readable by other users – run: chmod 600 ${q(keyPath)}`);
     if (!expectedPub) console.warn('Warning: package.json has no updates.publicKey – the feed is signed, but the apps can\'t check it.');
   } else if (expectedPub) {
     throw new Error(`Release key not found: ${keyPath}\nThe apps only accept a signed feed. Pass --key file or set SLS_RELEASE_KEY (restore it from your backup).`);
@@ -121,6 +156,13 @@ Apps built from now on only install updates signed with this key.`);
   const product = pkg.build?.productName || pkg.name;
   const dmg = resolve(a.dmg || join(root, 'dist', `${product}-${version}-arm64.dmg`));
   if (!existsSync(dmg)) throw new Error(`DMG not found: ${dmg}\nRun \`npm run dist\` first (after raising "version" in package.json).`);
+  const winDefault = join(root, 'dist', winAssetName(version));
+  const winExe = a['no-win'] ? null : a['win-exe'] ? resolve(a['win-exe']) : existsSync(winDefault) ? winDefault : null;
+  if (winExe && !existsSync(winExe)) throw new Error(`Windows installer not found: ${winExe}`);
+  if (!winExe && !a['no-win']) {
+    console.warn(`Warning: no Windows installer (${show(winDefault)}) – this update is macOS only; the Windows app won't offer it.
+  Build it with \`npm run dist:win\` on Windows or download it from the Windows workflow, or pass --win-exe path (--no-win silences this).`);
+  }
 
   let notes = a.notes ?? (a['notes-file'] ? readFileSync(resolve(a['notes-file']), 'utf8').trim() : null);
   if (notes == null) {
@@ -131,24 +173,9 @@ Apps built from now on only install updates signed with this key.`);
 
   const out = resolve(a.out || join(root, 'dist', `release-${version}`));
   mkdirSync(out, { recursive: true });
-  const asset = join(out, dmgAssetName(version));
-  rmSync(asset, { force: true });
-  console.log(`Copying ${show(dmg)} → ${show(asset)} …`);
-  copyFileSync(dmg, asset, constants.COPYFILE_FICLONE); // APFS clone: instant, no extra space
-  console.log('Hashing …');
-  const sha256 = await sha256File(asset);
-  const size = statSync(asset).size;
-  const feed = validateFeed({
-    version,
-    notes,
-    url: `https://github.com/${repo}/releases/download/v${version}/${dmgAssetName(version)}`,
-    sha256,
-    size,
-    ...(a['min-version'] ? { minVersion: a['min-version'] } : {}),
-    page: `https://github.com/${repo}/releases/tag/v${version}`,
-    pubDate: new Date().toISOString(),
-  });
-  let clean = Object.fromEntries(Object.entries(feed).filter(([, v]) => v !== null));
+  const mac = await stage(dmg, out, dmgAssetName(version));
+  const win = winExe ? await stage(winExe, out, winAssetName(version)) : null;
+  let clean = buildFeed({ version, notes, repo, dmg: mac, win, minVersion: a['min-version'] || null });
   if (signing) {
     clean = signFeed(clean, signing.key);
     verifyFeedSignature(JSON.parse(JSON.stringify(clean)), signing.publicKey); // exactly what the apps will do
@@ -157,15 +184,15 @@ Apps built from now on only install updates signed with this key.`);
   writeFileSync(join(out, 'notes.md'), notes + '\n');
 
   const feedUrl = feedUrlFrom({ ...pkg.updates, repo });
+  const assets = [mac, win].filter(Boolean);
   console.log(`
 Update ${version} is ready in ${show(out)}:
-  ${dmgAssetName(version)}  ${(size / 1024 / 1024).toFixed(1)} MB
-  sha256 ${sha256}
-  latest.json (${signing ? `signed with ${show(keyPath)}` : 'NOT signed'}), notes.md
+${assets.map((x) => `  ${x.name}  ${(x.size / 1024 / 1024).toFixed(1)} MB\n  sha256 ${x.sha256}`).join('\n')}
+  latest.json (${signing ? `signed with ${show(keyPath)}` : 'NOT signed'}${win ? ', macOS + Windows' : ', macOS only'}), notes.md
 
 Publish it from the project folder (the installed apps read ${feedUrl}):
 
-  gh release create v${version} ${q(show(asset))} ${q(show(join(out, 'latest.json')))} --repo ${repo} --title ${q(`${product} ${version}`)} --notes-file ${q(show(join(out, 'notes.md')))}
+  gh release create v${version} ${[...assets.map((x) => x.path), join(out, 'latest.json')].map((p) => q(show(p))).join(' ')} --repo ${repo} --title ${q(`${product} ${version}`)} --notes-file ${q(show(join(out, 'notes.md')))}
 
 Don't mark it as a pre-release or draft – "latest" only points to normal releases.`);
 }

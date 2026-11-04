@@ -18,8 +18,8 @@ body:
   - type: input
     id: os
     attributes:
-      label: macOS version and Mac
-      placeholder: "macOS 15.4, MacBook Air M2"
+      label: Operating system and computer
+      placeholder: "macOS 15.4, MacBook Air M2 – or Windows 11 24H2, x64 laptop"
     validations:
       required: true
   - type: input

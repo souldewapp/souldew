@@ -1,10 +1,19 @@
 name: Release
 
-# Pushing a version tag publishes an update: `git tag v2.1.0 && git push origin v2.1.0`.
+# Pushing a version tag builds an update: `git tag v2.1.0 && git push origin v2.1.0`.
 # The tag must match "version" in package.json, and CHANGELOG.md needs a "## 2.1.0" section (the release notes).
-# Installed apps find the new version within a few hours (or at once via Settings › About › Check for updates).
 #
-# One-time setup: Settings › Secrets and variables › Actions › New repository secret
+# Windows: the installer is always built here (windows-latest).
+# macOS: the DMG is built here only when the repository variable MACOS_RELEASE is "true" (Settings › Secrets and
+# variables › Actions › Variables) – macOS runners don't start for this repository at the moment.
+#
+# - DMG built here and SLS_RELEASE_KEY set: the release is published right away with the DMG, the Windows installer
+#   and one signed latest.json for both. Installed apps find it within a few hours.
+# - Otherwise: a DRAFT release with the Windows installer is created (installed apps don't see drafts). Finish it on
+#   a Mac – see docs/DEVELOPMENT.md › "Releasing": build the DMG, download the installer from the draft, run
+#   `npm run release` (signs one latest.json for both), upload DMG + latest.json to the draft and publish it.
+#
+# One-time setup for the automatic route: Settings › Secrets and variables › Actions › New repository secret
 #   SLS_RELEASE_KEY = the full contents of ~/.config/soullink-studio/release-key.pem
 # (the private half of package.json → updates.publicKey; the apps only accept a feed signed with it).
 
@@ -20,18 +29,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
-    name: Build & publish the macOS app
-    runs-on: macos-latest # Apple silicon – the app is built for arm64
+  windows:
+    name: Build the Windows installer
+    runs-on: windows-latest
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
       - name: Tag matches package.json
         id: version
+        shell: bash
         run: |
           version=$(node -p "require('./package.json').version")
           if [ "v$version" != "$GITHUB_REF_NAME" ]; then
@@ -39,35 +51,97 @@ jobs:
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
-
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      - run: node scripts/fetch-jre.mjs x64
+      - name: Build the installer
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false' # unsigned (no certificate) – README explains SmartScreen
+        run: npx electron-builder --win nsis --x64 --publish never
+      - name: Smoke test
+        run: node scripts/smoke-app.mjs dist/win-unpacked/souldew.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/souldew-${{ steps.version.outputs.version }}-win-x64-setup.exe
+          if-no-files-found: error
 
+  macos:
+    name: Build the macOS DMG
+    if: vars.MACOS_RELEASE == 'true'
+    runs-on: macos-latest # Apple silicon – the app is built for arm64
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
       - name: Build the DMG
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false' # ad-hoc signed (build.mac.identity "-")
         run: npm run dist -- --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/souldew-*-arm64.dmg
+          if-no-files-found: error
 
-      - name: Sign the update feed
-        env:
-          RELEASE_KEY: ${{ secrets.SLS_RELEASE_KEY }}
-        run: |
-          if [ -z "$RELEASE_KEY" ]; then
-            echo "::error::The repository secret SLS_RELEASE_KEY is missing (see the top of this workflow)"
-            exit 1
-          fi
-          key="$RUNNER_TEMP/release-key.pem"
-          (umask 077 && printf '%s\n' "$RELEASE_KEY" > "$key")
-          npm run release -- --key "$key"
-          rm -f "$key"
-
-      - name: Publish the GitHub release
+  publish:
+    name: Publish the GitHub release
+    needs: [windows, macos]
+    # runs when Windows succeeded and macOS either succeeded or was skipped (not built here)
+    if: always() && needs.windows.result == 'success' && (needs.macos.result == 'success' || needs.macos.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish (DMG + installer + signed feed) or create a draft (installer only)
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.windows.outputs.version }}
+          RELEASE_KEY: ${{ secrets.SLS_RELEASE_KEY }}
         run: |
-          out="dist/release-$VERSION"
-          # not a draft or pre-release: the apps read releases/latest/download/latest.json
-          gh release create "v$VERSION" "$out/souldew-$VERSION-arm64.dmg" "$out/latest.json" \
-            --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file "$out/notes.md" --verify-tag
+          ls -la dist
+          dmg="dist/souldew-$VERSION-arm64.dmg"
+          exe="dist/souldew-$VERSION-win-x64-setup.exe"
+          if [ -f "$dmg" ] && [ -n "$RELEASE_KEY" ]; then
+            key="$RUNNER_TEMP/release-key.pem"
+            (umask 077 && printf '%s\n' "$RELEASE_KEY" > "$key")
+            node scripts/release.mjs --key "$key" --dmg "$dmg" --win-exe "$exe"
+            rm -f "$key"
+            out="dist/release-$VERSION"
+            # not a draft or pre-release: the apps read releases/latest/download/latest.json
+            gh release create "v$VERSION" "$out/souldew-$VERSION-arm64.dmg" "$out/souldew-$VERSION-win-x64-setup.exe" "$out/latest.json" \
+              --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file "$out/notes.md" --verify-tag
+            echo "Published v$VERSION with macOS + Windows and a signed latest.json." >> "$GITHUB_STEP_SUMMARY"
+          else
+            [ -f "$dmg" ] && echo "::warning::SLS_RELEASE_KEY is not set – the feed can't be signed, creating a draft instead"
+            node --input-type=module -e "
+              import { readFileSync, writeFileSync } from 'node:fs';
+              const { changelogSection } = await import('./scripts/release.mjs');
+              const notes = changelogSection(readFileSync('CHANGELOG.md', 'utf8'), process.env.VERSION);
+              if (notes == null) { console.error('CHANGELOG.md has no ## ' + process.env.VERSION + ' section'); process.exit(1); }
+              writeFileSync('notes.md', notes + '\n');"
+            gh release create "v$VERSION" "$exe" --draft --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file notes.md --verify-tag
+            {
+              echo "### Draft release v$VERSION created (Windows installer only)"
+              echo "Installed apps don't see it yet. Finish it on a Mac (docs/DEVELOPMENT.md › Releasing):"
+              echo '```'
+              echo "npm run dist"
+              echo "gh release download v$VERSION --pattern '*-win-x64-setup.exe' --dir dist"
+              echo "npm run release"
+              echo "gh release upload v$VERSION dist/release-$VERSION/souldew-$VERSION-arm64.dmg dist/release-$VERSION/latest.json"
+              echo "gh release edit v$VERSION --draft=false --latest"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

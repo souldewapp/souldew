@@ -14,7 +14,8 @@ import { ALL_SLOTS, MODES, slotsOf, defaultRunName } from '../../shared/slots.mj
 /** Runs from before 1–4 players were always a pair – the default where no slots are passed (shared/slots.mjs). */
 const PAIR = ['p1', 'p2'];
 
-const safeName = (s) => String(s || '').replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 40) || 'Spieler';
+// Player names become part of file names ("<name> - <game>.nds"): nothing Windows forbids, no control characters.
+const safeName = (s) => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f\u007f]+/g, '').trim().slice(0, 40) || 'Spieler';
 const defaultName = (slot) => `Spieler ${slot.slice(1)}`;
 
 /**
@@ -381,7 +382,7 @@ async function buildInto(opts, onLog) {
   };
 
   const gameLabel = (patched.patchName || opts.gameTitle || patched.header?.title || 'Pokemon').replace(/^Pokémon\s*/i, '').replace(/\.(xdelta|vcdiff|xdelta3|bps|ups|ips)$/i, '')
-    .replace(/[\\/:*?"<>|]+/g, '').trim() || 'Pokemon'; // becomes part of a file name
+    .replace(/[\\/:*?"<>|\u0000-\u001f\u007f]+/g, '').trim() || 'Pokemon'; // becomes part of a file name
   const ext = patched.system || 'nds';
   // Equal player names would make those players share (and overwrite) one ROM file.
   const labels = outputLabels(players);

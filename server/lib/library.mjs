@@ -1,13 +1,13 @@
 // Game library: scans the library folder(s) for ROMs and patches (also inside .zip files),
 // identifies them by header + CRC32 and matches them to the catalog. Results are cached.
-import { readdirSync, statSync, readFileSync, existsSync, mkdirSync, copyFileSync, openSync, readSync, closeSync } from 'node:fs';
-import { join, extname, basename, resolve, sep, dirname } from 'node:path';
+import { readdirSync, statSync, readFileSync, existsSync, mkdirSync, copyFileSync, openSync, readSync, closeSync, realpathSync } from 'node:fs';
+import { join, extname, basename, resolve, dirname, posix, win32 } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { listZip, readZipEntry } from './zip.mjs';
 import { APP_ROOT, DATA_DIR, DEV, LIBRARY_DIR, SHARED_DIR } from './paths.mjs';
 import { crc32Hex } from '../../shared/checksum.mjs';
-import { writeFileAtomic, httpError } from './fsutil.mjs';
+import { writeFileAtomic, httpError, safeFileName, isInside } from './fsutil.mjs';
 import { identifyRom, matchCatalog, ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../../shared/romid.mjs';
 import { describePatch, detectPatchFormat } from '../../shared/patchers.mjs';
 
@@ -64,7 +64,7 @@ export function resolveId(id, config = {}) {
   const entry = cut < 0 ? undefined : s.slice(cut + 2);
   const abs = resolve(file);
   const roots = libraryRoots(config);
-  if (!roots.some((r) => abs.startsWith(r + sep))) throw httpError(403, 'Datei liegt nicht in einem Bibliotheksordner', 'notInLibrary');
+  if (!roots.some((r) => isInside(abs, r))) throw httpError(403, 'Datei liegt nicht in einem Bibliotheksordner', 'notInLibrary');
   if (!existsSync(abs)) throw httpError(404, `Datei nicht gefunden: ${basename(abs)}`, 'fileNotFoundNamed', { name: basename(abs) });
   return { abs, entry };
 }
@@ -206,18 +206,64 @@ export function scanLibrary(config = {}) {
   return { roms, patches, roots: libraryRoots(config), libraryDir: LIBRARY_DIR };
 }
 
-// ---- finding games elsewhere on this Mac ----------------------------------------------------------------------
-// Where people keep ROMs: the usual folders, iCloud Drive, game / ROM folders, OpenEmu's library. Only headers are
-// read (a few hundred bytes per file), the walk is bounded in depth, files and time, and system folders, app
-// bundles and photo libraries are never entered.
-const DISCOVER_SKIP = /^(node_modules|Library|Applications|Pictures|Music|Movies|\.Trash|Caches?|DerivedData|Pods|venv|site-packages|__pycache__|target|vendor)$|\.(app|photoslibrary|bundle|framework|xcodeproj|xcworkspace|git|lproj)$/i;
+// ---- finding games elsewhere on this computer -----------------------------------------------------------------
+// Where people keep ROMs: the usual folders, iCloud Drive / OneDrive, game / ROM folders, OpenEmu's library (Mac),
+// RetroArch / RetroBat / LaunchBox (Windows). Only headers are read (a few hundred bytes per file), the walk is
+// bounded in depth, files and time, and system folders, app bundles and photo libraries are never entered.
+const DISCOVER_SKIP = /^(node_modules|Library|Applications|Pictures|Music|Movies|Videos|AppData|\$Recycle\.Bin|System Volume Information|WindowsApps|\.Trash|Caches?|DerivedData|Pods|venv|site-packages|__pycache__|target|vendor)$|\.(app|photoslibrary|bundle|framework|xcodeproj|xcworkspace|git|lproj)$/i;
 const MAX_ROM_BYTES = 600 * 1024 * 1024;
 
-export function discoverRoots(home = homedir()) {
-  const h = (...p) => join(home, ...p);
-  return [h('Downloads'), h('Desktop'), h('Documents'), h('Games'), h('ROMs'), h('Roms'), h('roms'), h('Emulation'),
-    h('Library', 'Mobile Documents', 'com~apple~CloudDocs'), h('Library', 'Application Support', 'OpenEmu', 'Game Library')]
-    .filter((d, i, all) => all.indexOf(d) === i && existsSync(d));
+/**
+ * The real folders behind the Downloads / Desktop / Documents shortcuts – the desktop app passes them in
+ * (Electron knows when Windows moved them, e.g. to OneDrive or another drive): SLS_USER_DIRS = JSON list.
+ */
+function userDirs(env, P) {
+  try {
+    const list = JSON.parse(env.SLS_USER_DIRS || '[]');
+    return Array.isArray(list) ? list.filter((d) => typeof d === 'string' && d.length < 1024 && P.isAbsolute(d)) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** One entry per real folder (ROMs / Roms / roms are one folder on case-insensitive disks), existing ones only. */
+function uniqueDirs(dirs, platform) {
+  const seen = new Set();
+  return dirs.filter((d) => {
+    let real;
+    try {
+      if (!statSync(d).isDirectory()) return false;
+      real = realpathSync.native(d);
+    } catch {
+      return false;
+    }
+    const key = platform === 'win32' || platform === 'darwin' ? real.toLowerCase() : real;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/** Every place worth a look on this platform, existing or not (pure – path rules of `platform`, testable anywhere). */
+export function discoverCandidates(home = homedir(), { platform = process.platform, env = process.env } = {}) {
+  const P = platform === 'win32' ? win32 : posix;
+  const h = (...p) => P.join(home, ...p);
+  const common = [...userDirs(env, P), h('Downloads'), h('Desktop'), h('Documents'), h('Games'), h('ROMs'), h('Roms'), h('roms'), h('Emulation')];
+  if (platform === 'win32') {
+    const drive = `${(env.SystemDrive || 'C:').replace(/[\\/]+$/, '')}\\`;
+    const appData = env.APPDATA || h('AppData', 'Roaming');
+    const oneDrive = [env.OneDrive, env.OneDriveConsumer, env.OneDriveCommercial].filter((d) => typeof d === 'string' && P.isAbsolute(d));
+    return [...common, ...oneDrive, h('OneDrive'), h('Emulators'), h('LaunchBox', 'Games'),
+      P.join(appData, 'RetroArch', 'roms'), P.join(appData, 'RetroArch', 'downloads'),
+      P.join(drive, 'RetroArch-Win64', 'roms'), P.join(drive, 'RetroArch-Win64', 'downloads'), P.join(drive, 'RetroBat', 'roms'),
+      P.join(drive, 'ROMs'), P.join(drive, 'Games'), P.join(drive, 'Emulation'), P.join(drive, 'Emulators')];
+  }
+  return [...common, h('Library', 'Mobile Documents', 'com~apple~CloudDocs'), h('Library', 'Application Support', 'OpenEmu', 'Game Library')];
+}
+
+/** The folders "Search my Mac / PC" looks through: the candidates that exist, each real folder once. */
+export function discoverRoots(home = homedir(), opts = {}) {
+  return uniqueDirs(discoverCandidates(home, opts), opts.platform || process.platform);
 }
 
 /**
@@ -227,13 +273,16 @@ export function discoverRoots(home = homedir()) {
 export function discoverRoms({ roots = discoverRoots(), known = [], maxDepth = 4, maxEntries = 30000, budgetMs = 8000 } = {}) {
   const cat = catalog();
   const started = Date.now();
-  const libraryDirs = [LIBRARY_DIR].map((d) => resolve(d) + sep);
   const sig = (r) => `${r.system}|${(r.code || r.title || '').toUpperCase()}|${r.size}`;
   const have = new Set(known.map(sig));
   const found = [];
+  const listed = new Set(); // a file reachable from two places (Documents inside OneDrive …) is listed once
+  const fileKey = (info) => `${process.platform === 'win32' ? info.path.toLowerCase() : info.path}::${info.entry || ''}`;
   let entries = 0;
   let truncated = false;
   const add = (info) => {
+    if (listed.has(fileKey(info))) return;
+    listed.add(fileKey(info));
     const m = matchCatalog(info, cat);
     found.push({ ...info, gameId: m?.game?.id || null, inLibrary: have.has(sig(info)) });
   };
@@ -247,7 +296,7 @@ export function discoverRoms({ roots = discoverRoots(), known = [], maxDepth = 4
       try {
         names = readdirSync(dir);
       } catch {
-        continue; // no permission (macOS asks once per folder) or gone
+        continue; // no permission (macOS asks once per folder, Windows may lock some) or gone
       }
       for (const name of names) {
         if (++entries > maxEntries || Date.now() > deadline) {
@@ -256,7 +305,7 @@ export function discoverRoms({ roots = discoverRoots(), known = [], maxDepth = 4
         }
         if (name.startsWith('.') || DISCOVER_SKIP.test(name)) continue;
         const path = join(dir, name);
-        if (libraryDirs.some((d) => (path + sep).startsWith(d))) continue; // already the library
+        if (path === LIBRARY_DIR || isInside(path, LIBRARY_DIR)) continue; // already the library
         let st;
         try {
           st = statSync(path);
@@ -343,17 +392,10 @@ export function importFiles(paths) {
  * no reserved device names (CON, NUL, COM1 …), composed Unicode (NFC) so the same name never exists twice.
  */
 export function uploadTarget(name) {
-  let safe = String(name ?? '').normalize('NFC').split(/[\\/]/).pop()
-    .replace(/[\u0000-\u001f\u007f:*?"<>|]+/g, '_').replace(/[. ]+$/, '').trim();
+  let safe = safeFileName(name, { fallback: '', maxBytes: 200 }); // file systems allow 255 bytes per name
   const ext = extname(safe).slice(1).toLowerCase();
   if (![...ROM_EXTENSIONS, ...PATCH_EXTENSIONS, 'zip'].includes(ext)) throw httpError(400, 'Nur ROMs (.gb/.gbc/.gba/.nds), Patches oder .zip', 'uploadType');
-  if (/^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i.test(safe)) safe = `_${safe}`;
   if (safe.startsWith('.')) safe = `_${safe.slice(1)}`; // hidden files are skipped by the library scan
-  if (Buffer.byteLength(safe) > 200) { // file systems allow 255 bytes per name
-    const stem = Array.from(safe.slice(0, -(ext.length + 1)));
-    while (Buffer.byteLength(stem.join('')) > 180) stem.pop();
-    safe = `${stem.join('').trim()}.${ext}`;
-  }
   mkdirSync(LIBRARY_DIR, { recursive: true });
   return join(LIBRARY_DIR, safe);
 }

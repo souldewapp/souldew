@@ -1229,3 +1229,19 @@ button.power:focus-visible { outline: 2px solid var(--focus); outline-offset: 2p
 .entry-choices .entry.rules { border-top: 3px solid var(--cir); }
 .entry-choices .entry.rules ul { padding-left: 18px; }
 .onb-choices.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* ---------- Windows: the title bar ---------- */
+/* No traffic lights: Windows draws minimize / maximize / close over the top right corner (36 px high, ~140 px wide,
+   electron/main.mjs titleBarOverlay). The top strip stays draggable, the page starts below the buttons, and the rail
+   needs no room at the top left. */
+html.platform-win32 .titlebar-drag { height: 36px; }
+html.platform-win32 .rail:not(.web) { padding-top: 22px; }
+html.platform-win32 .app-native .main-inner { padding-top: 46px; }
+html.platform-win32 .app-native .session.full { padding-top: 42px; }
+html.platform-win32 .app-native .rail-open { top: 8px; left: 12px; width: 30px; height: 30px; }
+/* slim, dark scroll bars instead of Windows' light default ones */
+html.platform-win32 { scrollbar-color: #3a3942 transparent; }
+html.platform-win32[data-theme='contrast'] { scrollbar-color: #6b6a75 transparent; }
+/* the sidebar toggle moves from the traffic-light row into the brand row, like in the browser */
+html.platform-win32 .rail .brand { padding-right: 36px; }
+html.platform-win32 .rail:not(.web) .rail-toggle { top: 25px; }

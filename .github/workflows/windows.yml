@@ -1,0 +1,97 @@
+name: Windows build
+
+# Builds the Windows installer (NSIS, x64) and checks that it really works: the unpacked app starts, its server
+# answers, the bundled Java runs the randomizer; the installer installs silently, the installed app starts, the
+# uninstaller removes it; and the one-click emulator downloads (melonDS zip, mGBA 7z) unpack. The installer is kept
+# as an Actions artifact (unsigned – see README › Windows).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [windows-port]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & smoke-test the Windows app
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Java runtime (Temurin 17, jlinked) – cached
+        uses: actions/cache@v4
+        with:
+          path: tools/jre/win32-x64
+          key: jre-win32-x64-${{ hashFiles('scripts/fetch-jre.mjs') }}
+      - run: node scripts/fetch-jre.mjs x64
+
+      - name: Build the installer
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false' # no code signing certificate
+        run: npx electron-builder --win nsis --x64 --publish never
+
+      - name: Installer exists under its release name
+        shell: pwsh
+        run: |
+          $v = node -p "require('./package.json').version"
+          $exe = "dist/souldew-$v-win-x64-setup.exe"
+          if (-not (Test-Path $exe)) { Get-ChildItem dist; throw "missing $exe" }
+          "{0}  {1:N1} MB" -f $exe, ((Get-Item $exe).Length / 1MB)
+          if (-not (Test-Path dist/win-unpacked/resources/tools/jre/win32-x64/bin/java.exe)) { throw 'JRE not bundled' }
+
+      - name: Smoke test – unpacked app
+        run: node scripts/smoke-app.mjs dist/win-unpacked/souldew.exe --screenshot smoke-unpacked.png
+
+      - name: Smoke test – install silently, start the installed app, uninstall
+        shell: pwsh
+        run: |
+          $v = node -p "require('./package.json').version"
+          $setup = Resolve-Path "dist/souldew-$v-win-x64-setup.exe"
+          Start-Process -FilePath $setup -ArgumentList '/S' -Wait
+          $dir = Join-Path $env:LOCALAPPDATA 'Programs\souldew'
+          foreach ($f in 'souldew.exe', 'Uninstall souldew.exe', 'resources\tools\jre\win32-x64\bin\java.exe') {
+            if (-not (Test-Path (Join-Path $dir $f))) { throw "not installed: $f" }
+          }
+          $lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'souldew.lnk'
+          if (-not (Test-Path $lnk)) { throw "no start menu shortcut ($lnk)" }
+          node scripts/smoke-app.mjs (Join-Path $dir 'souldew.exe') --screenshot smoke-installed.png
+          if ($LASTEXITCODE -ne 0) { throw 'installed app failed the smoke test' }
+          Start-Process -FilePath (Join-Path $dir 'Uninstall souldew.exe') -ArgumentList '/S' -Wait
+          Start-Sleep -Seconds 5
+          if (Test-Path (Join-Path $dir 'souldew.exe')) { throw 'uninstaller left the app behind' }
+          'install / start / uninstall: ok'
+
+      - name: One-click emulator downloads unpack (melonDS zip, mGBA 7z)
+        shell: pwsh
+        run: |
+          $env:SLS_DATA_DIR = Join-Path $env:RUNNER_TEMP 'emu-data'
+          node --input-type=module -e "const m = await import('./server/lib/emulator.mjs'); for (const id of ['melonds', 'mgba']) { const r = await m.installEmulator(id); console.log(id, r.version, r.path); if (!r.installed || !/\.exe$/i.test(r.path)) process.exit(1); }"
+          if ($LASTEXITCODE -ne 0) { throw 'emulator install failed' }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: souldew-windows-installer
+          path: dist/souldew-*-win-x64-setup.exe
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-test
+          path: |
+            smoke-*.png
+            smoke-app.log
+          if-no-files-found: ignore
+          retention-days: 7

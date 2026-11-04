@@ -6,13 +6,18 @@ import { api } from '../lib/api.mjs';
 import { serverErrorText } from '../lib/errors.mjs';
 import { catalog, gameTitle } from '../lib/data.mjs';
 import { FirstSteps } from './firststeps.mjs';
+import { IS_MAC, shortPath } from '../lib/platform.mjs';
 
 const SYS = { gb: 'GB', gbc: 'GBC', gba: 'GBA', nds: 'DS' };
 
+/** "Search my Mac" / "Search my PC" – the button's label on this computer. */
+export const discoverLabel = () => (IS_MAC ? t('disc.button', 'Search my Mac') : t('disc.buttonPc', 'Search my PC'));
+
 /** Ask for files (native dialog in the app, file input in a browser) and import them. */
+
 /**
- * "Search my Mac": the server looks through Downloads, Desktop, Documents, iCloud Drive, game folders and OpenEmu
- * for ROMs (headers only) – the player ticks what to copy into the library.
+ * "Search my Mac / PC": the server looks through Downloads, Desktop, Documents, iCloud Drive / OneDrive, game folders
+ * and emulator libraries for ROMs (headers only) – the player ticks what to copy into the library.
  */
 export function DiscoverModal({ onClose }) {
   const { reloadLibrary, toast } = useApp();
@@ -31,8 +36,7 @@ export function DiscoverModal({ onClose }) {
     return () => { off = true; };
   }, []);
   const key = (f) => `${f.path}|${f.entry || ''}`;
-  const home = (p) => p.replace(/^\/Users\/[^/]+\/Library\/Mobile Documents\/com~apple~CloudDocs/, 'iCloud Drive')
-    .replace(/^\/Users\/[^/]+\/Library\/Application Support\/OpenEmu\/Game Library/, 'OpenEmu').replace(/^\/Users\/[^/]+/, '~');
+  const home = shortPath;
   const chosen = (res?.found || []).filter((f) => pick[key(f)]);
   const add = async () => {
     setBusy(true);
@@ -47,12 +51,13 @@ export function DiscoverModal({ onClose }) {
       setBusy(false);
     }
   };
-  return html`<${Modal} open=${true} wide onClose=${() => !busy && onClose()} title=${t('disc.title', 'Search this Mac for games')}
+  return html`<${Modal} open=${true} wide onClose=${() => !busy && onClose()} title=${IS_MAC ? t('disc.title', 'Search this Mac for games') : t('disc.titlePc', 'Search this PC for games')}
     footer=${html`<button class="btn ghost" disabled=${busy} onClick=${onClose}>${t('common.cancel', 'Cancel')}</button>
       ${res && html`<button class="btn primary" disabled=${busy || !chosen.length} onClick=${add}><${Icon} name="plus" size=${14} />${t('disc.add', 'Add {n}|Add {n}', { n: chosen.length, count: chosen.length })}</button>`}`}>
     ${!res && !error && html`<div class="disc-search" role="status"><span class="disc-spin" aria-hidden="true"></span>
-      <div><b>${t('disc.searching', 'Looking in Downloads, Desktop, Documents, iCloud Drive and game folders …')}</b>
-      <p class="small muted">${t('disc.privacy', 'Only file names and the first bytes of game files are read – nothing leaves your Mac. macOS may ask once whether souldew may look into these folders.')}</p></div></div>`}
+      <div><b>${IS_MAC ? t('disc.searching', 'Looking in Downloads, Desktop, Documents, iCloud Drive and game folders …') : t('disc.searchingPc', 'Looking in Downloads, Desktop, Documents, OneDrive and game folders …')}</b>
+      <p class="small muted">${IS_MAC ? t('disc.privacy', 'Only file names and the first bytes of game files are read – nothing leaves your Mac. macOS may ask once whether souldew may look into these folders.')
+        : t('disc.privacyPc', 'Only file names and the first bytes of game files are read – nothing leaves your PC.')}</p></div></div>`}
     ${error && html`<div class="warning error" role="alert">${error}</div>`}
     ${res && !res.found.length && html`<div class="note">${t('disc.none', 'No games found in the usual places. Add them by hand – or drop the files into the library.')}</div>`}
     ${res && res.found.length > 0 && html`<ul class="disc-list">
@@ -328,7 +333,7 @@ export function LibraryView() {
 
   return html`<div>
     <div class="topbar"><h1>${t('lib.title', 'Library')}</h1>
-      <button class="btn go" onClick=${() => setDiscover(true)}><${Icon} name="search" size=${16} />${t('disc.button', 'Search my Mac')}</button>
+      <button class="btn go" onClick=${() => setDiscover(true)}><${Icon} name="search" size=${16} />${discoverLabel()}</button>
       <button class="btn" onClick=${() => addGamesFlow({ reloadLibrary, toast })}><${Icon} name="plus" size=${16} />${t('lib.addFiles', 'Add files')}</button>
       ${window.sls && html`<button class="btn ghost" onClick=${() => api.post('/api/library/reveal', {})}><${Icon} name="folder" size=${16} />${t('lib.reveal', 'Show folder')}</button>`}
     </div>

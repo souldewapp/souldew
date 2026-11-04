@@ -17,8 +17,9 @@ test('CRC32 / Adler-32 check values', () => {
 });
 
 test('xz decoder matches the xz CLI (when installed)', (t) => {
-  let xz;
-  try { xz = execFileSync('which', ['xz']).toString().trim(); } catch { return t.skip('xz not installed'); }
+  // Run `xz` straight from the PATH (`which` would hand back a POSIX path that Windows can't start, e.g. Git Bash's).
+  const xz = 'xz';
+  try { execFileSync(xz, ['--version'], { stdio: 'ignore' }); } catch { return t.skip('xz not installed'); }
   const input = new Uint8Array(200000);
   for (let i = 0; i < input.length; i++) input[i] = (i * 7 + (i >> 5)) & 0xff ^ (i % 251 === 0 ? 0x55 : 0);
   const packed = execFileSync(xz, ['-c', '-6'], { input });

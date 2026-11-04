@@ -39,7 +39,7 @@ Chromium's and Node.js's own notices), electron-builder (MIT), ESLint (MIT).
 
 | Component | License | Notes |
 |---|---|---|
-| Eclipse Temurin JRE 17 (arm64) | GPL-2.0 with Classpath Exception | Downloaded by `scripts/fetch-jre.mjs` from the Adoptium API into `tools/jre/` (not in the repository) and bundled into the DMG with its `legal/` folder. https://adoptium.net |
+| Eclipse Temurin JRE 17 (macOS arm64, Windows x64) | GPL-2.0 with Classpath Exception | Downloaded by `scripts/fetch-jre.mjs` from the Adoptium API into `tools/jre/` (not in the repository) and bundled into the DMG / the Windows installer with its `legal/` folder. https://adoptium.net |
 
 ## Fetched at runtime
 

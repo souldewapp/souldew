@@ -1,6 +1,6 @@
 // Java + Universal Pokemon Randomizer ZX detection, download and invocation.
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync, renameSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, renameSync, rmSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, delimiter, dirname } from 'node:path';
 import { listZip, readZipEntry } from './zip.mjs';
@@ -12,15 +12,50 @@ export const UPR_ZIP_SHA256 = '26051fe8a6665ea0582dfcd4d1c3e4889da42a2f731f5fc53
 const BUNDLED_JAR = join(BUNDLED_TOOLS, 'upr', 'PokeRandoZX.jar');
 export const UPR_JAR = existsSync(BUNDLED_JAR) ? BUNDLED_JAR : join(TOOLS_DIR, 'upr', 'PokeRandoZX.jar');
 export const BRIDGE_DIR = join(BUNDLED_TOOLS, 'upr-bridge');
-const BUNDLED_JAVA = join(BUNDLED_TOOLS, 'jre', `${process.platform}-${process.arch}`, 'bin', process.platform === 'win32' ? 'java.exe' : 'java');
+const JAVA_EXE = process.platform === 'win32' ? 'java.exe' : 'java';
+const bundledJava = (arch) => join(BUNDLED_TOOLS, 'jre', `${process.platform}-${arch}`, 'bin', JAVA_EXE);
+const BUNDLED_JAVA = bundledJava(process.arch);
+// An arm64 Windows PC runs the bundled x64 runtime through Windows' x64 emulation.
+const BUNDLED_FALLBACK = process.platform === 'win32' && process.arch === 'arm64' ? bundledJava('x64') : null;
+
+/**
+ * JVM options for the randomizer. UTF-8 as the default charset: Java 17 on Windows would otherwise read and write
+ * text in the ANSI code page (cp1252), unlike macOS – the same seed must give the same game on every computer.
+ */
+export const JAVA_OPTS = ['-Xmx1g', '-Djava.awt.headless=true', '-Dfile.encoding=UTF-8', '-Dsun.stdout.encoding=UTF-8', '-Dsun.stderr.encoding=UTF-8'];
 
 let javaCache = null;
+
+/** Installed JDKs / JREs in the usual Windows folders (…\Java\jdk-17\bin\java.exe, Adoptium, Microsoft, Zulu …). */
+export function windowsJavaCandidates(env = process.env, list = readdirSync) {
+  const found = [];
+  const roots = [env.ProgramFiles, env['ProgramFiles(x86)'], env.ProgramW6432].filter(Boolean);
+  // 'jdk-21.0.4.7-hotspot' → 21, 'jdk1.8.0_202' / 'jre1.8.0' → 8
+  const major = (name) => {
+    const m = /(\d+)(?:\.(\d+))?/.exec(name);
+    return !m ? 0 : m[1] === '1' && m[2] ? Number(m[2]) : Number(m[1]);
+  };
+  for (const root of [...new Set(roots)]) {
+    for (const vendor of ['Java', 'Eclipse Adoptium', 'Eclipse Foundation', 'Microsoft', 'Zulu', 'Amazon Corretto', 'BellSoft', 'Semeru']) {
+      let names = [];
+      try {
+        names = list(join(root, vendor));
+      } catch {
+        continue;
+      }
+      for (const name of names) found.push({ path: join(root, vendor, name, 'bin', 'java.exe'), major: major(name) });
+    }
+  }
+  // newest first, so a current Java wins over an old Java 8 left behind
+  return found.sort((a, b) => b.major - a.major).map((f) => f.path);
+}
 
 function javaCandidates() {
   // The bundled runtime comes first: both players then use the identical Java version,
   // which keeps seeded randomization byte-identical across machines.
   const list = [BUNDLED_JAVA];
-  if (process.env.JAVA_HOME) list.push(join(process.env.JAVA_HOME, 'bin', process.platform === 'win32' ? 'java.exe' : 'java'));
+  if (BUNDLED_FALLBACK) list.push(BUNDLED_FALLBACK);
+  if (process.env.JAVA_HOME) list.push(join(process.env.JAVA_HOME, 'bin', JAVA_EXE));
   list.push('java');
   if (process.platform === 'darwin') {
     const r = spawnSync('/usr/libexec/java_home', [], { encoding: 'utf8' });
@@ -28,11 +63,7 @@ function javaCandidates() {
     list.push('/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java');
     list.push('/opt/homebrew/opt/openjdk/bin/java');
   }
-  if (process.platform === 'win32') {
-    for (const base of ['C:\\Program Files\\Java', 'C:\\Program Files\\Eclipse Adoptium', 'C:\\Program Files\\Microsoft']) {
-      list.push(join(base, 'bin', 'java.exe'));
-    }
-  }
+  if (process.platform === 'win32') list.push(...windowsJavaCandidates());
   return list;
 }
 
@@ -40,13 +71,14 @@ export function detectJava(force = false) {
   if (javaCache && !force) return javaCache;
   for (const bin of javaCandidates()) {
     try {
-      const r = spawnSync(bin, ['-version'], { encoding: 'utf8', timeout: 15000 });
+      // windowsHide: java.exe is a console program – without it every check would flash a console window
+      const r = spawnSync(bin, ['-version'], { encoding: 'utf8', timeout: 15000, windowsHide: true });
       const text = `${r.stderr || ''}${r.stdout || ''}`;
       const m = text.match(/version "([^"]+)"/);
       if (r.status === 0 && m) {
         const raw = m[1];
         const major = raw.startsWith('1.') ? Number(raw.split('.')[1]) : Number(raw.split(/[.+-]/)[0]);
-        javaCache = { ok: major >= 8, bin, version: raw, major, bundled: bin === BUNDLED_JAVA, vendor: text.split('\n')[1]?.trim() || '' };
+        javaCache = { ok: major >= 8, bin, version: raw, major, bundled: bin === BUNDLED_JAVA || bin === BUNDLED_FALLBACK, vendor: text.split(/\r?\n/)[1]?.trim() || '' };
         return javaCache;
       }
     } catch {
@@ -93,8 +125,9 @@ export function runBridge(args, { timeoutMs = 180000 } = {}) {
   if (!existsSync(UPR_JAR)) return Promise.reject(new Error('Universal Pokemon Randomizer ZX fehlt – bitte im Setup installieren.'));
   return new Promise((resolve, reject) => {
     const cp = [UPR_JAR, BRIDGE_DIR].join(delimiter);
-    const child = spawn(java.bin, ['-Xmx1g', '-Djava.awt.headless=true', '-cp', cp, 'SoulLinkBridge', ...args], {
+    const child = spawn(java.bin, [...JAVA_OPTS, '-cp', cp, 'SoulLinkBridge', ...args], {
       cwd: dirname(UPR_JAR),
+      windowsHide: true, // no console window next to the app while the randomizer runs
     });
     let out = '';
     let err = '';
@@ -128,7 +161,7 @@ export function runBridge(args, { timeoutMs = 180000 } = {}) {
         else if (m[1] === 'DONE') result.done = value;
       }
       if (code !== 0 || result.error) {
-        const detail = timedOut ? `Zeitüberschreitung nach ${Math.round(timeoutMs / 1000)} s` : result.error || err.split('\n').find((l) => l.trim()) || `Exit-Code ${code}`;
+        const detail = timedOut ? `Zeitüberschreitung nach ${Math.round(timeoutMs / 1000)} s` : result.error || err.split(/\r?\n/).find((l) => l.trim())?.trim() || `Exit-Code ${code}`;
         const e = new Error(`Randomizer-Fehler: ${detail}`);
         e.details = result;
         reject(e);

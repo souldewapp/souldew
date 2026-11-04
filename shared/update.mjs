@@ -1,10 +1,14 @@
 // Update feed: version comparison and validation of latest.json. Pure functions, no Node or DOM APIs,
 // shared by the Electron updater, scripts/release.mjs and the tests.
 //
-// Feed format (latest.json, published next to the DMG of each GitHub release):
+// Feed format (latest.json, published next to the DMG and the Windows installer of each GitHub release):
 //   { version: '2.1.0', notes: '…', url: 'https://…/souldew-2.1.0-arm64.dmg',
 //     sha256: '<64 hex>', size: 123456789, minVersion?: '2.0.0', page?: 'https://…', pubDate?: '…',
+//     assets?: { 'win32-x64': { name: 'souldew-2.1.0-win-x64-setup.exe', url: 'https://…', sha256: '<64 hex>', size: 98765432 } },
 //     sig?: '<base64 Ed25519 signature of canonicalFeed(feed)>' }
+// The top-level url/sha256/size are the macOS DMG – that is all souldew ≤ 2.0 knows. Other platforms live in
+// `assets` (added in 2.1): older apps ignore unknown fields, and the signature covers every field, `assets` included,
+// so the same signed latest.json serves both (test/update.test.mjs runs the 2.0.0 code against such a feed).
 
 // semver.org 2.0.0 (no leading "v", no leading zeros in numeric parts).
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
@@ -88,15 +92,66 @@ export function validateFeed(feed, { allowLocal = false } = {}) {
     minVersion: minVersion || null,
     page: page || null,
     pubDate: typeof pubDate === 'string' ? pubDate.slice(0, 40) : null,
+    assets: validateAssets(feed.assets, { allowLocal }),
   };
+}
+
+/** Platforms with an `assets` entry: what file type each one installs from. */
+export const ASSET_PLATFORMS = { 'win32-x64': 'exe', 'win32-arm64': 'exe' };
+
+/** 'win32-x64' for this platform / architecture (process.platform, process.arch). */
+export const platformKey = (platform, arch) => `${platform}-${arch}`;
+
+/**
+ * The `assets` block: { 'win32-x64': { name, url, sha256, size } }. Unknown platform keys are dropped (a newer
+ * feed may list platforms this version doesn't know); a known one that is malformed makes the whole feed invalid.
+ */
+function validateAssets(assets, { allowLocal }) {
+  if (assets === undefined || assets === null) return {};
+  if (typeof assets !== 'object' || Array.isArray(assets)) throw feedError('Update feed has an invalid assets block');
+  const out = {};
+  for (const [key, ext] of Object.entries(ASSET_PLATFORMS)) {
+    const a = assets[key];
+    if (a === undefined) continue;
+    if (!a || typeof a !== 'object' || Array.isArray(a)) throw feedError(`Update asset ${key} is invalid`);
+    const { name, url, sha256, size } = a;
+    if (typeof name !== 'string' || name.length > 200 || !/^[\w.+-]+$/.test(name) || !name.toLowerCase().endsWith(`.${ext}`)) throw feedError(`Update asset ${key} has an invalid file name`);
+    if (typeof url !== 'string' || !isAllowedUrl(url, { allowLocal })) throw feedError(`Update asset ${key} must be an https:// URL`);
+    if (!new URL(url).pathname.endsWith(`/${name}`)) throw feedError(`Update asset ${key}: the URL does not end with its file name`);
+    if (typeof sha256 !== 'string' || !/^[0-9a-f]{64}$/i.test(sha256)) throw feedError(`Update asset ${key} has no valid sha256`);
+    if (!Number.isSafeInteger(size) || size <= 0 || size > MAX_UPDATE_SIZE) throw feedError(`Update asset ${key} has no valid size`);
+    out[key] = { name, url, sha256: sha256.toLowerCase(), size };
+  }
+  return out;
+}
+
+/**
+ * The download for this platform: { url, sha256, size, name } – the DMG (top level) on macOS, the `assets` entry
+ * elsewhere – or null when the release has nothing for it (e.g. a macOS-only release seen from Windows).
+ */
+export function assetFor(feed, platform, arch) {
+  if (!feed) return null;
+  if (platform === 'darwin') {
+    let name = null;
+    try {
+      name = decodeURIComponent(new URL(feed.url).pathname.split('/').pop()) || null;
+    } catch {
+      // validateFeed already refused anything that isn't a URL
+    }
+    return { url: feed.url, sha256: feed.sha256, size: feed.size, name };
+  }
+  return feed.assets?.[platformKey(platform, arch)] || null;
 }
 
 /**
  * What to do with a valid feed for the installed version:
- * 'none' (same or older – never downgrade), 'install', or 'manual' (installed version is below minVersion).
+ * 'none' (same or older – never downgrade; or nothing to download for `platform`), 'install', or 'manual'
+ * (installed version is below minVersion).
  */
-export function updateAction(feed, current) {
+export function updateAction(feed, current, { platform, arch } = {}) {
   if (!isNewer(feed.version, current)) return 'none';
+  // a release without a download for this platform is no update for it (only checked when the caller says which)
+  if (platform && !assetFor(feed, platform, arch)) return 'none';
   if (feed.minVersion && compareVersions(current, feed.minVersion) < 0) return 'manual';
   return 'install';
 }
@@ -145,3 +200,6 @@ export function canonicalFeed(feed) {
 
 /** Release asset name without spaces (GitHub would turn them into dots and break the URL in the feed). */
 export const dmgAssetName = (version, arch = 'arm64') => `souldew-${version}-${arch}.dmg`;
+
+/** The Windows installer of a release (package.json → build.win.artifactName builds exactly this name). */
+export const winAssetName = (version, arch = 'x64') => `souldew-${version}-win-${arch}-setup.exe`;

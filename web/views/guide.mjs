@@ -3,6 +3,7 @@ import { useApp, saveDiagnostics } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t } from '../lib/i18n.mjs';
 import { resolve as resolveControls, keyLabel } from '../lib/controls.mjs';
+import { shortcut } from '../lib/platform.mjs';
 
 export const SHORTCUTS = () => [
   ['Tab', t('keys.turboHold', 'Hold for fast forward')],
@@ -10,18 +11,18 @@ export const SHORTCUTS = () => [
   ['P', t('keys.pause', 'Pause / resume')],
   ['F5', t('keys.quicksaveSel', 'Quick save state (selected slot)')],
   ['F8', t('keys.quickloadSel', 'Quick load state (selected slot)')],
-  ['⇧ 1–4', t('keys.saveSlot', 'Save to slot 1–4')],
+  [shortcut('Shift+1–4', { space: true }), t('keys.saveSlot', 'Save to slot 1–4')],
   ['1–4', t('keys.loadSlot', 'Load slot 1–4')],
   ['F12', t('keys.screenshot', 'Screenshot')],
   ['M', t('keys.mute', 'Sound on/off')],
   ['+ / –', t('keys.volume', 'Louder / quieter')],
   ['F', t('keys.fullscreen', 'Fullscreen game')],
   ['R', t('keys.reset', 'Reset the game (asks first)')],
-  // menu accelerators (electron/main.mjs) – only exist in the desktop app
+  // menu accelerators (electron/main.mjs) – only exist in the desktop app; ⌘ on a Mac, Ctrl on Windows
   ...(window.sls?.native ? [
-    ['⌘ 1–5', t('keys.sectionsNavStream', 'Library · SoulLink · Nuzlocke · Connection · Stream')],
-    ['⌘ O', t('keys.add', 'Add games')],
-    ['⌘ B', t('keys.sidebar', 'Show / hide the sidebar')],
+    [shortcut('Mod+1–5', { space: true }), t('keys.sectionsNavStream', 'Library · SoulLink · Nuzlocke · Connection · Stream')],
+    [shortcut('Mod+O', { space: true }), t('keys.add', 'Add games')],
+    [shortcut('Mod+B', { space: true }), t('keys.sidebar', 'Show / hide the sidebar')],
   ] : []),
 ];
 

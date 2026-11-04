@@ -4,6 +4,7 @@ import { html, useState, useEffect } from '/vendor/htm-preact.mjs';
 import { t } from '../lib/i18n.mjs';
 import { Modal, Led, openExternal, useApp } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
+import { PLATFORM, shortcut } from '../lib/platform.mjs';
 
 const bridge = () => window.sls?.update || null;
 
@@ -43,13 +44,19 @@ const REASONS = () => ({
   minVersion: t('upd.reasonMinVersion', 'Your version is too old to update automatically.'),
   'copy-failed': t('upd.reasonCopy', 'Copying the new app failed.'),
   signature: t('upd.reasonSignature', 'The new version’s signature could not be verified, so it was not installed automatically.'),
+  portable: t('upd.reasonPortable', 'This copy of souldew wasn’t installed with the installer (it runs from an unpacked folder), so it can’t update itself.'),
+  'launch-failed': t('upd.reasonLaunch', 'The installer could not be started automatically.'),
 });
 
 const STEPS = () => ({
   verify: t('upd.stepVerify', 'Checking the download'),
   mount: t('upd.stepMount', 'Opening the disk image'),
   copy: t('upd.stepCopy', 'Copying the new app'),
+  launch: t('upd.stepLaunch', 'Starting the installer – souldew closes and opens again by itself'),
 });
+
+/** The platform the update is for (the main process says it; older states don't have it). */
+const isWin = (s) => (s?.platform || PLATFORM) === 'win32';
 
 function NotesModal({ u, open, onClose, footer }) {
   return html`<${Modal} open=${open} onClose=${onClose} title=${t('upd.notesTitle', 'What’s new in {version}', { version: u?.version })} footer=${footer}>
@@ -62,13 +69,20 @@ function ManualModal({ s, open, onClose }) {
     footer=${html`<button class="btn ghost" onClick=${() => bridge().showDownload()}><${Icon} name="folder" size=${14} />${t('upd.showDownload', 'Show download')}</button>
       <button class="btn primary" onClick=${onClose}>${t('common.close', 'Close')}</button>`}>
     ${s.reason && REASONS()[s.reason] && html`<p class="small muted">${REASONS()[s.reason]}</p>`}
-    <ol class="small">
+    ${isWin(s) ? html`<ol class="small">
+      <li>${t('upd.manual1Win', 'Quit souldew ({keys}).', { keys: shortcut('Alt+F4') })}</li>
+      <li>${t('upd.manual2Win', 'In the Explorer window that opened, double-click {file}. It installs the new version and keeps your data.', { file: s.update?.asset?.name || 'souldew-setup.exe' })}</li>
+      <li>${t('upd.manual3', 'Open souldew again.')}</li>
+    </ol>
+    <p class="small muted">${t('upd.dataSafeWin', 'Your runs, saves and settings are kept: they live in your user folder (AppData), not inside the app.')}</p>
+    <p class="small muted">${t('upd.smartscreen', 'If Windows SmartScreen says it protected your PC, click “More info” › “Run anyway”. That is needed because souldew is not signed with a paid certificate.')}</p>`
+    : html`<ol class="small">
       <li>${t('upd.manual1', 'Quit souldew (⌘Q).')}</li>
       <li>${t('upd.manual2', 'In the Finder window that opened, drag souldew onto Applications and choose “Replace”.')}</li>
       <li>${t('upd.manual3', 'Open souldew again.')}</li>
     </ol>
     <p class="small muted">${t('upd.dataSafe', 'Your runs, saves and settings are kept: they live in your Library folder, not inside the app.')}</p>
-    <p class="small muted">${t('upd.gatekeeper', 'If macOS says it can’t check the app for malicious software, right-click it in Applications › Open › Open. That is needed once because souldew is not notarized by Apple.')}</p>
+    <p class="small muted">${t('upd.gatekeeper', 'If macOS says it can’t check the app for malicious software, right-click it in Applications › Open › Open. That is needed once because souldew is not notarized by Apple.')}</p>`}
   <//>`;
 }
 
@@ -138,12 +152,14 @@ export function UpdateBanner() {
     text = STEPS()[s.step] || '';
   } else if (s.phase === 'ready') {
     title = t('upd.ready', 'Update ready');
-    text = `${t('upd.readyText', 'Restart to use version {version}. Your runs, saves and settings stay as they are.', { version: u.version })}${session ? ` ${t('upd.saveFirst', 'Save in the game first – restarting closes it.')}` : ''}`;
+    text = `${isWin(s) ? t('upd.readyTextWin', 'Restart to install version {version} – it takes a few seconds, then souldew opens again. Your runs, saves and settings stay as they are.', { version: u.version })
+      : t('upd.readyText', 'Restart to use version {version}. Your runs, saves and settings stay as they are.', { version: u.version })}${session ? ` ${t('upd.saveFirst', 'Save in the game first – restarting closes it.')}` : ''}`;
     actions = html`<button class="btn small primary" onClick=${() => b.restart()}>${t('upd.restart', 'Restart now')}</button>
       <button class="btn small ghost" title=${t('upd.laterHint', 'The update is installed when you quit the app.')} onClick=${later}>${t('upd.later', 'Later')}</button>`;
   } else if (s.phase === 'manual') {
     title = t('upd.manual', 'Almost done');
-    text = t('upd.manualText', 'Version {version} is downloaded and checked. Replace the app by hand to finish.', { version: u.version });
+    text = isWin(s) ? t('upd.manualTextWin', 'Version {version} is downloaded and checked. Run the installer to finish.', { version: u.version })
+      : t('upd.manualText', 'Version {version} is downloaded and checked. Replace the app by hand to finish.', { version: u.version });
     actions = html`<button class="btn small primary" onClick=${() => setManual(true)}>${t('upd.how', 'How?')}</button>
       <button class="btn small ghost" onClick=${() => b.showDownload()}>${t('upd.showDownload', 'Show download')}</button>`;
   } else {

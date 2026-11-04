@@ -1,18 +1,21 @@
 // External emulators: detection, one-click install from GitHub releases, launching.
 // The integrated emulator (EmulatorJS inside the app) needs none of this.
-import { existsSync, mkdirSync, writeFileSync, readdirSync, rmSync, cpSync, statSync } from 'node:fs';
-import { join, basename, isAbsolute, resolve } from 'node:path';
+import { existsSync, mkdirSync, writeFileSync, readdirSync, rmSync, cpSync, statSync, chmodSync } from 'node:fs';
+import { join, basename, dirname, isAbsolute, resolve } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { TOOLS_DIR } from './paths.mjs';
 import { httpError } from './fsutil.mjs';
+import { extractArchive } from './archive.mjs';
 
+// assets: which file of the emulator's latest GitHub release to download – per platform, and per architecture
+// where the project builds for several (an arm64 Windows PC runs the x64 build of mGBA through emulation).
 export const EMULATORS = {
   melonds: {
     name: 'melonDS',
     systems: ['nds'],
     repo: 'melonDS-emu/melonDS',
     live: 'save', // reads the .sav after every in-game save
-    assets: { darwin: /macOS-universal\.zip$/i, win32: /windows-x86_64\.zip$/i, linux: /appimage-x86_64\.zip$/i },
+    assets: { darwin: /macOS-universal\.zip$/i, win32: { x64: /windows-x86_64\.zip$/i, arm64: /windows-aarch64\.zip$/i }, linux: { x64: /appimage-x86_64\.zip$/i, arm64: /appimage-aarch64\.zip$/i } },
     app: /^melonDS.*\.app$/i,
     exe: /^melonDS(\.exe|\.AppImage)?$/i,
   },
@@ -21,11 +24,26 @@ export const EMULATORS = {
     systems: ['gb', 'gbc', 'gba'],
     repo: 'mgba-emu/mgba',
     live: 'script', // Lua bridge streams the party in real time
-    assets: { darwin: /-macos\.dmg$/i, win32: /-win64\.7z$/i, linux: /appimage-x64\.appimage$/i },
+    assets: { darwin: /-macos\.dmg$/i, win32: /-win64\.7z$/i, linux: { x64: /appimage-x64\.appimage$/i, arm64: /appimage-arm64\.appimage$/i } },
     app: /^mGBA\.app$/i,
     exe: /^mGBA(\.exe)?$/i,
   },
 };
+
+/** The release-asset pattern for an emulator on this platform / architecture, or null when there is no build. */
+export function assetPattern(id, platform = process.platform, arch = process.arch) {
+  const a = EMULATORS[id]?.assets?.[platform];
+  if (!a) return null;
+  if (a instanceof RegExp) return a;
+  return a[arch] || a.x64 || null;
+}
+
+/** Where the official Windows installers put the emulators (mGBA's installer; melonDS only ships a zip). */
+export function windowsSystemPaths(id, env = process.env) {
+  const bases = [env.ProgramFiles, env['ProgramFiles(x86)'], env.LOCALAPPDATA && join(env.LOCALAPPDATA, 'Programs')].filter(Boolean);
+  const exe = id === 'mgba' ? ['mGBA', 'mGBA.exe'] : id === 'melonds' ? ['melonDS', 'melonDS.exe'] : null;
+  return exe ? bases.map((b) => join(b, ...exe)) : [];
+}
 
 const dirFor = (id) => join(TOOLS_DIR, 'emulators', id);
 
@@ -83,6 +101,9 @@ export function detectEmulator(id, customPath) {
     const appName = id === 'mgba' ? 'mGBA.app' : 'melonDS.app';
     candidates.push({ path: `/Applications/${appName}`, source: 'system' }, { path: join(process.env.HOME || '', 'Applications', appName), source: 'system' });
   }
+  if (process.platform === 'win32') {
+    for (const path of windowsSystemPaths(id)) candidates.push({ path, source: 'system' });
+  }
   const found = candidates.find((c) => existsSync(c.path));
   return found ? { installed: true, ...found } : { installed: false };
 }
@@ -93,7 +114,7 @@ export async function installEmulator(id) {
   const relRes = await fetch(`https://api.github.com/repos/${emu.repo}/releases/latest`, { headers: { 'User-Agent': 'souldew' } });
   if (!relRes.ok) throw new Error(`GitHub antwortete ${relRes.status} – später erneut versuchen`);
   const rel = await relRes.json();
-  const pattern = emu.assets[process.platform];
+  const pattern = assetPattern(id);
   const asset = (rel.assets || []).find((a) => pattern?.test(a.name));
   if (!asset) throw new Error(`Kein ${emu.name}-Download für ${process.platform} gefunden`);
   const res = await fetch(asset.browser_download_url);
@@ -105,7 +126,15 @@ export async function installEmulator(id) {
   const file = join(dir, asset.name);
   writeFileSync(file, bytes);
   let ok = true;
-  if (asset.name.endsWith('.dmg')) {
+  if (process.platform !== 'darwin' && /\.(zip|7z)$/i.test(asset.name)) {
+    // Windows / Linux: unpacked in JavaScript – no PowerShell quoting, and Windows 10's tar.exe can't read 7z (LZMA)
+    try {
+      extractArchive(file, dir);
+    } catch (e) {
+      rmSync(dir, { recursive: true, force: true }); // no half-unpacked emulator left to be found
+      throw new Error(`Entpacken fehlgeschlagen: ${e.message}`);
+    }
+  } else if (asset.name.endsWith('.dmg')) {
     const mount = join(dir, 'mnt');
     mkdirSync(mount, { recursive: true });
     ok = spawnSync('hdiutil', ['attach', '-nobrowse', '-readonly', '-mountpoint', mount, file]).status === 0;
@@ -117,18 +146,14 @@ export async function installEmulator(id) {
       ok = !!app;
     }
   } else if (asset.name.endsWith('.zip')) {
-    ok = (process.platform === 'darwin' ? spawnSync('ditto', ['-x', '-k', file, dir]) : process.platform === 'win32'
-      ? spawnSync('powershell', ['-NoProfile', '-Command', `Expand-Archive -Force -LiteralPath '${file}' -DestinationPath '${dir}'`])
-      : spawnSync('unzip', ['-o', file, '-d', dir])).status === 0;
-  } else if (asset.name.endsWith('.7z')) {
-    ok = spawnSync('tar', ['-xf', file, '-C', dir]).status === 0; // bsdtar on Windows 10+ reads 7z
+    ok = spawnSync('ditto', ['-x', '-k', file, dir]).status === 0; // macOS: keeps the .app bundle intact
   } else if (/appimage$/i.test(asset.name)) {
-    spawnSync('chmod', ['+x', file]);
+    chmodSync(file, 0o755);
   }
   if (!ok) throw new Error('Entpacken fehlgeschlagen');
   if (!/appimage$/i.test(asset.name)) rmSync(file, { force: true });
   const inner = findIn(dir, (n) => /\.AppImage$/i.test(n));
-  if (inner) spawnSync('chmod', ['+x', inner]);
+  if (inner) chmodSync(inner, 0o755);
   if (process.platform === 'darwin') {
     const app = findIn(dir, (n) => emu.app.test(n));
     if (app) spawnSync('xattr', ['-dr', 'com.apple.quarantine', app]);
@@ -148,7 +173,8 @@ export async function launchRom(id, romPath, { customPath, script } = {}) {
     child = spawn('open', ['-a', emu.path, '--args', ...args], { detached: true, stdio: 'ignore' });
   } else {
     if (!EMULATORS[id].exe.test(exeName)) throw httpError(400, 'Ungültiger Emulator-Pfad', 'badEmulatorPath');
-    child = spawn(emu.path, args, { detached: true, stdio: 'ignore' });
+    // Windows: started from its own folder, so mGBA's portable.ini (settings next to the exe) and its DLLs are found
+    child = spawn(emu.path, args, { detached: true, stdio: 'ignore', ...(process.platform === 'win32' ? { cwd: dirname(emu.path) } : {}) });
   }
   // An unhandled 'error' event on the child would crash the whole server.
   await new Promise((resolve, reject) => {
@@ -159,9 +185,18 @@ export async function launchRom(id, romPath, { customPath, script } = {}) {
   return { ...emu, script };
 }
 
+/** The command that shows `path` selected in the file manager (Finder / Explorer), as [command, args, options]. */
+export function revealCommand(path, platform = process.platform) {
+  if (platform === 'darwin') return ['open', ['-R', path], {}];
+  // Explorer parses its own command line: /select,"C:\path with spaces\file" – passed verbatim, quoted by hand
+  // (Windows paths can't contain quotes).
+  if (platform === 'win32') return ['explorer.exe', [`/select,"${path.replace(/"/g, '')}"`], { windowsVerbatimArguments: true }];
+  return ['xdg-open', [path], {}];
+}
+
 export function revealInFileManager(path) {
-  const cmd = process.platform === 'darwin' ? ['open', ['-R', path]] : process.platform === 'win32' ? ['explorer', [`/select,${path}`]] : ['xdg-open', [path]];
-  const child = spawn(cmd[0], cmd[1], { detached: true, stdio: 'ignore' });
+  const [cmd, args, opts] = revealCommand(path);
+  const child = spawn(cmd, args, { detached: true, stdio: 'ignore', ...opts });
   child.on('error', (e) => console.warn('reveal failed:', e.message));
   child.unref();
 }
@@ -171,7 +206,7 @@ export function emulatorRunning() {
   const names = /melonDS|NooDS|DeSmuME|desmume|mGBA/i;
   try {
     if (process.platform === 'win32') {
-      return names.test(spawnSync('tasklist', ['/FO', 'CSV', '/NH'], { encoding: 'utf8' }).stdout || '');
+      return names.test(spawnSync('tasklist', ['/FO', 'CSV', '/NH'], { encoding: 'utf8', windowsHide: true }).stdout || '');
     }
     const out = spawnSync('ps', ['-axo', 'comm='], { encoding: 'utf8' }).stdout || '';
     return out.split('\n').some((line) => names.test(line.split('/').pop()));

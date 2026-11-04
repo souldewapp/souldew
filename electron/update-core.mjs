@@ -1,12 +1,14 @@
-// Self-update for the unsigned macOS app – the parts that need Node but not Electron (testable with node --test).
-// Squirrel.Mac only updates properly signed apps, so this does it by hand:
+// Self-update for the unsigned desktop app – the parts that need Node but not Electron (testable with node --test).
+// macOS: Squirrel.Mac only updates properly signed apps, so this does it by hand:
 // download the DMG → verify sha256 + size → mount it → copy the new .app next to the installed one →
 // on restart swap the two bundles with two renames. User data lives in ~/Library/Application Support
 // and is never touched.
+// Windows: download the NSIS installer → verify sha256 + size → on restart run it silently; it waits for the app to
+// quit, replaces it and starts the new version. User data lives in %APPDATA%\SoulLink Studio and is never touched.
 import { createWriteStream, createReadStream, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, readdirSync, accessSync, constants, statSync } from 'node:fs';
 import { createHash, createPublicKey, createPrivateKey, sign as cryptoSign, verify as cryptoVerify } from 'node:crypto';
-import { execFile } from 'node:child_process';
-import { join, dirname, basename } from 'node:path';
+import { execFile, spawn } from 'node:child_process';
+import { join, dirname, basename, sep, win32 } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Readable } from 'node:stream';
 import { validateFeed, isAllowedUrl, digestsMatch, canonicalFeed, MAX_UPDATE_SIZE } from '../shared/update.mjs';
@@ -158,7 +160,7 @@ export async function fetchFeed(url, { timeoutMs = 15000, allowLocal = false, fe
 }
 
 /**
- * Streams the DMG to `dest` while hashing it, with progress callbacks, a timeout for the first byte and
+ * Streams the download (DMG / installer) to `dest` while hashing it, with progress callbacks, a timeout for the first byte and
  * an idle timeout between chunks. The file only appears at `dest` after size and sha256 matched.
  */
 export async function downloadFile(url, dest, { size, sha256, allowLocal = false, timeoutMs = 30000, idleMs = 60000, onProgress, signal, fetchImpl } = {}) {
@@ -234,7 +236,7 @@ export function canReplace(bundle) {
 export function cleanupStaging(bundle) {
   if (!bundle) return;
   const dir = stagingDirFor(bundle);
-  if (bundle.startsWith(dir + '/')) return;
+  if (bundle.startsWith(dir + sep)) return;
   rmSync(dir, { recursive: true, force: true });
 }
 
@@ -320,4 +322,42 @@ export async function stageFromDmg({ dmg, bundle, version, log = () => {} }) {
     const detached = !attached || (await run('/usr/bin/hdiutil', ['detach', mount, '-force']).then(() => true, () => false));
     if (detached) rmSync(mount, { recursive: true, force: true }); // never recurse into a still-mounted image
   }
+}
+
+// ---- Windows: the NSIS installer --------------------------------------------------------------
+// electron-builder's NSIS installer (package.json → build.nsis: one-click, per user, no admin rights) puts
+// "Uninstall souldew.exe" next to souldew.exe. Started with /S --updated it waits for the running app to exit
+// (and closes it if needed), replaces the program files silently and – with --force-run – starts the new version.
+// Path handling uses path.win32, so this is testable on any OS.
+
+/** Install folder of an app installed by the NSIS installer, or null (unpacked build, portable copy, development). */
+export function nsisInstallDir(exePath, { exists = existsSync, productName = 'souldew' } = {}) {
+  if (typeof exePath !== 'string' || !win32.isAbsolute(exePath) || !/\.exe$/i.test(exePath)) return null;
+  const dir = win32.dirname(exePath);
+  return exists(win32.join(dir, `Uninstall ${productName}.exe`)) ? dir : null;
+}
+
+/** Command line for the installer: silent, as an update, and (unless quitting for good) start the app afterwards. */
+export const installerArgs = ({ relaunch = true } = {}) => ['/S', '--updated', ...(relaunch ? ['--force-run'] : [])];
+
+/**
+ * Starts the downloaded installer detached from the app (it has to outlive it). Resolves once the process runs,
+ * rejects (code INSTALLER) if it can't be started – the app then keeps running and says so.
+ */
+export function launchInstaller(installer, { relaunch = true, spawnImpl = spawn } = {}) {
+  return new Promise((resolvePromise, reject) => {
+    let child;
+    try {
+      if (!existsSync(installer)) throw new Error('the downloaded installer is missing');
+      child = spawnImpl(installer, installerArgs({ relaunch }), { detached: true, stdio: 'ignore', cwd: dirname(installer) });
+    } catch (e) {
+      reject(fail('INSTALLER', `The installer could not be started: ${e.message}`));
+      return;
+    }
+    child.once('error', (e) => reject(fail('INSTALLER', `The installer could not be started: ${e.message}`)));
+    child.once('spawn', () => {
+      child.unref();
+      resolvePromise(child.pid);
+    });
+  });
 }

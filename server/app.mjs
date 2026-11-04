@@ -7,7 +7,7 @@ import { once } from 'node:events';
 import { join, extname, normalize, resolve, basename, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { WEB_DIR, SHARED_DIR, CACHE_DIR, DATA_DIR, CONFIG_PATH, NODE_MODULES, DEV, LIBRARY_DIR } from './lib/paths.mjs';
-import { writeFileAtomic, httpError } from './lib/fsutil.mjs';
+import { writeFileAtomic, httpError, safeFileName } from './lib/fsutil.mjs';
 import { detectJava, uprStatus, installUpr, runBridge } from './lib/toolchain.mjs';
 import { preparePatchedRom, KNOWN_PATCHES } from './lib/roms.mjs';
 import { ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../shared/romid.mjs';
@@ -624,7 +624,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const { paths } = await readBody(req);
     return { added: importFiles(paths || []) };
   });
-  // Search this Mac for ROMs (the usual folders) – the import below then copies the ones the player picked.
+  // Search this Mac / PC for ROMs (the usual folders) – the import below then copies the ones the player picked.
   route('POST', /^\/api\/library\/discover$/, () => discoverRoms({ known: scanLibrary(loadConfig()).roms }));
   route('POST', /^\/api\/library\/upload$/, async (req, m, url) => {
     // name checked first (a wrong file type is refused before its bytes are read), then streamed to disk:
@@ -928,7 +928,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         const dir = join(CACHE_DIR, 'unzipped');
         mkdirSync(dir, { recursive: true });
         // one folder per archive entry: different zips often contain equally named ROMs
-        romPath = join(dir, keyOf(romId), basename(entry));
+        // (the entry's own name, made valid here – "Pokémon: X.nds" from a Mac zip can't be created on Windows)
+        romPath = join(dir, keyOf(romId), safeFileName(entry, { fallback: `rom.${extname(entry).slice(1) || 'bin'}` }));
         if (!existsSync(romPath)) {
           mkdirSync(dirname(romPath), { recursive: true });
           writeFileAtomic(romPath, loadFile(romId, loadConfig()));

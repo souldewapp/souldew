@@ -6,10 +6,10 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseVersion, compareVersions, isNewer, isAllowedUrl, validateFeed, updateAction, digestsMatch, feedUrlFrom, dmgAssetName } from '../shared/update.mjs';
-import { fetchChecked } from '../electron/update-core.mjs';
+import { parseVersion, compareVersions, isNewer, isAllowedUrl, validateFeed, updateAction, digestsMatch, feedUrlFrom, dmgAssetName, winAssetName, assetFor, platformKey } from '../shared/update.mjs';
+import { fetchChecked, nsisInstallDir, installerArgs, launchInstaller } from '../electron/update-core.mjs';
 import { sha256File, verifyFile, fetchFeed, downloadFile, bundleFromExe, isTranslocated, stagingDirFor, canReplace, swapBundle, cleanupStaging } from '../electron/update-core.mjs';
-import { changelogSection } from '../scripts/release.mjs';
+import { changelogSection, buildFeed } from '../scripts/release.mjs';
 
 const TMP = mkdtempSync(join(tmpdir(), 'sls-update-'));
 test.after(() => rmSync(TMP, { recursive: true, force: true }));
@@ -209,7 +209,8 @@ test('bundle paths', () => {
   assert.equal(bundleFromExe('/Users/x/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'), '/Users/x/node_modules/electron/dist/Electron.app');
   assert.equal(bundleFromExe('/usr/local/bin/node'), null);
   assert.ok(isTranslocated('/private/var/folders/ab/T/AppTranslocation/1234/d/souldew.app'));
-  assert.equal(stagingDirFor('/Applications/souldew.app'), '/Applications/.souldew.update');
+  // next to the bundle, in the platform's path syntax (this mac-only code is still exercised on Windows CI)
+  assert.equal(stagingDirFor('/Applications/souldew.app'), join('/Applications', '.souldew.update'));
   assert.equal(canReplace(null).reason, 'not-bundle');
   assert.equal(canReplace('/private/var/folders/x/AppTranslocation/y/A.app').reason, 'translocated');
   assert.equal(canReplace('/Volumes/souldew/souldew.app').reason, 'dmg');
@@ -306,7 +307,9 @@ test('release key: init writes 0600 key + public key and never overwrites', asyn
   writeFileSync(pkgPath, JSON.stringify({ name: 'x', version: '2.0.0', updates: { repo: 'o/r' } }, null, 2) + '\n');
   const keyPath = join(dir, 'sub', 'release-key.pem');
   const r = initKey({ keyPath, pkgPath, repoRoot });
-  assert.equal(statSync(keyPath).mode & 0o777, 0o600);
+  // Windows has no POSIX modes (stat always reports 0o666 there); the user profile's ACL protects the key instead.
+  if (process.platform !== 'win32') assert.equal(statSync(keyPath).mode & 0o777, 0o600);
+  assert.ok(existsSync(keyPath));
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
   assert.deepEqual(pkg.updates, { repo: 'o/r', publicKey: r.publicKey });
   assert.equal(loadReleaseKey(keyPath, r.publicKey).publicKey, r.publicKey);
@@ -325,4 +328,137 @@ test('release key: init writes 0600 key + public key and never overwrites', asyn
   assert.equal(keyPathFrom({ key: keyPath }, {}), keyPath);
   assert.equal(keyPathFrom({}, { SLS_RELEASE_KEY: keyPath }), keyPath);
   assert.equal(keyPathFrom({}, {}), DEFAULT_KEY);
+});
+
+// ---- Windows: the installer asset in the feed --------------------------------------------------
+const WIN_URL = 'https://github.com/o/r/releases/download/v2.1.0/souldew-2.1.0-win-x64-setup.exe';
+const winAsset = (over = {}) => ({ name: 'souldew-2.1.0-win-x64-setup.exe', url: WIN_URL, sha256: 'c'.repeat(64), size: 98765, ...over });
+
+test('assets: the Windows installer entry is validated, unknown platforms are dropped', () => {
+  const ok = validateFeed(feed({ assets: { 'win32-x64': winAsset({ sha256: 'C'.repeat(64) }), 'haiku-x64': { anything: 1 } } }));
+  assert.deepEqual(ok.assets, { 'win32-x64': winAsset() });
+  assert.deepEqual(validateFeed(feed()).assets, {}); // older feeds: no assets
+  assert.deepEqual(validateFeed(feed({ assets: null })).assets, {});
+  const bad = [
+    'x', [], { 'win32-x64': null }, { 'win32-x64': [] },
+    { 'win32-x64': winAsset({ name: 'souldew.dmg' }) }, { 'win32-x64': winAsset({ name: '../evil.exe' }) }, { 'win32-x64': winAsset({ name: 'a b.exe' }) },
+    { 'win32-x64': winAsset({ url: WIN_URL.replace('https:', 'http:') }) }, { 'win32-x64': winAsset({ url: 'https://github.com/o/r/other.exe' }) },
+    { 'win32-x64': winAsset({ sha256: 'abc' }) }, { 'win32-x64': winAsset({ size: 0 }) }, { 'win32-x64': winAsset({ size: '98765' }) },
+    { 'win32-x64': winAsset({ size: 3 * 1024 ** 3 }) },
+  ];
+  for (const assets of bad) assert.throws(() => validateFeed(feed({ assets })), (e) => e.code === 'BAD_FEED', JSON.stringify(assets));
+  assert.equal(validateFeed(feed({ assets: { 'win32-x64': winAsset({ url: 'http://localhost:1/souldew-2.1.0-win-x64-setup.exe' }) } }), { allowLocal: true }).assets['win32-x64'].size, 98765);
+});
+
+test('assetFor / updateAction pick the download for this platform', () => {
+  const both = validateFeed(feed({ assets: { 'win32-x64': winAsset() } }));
+  const macOnly = validateFeed(feed());
+  assert.deepEqual(assetFor(both, 'darwin', 'arm64'), { url: feed().url, sha256: SHA, size: 1234, name: 'souldew-2.1.0-arm64.dmg' });
+  assert.deepEqual(assetFor(both, 'win32', 'x64'), winAsset());
+  assert.equal(assetFor(both, 'win32', 'arm64'), null);
+  assert.equal(assetFor(both, 'linux', 'x64'), null);
+  assert.equal(assetFor(macOnly, 'win32', 'x64'), null);
+  assert.equal(platformKey('win32', 'x64'), 'win32-x64');
+  // a release without a Windows installer is no update for Windows – but still one for the Mac
+  assert.equal(updateAction(macOnly, '2.0.0', { platform: 'win32', arch: 'x64' }), 'none');
+  assert.equal(updateAction(macOnly, '2.0.0', { platform: 'darwin', arch: 'arm64' }), 'install');
+  assert.equal(updateAction(both, '2.0.0', { platform: 'win32', arch: 'x64' }), 'install');
+  assert.equal(updateAction(both, '2.1.0', { platform: 'win32', arch: 'x64' }), 'none');
+  assert.equal(updateAction(validateFeed(feed({ minVersion: '2.0.5', assets: { 'win32-x64': winAsset() } })), '2.0.0', { platform: 'win32', arch: 'x64' }), 'manual');
+  assert.equal(winAssetName('2.1.0'), 'souldew-2.1.0-win-x64-setup.exe');
+  assert.equal(winAssetName('2.1.0', 'arm64'), 'souldew-2.1.0-win-arm64-setup.exe');
+});
+
+test('release: one feed carries the DMG (top level) and the Windows installer (assets)', () => {
+  const dmg = { sha256: 'a'.repeat(64), size: 111 };
+  const win = { sha256: 'b'.repeat(64), size: 222 };
+  const f = buildFeed({ version: '2.1.0', notes: 'Windows support', repo: 'o/r', dmg, win, pubDate: '2026-11-04T00:00:00.000Z' });
+  assert.deepEqual(f, {
+    version: '2.1.0', notes: 'Windows support',
+    url: 'https://github.com/o/r/releases/download/v2.1.0/souldew-2.1.0-arm64.dmg', sha256: 'a'.repeat(64), size: 111,
+    page: 'https://github.com/o/r/releases/tag/v2.1.0', pubDate: '2026-11-04T00:00:00.000Z',
+    assets: { 'win32-x64': { name: 'souldew-2.1.0-win-x64-setup.exe', url: 'https://github.com/o/r/releases/download/v2.1.0/souldew-2.1.0-win-x64-setup.exe', sha256: 'b'.repeat(64), size: 222 } },
+  });
+  // macOS only: exactly the 2.0 format (no assets key at all), minVersion when asked for
+  const mac = buildFeed({ version: '2.1.0', notes: 'x', repo: 'o/r', dmg, minVersion: '2.0.0' });
+  assert.equal('assets' in mac, false);
+  assert.equal(mac.minVersion, '2.0.0');
+});
+
+test('backward compatible: souldew 2.0.0 accepts and verifies a signed feed with the Windows entry', async () => {
+  // test/fixtures/update-2.0.0 is the feed code of the released 2.0.0 app, byte for byte (commit bba9071).
+  const old = await import('./fixtures/update-2.0.0/shared/update.mjs');
+  const oldCore = await import('./fixtures/update-2.0.0/electron/update-core.mjs');
+  const { generateKeyPairSync } = await import('node:crypto');
+  const { signFeed, publicKeyBase64, verifyFeedSignature } = await import('../electron/update-core.mjs');
+  const { privateKey } = generateKeyPairSync('ed25519');
+  const pub = publicKeyBase64(privateKey);
+  // Exactly what scripts/release.mjs writes to latest.json today: built, signed, serialized with 2-space indent.
+  const built = buildFeed({ version: '2.1.0', notes: 'Windows support\n- “quotes”, ümlauts', repo: 'souldewapp/souldew', dmg: { sha256: 'a'.repeat(64), size: 123456789 }, win: { sha256: 'B'.repeat(64), size: 98765432 } });
+  const text = JSON.stringify(signFeed(built, privateKey), null, 2) + '\n';
+  const published = JSON.parse(text);
+  assert.ok(published.assets['win32-x64']);
+
+  // 2.0.0: the canonical form covers the new field, so the signature checks out …
+  assert.equal(old.canonicalFeed(published), (await import('../shared/update.mjs')).canonicalFeed(published));
+  assert.ok(oldCore.verifyFeedSignature(published, pub));
+  // … the validation ignores the unknown `assets` and keeps the DMG …
+  const seen = old.validateFeed(published);
+  assert.equal(seen.url, 'https://github.com/souldewapp/souldew/releases/download/v2.1.0/souldew-2.1.0-arm64.dmg');
+  assert.equal(seen.size, 123456789);
+  assert.equal('assets' in seen, false);
+  assert.equal(old.updateAction(seen, '2.0.0'), 'install');
+  // … and the whole check of an installed 2.0.0 app (download, signature, validation) succeeds end to end.
+  await withServer((req, res) => (req.url === '/latest.json' ? res.end(text) : res.writeHead(404).end()), async (b) => {
+    const f = await oldCore.fetchFeed(`${b}/latest.json`, { allowLocal: true, publicKey: pub });
+    assert.equal(f.version, '2.1.0');
+    assert.equal(f.sha256, 'a'.repeat(64));
+    // the new app reads the same file and finds its installer
+    const g = await fetchFeed(`${b}/latest.json`, { allowLocal: true, publicKey: pub });
+    assert.deepEqual(assetFor(g, 'win32', 'x64'), { name: 'souldew-2.1.0-win-x64-setup.exe', url: 'https://github.com/souldewapp/souldew/releases/download/v2.1.0/souldew-2.1.0-win-x64-setup.exe', sha256: 'b'.repeat(64), size: 98765432 });
+    assert.equal(assetFor(g, 'darwin', 'arm64').url, f.url);
+  });
+  // The signature protects the Windows entry for old and new apps alike: a changed installer hash is refused.
+  const tampered = { ...published, assets: { 'win32-x64': { ...published.assets['win32-x64'], sha256: 'f'.repeat(64) } } };
+  assert.throws(() => oldCore.verifyFeedSignature(tampered, pub), (e) => e.code === 'BAD_SIGNATURE');
+  assert.throws(() => verifyFeedSignature(tampered, pub), (e) => e.code === 'BAD_SIGNATURE');
+  // And the other way round: a feed made by the 2.0.0 release script (no assets) still works for the new app.
+  const legacy = signFeed(old.validateFeed(feed()), privateKey);
+  assert.ok(verifyFeedSignature(JSON.parse(JSON.stringify(legacy)), pub));
+  assert.equal(updateAction(validateFeed(legacy), '2.0.0', { platform: 'darwin', arch: 'arm64' }), 'install');
+  assert.equal(updateAction(validateFeed(legacy), '2.0.0', { platform: 'win32', arch: 'x64' }), 'none');
+});
+
+test('Windows install: only an app installed by the NSIS installer updates itself', () => {
+  const files = new Set(['C:\\Users\\Ana\\AppData\\Local\\Programs\\souldew\\Uninstall souldew.exe']);
+  const exists = (p) => files.has(p);
+  assert.equal(nsisInstallDir('C:\\Users\\Ana\\AppData\\Local\\Programs\\souldew\\souldew.exe', { exists }), 'C:\\Users\\Ana\\AppData\\Local\\Programs\\souldew');
+  assert.equal(nsisInstallDir('D:\\build\\win-unpacked\\souldew.exe', { exists }), null); // unpacked / portable
+  assert.equal(nsisInstallDir('/Applications/souldew.app/Contents/MacOS/souldew', { exists: () => true }), null);
+  assert.equal(nsisInstallDir(null), null);
+  assert.deepEqual(installerArgs(), ['/S', '--updated', '--force-run']);
+  assert.deepEqual(installerArgs({ relaunch: false }), ['/S', '--updated']);
+});
+
+test('launchInstaller starts the installer detached and reports a failed start', async () => {
+  const { EventEmitter } = await import('node:events');
+  const exe = join(TMP, 'souldew-2.1.0-win-x64-setup.exe');
+  writeFileSync(exe, 'MZ');
+  const calls = [];
+  const fake = (outcome) => (cmd, args, opts) => {
+    calls.push({ cmd, args, opts });
+    const child = Object.assign(new EventEmitter(), { pid: 4242, unref: () => (child.unrefd = true) });
+    setImmediate(() => (outcome === 'ok' ? child.emit('spawn') : child.emit('error', Object.assign(new Error('spawn EACCES'), { code: 'EACCES' }))));
+    return child;
+  };
+  assert.equal(await launchInstaller(exe, { spawnImpl: fake('ok') }), 4242);
+  assert.equal(calls[0].cmd, exe);
+  assert.deepEqual(calls[0].args, ['/S', '--updated', '--force-run']);
+  assert.equal(calls[0].opts.detached, true);
+  assert.equal(calls[0].opts.stdio, 'ignore');
+  await launchInstaller(exe, { relaunch: false, spawnImpl: fake('ok') });
+  assert.deepEqual(calls[1].args, ['/S', '--updated']);
+  await assert.rejects(launchInstaller(exe, { spawnImpl: fake('fail') }), (e) => e.code === 'INSTALLER' && /EACCES/.test(e.message));
+  await assert.rejects(launchInstaller(join(TMP, 'missing.exe'), { spawnImpl: fake('ok') }), (e) => e.code === 'INSTALLER');
+  assert.equal(calls.length, 3); // a missing installer is never "started"
 });

@@ -28,6 +28,7 @@ import { DeathAlert } from './views/session-info.mjs';
 import { RestartOffer, RunOverNotice } from './views/restart.mjs';
 import { FirstStepsPill } from './views/firststeps.mjs';
 import { mySlotIn } from './lib/restart.mjs';
+import { IS_MAC, shortcut } from './lib/platform.mjs';
 
 applyStoredTheme(); // before the first render: no flash of the wrong colours
 
@@ -53,7 +54,8 @@ const pref = {
 function sendMenuLabels() {
   window.sls?.setMenuLabels?.({
     settings: t('menu.settings', 'Settings …'), file: t('menu.file', 'File'), addGames: t('menu.addGames', 'Add games …'),
-    revealLibrary: t('menu.revealLibrary', 'Show library folder in Finder'), go: t('menu.go', 'Go'),
+    revealLibrary: IS_MAC ? t('menu.revealLibrary', 'Show library folder in Finder') : t('menu.revealLibraryWin', 'Show library folder in Explorer'),
+    go: t('menu.go', 'Go'), quit: t('menu.quit', 'Quit'),
     library: t('nav.library', 'Library'), soullink: t('nav.soullink', 'SoulLink'), nuzlocke: t('nav.nuzlocke', 'Nuzlocke'), link: t('nav.link', 'Connection'), stream: t('nav.stream', 'Stream'),
     emulator: t('menu.emulator', 'Emulator'), pause: t('keys.pause', 'Pause / resume'), turbo: t('menu.turbo', 'Toggle turbo'),
     faster: t('menu.faster', 'Faster'), slower: t('menu.slower', 'Slower'), quicksave: t('menu.quicksave', 'Quick save'), quickload: t('menu.quickload', 'Quick load'),
@@ -532,7 +534,7 @@ function App() {
   const showOnboarding = !!status && !status.config?.onboarded;
   const View = { library: LibraryView, soullink: SoulLinkView, nuzlocke: NuzlockeView, play: PlayView, link: LinkView, stream: StreamView, settings: SettingsView, guide: GuideView }[route.route] || LibraryView;
   const names = runDoc ? getPlayers(runDoc, manifest) : null;
-  // Fullscreen – the window's (macOS) or the game's (F): the side rail folds away, the game gets the room
+  // Fullscreen – the window's (macOS: green button, Windows: F11) or the game's (F): the side rail folds away, the game gets the room
   const [winFs, setWinFs] = useState(false);
   const [docFs, setDocFs] = useState(false);
   useEffect(() => {
@@ -602,12 +604,12 @@ function App() {
       ${native && html`<div class="titlebar-drag"></div>`}
       ${folded && html`<div class="rail-edge" aria-hidden="true" onPointerEnter=${peekIn} onPointerLeave=${peekOut}></div>`}
       ${folded && !fs && !peek && html`<${CoffeeLink} float />`}
-      ${railHidden && !fs && !peek && html`<button class="rail-open no-drag" onClick=${() => setHidden(false)} title=${`${t('rail.show', 'Show the sidebar')} (⌘B)`} aria-label=${t('rail.show', 'Show the sidebar')}><${Icon} name="sidebar" size=${18} /></button>`}
+      ${railHidden && !fs && !peek && html`<button class="rail-open no-drag" onClick=${() => setHidden(false)} title=${`${t('rail.show', 'Show the sidebar')} (${shortcut('Mod+B')})`} aria-label=${t('rail.show', 'Show the sidebar')}><${Icon} name="sidebar" size=${18} /></button>`}
       <aside class=${`rail ${native ? '' : 'web'} ${native ? 'drag' : ''}`} onPointerEnter=${folded ? peekIn : undefined} onPointerLeave=${folded ? peekOut : undefined}
         onfocusin=${folded ? peekIn : undefined} onfocusout=${folded ? (e) => { if (!e.currentTarget.contains(e.relatedTarget)) peekOut(); } : undefined}>
         <div class="brand no-drag"><${AppMark} size=${34} /><div class="name">souldew</div>
           ${streamer && html`<a href="#/stream" class="onair on brand-onair" title=${t('stream.onAirHint', 'Streamer mode is on – codes, keys, paths and spoilers are covered')}>${t('stream.live', 'LIVE')}</a>`}</div>
-        ${!fs && html`<button class="rail-toggle no-drag" onClick=${() => setHidden(!railHidden)} title=${`${railHidden ? t('rail.pin', 'Keep the sidebar open') : t('rail.hide', 'Hide the sidebar')} (⌘B)`}
+        ${!fs && html`<button class="rail-toggle no-drag" onClick=${() => setHidden(!railHidden)} title=${`${railHidden ? t('rail.pin', 'Keep the sidebar open') : t('rail.hide', 'Hide the sidebar')} (${shortcut('Mod+B')})`}
             aria-label=${railHidden ? t('rail.pin', 'Keep the sidebar open') : t('rail.hide', 'Hide the sidebar')} aria-pressed=${!railHidden}><${Icon} name="sidebar" size=${16} /></button>`}
         <nav class="nav no-drag" aria-label=${t('nav.aria', 'Sections')} onPointerOver=${navLight} onPointerMove=${navLight}>
           ${NAV.map((n) => html`<a href=${`#/${n.id}`} class=${here === n.id ? 'active' : ''} aria-current=${here === n.id ? 'page' : undefined} style=${`--na:${n.accent}`}>

@@ -8,6 +8,28 @@ export function decodeXz(input, expectedSize) {
   return new XzStreamDecoder().decode(input, expectedSize);
 }
 
+/** A raw LZMA2 stream (no .xz container) of known size – how 7-Zip archives store LZMA2 data. */
+export function decodeLzma2(input, size) {
+  const d = new XzStreamDecoder();
+  d.started = true;
+  return d.decode(input, size);
+}
+
+/**
+ * A raw LZMA ("LZMA1") stream of known size, as in 7-Zip archives: `props` are the coder's 5 property bytes
+ * (lc/lp/pb, dictionary size – the latter doesn't matter, the whole output is the history).
+ */
+export function decodeLzma(input, props, size) {
+  if (!props || props.length < 1) throw new Error('lzma: missing properties');
+  if (!(size >= 0) || size > 1024 * 1024 * 1024) throw new Error('lzma: stream is implausibly large');
+  const lz = new LzmaState();
+  lz.setProps(props[0], { lzma1: true });
+  lz.resetState();
+  const out = new Uint8Array(size);
+  if (size > 0) lz.decodeChunk(input, 0, out, 0, size, 0);
+  return out;
+}
+
 /**
  * Incremental decoder. xdelta3 keeps ONE liblzma stream per section type (data / inst / addr)
  * alive for the whole patch: the .xz stream + block header appear only in the first window's
@@ -168,13 +190,14 @@ class LzmaState {
     this.resetState();
   }
 
-  setProps(byte) {
+  setProps(byte, { lzma1 = false } = {}) {
     if (byte > 224) throw new Error('xz: bad LZMA properties');
     this.lc = byte % 9;
     byte = (byte / 9) | 0;
     this.lp = byte % 5;
     this.pb = (byte / 5) | 0;
-    if (this.lc + this.lp > 4) throw new Error('xz: lc + lp > 4 is invalid in LZMA2');
+    // LZMA2 limits lc + lp to 4; plain LZMA allows more (up to 12 → a 12 MB literal table, fine)
+    if (!lzma1 && this.lc + this.lp > 4) throw new Error('xz: lc + lp > 4 is invalid in LZMA2');
     this.literal = new Uint16Array(0x300 << (this.lc + this.lp));
     this.literal.fill(1024);
   }

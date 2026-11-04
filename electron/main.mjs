@@ -1,15 +1,21 @@
-// souldew – macOS desktop app shell.
+// souldew – desktop app shell (macOS and Windows).
 // Starts the local server in-process on a free port and shows the UI in a native window.
 import { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeTheme, session, powerSaveBlocker } from 'electron';
-import { join, dirname } from 'node:path';
+import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setupUpdater } from './updater.mjs';
-import { sameOrigin, safeExternalUrl, subframeNavigationAllowed, permissionAllowed, isTrustedIpcSender } from './guards.mjs';
+import { sameOrigin, safeExternalUrl, subframeNavigationAllowed, permissionAllowed, isTrustedIpcSender, titleBarColors } from './guards.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+const MAC = process.platform === 'darwin';
+const WIN = process.platform === 'win32';
 app.setName('souldew');
+// Windows: the same id as the installer's shortcuts (package.json → build.appId), so the taskbar groups the window
+// with a pinned shortcut and shows the app's own name and icon.
+if (WIN) app.setAppUserModelId('studio.soullink.app');
 // The app used to be called "SoulLink Studio": its data folder keeps that name, so runs, saves, settings and the
-// web storage (localStorage, EmulatorJS' IndexedDB) carry over after the rename.
+// web storage (localStorage, EmulatorJS' IndexedDB) carry over after the rename. (macOS: ~/Library/Application
+// Support/SoulLink Studio, Windows: %APPDATA%\SoulLink Studio.)
 // An explicit --user-data-dir (tests, a second profile) still wins.
 if (!app.commandLine.hasSwitch('user-data-dir')) app.setPath('userData', join(app.getPath('appData'), 'SoulLink Studio'));
 // Boot chime + emulator audio without a prior click.
@@ -19,9 +25,18 @@ app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
-// Writable data lives in ~/Library/Application Support/SoulLink Studio (see above); bundled tools sit next to the code.
+// Writable data lives in the data folder (see above); bundled tools sit next to the code.
 process.env.SLS_DATA_DIR = app.getPath('userData');
 process.env.SLS_TOOLS_DIR = app.isPackaged ? join(process.resourcesPath, 'tools') : join(here, '..', 'tools');
+// Where "Search my Mac / PC" looks first: the real Downloads / Desktop / Documents folders (Windows may have moved
+// them to OneDrive or another drive – only Electron knows).
+process.env.SLS_USER_DIRS = JSON.stringify(['downloads', 'desktop', 'documents'].map((k) => {
+  try {
+    return app.getPath(k);
+  } catch {
+    return null;
+  }
+}).filter(Boolean));
 
 // A second start only brings the running window to the front (second-instance below) – it must not boot a server
 // and a window of its own while app.quit() is still on its way.
@@ -43,6 +58,21 @@ async function boot() {
   createWindow();
 }
 
+/** Height of the title bar area on Windows (window buttons drawn over the page, styles.css .platform-win32). */
+const TITLEBAR_HEIGHT = 36;
+
+/**
+ * The window frame per platform. macOS: the page reaches under the title bar, traffic lights inset at the top left.
+ * Windows: likewise, with the minimize / maximize / close buttons drawn by Windows over the top right corner in the
+ * app's colours (titleBarOverlay; the page keeps that corner free and makes the top strip draggable). There is no
+ * visible menu bar on Windows – the menu's keyboard shortcuts still work. Linux: a normal frame.
+ */
+function windowChrome() {
+  if (MAC) return { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 18 } };
+  if (WIN) return { titleBarStyle: 'hidden', titleBarOverlay: { color: '#1c1b21', symbolColor: '#ebe6da', height: TITLEBAR_HEIGHT } };
+  return { autoHideMenuBar: true };
+}
+
 function createWindow() {
   nativeTheme.themeSource = 'dark';
   win = new BrowserWindow({
@@ -52,8 +82,9 @@ function createWindow() {
     minHeight: 640,
     title: 'souldew',
     backgroundColor: '#1b1a1f',
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 18 },
+    ...windowChrome(),
+    // the window / taskbar icon when running from source (`npm run app`); a packaged app uses its own
+    ...(!app.isPackaged && !MAC ? { icon: join(here, '..', 'build', 'icon.png') } : {}),
     show: false,
     webPreferences: {
       preload: join(here, 'preload.cjs'),
@@ -63,7 +94,7 @@ function createWindow() {
     },
   });
   win.once('ready-to-show', () => win.show());
-  // macOS fullscreen (green button / ⌃⌘F): the page folds the side rail away
+  // Window fullscreen (macOS: green button / ⌃⌘F, Windows: F11): the page folds the side rail away
   win.on('enter-full-screen', () => send('fullscreen', true));
   win.on('leave-full-screen', () => send('fullscreen', false));
   win.webContents.on('did-finish-load', () => send('fullscreen', win.isFullScreen()));
@@ -90,7 +121,7 @@ function createWindow() {
     if (sameOrigin(e.url, serverUrl)) return;
     e.preventDefault();
   });
-  // Closing the window (or quitting – Cmd+Q closes it too) while the game has progress since the last
+  // Closing the window (or quitting – Cmd+Q / Alt+F4 close it too) while the game has progress since the last
   // in-game save asks first. The page reports that state with its texts in the UI language.
   win.webContents.on('did-navigate', () => {
     unsaved = null; // a reloaded page reports again once its game runs
@@ -138,7 +169,7 @@ ipcMain.on('unsaved', (e, info) => {
   unsaved = u && u.title && u.keep && u.quit ? u : null;
 });
 
-// While a game runs the display stays on: playing with a controller, macOS sees no input and would dim and sleep
+// While a game runs the display stays on: playing with a controller, the OS sees no input and would dim and sleep
 // mid-battle. (EmulatorJS asks for a screen wake lock itself – Electron has no permission for it.)
 let awake = null;
 ipcMain.on('playing', (e, on) => {
@@ -158,42 +189,55 @@ ipcMain.on('menu-labels', (e, labels) => {
   buildMenu(labels);
 });
 
-/** labels: the page's texts in the app language (see 'menu-labels'); German until the page has sent them. */
+// Windows: the window buttons take the colour of the page's top edge (it changes with Settings › Appearance).
+ipcMain.on('titlebar-colors', (e, colors) => {
+  if (!trusted(e) || !WIN || !win) return;
+  const c = titleBarColors(colors);
+  if (c) win.setTitleBarOverlay({ ...c, height: TITLEBAR_HEIGHT });
+});
+
+/**
+ * labels: the page's texts in the app language (see 'menu-labels'); German until the page has sent them.
+ * macOS gets the usual app menu; Windows has no visible menu bar (titleBarOverlay), so there the menu only carries
+ * the keyboard shortcuts (Ctrl instead of ⌘, F11 for fullscreen) – Settings and Quit move into "File".
+ */
 function buildMenu(labels = {}) {
   const l = (key, fallback) => (typeof labels[key] === 'string' && labels[key] ? labels[key].slice(0, 80) : fallback);
   const nav = (route) => () => send('navigate', route);
   const emu = (action) => () => send('emu', action);
+  const settings = { label: l('settings', 'Einstellungen …'), accelerator: 'CmdOrCtrl+,', click: nav('settings') };
   const template = [
-    {
+    ...(MAC ? [{
       label: 'souldew',
       submenu: [
         { role: 'about' },
         { type: 'separator' },
-        { label: l('settings', 'Einstellungen …'), accelerator: 'Cmd+,', click: nav('settings') },
+        settings,
         { type: 'separator' },
         { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' },
         { type: 'separator' },
         { role: 'quit' },
       ],
-    },
+    }] : []),
     {
       label: l('file', 'Ablage'),
       submenu: [
-        { label: l('addGames', 'Spiele hinzufügen …'), accelerator: 'Cmd+O', click: () => send('menu', 'add-games') },
-        { label: l('revealLibrary', 'Bibliotheksordner im Finder'), click: () => send('menu', 'reveal-library') },
+        { label: l('addGames', 'Spiele hinzufügen …'), accelerator: 'CmdOrCtrl+O', click: () => send('menu', 'add-games') },
+        { label: l('revealLibrary', MAC ? 'Bibliotheksordner im Finder' : 'Bibliotheksordner im Explorer'), click: () => send('menu', 'reveal-library') },
         { type: 'separator' },
-        { role: 'close' },
+        // Windows: no Ctrl+W – it would close the window and with it the app; Alt+F4 does that the Windows way
+        ...(MAC ? [{ role: 'close' }] : [settings, { type: 'separator' }, { role: 'quit', label: l('quit', 'Beenden') }]),
       ],
     },
     { role: 'editMenu' },
     {
       label: l('go', 'Gehe zu'),
       submenu: [
-        { label: l('library', 'Bibliothek'), accelerator: 'Cmd+1', click: nav('library') },
-        { label: l('soullink', 'SoulLink'), accelerator: 'Cmd+2', click: nav('soullink') },
-        { label: l('nuzlocke', 'Nuzlocke'), accelerator: 'Cmd+3', click: nav('nuzlocke') },
-        { label: l('link', 'Verbindung'), accelerator: 'Cmd+4', click: nav('link') },
-        { label: l('stream', 'Stream'), accelerator: 'Cmd+5', click: nav('stream') },
+        { label: l('library', 'Bibliothek'), accelerator: 'CmdOrCtrl+1', click: nav('library') },
+        { label: l('soullink', 'SoulLink'), accelerator: 'CmdOrCtrl+2', click: nav('soullink') },
+        { label: l('nuzlocke', 'Nuzlocke'), accelerator: 'CmdOrCtrl+3', click: nav('nuzlocke') },
+        { label: l('link', 'Verbindung'), accelerator: 'CmdOrCtrl+4', click: nav('link') },
+        { label: l('stream', 'Stream'), accelerator: 'CmdOrCtrl+5', click: nav('stream') },
       ],
     },
     {
@@ -201,22 +245,22 @@ function buildMenu(labels = {}) {
       submenu: [
         { label: l('pause', 'Pause / Weiter'), accelerator: 'P', registerAccelerator: false, click: emu('pause') },
         { label: l('turbo', 'Turbo umschalten'), accelerator: 'T', registerAccelerator: false, click: emu('turbo') },
-        { label: l('faster', 'Schneller'), accelerator: 'Cmd+Plus', click: emu('faster') },
-        { label: l('slower', 'Langsamer'), accelerator: 'Cmd+-', click: emu('slower') },
+        { label: l('faster', 'Schneller'), accelerator: 'CmdOrCtrl+Plus', click: emu('faster') },
+        { label: l('slower', 'Langsamer'), accelerator: 'CmdOrCtrl+-', click: emu('slower') },
         { type: 'separator' },
         { label: l('quicksave', 'Schnellspeichern'), accelerator: 'F5', registerAccelerator: false, click: emu('quicksave') },
         { label: l('quickload', 'Schnellladen'), accelerator: 'F8', registerAccelerator: false, click: emu('quickload') },
         { label: l('screenshot', 'Screenshot'), accelerator: 'F12', registerAccelerator: false, click: emu('screenshot') },
         { label: l('mute', 'Ton an/aus'), accelerator: 'M', registerAccelerator: false, click: emu('mute') },
         { type: 'separator' },
-        { label: l('fullscreen', 'Vollbild'), accelerator: 'Ctrl+Cmd+F', role: 'togglefullscreen' },
+        { label: l('fullscreen', 'Vollbild'), accelerator: MAC ? 'Ctrl+Cmd+F' : 'F11', role: 'togglefullscreen' },
       ],
     },
-    { role: 'windowMenu' },
+    ...(MAC ? [{ role: 'windowMenu' }] : []),
     {
       role: 'help',
       submenu: [
-        { label: l('shortcuts', 'Tastenkürzel'), accelerator: 'Cmd+/', click: () => send('menu', 'shortcuts') },
+        { label: l('shortcuts', 'Tastenkürzel'), accelerator: 'CmdOrCtrl+/', click: () => send('menu', 'shortcuts') },
         { label: l('guide', 'Anleitung'), click: nav('guide') },
         ...(app.isPackaged ? [] : [{ type: 'separator' }, { role: 'toggleDevTools' }, { role: 'reload' }]),
       ],
@@ -237,14 +281,16 @@ handle('pick-files', async (e, opts) => {
   return r.canceled ? [] : r.filePaths;
 });
 handle('reveal', (e, path) => {
-  if (typeof path === 'string' && path.startsWith('/') && !path.includes('\0')) shell.showItemInFolder(path);
+  // an absolute path of this platform (/Users/… on macOS, C:\… or \\server\share\… on Windows)
+  if (typeof path === 'string' && path.length < 4096 && isAbsolute(path) && !path.includes('\0')) shell.showItemInFolder(path);
 });
 handle('open-external', (e, url) => openExternalSafe(url));
-handle('app-info', () => ({ version: app.getVersion(), packaged: app.isPackaged, dataDir: app.getPath('userData') }));
+handle('app-info', () => ({ version: app.getVersion(), packaged: app.isPackaged, dataDir: app.getPath('userData'), platform: process.platform }));
 
 app.on('second-instance', () => {
   if (win) {
     if (win.isMinimized()) win.restore();
+    win.show();
     win.focus();
   }
 });

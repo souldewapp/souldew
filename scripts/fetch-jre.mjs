@@ -2,7 +2,7 @@
 // Downloads a Temurin JDK 17, then jlinks only the modules the randomizer needs
 // (java.base, java.desktop, java.logging) → ~46 MB instead of ~150 MB.
 // Both players use this exact runtime, so seeded randomization stays byte-identical.
-// Usage: node scripts/fetch-jre.mjs [arm64|x64]
+// Usage: node scripts/fetch-jre.mjs [arm64|x64]   (run on the platform you build for: macOS → darwin-*, Windows → win32-*)
 import { mkdirSync, rmSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,14 +27,19 @@ rmSync(tmp, { recursive: true, force: true });
 mkdirSync(tmp, { recursive: true });
 const archive = join(tmp, os === 'windows' ? 'jdk.zip' : 'jdk.tar.gz');
 writeFileSync(archive, Buffer.from(await res.arrayBuffer()));
-const x = os === 'windows'
-  ? spawnSync('powershell', ['-NoProfile', '-Command', `Expand-Archive -Force '${archive}' '${tmp}'`], { stdio: 'inherit' })
-  : spawnSync('tar', ['xzf', archive, '-C', tmp], { stdio: 'inherit' });
+// Windows: the system's bsdtar reads zip (Git's GNU tar, often first in PATH on CI, doesn't) – PowerShell as fallback.
+const winTar = join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
+const psQuote = (p) => `'${p.replace(/'/g, "''")}'`;
+const x = os !== 'windows'
+  ? spawnSync('tar', ['xzf', archive, '-C', tmp], { stdio: 'inherit' })
+  : existsSync(winTar)
+    ? spawnSync(winTar, ['-xf', archive, '-C', tmp], { stdio: 'inherit' })
+    : spawnSync('powershell', ['-NoProfile', '-Command', `Expand-Archive -Force -LiteralPath ${psQuote(archive)} -DestinationPath ${psQuote(tmp)}`], { stdio: 'inherit' });
 if (x.status !== 0) throw new Error('extract failed');
 const dir = readdirSync(tmp).find((d) => d.startsWith('jdk'));
 const home = os === 'mac' ? join(tmp, dir, 'Contents', 'Home') : join(tmp, dir);
 rmSync(target, { recursive: true, force: true });
-const r = spawnSync(join(home, 'bin', 'jlink'), ['--add-modules', 'java.base,java.desktop,java.logging', '--strip-debug', '--no-man-pages',
+const r = spawnSync(join(home, 'bin', os === 'windows' ? 'jlink.exe' : 'jlink'), ['--add-modules', 'java.base,java.desktop,java.logging', '--strip-debug', '--no-man-pages',
   '--no-header-files', '--compress=2', '--output', target], { stdio: 'inherit' });
 if (r.status !== 0) throw new Error('jlink failed');
 rmSync(tmp, { recursive: true, force: true });
