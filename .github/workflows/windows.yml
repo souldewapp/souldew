@@ -2,7 +2,7 @@ name: Windows build
 
 # Builds the Windows installer (NSIS, x64) and checks that it really works: the unpacked app starts, its server
 # answers, the bundled Java runs the randomizer; the installer installs silently, the installed app starts, the
-# uninstaller removes it; and the one-click emulator downloads (melonDS zip, mGBA 7z) unpack. The installer is kept
+# uninstaller removes it; and the one-click emulator downloads (melonDS zip, mGBA 7z) install through the app. The installer is kept
 # as an Actions artifact (unsigned – see README › Windows).
 
 on:
@@ -53,8 +53,8 @@ jobs:
           "{0}  {1:N1} MB" -f $exe, ((Get-Item $exe).Length / 1MB)
           if (-not (Test-Path dist/win-unpacked/resources/tools/jre/win32-x64/bin/java.exe)) { throw 'JRE not bundled' }
 
-      - name: Smoke test – unpacked app
-        run: node scripts/smoke-app.mjs dist/win-unpacked/souldew.exe --screenshot smoke-unpacked.png
+      - name: Smoke test – unpacked app (incl. one-click melonDS zip + mGBA 7z install through the app)
+        run: node scripts/smoke-app.mjs dist/win-unpacked/souldew.exe --screenshot smoke-unpacked.png --emulators
 
       - name: Smoke test – install silently, start the installed app, uninstall
         shell: pwsh
@@ -97,13 +97,6 @@ jobs:
           Start-Sleep -Seconds 5
           if (Test-Path (Join-Path $dir 'souldew.exe')) { throw 'uninstaller left the app behind' }
           'install / start / uninstall: ok'
-
-      - name: One-click emulator downloads unpack (melonDS zip, mGBA 7z)
-        shell: pwsh
-        run: |
-          $env:SLS_DATA_DIR = Join-Path $env:RUNNER_TEMP 'emu-data'
-          node --input-type=module -e "const m = await import('./server/lib/emulator.mjs'); for (const id of ['melonds', 'mgba']) { const r = await m.installEmulator(id); console.log(id, r.version, r.path); if (!r.installed || !/\.exe$/i.test(r.path)) process.exit(1); }"
-          if ($LASTEXITCODE -ne 0) { throw 'emulator install failed' }
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

@@ -53,7 +53,8 @@ export function extractArchive(file, dest) {
  */
 export function extractArchiveAsync(file, dest) {
   return new Promise((resolvePromise, reject) => {
-    const worker = new Worker(new URL(import.meta.url), { workerData: { task: 'extract', file, dest } });
+    // execArgv: [] – the worker must not inherit flags meant for the main script (e.g. `node --input-type=module -e`)
+    const worker = new Worker(new URL(import.meta.url), { workerData: { task: 'extract', file, dest }, execArgv: [] });
     let settled = false;
     worker.once('message', (m) => {
       settled = true;

@@ -4,6 +4,7 @@
 //
 // Usage: node scripts/smoke-app.mjs <path to souldew.exe / the app's binary> [--screenshot file.png] [--timeout 120]
 //          [--lang de]   (starts past the onboarding, in that language – for a screenshot of the library)
+//          [--emulators] (also installs melonDS and mGBA through the app, as the one-click button does – needs internet)
 // The app always tries port 47390 first – this refuses to run while something (e.g. your installed souldew)
 // already listens there, so it never talks to an app it didn't start.
 import { spawn, spawnSync } from 'node:child_process';
@@ -91,6 +92,20 @@ try {
       check(!!r.json && Object.keys(r.json).length > 10, `randomizer bridge runs (${Object.keys(r.json || {}).length} settings)`);
     } catch (e) {
       check(false, `randomizer bridge runs: ${e.message}`);
+    }
+    if (args.includes('--emulators')) {
+      for (const id of ['melonds', 'mgba']) {
+        const t0 = Date.now();
+        const install = fetch(`${base}/api/emulators/${id}/install`, { method: 'POST', headers: { 'x-soullink': '1', 'content-type': 'application/json' }, body: '{}' });
+        // unpacking runs on a worker thread: the app keeps answering meanwhile
+        await sleep(1500);
+        const t1 = Date.now();
+        const alive = await fetch(`${base}/api/status`).then((r) => r.ok, () => false);
+        check(alive && Date.now() - t1 < 3000, `app stays responsive while ${id} installs (${Date.now() - t1} ms)`);
+        const res = await install;
+        const r = await res.json().catch(() => ({}));
+        check(res.ok && r.installed === true && /\.exe$|\.app$|AppImage$/i.test(r.path || ''), `one-click ${id} ${r.version || ''} → ${r.path || r.error} (${Math.round((Date.now() - t0) / 1000)} s)`);
+      }
     }
     if (shot && process.platform === 'win32') {
       await sleep(12000); // boot animation + first paint
