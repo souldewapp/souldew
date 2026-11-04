@@ -156,6 +156,15 @@ export function updateAction(feed, current, { platform, arch } = {}) {
   return 'install';
 }
 
+/**
+ * updateAction for the running app's platform. minVersion exists for macOS bundles that can't be swapped in place;
+ * the Windows installer updates any installed version, so there it never means "by hand".
+ */
+export function actionFor(feed, current, { platform, arch }) {
+  const action = updateAction(feed, current, { platform, arch });
+  return platform === 'win32' && action === 'manual' ? 'install' : action;
+}
+
 /** Constant-shape comparison of two hex digests (case-insensitive). */
 export function digestsMatch(actual, expected) {
   if (typeof actual !== 'string' || typeof expected !== 'string') return false;

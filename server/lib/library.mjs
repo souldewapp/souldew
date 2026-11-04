@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { listZip, readZipEntry } from './zip.mjs';
 import { APP_ROOT, DATA_DIR, DEV, LIBRARY_DIR, SHARED_DIR } from './paths.mjs';
 import { crc32Hex } from '../../shared/checksum.mjs';
-import { writeFileAtomic, httpError, safeFileName, isInside } from './fsutil.mjs';
+import { writeFileAtomic, httpError, safeFileName, isInside, samePath } from './fsutil.mjs';
 import { identifyRom, matchCatalog, ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../../shared/romid.mjs';
 import { describePatch, detectPatchFormat } from '../../shared/patchers.mjs';
 
@@ -262,6 +262,15 @@ export function discoverCandidates(home = homedir(), { platform = process.platfo
 }
 
 /** The folders "Search my Mac / PC" looks through: the candidates that exist, each real folder once. */
+/**
+ * An online-only cloud file (OneDrive "Files On-Demand" and other Windows cloud providers): it takes no space on the
+ * disk yet, and reading even its first bytes would download it. Windows reports no allocated blocks for it (libuv:
+ * st_blocks = allocation size / 512), while a real file of a ROM's size always has some. Never read those.
+ */
+export function onlineOnly(st, platform = process.platform) {
+  return platform === 'win32' && st.size > 4096 && st.blocks === 0;
+}
+
 export function discoverRoots(home = homedir(), opts = {}) {
   return uniqueDirs(discoverCandidates(home, opts), opts.platform || process.platform);
 }
@@ -305,7 +314,7 @@ export function discoverRoms({ roots = discoverRoots(), known = [], maxDepth = 4
         }
         if (name.startsWith('.') || DISCOVER_SKIP.test(name)) continue;
         const path = join(dir, name);
-        if (path === LIBRARY_DIR || isInside(path, LIBRARY_DIR)) continue; // already the library
+        if (samePath(path, LIBRARY_DIR) || isInside(path, LIBRARY_DIR)) continue; // already the library
         let st;
         try {
           st = statSync(path);
@@ -321,7 +330,7 @@ export function discoverRoms({ roots = discoverRoots(), known = [], maxDepth = 4
     }
   };
   const look = (path, name, st) => {
-    if (!st.isFile() || st.size > MAX_ROM_BYTES) return;
+    if (!st.isFile() || st.size > MAX_ROM_BYTES || onlineOnly(st)) return;
     const ext = extname(name).slice(1).toLowerCase();
     try {
       if (ROM_EXTENSIONS.includes(ext)) {

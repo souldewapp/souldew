@@ -2,6 +2,7 @@
 // in plain JavaScript. Used on Windows and Linux; macOS keeps ditto / hdiutil, which preserve .app bundles exactly.
 // Entry names are checked: nothing is written outside the target folder, and names are made valid for the platform.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { join } from 'node:path';
 import { listZip, readZipEntry } from './zip.mjs';
 import { read7z } from './sevenzip.mjs';
@@ -44,4 +45,35 @@ export function extractArchive(file, dest) {
     throw new Error(`Unsupported archive: ${file}`);
   }
   return written;
+}
+
+/**
+ * extractArchive on a worker thread: unpacking a 7z (LZMA) takes seconds of CPU, and the server shares its thread
+ * with the app's main process – the window must not freeze meanwhile. Resolves with the files written.
+ */
+export function extractArchiveAsync(file, dest) {
+  return new Promise((resolvePromise, reject) => {
+    const worker = new Worker(new URL(import.meta.url), { workerData: { task: 'extract', file, dest } });
+    let settled = false;
+    worker.once('message', (m) => {
+      settled = true;
+      if (m.ok) resolvePromise(m.written);
+      else reject(Object.assign(new Error(m.message), { code: m.code }));
+    });
+    worker.once('error', (e) => {
+      settled = true;
+      reject(e);
+    });
+    worker.once('exit', (code) => {
+      if (!settled) reject(new Error(`Unpacking stopped unexpectedly (exit code ${code})`));
+    });
+  });
+}
+
+if (!isMainThread && workerData?.task === 'extract') {
+  try {
+    parentPort.postMessage({ ok: true, written: extractArchive(workerData.file, workerData.dest) });
+  } catch (e) {
+    parentPort.postMessage({ ok: false, message: e.message, code: e.code || null });
+  }
 }

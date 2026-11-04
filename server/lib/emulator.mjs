@@ -5,7 +5,7 @@ import { join, basename, dirname, isAbsolute, resolve } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { TOOLS_DIR } from './paths.mjs';
 import { httpError } from './fsutil.mjs';
-import { extractArchive } from './archive.mjs';
+import { extractArchiveAsync } from './archive.mjs';
 
 // assets: which file of the emulator's latest GitHub release to download – per platform, and per architecture
 // where the project builds for several (an arm64 Windows PC runs the x64 build of mGBA through emulation).
@@ -30,12 +30,25 @@ export const EMULATORS = {
   },
 };
 
-/** The release-asset pattern for an emulator on this platform / architecture, or null when there is no build. */
-export function assetPattern(id, platform = process.platform, arch = process.arch) {
+/**
+ * Release-asset patterns for an emulator on this platform / architecture, best first: the native build, then the
+ * x64 one (Windows on ARM and macOS run x64 builds through emulation) – a release without an arm64 build still
+ * installs. Empty when there is no build for the platform at all.
+ */
+export function assetPatterns(id, platform = process.platform, arch = process.arch) {
   const a = EMULATORS[id]?.assets?.[platform];
-  if (!a) return null;
-  if (a instanceof RegExp) return a;
-  return a[arch] || a.x64 || null;
+  if (!a) return [];
+  if (a instanceof RegExp) return [a];
+  return [...new Set([a[arch], a.x64].filter(Boolean))];
+}
+
+/** The asset of a GitHub release to install: the first pattern that matches one of its files. */
+export function pickAsset(assets, id, platform = process.platform, arch = process.arch) {
+  for (const pattern of assetPatterns(id, platform, arch)) {
+    const hit = (assets || []).find((a) => pattern.test(a.name));
+    if (hit) return hit;
+  }
+  return null;
 }
 
 /** Where the official Windows installers put the emulators (mGBA's installer; melonDS only ships a zip). */
@@ -114,8 +127,7 @@ export async function installEmulator(id) {
   const relRes = await fetch(`https://api.github.com/repos/${emu.repo}/releases/latest`, { headers: { 'User-Agent': 'souldew' } });
   if (!relRes.ok) throw new Error(`GitHub antwortete ${relRes.status} – später erneut versuchen`);
   const rel = await relRes.json();
-  const pattern = assetPattern(id);
-  const asset = (rel.assets || []).find((a) => pattern?.test(a.name));
+  const asset = pickAsset(rel.assets, id);
   if (!asset) throw new Error(`Kein ${emu.name}-Download für ${process.platform} gefunden`);
   const res = await fetch(asset.browser_download_url);
   if (!res.ok) throw new Error(`Download fehlgeschlagen (${res.status})`);
@@ -129,7 +141,7 @@ export async function installEmulator(id) {
   if (process.platform !== 'darwin' && /\.(zip|7z)$/i.test(asset.name)) {
     // Windows / Linux: unpacked in JavaScript – no PowerShell quoting, and Windows 10's tar.exe can't read 7z (LZMA)
     try {
-      extractArchive(file, dir);
+      await extractArchiveAsync(file, dir); // on a worker thread: the app's window stays responsive
     } catch (e) {
       rmSync(dir, { recursive: true, force: true }); // no half-unpacked emulator left to be found
       throw new Error(`Entpacken fehlgeschlagen: ${e.message}`);

@@ -2,13 +2,16 @@
 // compressed header) without 7-Zip or a `tar` that knows the format (Windows 10's tar.exe can't read LZMA).
 // Supported: Copy, LZMA, LZMA2, Deflate, BCJ (x86) and BCJ2 coders, solid and non-solid archives, encoded headers,
 // empty files and folders. Not supported (refused with a clear error): encryption, other filters, multi-volume.
-// Every file's CRC32 is checked when the archive has one.
+// Every file must carry a CRC32 and is checked against it; the declared sizes of all coders together are capped,
+// and running out of compressed data is an error – a damaged or crafted archive can't expand into gigabytes.
 import { inflateRawSync } from 'node:zlib';
 import { decodeLzma, decodeLzma2 } from '../../shared/xz.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-/** Unpacked size we refuse to go beyond (the emulators are ~100 MB). */
+/** Unpacked size we refuse to go beyond, all coders of all folders together (the emulators are ~100 MB). */
 export const MAX_UNPACKED = 1024 * 1024 * 1024;
+/** A compressed header is a file list – never this big. */
+const MAX_HEADER = 64 * 1024 * 1024;
 
 const SIGNATURE = [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c];
 const ID = {
@@ -387,6 +390,18 @@ export function bcj2Decode(main, call, jump, rc, outSize) {
 
 function runCoder(coder, inputs, size) {
   if (size > MAX_UNPACKED) throw bad('archive is too large');
+  try {
+    return decode(coder, inputs, size);
+  } catch (e) {
+    if (e.code === 'BAD_7Z') throw e;
+    throw bad(`damaged data (${e.message})`); // the LZMA / Deflate decoders' own errors
+  }
+}
+
+/** Every coder output a folder declares, summed – what unpacking it would allocate at most. */
+const declaredSize = (folders) => folders.reduce((n, f) => n + f.unpackSizes.reduce((a, b) => a + b, 0), 0);
+
+function decode(coder, inputs, size) {
   switch (coder.id) {
     case CODERS.COPY:
       return inputs[0].subarray(0, size);
@@ -478,6 +493,7 @@ export function read7z(input) {
     if (id !== ID.EncodedHeader) throw bad('unknown header type');
     const info = readStreamsInfo(r);
     if (!info.folders.length) throw bad('empty encoded header');
+    if (declaredSize(info.folders.slice(0, 1)) > MAX_HEADER) throw bad('header is implausibly large');
     header = decodeFolder(buf, info.folders[0], packSlices(buf, info)[0]);
   }
   const r = header;
@@ -493,8 +509,7 @@ export function read7z(input) {
     else if (id === ID.FilesInfo) files = readFilesInfo(r);
     else throw bad(`unknown header property ${id}`);
   }
-  const total = main.folders.reduce((n, f) => n + folderSize(f), 0);
-  if (total > MAX_UNPACKED) throw bad('archive is too large');
+  if (declaredSize(main.folders) > MAX_UNPACKED) throw bad('archive is too large');
   const slices = packSlices(buf, main);
   const folderData = new Map();
   const offsets = new Map();
@@ -513,7 +528,9 @@ export function read7z(input) {
     const data = folderData.get(stream.folder).subarray(at, at + stream.size);
     offsets.set(stream.folder, at + stream.size);
     if (data.length !== stream.size) throw bad('file data out of range');
-    if (stream.crc !== null && crc32(data) !== stream.crc) throw bad(`CRC error in ${name} (damaged archive)`);
+    // 7-Zip (and every other writer we know) stores a CRC for each file – without one nothing proves the data
+    if (stream.crc === null) throw bad(`no checksum for ${name}`);
+    if (crc32(data) !== stream.crc) throw bad(`CRC error in ${name} (damaged archive)`);
     return { name, dir: false, data };
   });
 }

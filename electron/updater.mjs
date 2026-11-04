@@ -5,10 +5,10 @@ import { app, ipcMain, shell } from 'electron';
 import { readFileSync, existsSync, mkdirSync, rmSync, renameSync, copyFileSync, writeFileSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { feedUrlFrom, updateAction, assetFor, dmgAssetName, winAssetName } from '../shared/update.mjs';
+import { feedUrlFrom, updateAction, actionFor, assetFor, dmgAssetName, winAssetName } from '../shared/update.mjs';
 import {
   fetchFeed, downloadFile, verifyFile, bundleFromExe, canReplace, cleanupStaging, stageFromDmg, swapBundle,
-  nsisInstallDir, launchInstaller,
+  nsisInstallDir, launchInstaller, windowsInstallPlan, cleanupWorkDir,
 } from './update-core.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -89,25 +89,26 @@ export function setupUpdater({ send, trusted = () => false }) {
   let download = null; // the verified DMG / installer
   let abort = null;
   let swapped = false;
-  let launched = false;
+  const plan = windowsInstallPlan(); // Windows: when the installer may start (only once the quit is certain)
   const set = (patch) => {
     state = { ...state, ...patch };
     send('update', state);
     return state;
   };
 
-  // Leftovers of the previous update: the replaced old bundle and the downloaded DMG / installer. On Windows the
-  // installer that just updated the app may still be finishing (it starts the new version itself), so wait a bit.
-  const cleanup = () => {
+  // Leftovers of the previous update: the replaced old bundle and the downloaded DMG / installer – right at the start,
+  // before anything new is downloaded. On Windows the installer that just updated the app may still be finishing
+  // (it starts the new version itself): a file it still holds is skipped and goes on the next start.
+  if (bundle) {
     try {
-      if (bundle) cleanupStaging(bundle);
+      cleanupStaging(bundle);
       rmSync(workDir, { recursive: true, force: true });
     } catch (e) {
       console.warn('update cleanup failed:', e.message);
     }
-  };
-  if (bundle) cleanup();
-  else if (installDir) setTimeout(cleanup, 2 * 60 * 1000).unref?.();
+  } else if (installDir) {
+    cleanupWorkDir(workDir, { keep: download });
+  }
 
   async function check({ manual = false } = {}) {
     if (!feedUrl || BUSY.includes(state.phase) || state.phase === 'checking') return state;
@@ -116,7 +117,7 @@ export function setupUpdater({ send, trusted = () => false }) {
     try {
       const feed = await fetchFeed(feedUrl, { allowLocal, publicKey });
       // A release without a download for this platform (e.g. macOS only) is no update here.
-      const action = updateAction(feed, current, target);
+      const action = actionFor(feed, current, target); // (minVersion never sends Windows to the manual route)
       if (action === 'none') return set({ phase: 'uptodate', update: null, checkedAt: Date.now() });
       const asset = assetFor(feed, target.platform, target.arch);
       return set({ phase: 'available', update: { ...feed, action, asset, page: pageFor(feed) }, error: null, checkedAt: Date.now() });
@@ -172,8 +173,7 @@ export function setupUpdater({ send, trusted = () => false }) {
       await verifyFile(file, asset); // once more from disk – what gets installed is exactly what was checked
       if (WIN) {
         if (!installDir) return manualRoute(app.isPackaged ? 'portable' : 'dev');
-        if (u.action === 'manual') return manualRoute('minVersion');
-        // The installer runs when the user restarts (or quits) – it closes the app to replace it.
+        // The installer runs when the app quits ("Restart now", or later) – it closes the app to replace it.
         return set({ phase: 'ready', step: null, progress: null });
       }
       if (!bundle || u.action === 'manual') return manualRoute(!bundle ? 'dev' : 'minVersion');
@@ -215,15 +215,10 @@ export function setupUpdater({ send, trusted = () => false }) {
         download = null;
         return set({ phase: 'error', error: e.message, step: null });
       }
-      try {
-        await launchInstaller(download, { relaunch: true });
-      } catch (e) {
-        console.warn('starting the installer failed:', e.message);
-        return manualRoute('launch-failed').catch((err) => set({ phase: 'error', error: err.message, step: null }));
-      }
-      launched = true;
-      writeMarker();
-      app.quit(); // the installer waits for this, replaces the app and starts the new version
+      // Only quit here: the installer starts in will-quit, when closing can't be called off any more (the
+      // unsaved-progress question may still keep the game open – then the card goes back to "Restart now").
+      plan.restart();
+      app.quit();
       return state;
     }
     try {
@@ -239,17 +234,23 @@ export function setupUpdater({ send, trusted = () => false }) {
     return state;
   }
 
-  // "Later": a downloaded update is put in place when the app quits, so the next start is the new version.
+  // The quit was called off (unsaved progress → "keep playing", electron/main.mjs): no installer, back to "ready".
+  app.on('sls-quit-cancelled', () => {
+    if (WIN && plan.quitCancelled() && state.phase === 'installing') set({ phase: 'ready', step: null });
+  });
+
+  // Quitting for good. Windows: start the installer now – after "Restart now" it starts the new version when done,
+  // after "Later" it only installs. (The spawn happens synchronously, before the app is gone; it was verified.)
+  // macOS: a staged update ("Later") is put in place, so the next start is the new version.
   app.on('will-quit', () => {
-    if (state.phase !== 'ready') return;
     if (WIN) {
-      if (launched || !download) return;
-      launched = true;
-      // no relaunch: the user quit on purpose. (Can't await here – it was verified after the download.)
-      launchInstaller(download, { relaunch: false }).catch((e) => console.warn('installing the update on quit failed:', e.message));
+      const go = plan.willQuit({ ready: state.phase === 'ready', installer: download });
+      if (!go) return;
+      launchInstaller(download, go).catch((e) => console.warn('starting the installer on quit failed:', e.message));
       writeMarker();
       return;
     }
+    if (state.phase !== 'ready') return;
     try {
       swap();
     } catch (e) {

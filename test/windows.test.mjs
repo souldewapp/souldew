@@ -6,11 +6,11 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { safeFileName, isInside, renameRetry } from '../server/lib/fsutil.mjs';
+import { safeFileName, isInside, renameRetry, samePath } from '../server/lib/fsutil.mjs';
 import { read7z, bcjX86Decode, bcj2Decode } from '../server/lib/sevenzip.mjs';
-import { extractArchive, entryTarget } from '../server/lib/archive.mjs';
-import { discoverCandidates, discoverRoots } from '../server/lib/library.mjs';
-import { assetPattern, windowsSystemPaths, revealCommand, EMULATORS } from '../server/lib/emulator.mjs';
+import { extractArchive, extractArchiveAsync, entryTarget } from '../server/lib/archive.mjs';
+import { discoverCandidates, discoverRoots, discoverRoms, onlineOnly } from '../server/lib/library.mjs';
+import { assetPatterns, pickAsset, windowsSystemPaths, revealCommand, EMULATORS } from '../server/lib/emulator.mjs';
 import { windowsJavaCandidates, JAVA_OPTS } from '../server/lib/toolchain.mjs';
 import { titleBarColors } from '../electron/guards.mjs';
 import { decodeLzma2 } from '../shared/xz.mjs';
@@ -37,6 +37,23 @@ test('safeFileName: valid on Windows, macOS and Linux', () => {
   assert.equal(safeFileName('...', { fallback: 'rom.nds' }), 'rom.nds');
   const long = safeFileName(`${'ä'.repeat(300)}.nds`);
   assert.ok(Buffer.byteLength(long) <= 200 && long.endsWith('.nds'), long);
+  // Windows also reserves these, and "CON .txt" (spaces before the dot) is still CON
+  assert.equal(safeFileName('CON .txt'), '_CON .txt');
+  assert.equal(safeFileName('CONIN$'), '_CONIN$');
+  assert.equal(safeFileName('conout$.log'), '_conout$.log');
+  assert.equal(safeFileName('ab\u202Egnp.exe'), 'ab_gnp.exe'); // no right-to-left tricks
+  // cut to length: never ending in a dot or space (Windows would drop them and change the name)
+  for (const name of [`${'a'.repeat(198)}.b${'c'.repeat(30)}`, `${'a'.repeat(199)}. x`, `${'a'.repeat(199)} .x`, `${'b'.repeat(197)}...${'c'.repeat(40)}`]) {
+    const out = safeFileName(name);
+    assert.ok(Buffer.byteLength(out) <= 200 && !/[. ]$/.test(out), JSON.stringify(out));
+  }
+});
+
+test('samePath: case-insensitive on Windows only', () => {
+  assert.ok(samePath('C:\\Users\\Ana\\Library', 'c:\\users\\ana\\library\\', 'win32'));
+  assert.ok(!samePath('C:\\Users\\Ana\\Library', 'C:\\Users\\Ana', 'win32'));
+  assert.ok(samePath('/Users/ana/Library/', '/Users/ana/Library', 'darwin'));
+  assert.ok(!samePath('/Users/ana/library', '/Users/ana/Library', 'linux'));
 });
 
 test('isInside: Windows drive roots and case-insensitivity, POSIX as before', () => {
@@ -107,6 +124,48 @@ test('read7z refuses damaged and foreign data instead of unpacking garbage', () 
   const flipped = Buffer.from(good);
   flipped[40] ^= 0xff; // inside the stored hello.txt → its CRC no longer matches
   assert.throws(() => read7z(flipped), (e) => e.code === 'BAD_7Z' && /CRC/.test(e.message));
+});
+
+/** A minimal .7z: one file 'a' in one folder with one coder (0x030101 LZMA, or 0x00 stored) – optionally a CRC. */
+function tiny7z({ size, packed, coder = 'lzma', crc = null }) {
+  const num = (v) => {
+    const b = Buffer.alloc(5);
+    b[0] = 0xf0;
+    b.writeUInt32LE(v, 1);
+    return b;
+  };
+  const name = Buffer.from('a\0', 'utf16le');
+  const coderBytes = coder === 'lzma' ? [0x23, 0x03, 0x01, 0x01, 0x05, 0x5d, 0, 0, 0x10, 0] : [0x01, 0x00];
+  const crcBytes = crc === null ? [] : [0x0a, 0x01, ...Buffer.from(Uint32Array.of(crc).buffer)];
+  const header = Buffer.concat([
+    Buffer.from([0x01, 0x04, 0x06, 0x00, 0x01, 0x09, packed.length, 0x00, 0x07, 0x0b, 0x01, 0x00, 0x01, ...coderBytes, 0x0c]), num(size),
+    Buffer.from([...crcBytes, 0x00, 0x00, 0x05, 0x01, 0x11, name.length + 1, 0x00]), name, Buffer.from([0x00, 0x00])]);
+  const start = Buffer.alloc(32);
+  Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c, 0, 4]).copy(start);
+  start.writeBigUInt64LE(BigInt(packed.length), 12);
+  start.writeBigUInt64LE(BigInt(header.length), 20);
+  return Buffer.concat([start, packed, header]);
+}
+
+test('7z bombs: a tiny archive that claims a huge file is refused at once, not decoded from thin air', () => {
+  const packed = Buffer.from([0, 0x80, 0x55, 0xaa, 0x13, 0x37, 0, 0, 0, 0]); // ten bytes of "LZMA"
+  for (const size of [10_000_000, 1_000_000_000, 2_000_000_000]) {
+    const t = Date.now();
+    assert.throws(() => read7z(tiny7z({ size, packed })), (e) => e.code === 'BAD_7Z', String(size));
+    assert.ok(Date.now() - t < 1000, `${size}: took ${Date.now() - t} ms`);
+  }
+  // stored data must carry a checksum – and match it
+  const hello = Buffer.from('hello souldew');
+  assert.throws(() => read7z(tiny7z({ size: hello.length, packed: hello, coder: 'copy' })), (e) => e.code === 'BAD_7Z' && /checksum/.test(e.message));
+  assert.throws(() => read7z(tiny7z({ size: hello.length, packed: hello, coder: 'copy', crc: 1 })), (e) => e.code === 'BAD_7Z' && /CRC/.test(e.message));
+  const ok = read7z(tiny7z({ size: hello.length, packed: hello, coder: 'copy', crc: crc32(hello) }));
+  assert.equal(Buffer.from(ok[0].data).toString(), 'hello souldew');
+});
+
+test('LZMA / LZMA2 streams that end early are errors, not zeros', () => {
+  const lzma2 = readFileSync(join(FIX, 'bcj-x86.lzma2'));
+  assert.throws(() => decodeLzma2(lzma2.subarray(0, 2000), 4096), /ended early/);
+  assert.throws(() => decodeLzma2(lzma2.subarray(0, 3), 4096), /ended early/);
 });
 
 test('BCJ x86 filter decodes what liblzma (xz) encoded', () => {
@@ -184,6 +243,18 @@ test('extractArchive unpacks zip and 7z, keeps folders and checks CRCs', () => {
   assert.throws(() => extractArchive(join(TMP, 'x.rar'), join(TMP, 'x-rar')), /Unsupported/);
 });
 
+test('extractArchiveAsync unpacks on a worker thread and reports its errors', async () => {
+  const seven = join(TMP, 'async.7z');
+  writeFileSync(seven, readFileSync(join(FIX, 'lzma1.7z')));
+  const out = join(TMP, 'x-async');
+  const written = await extractArchiveAsync(seven, out);
+  assert.equal(written.length, 4);
+  assert.equal(readFileSync(join(out, 'a', 'hello.txt'), 'utf8'), 'Hello souldew\n'.repeat(50));
+  const bomb = join(TMP, 'bomb.7z');
+  writeFileSync(bomb, tiny7z({ size: 1_000_000_000, packed: Buffer.alloc(10) }));
+  await assert.rejects(extractArchiveAsync(bomb, join(TMP, 'x-bomb')), (e) => e.code === 'BAD_7Z');
+});
+
 test('archive entries can never land outside the target folder', () => {
   const dest = join(TMP, 'safe');
   for (const evil of ['../evil.exe', 'a/../../evil.exe', '..\\evil.exe', '/etc/passwd', '\\Windows\\evil.dll', 'C:\\Windows\\evil.dll', 'c:evil.exe']) {
@@ -227,6 +298,21 @@ test('discoverRoots: only existing folders, each real folder once (ROMs / roms o
   assert.ok(roots.every((r) => existsSync(r)));
 });
 
+test('Search my PC: online-only OneDrive files are never read (that would download them), real files are found', () => {
+  assert.equal(onlineOnly({ size: 16 * 1024 * 1024, blocks: 0 }, 'win32'), true); // placeholder: nothing on the disk
+  assert.equal(onlineOnly({ size: 16 * 1024 * 1024, blocks: 32768 }, 'win32'), false);
+  assert.equal(onlineOnly({ size: 600, blocks: 0 }, 'win32'), false); // tiny files live inside the file table
+  assert.equal(onlineOnly({ size: 16 * 1024 * 1024, blocks: 0 }, 'darwin'), false);
+  // on this computer (Windows in CI): an ordinary ROM-sized file reports blocks and is found
+  const root = join(TMP, 'discover');
+  mkdirSync(root, { recursive: true });
+  const gba = new Uint8Array(64 * 1024);
+  gba[0xb2] = 0x96;
+  writeFileSync(join(root, 'game.gba'), gba);
+  const r = discoverRoms({ roots: [root] });
+  assert.deepEqual(r.found.map((f) => f.name), ['game.gba']);
+});
+
 test('found files are shown with short paths on both systems', () => {
   assert.equal(shortPath('/Users/ana/Downloads/x.nds'), '~/Downloads/x.nds');
   assert.equal(shortPath('/Users/ana/Library/Mobile Documents/com~apple~CloudDocs/ROMs/x.nds'), 'iCloud Drive/ROMs/x.nds');
@@ -239,14 +325,17 @@ test('found files are shown with short paths on both systems', () => {
 test('emulator downloads: the right official build per platform and architecture', () => {
   const melon = ['melonDS-1.1-appimage-x86_64.zip', 'melonDS-1.1-macOS-universal.zip', 'melonDS-1.1-windows-aarch64.zip', 'melonDS-1.1-windows-x86_64.zip'];
   const mgba = ['mGBA-0.10.5-macos.dmg', 'mGBA-0.10.5-win32.7z', 'mGBA-0.10.5-win64-installer.exe', 'mGBA-0.10.5-win64.7z', 'mGBA-0.10.5-appimage-x64.appimage'];
-  const pick = (id, list, platform, arch) => list.find((n) => assetPattern(id, platform, arch)?.test(n)) || null;
+  const pick = (id, list, platform, arch) => pickAsset(list.map((name) => ({ name })), id, platform, arch)?.name || null;
   assert.equal(pick('melonds', melon, 'win32', 'x64'), 'melonDS-1.1-windows-x86_64.zip');
   assert.equal(pick('melonds', melon, 'win32', 'arm64'), 'melonDS-1.1-windows-aarch64.zip');
   assert.equal(pick('melonds', melon, 'darwin', 'arm64'), 'melonDS-1.1-macOS-universal.zip');
   assert.equal(pick('mgba', mgba, 'win32', 'x64'), 'mGBA-0.10.5-win64.7z'); // not the installer, not 32-bit
   assert.equal(pick('mgba', mgba, 'win32', 'arm64'), 'mGBA-0.10.5-win64.7z'); // x64 build under emulation
   assert.equal(pick('mgba', mgba, 'darwin', 'x64'), 'mGBA-0.10.5-macos.dmg');
-  assert.equal(assetPattern('mgba', 'sunos', 'x64'), null);
+  assert.deepEqual(assetPatterns('mgba', 'sunos', 'x64'), []);
+  // a release without a Windows ARM build: the x64 one (runs through emulation) instead of nothing
+  assert.equal(pick('melonds', melon.filter((n) => !/aarch64/.test(n)), 'win32', 'arm64'), 'melonDS-1.1-windows-x86_64.zip');
+  assert.equal(pick('melonds', ['melonDS-1.1-ubuntu-x86_64.zip'], 'win32', 'x64'), null);
   assert.ok(EMULATORS.mgba.exe.test('mGBA.exe') && !EMULATORS.mgba.exe.test('mgba-sdl.exe'));
   assert.ok(EMULATORS.melonds.exe.test('melonDS.exe'));
 });

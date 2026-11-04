@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseVersion, compareVersions, isNewer, isAllowedUrl, validateFeed, updateAction, digestsMatch, feedUrlFrom, dmgAssetName, winAssetName, assetFor, platformKey } from '../shared/update.mjs';
-import { fetchChecked, nsisInstallDir, installerArgs, launchInstaller } from '../electron/update-core.mjs';
+import { parseVersion, compareVersions, isNewer, isAllowedUrl, validateFeed, updateAction, digestsMatch, feedUrlFrom, dmgAssetName, winAssetName, assetFor, platformKey, actionFor } from '../shared/update.mjs';
+import { fetchChecked, nsisInstallDir, installerArgs, launchInstaller, windowsInstallPlan, cleanupWorkDir } from '../electron/update-core.mjs';
 import { sha256File, verifyFile, fetchFeed, downloadFile, bundleFromExe, isTranslocated, stagingDirFor, canReplace, swapBundle, cleanupStaging } from '../electron/update-core.mjs';
 import { changelogSection, buildFeed } from '../scripts/release.mjs';
 
@@ -365,6 +365,11 @@ test('assetFor / updateAction pick the download for this platform', () => {
   assert.equal(updateAction(both, '2.0.0', { platform: 'win32', arch: 'x64' }), 'install');
   assert.equal(updateAction(both, '2.1.0', { platform: 'win32', arch: 'x64' }), 'none');
   assert.equal(updateAction(validateFeed(feed({ minVersion: '2.0.5', assets: { 'win32-x64': winAsset() } })), '2.0.0', { platform: 'win32', arch: 'x64' }), 'manual');
+  // minVersion: by hand on the Mac, but the Windows installer updates any version
+  const old = validateFeed(feed({ minVersion: '2.0.5', assets: { 'win32-x64': winAsset() } }));
+  assert.equal(actionFor(old, '2.0.0', { platform: 'darwin', arch: 'arm64' }), 'manual');
+  assert.equal(actionFor(old, '2.0.0', { platform: 'win32', arch: 'x64' }), 'install');
+  assert.equal(actionFor(old, '2.1.0', { platform: 'win32', arch: 'x64' }), 'none');
   assert.equal(winAssetName('2.1.0'), 'souldew-2.1.0-win-x64-setup.exe');
   assert.equal(winAssetName('2.1.0', 'arm64'), 'souldew-2.1.0-win-arm64-setup.exe');
 });
@@ -461,4 +466,42 @@ test('launchInstaller starts the installer detached and reports a failed start',
   await assert.rejects(launchInstaller(exe, { spawnImpl: fake('fail') }), (e) => e.code === 'INSTALLER' && /EACCES/.test(e.message));
   await assert.rejects(launchInstaller(join(TMP, 'missing.exe'), { spawnImpl: fake('ok') }), (e) => e.code === 'INSTALLER');
   assert.equal(calls.length, 3); // a missing installer is never "started"
+});
+
+test('Windows: the installer only starts once quitting is certain – never while "keep playing" is still possible', () => {
+  const exe = 'C:\\Temp\\souldew Update\\souldew-2.1.0-win-x64-setup.exe';
+  // "Restart now", the unsaved-progress question answers "keep playing": nothing starts, the card goes back to ready
+  let plan = windowsInstallPlan();
+  plan.restart();
+  assert.equal(plan.launched, false); // restart() itself never starts the installer
+  assert.equal(plan.quitCancelled(), true);
+  assert.equal(plan.willQuit({ ready: false, installer: exe }), null); // a later quit without an update ready: nothing
+  // "Restart now" again, this time the app really quits → installer with relaunch, exactly once
+  plan.restart();
+  assert.deepEqual(plan.willQuit({ ready: false, installer: exe }), { relaunch: true });
+  assert.equal(plan.willQuit({ ready: false, installer: exe }), null);
+  assert.equal(plan.quitCancelled(), false); // too late to call off – it runs already
+  // "Later", then the user quits: install silently, don't start the app again
+  plan = windowsInstallPlan();
+  assert.deepEqual(plan.willQuit({ ready: true, installer: exe }), { relaunch: false });
+  // nothing downloaded / nothing ready: quitting never starts anything
+  assert.equal(windowsInstallPlan().willQuit({ ready: true, installer: null }), null);
+  assert.equal(windowsInstallPlan().willQuit({ ready: false, installer: exe }), null);
+  assert.equal(windowsInstallPlan().quitCancelled(), false);
+});
+
+test('Windows: cleaning up old downloads never removes the current one and skips locked files', () => {
+  const dir = join(TMP, 'win-update');
+  mkdirSync(join(dir, 'old-dir'), { recursive: true });
+  for (const f of ['souldew-2.0.9-win-x64-setup.exe', 'souldew-2.1.0-win-x64-setup.exe', 'locked.exe']) writeFileSync(join(dir, f), 'MZ');
+  const keep = join(dir, 'souldew-2.1.0-win-x64-setup.exe');
+  const rm = (p, o) => {
+    if (p.endsWith('locked.exe')) throw Object.assign(new Error('EBUSY'), { code: 'EBUSY' });
+    rmSync(p, o);
+  };
+  cleanupWorkDir(dir, { keep, rm });
+  assert.deepEqual(readdirSync(dir).sort(), ['locked.exe', 'souldew-2.1.0-win-x64-setup.exe']);
+  cleanupWorkDir(join(TMP, 'does-not-exist')); // no folder: nothing to do
+  cleanupWorkDir(dir);
+  assert.deepEqual(readdirSync(dir), []);
 });

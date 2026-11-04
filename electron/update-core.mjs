@@ -361,3 +361,57 @@ export function launchInstaller(installer, { relaunch = true, spawnImpl = spawn 
     });
   });
 }
+
+/**
+ * When the Windows installer may run. It closes the app to replace it, so it must only start once quitting can't be
+ * cancelled any more (will-quit) – the unsaved-progress question on closing can still say "keep playing", and an
+ * installer started earlier would kill the app with the game in it.
+ *   restart()        "Restart now": remember it; the caller then asks the app to quit
+ *   quitCancelled()  the quit was called off: true when a restart was pending (the UI goes back to "ready")
+ *   willQuit()       → { relaunch } to start the installer now (once), or null
+ */
+export function windowsInstallPlan() {
+  let restartRequested = false;
+  let launched = false;
+  return {
+    restart() {
+      restartRequested = true;
+    },
+    quitCancelled() {
+      const was = restartRequested && !launched;
+      restartRequested = false;
+      return was;
+    },
+    /** ready: an update is downloaded and verified ("Later" was chosen); installer: its path. */
+    willQuit({ ready, installer }) {
+      if (launched || !installer || !(ready || restartRequested)) return null;
+      launched = true;
+      return { relaunch: restartRequested }; // after "Later" the user quit on purpose: don't start the app again
+    },
+    get launched() {
+      return launched;
+    },
+  };
+}
+
+/**
+ * Removes what earlier updates left in the download folder – except `keep` (the download in use). A file that
+ * is still locked (the installer that just updated the app may still be finishing) stays until the next start.
+ */
+export function cleanupWorkDir(dir, { keep = null, rm = rmSync, list = readdirSync } = {}) {
+  let names = [];
+  try {
+    names = list(dir);
+  } catch {
+    return; // nothing there
+  }
+  for (const name of names) {
+    const path = join(dir, name);
+    if (keep && path === keep) continue;
+    try {
+      rm(path, { recursive: true, force: true });
+    } catch {
+      // locked – next time
+    }
+  }
+}

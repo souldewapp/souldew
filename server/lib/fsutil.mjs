@@ -32,8 +32,12 @@ export function writeFileAtomic(path, data) {
   }
 }
 
-/** Device names Windows reserves in every folder, with or without an extension (CON, NUL, COM1, LPT1.txt …). */
-const RESERVED = /^(con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³])(\.|$)/i;
+/**
+ * Device names Windows reserves in every folder, with or without an extension and with spaces before it
+ * (CON, NUL, COM1, LPT1.txt, "CON .txt", CONIN$ …).
+ */
+const RESERVED = /^(con|prn|aux|nul|conin\$|conout\$|com[0-9¹²³]|lpt[0-9¹²³]) *(\.|$)/i;
+const TRAILING = /[. ]+$/;
 
 /**
  * A file name that is valid on Windows, macOS and Linux alike: no path parts, no characters Windows forbids
@@ -41,16 +45,24 @@ const RESERVED = /^(con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³])(\.|$)/i;
  * (NFC) and at most `maxBytes` UTF-8 bytes (the extension is kept). Empty results become `fallback`.
  */
 export function safeFileName(name, { fallback = '_', maxBytes = 200 } = {}) {
+  // (bidirectional controls go too: "ab\u202Egnp.exe" would display as "abexe.png")
   let safe = String(name ?? '').normalize('NFC').split(/[\\/]/).pop()
-    .replace(/[\u0000-\u001f\u007f:*?"<>|]+/g, '_').replace(/[. ]+$/, '').trim();
+    .replace(/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069:*?"<>|]+/g, '_').replace(TRAILING, '').trim();
   if (RESERVED.test(safe)) safe = `_${safe}`;
   if (Buffer.byteLength(safe) > maxBytes) {
-    const ext = extname(safe).length <= 16 ? extname(safe) : '';
+    // keep a real extension (short, no spaces); the stem is cut on a character boundary, never ending in . or space
+    const ext = /^\.[^. ]{1,15}$/.test(extname(safe)) ? extname(safe) : '';
     const stem = Array.from(safe.slice(0, safe.length - ext.length));
     while (stem.length && Buffer.byteLength(stem.join('')) + Buffer.byteLength(ext) > maxBytes) stem.pop();
-    safe = `${stem.join('').trim()}${ext}`;
+    safe = `${stem.join('').replace(TRAILING, '').trim()}${ext}`.replace(TRAILING, '');
   }
   return safe || fallback;
+}
+
+/** Same file or folder by the platform's rules (case-insensitive on Windows). */
+export function samePath(a, b, platform = process.platform) {
+  const p = platform === 'win32' ? win32 : posix;
+  return p.relative(p.resolve(a), p.resolve(b)) === '';
 }
 
 /**

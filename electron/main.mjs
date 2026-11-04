@@ -134,7 +134,10 @@ function createWindow() {
     const u = unsaved;
     dialog.showMessageBox(win, { type: 'warning', buttons: [u.keep, u.quit], defaultId: 0, cancelId: 0, message: u.title, detail: u.text })
       .then(({ response }) => {
-        if (response !== 1) return;
+        if (response !== 1) {
+          app.emit('sls-quit-cancelled'); // e.g. a pending update install must not start (electron/updater.mjs)
+          return;
+        }
         closeOk = true;
         app.quit();
       })
@@ -281,8 +284,9 @@ handle('pick-files', async (e, opts) => {
   return r.canceled ? [] : r.filePaths;
 });
 handle('reveal', (e, path) => {
-  // an absolute path of this platform (/Users/… on macOS, C:\… or \\server\share\… on Windows)
-  if (typeof path === 'string' && path.length < 4096 && isAbsolute(path) && !path.includes('\0')) shell.showItemInFolder(path);
+  // an absolute local path of this platform (/Users/… on macOS, C:\… on Windows) – no network or device paths
+  // (\\server\…, \\?\…, \\.\…): showing one would make Windows contact that server or open a device
+  if (typeof path === 'string' && path.length < 4096 && isAbsolute(path) && !/^[\\/]{2}/.test(path) && !path.includes('\0')) shell.showItemInFolder(path);
 });
 handle('open-external', (e, url) => openExternalSafe(url));
 handle('app-info', () => ({ version: app.getVersion(), packaged: app.isPackaged, dataDir: app.getPath('userData'), platform: process.platform }));

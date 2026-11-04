@@ -10,8 +10,8 @@
   desktop shortcuts. It isn't signed with a paid certificate, so SmartScreen may ask once (More info › Run anyway).
 - The window matches the dark look on Windows too (window buttons in the app's colours); all shortcuts use Ctrl, and
   the app speaks of Explorer and "Search my PC" there.
-- "Search my PC" looks in Downloads, Desktop, Documents, OneDrive and the folders of RetroArch, RetroBat and
-  LaunchBox.
+- "Search my PC" looks in Downloads, Desktop, Documents, OneDrive (files already on the PC – online-only files
+  aren't downloaded) and the folders of RetroArch, RetroBat and LaunchBox.
 - One-click melonDS and mGBA install the official Windows builds; the Java runtime for the randomizer ships with the
   app, set to UTF-8 so the same seed builds the same game on Mac and Windows.
 - Automatic updates on Windows: the app downloads the new installer, checks its signature and checksum and installs

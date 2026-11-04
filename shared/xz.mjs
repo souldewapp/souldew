@@ -26,7 +26,7 @@ export function decodeLzma(input, props, size) {
   lz.setProps(props[0], { lzma1: true });
   lz.resetState();
   const out = new Uint8Array(size);
-  if (size > 0) lz.decodeChunk(input, 0, out, 0, size, 0);
+  if (size > 0) lz.decodeChunk(input, 0, out, 0, size, 0, input.length);
   return out;
 }
 
@@ -115,8 +115,10 @@ export class XzStreamDecoder {
         break;
       }
       if (control === 0x01 || control === 0x02) {
+        if (r.pos + 2 > input.length) throw new Error('xz: data ended early (damaged)');
         const size = ((input[r.pos] << 8) | input[r.pos + 1]) + 1;
         r.pos += 2;
+        if (r.pos + size > input.length) throw new Error('xz: data ended early (damaged)');
         if (control === 0x01) this.dictStart = this.dictLen;
         this._ensure(size);
         this.dict.set(input.subarray(r.pos, r.pos + size), this.dictLen);
@@ -125,6 +127,7 @@ export class XzStreamDecoder {
         continue;
       }
       if (control < 0x80) throw new Error(`xz: bad LZMA2 control byte 0x${control.toString(16)}`);
+      if (r.pos + 5 > input.length) throw new Error('xz: data ended early (damaged)');
       const unpacked = ((control & 0x1f) << 16) + ((input[r.pos] << 8) | input[r.pos + 1]) + 1;
       const packed = ((input[r.pos + 2] << 8) | input[r.pos + 3]) + 1;
       r.pos += 4;
@@ -134,7 +137,8 @@ export class XzStreamDecoder {
       if (reset >= 1) lz.resetState();
       this._ensure(unpacked);
       const chunkEnd = r.pos + packed;
-      lz.decodeChunk(input, r.pos, this.dict, this.dictLen, unpacked, this.dictStart);
+      if (chunkEnd > input.length) throw new Error('xz: data ended early (damaged)');
+      lz.decodeChunk(input, r.pos, this.dict, this.dictLen, unpacked, this.dictStart, chunkEnd);
       this.dictLen += unpacked;
       r.pos = chunkEnd;
     }
@@ -211,10 +215,20 @@ class LzmaState {
     this.rep0 = this.rep1 = this.rep2 = this.rep3 = 0;
   }
 
-  decodeChunk(inBuf, inPos, out, outPos, size, dictStart) {
+  /**
+   * Decodes `size` bytes from inBuf[inPos … inEnd). Running out of input is an error – a damaged or crafted stream
+   * must never be "decoded" from bytes that aren't there (they would read as zeros and could expand to any size).
+   */
+  decodeChunk(inBuf, inPos, out, outPos, size, dictStart, inEnd = inBuf.length) {
     // Range decoder (inlined into locals for speed).
     let pos = inPos;
+    inEnd = Math.min(inEnd, inBuf.length);
+    if (pos + 5 > inEnd) throw new Error('xz: data ended early (damaged)');
     if (inBuf[pos] !== 0) throw new Error('xz: bad range coder init');
+    const next = () => {
+      if (pos >= inEnd) throw new Error('xz: data ended early (damaged)');
+      return inBuf[pos++];
+    };
     let range = 0xffffffff;
     let code = ((inBuf[pos + 1] << 24) | (inBuf[pos + 2] << 16) | (inBuf[pos + 3] << 8) | inBuf[pos + 4]) >>> 0;
     pos += 5;
@@ -235,7 +249,7 @@ class LzmaState {
       }
       if (range < 0x1000000) {
         range = (range * 256) >>> 0;
-        code = ((code * 256) + inBuf[pos++]) >>> 0;
+        code = ((code * 256) + next()) >>> 0;
       }
       return b;
     };
@@ -266,7 +280,7 @@ class LzmaState {
         result = result * 2 + b;
         if (range < 0x1000000) {
           range = (range * 256) >>> 0;
-          code = ((code * 256) + inBuf[pos++]) >>> 0;
+          code = ((code * 256) + next()) >>> 0;
         }
       }
       return result;

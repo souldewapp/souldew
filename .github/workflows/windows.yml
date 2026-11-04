@@ -23,15 +23,17 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
 
       - name: Java runtime (Temurin 17, jlinked) – cached
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: tools/jre/win32-x64
           key: jre-win32-x64-${{ hashFiles('scripts/fetch-jre.mjs') }}
@@ -69,8 +71,10 @@ jobs:
           node scripts/smoke-app.mjs (Join-Path $dir 'souldew.exe') --screenshot smoke-installed.png --lang de
           if ($LASTEXITCODE -ne 0) { throw 'installed app failed the smoke test' }
 
-          # What the in-app updater does on "Restart now": start the installer with /S --updated --force-run, quit
-          # the app; the installer replaces it and starts the new version by itself.
+          # What the in-app updater does on "Restart now": the app quits through its normal path and, in will-quit,
+          # starts the installer with /S --updated --force-run; the installer waits for it, replaces it and starts
+          # the new version by itself. Here: close the app the normal way (WM_CLOSE, no force) and start the installer
+          # while it is shutting down.
           function Wait-Server([int]$seconds) {
             for ($i = 0; $i -lt $seconds; $i++) {
               try { Invoke-RestMethod http://127.0.0.1:47390/api/status -TimeoutSec 2 | Out-Null; return $true } catch { Start-Sleep 1 }
@@ -80,8 +84,8 @@ jobs:
           $updProfile = Join-Path $env:RUNNER_TEMP 'update-profile'
           $app = Start-Process -FilePath (Join-Path $dir 'souldew.exe') -ArgumentList "--user-data-dir=$updProfile" -PassThru
           if (-not (Wait-Server 90)) { throw 'installed app did not start' }
+          taskkill /PID $app.Id | Out-Null   # no /F: the window gets a normal close → the app's own quit path
           $installer = Start-Process -FilePath $setup -ArgumentList '/S', '--updated', '--force-run' -PassThru
-          Stop-Process -Id $app.Id   # the app quits right after starting the installer
           $installer.WaitForExit()
           if ($installer.ExitCode -ne 0) { throw "update installer exited with $($installer.ExitCode)" }
           if (-not (Wait-Server 90)) { throw 'the updated app was not started again (--force-run)' }
@@ -101,13 +105,13 @@ jobs:
           node --input-type=module -e "const m = await import('./server/lib/emulator.mjs'); for (const id of ['melonds', 'mgba']) { const r = await m.installEmulator(id); console.log(id, r.version, r.path); if (!r.installed || !/\.exe$/i.test(r.path)) process.exit(1); }"
           if ($LASTEXITCODE -ne 0) { throw 'emulator install failed' }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: souldew-windows-installer
           path: dist/souldew-*-win-x64-setup.exe
           if-no-files-found: error
           retention-days: 14
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: smoke-test
