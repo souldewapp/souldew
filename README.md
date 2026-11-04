@@ -47,20 +47,20 @@ Emulator, tracker, rules, randomizer and sync live in the same place – and the
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="docs/media/icons/play.svg" width="28" height="28" alt=""><br><b>Built-in emulator</b><br>DS, GBA, Game Boy and Game Boy Color. 1–4× speed, eight save states, controllers – and the game keeps running in a mini window while you check the board.</td>
-<td width="50%" valign="top"><img src="docs/media/icons/signal.svg" width="28" height="28" alt=""><br><b>Live tracking</b><br>Your team is read straight from game memory: species, nickname, level, HP, status and where it was caught. No typing things in.</td>
+<td width="50%" valign="top"><img src="docs/media/icons/play.svg" width="40" height="40" alt=""><br><b>Built-in emulator</b><br>DS, GBA, Game Boy and Game Boy Color. 1–4× speed, eight save states, controllers – and the game keeps running in a mini window while you check the board.</td>
+<td width="50%" valign="top"><img src="docs/media/icons/signal.svg" width="40" height="40" alt=""><br><b>Live tracking</b><br>Your team is read straight from game memory: species, nickname, level, HP, status and where it was caught. No typing things in.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="docs/media/icons/ball.svg" width="28" height="28" alt=""><br><b>Battle panel</b><br>The opponent’s types and weaknesses, how your moves land – and whether your rules even allow the catch, including type clashes with your partners.</td>
-<td width="50%" valign="top"><img src="docs/media/icons/link.svg" width="28" height="28" alt=""><br><b>Real-time sync</b><br>Up to four players, directly over WebRTC or through an encrypted relay. Your partner’s game shows up as a small live picture next to yours.</td>
+<td width="50%" valign="top"><img src="docs/media/icons/ball.svg" width="40" height="40" alt=""><br><b>Battle panel</b><br>The opponent’s types and weaknesses, how your moves land – and whether your rules even allow the catch, including type clashes with your partners.</td>
+<td width="50%" valign="top"><img src="docs/media/icons/link.svg" width="40" height="40" alt=""><br><b>Real-time sync</b><br>Up to four players, directly over WebRTC or through an encrypted relay. Your partner’s game shows up as a small live picture next to yours.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="docs/media/icons/scroll.svg" width="28" height="28" alt=""><br><b>Randomizer & ROM hacks</b><br>Universal Pokémon Randomizer ZX is built in, Java included. xdelta, BPS, UPS and IPS patches are applied for you, with 31 known hacks ready to go.</td>
-<td width="50%" valign="top"><img src="docs/media/icons/grave.svg" width="28" height="28" alt=""><br><b>Solo Nuzlocke</b><br>Classic, Hardcore or your own rules. Level caps, dupes and shiny clause, deaths and blackouts detected automatically – and a graveyard that remembers who did it.</td>
+<td width="50%" valign="top"><img src="docs/media/icons/scroll.svg" width="40" height="40" alt=""><br><b>Randomizer & ROM hacks</b><br>Universal Pokémon Randomizer ZX is built in, Java included. xdelta, BPS, UPS and IPS patches are applied for you, with 31 known hacks ready to go.</td>
+<td width="50%" valign="top"><img src="docs/media/icons/grave.svg" width="40" height="40" alt=""><br><b>Solo Nuzlocke</b><br>Classic, Hardcore or your own rules. Level caps, dupes and shiny clause, deaths and blackouts detected automatically – and a graveyard that remembers who did it.</td>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="docs/media/icons/sound.svg" width="28" height="28" alt=""><br><b>Turbo without chipmunk music</b><br>Fast-forward through the grind while the music keeps playing at normal speed. For DS games souldew plays the current song from your ROM’s own sound archive.</td>
-<td width="50%" valign="top"><img src="docs/media/icons/globe.svg" width="28" height="28" alt=""><br><b>Made for everyone</b><br>English, German, French, Spanish and Italian. Colour-blind safe schemes, full keyboard control and reduced motion.</td>
+<td width="50%" valign="top"><img src="docs/media/icons/sound.svg" width="40" height="40" alt=""><br><b>Turbo without chipmunk music</b><br>Fast-forward through the grind while the music keeps playing at normal speed. For DS games souldew plays the current song from your ROM’s own sound archive.</td>
+<td width="50%" valign="top"><img src="docs/media/icons/globe.svg" width="40" height="40" alt=""><br><b>Made for everyone</b><br>English, German, French, Spanish and Italian. Colour-blind safe schemes, full keyboard control and reduced motion.</td>
 </tr>
 </table>
 
@@ -88,21 +88,21 @@ Emulator, tracker, rules, randomizer and sync live in the same place – and the
 
 **The board** – linked pairs side by side, with live HP, status and the route they’re from.
 
-<img src="docs/media/shot-board.webp" alt="SoulLink board with linked pairs, live HP bars and status conditions." width="100%">
+<img src="docs/media/poster-board.webp" alt="SoulLink board with linked pairs, live HP bars and status conditions." width="100%">
 
 **Up to four players** – every team as in the game menu, each player in their colour.
 
-<img src="docs/media/shot-teams.webp" alt="Three players’ teams side by side, each in their own colour." width="100%">
+<img src="docs/media/poster-teams.webp" alt="Three players’ teams side by side, each in their own colour." width="100%">
 
 **Routes** – who caught what where, which areas are still open, and the pair that fell to a Geodude.
 
-<img src="docs/media/shot-routes.webp" alt="Route list with each player’s encounter per area, types and the linked state." width="100%">
+<img src="docs/media/poster-routes.webp" alt="Route list with each player’s encounter per area, types and the linked state." width="100%">
 
 ### Solo Nuzlocke
 
 Playing alone? Nuzlocke › **New Nuzlocke** asks only for your name, the game, the randomizer and the rules.
 
-<img src="docs/media/shot-nuzlocke.webp" alt="Solo Nuzlocke board with team, level cap and counters." width="100%">
+<img src="docs/media/poster-nuzlocke.webp" alt="Solo Nuzlocke board with team, level cap and counters." width="100%">
 
 - **Rules:** presets "Classic" (first encounter per area, fainted means dead, blackout ends the run, dupes and shiny clause) and "Hardcore" (plus strict level caps, no items in battle, "Set" battle style), or every rule on its own: blackout, deathless, dupes (species / evolution line), gifts & eggs and static encounters (count as the area / free extra / not allowed), type rule, nicknames, Pokémon Center visits per badge.
 - **Detected automatically:** catches and their area, death at 0 HP with the opponent, blackout, level cap exceeded, a badge won above the cap, a second catch in a used-up area, a missing nickname; in battle: dupe, shiny (free catch), legendary.
@@ -120,7 +120,7 @@ Every widget is a browser source for OBS – and it updates the moment a Pokémo
 - **Pokélink bridge** – your existing Pokélink themes can show souldew’s data.
 - **Overlay API** – a documented JSON snapshot and live event stream for your own tools.
 
-<img src="docs/media/shot-stream.webp" alt="Stream page with streamer mode and OBS overlay widgets with live previews." width="100%">
+<img src="docs/media/poster-stream.webp" alt="Stream page with streamer mode and OBS overlay widgets with live previews." width="100%">
 
 All widgets, options, the API and the Pokélink setup: **[docs/STREAMING.md](docs/STREAMING.md)**.
 
@@ -141,9 +141,9 @@ English and German versions are supported for the team; “You are here” reads
 ## Your games stay yours
 
 <table>
-<tr><td><img src="docs/media/icons/save.svg" width="28" height="28" alt=""></td><td><b>No ROMs, no saves.</b> Only tracker data travels between players – never games or save files. souldew includes and downloads no games.</td></tr>
-<tr><td><img src="docs/media/icons/lock.svg" width="28" height="28" alt=""></td><td><b>Encrypted by the invite.</b> Everything is encrypted with the key from your invite; a code alone never reveals your run.</td></tr>
-<tr><td><img src="docs/media/icons/eye.svg" width="28" height="28" alt=""></td><td><b>No account, no telemetry.</b> No sign-up, no analytics. A diagnostics file is only written when you ask for one.</td></tr>
+<tr><td><img src="docs/media/icons/save.svg" width="40" height="40" alt=""></td><td><b>No ROMs, no saves.</b> Only tracker data travels between players – never games or save files. souldew includes and downloads no games.</td></tr>
+<tr><td><img src="docs/media/icons/lock.svg" width="40" height="40" alt=""></td><td><b>Encrypted by the invite.</b> Everything is encrypted with the key from your invite; a code alone never reveals your run.</td></tr>
+<tr><td><img src="docs/media/icons/eye.svg" width="40" height="40" alt=""></td><td><b>No account, no telemetry.</b> No sign-up, no analytics. A diagnostics file is only written when you ask for one.</td></tr>
 </table>
 
 ## Install
