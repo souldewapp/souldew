@@ -13,7 +13,7 @@ Address: **https://souldewapp.github.io/souldew/** (English) and **/de/** (Germa
 | Path | Contents |
 |---|---|
 | `index.html`, `de/index.html` | The landing page in English and German. Identical markup, only the text differs – **change both** when content changes (German paths are prefixed with `../`). |
-| `impressum.html`, `datenschutz.html` | Legal notice and privacy policy (German) – **templates with yellow placeholders**. |
+| `impressum.html`, `datenschutz.html` | Legal notice and privacy policy (German). |
 | `404.html` | Served by GitHub Pages for unknown paths (absolute links to `/souldew/`). |
 | `assets/css/site.css` | All styles: tokens, type scale, hero, the pinned link cable, LCD code section, annotated board with zoom lenses, feature index, stream scene, responsive rules, reduced motion, legal pages. |
 | `assets/js/site.js` | Progressive enhancement: OS-aware download buttons + latest release (GitHub API), the link-cable story, the feature index, the word-by-word statement, the pixel-art route scene, the LCD scan reveal. Strings for both languages are at the top. |
@@ -29,8 +29,8 @@ Deployment: `.github/workflows/pages.yml` uploads this folder on every push to `
 
 ## Before going live
 
-1. **Fill in `impressum.html` and `datenschutz.html`**: name, address, e-mail and the date, then remove the yellow
-   notes (`<p class="todo">…`) and the `placeholder` spans. The texts are templates, not legal advice.
+1. `impressum.html` and `datenschutz.html` carry the operator's details (taken from kapischka.de/impressum). Keep them
+   in sync if those change, and update the date in the privacy policy when its content changes. Not legal advice.
 2. Repository **Settings › Pages › Build and deployment › Source: "GitHub Actions"**. After that the workflow publishes
    the site; the first run can also be started from the Actions tab.
 3. If the address ever changes (custom domain, other repository name), update the absolute URLs: `canonical`,
