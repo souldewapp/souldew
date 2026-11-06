@@ -374,6 +374,7 @@ button.hack-card:hover { background: var(--shell-4); }
 .feed-item.death .k { background: var(--cir); }
 .feed-item.catch .k { background: var(--tri); }
 .feed-item.chat .k { background: var(--crs); }
+.feed-item.cheat .k { background: var(--warn); }
 .feed-item time { color: var(--ink-3); font-size: 12px; white-space: nowrap; }
 .who-p1 { color: var(--p1); font-weight: 500; }
 .who-p2 { color: var(--p2); font-weight: 500; }
@@ -699,6 +700,11 @@ details.group details.group { margin: 0 14px 8px; }
 .turbo-audio { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 2px 0; border-top: 1px solid var(--edge-hi); color: var(--ink-2); }
 .turbo-audio select { padding: 4px 8px; font-size: 13px; }
 .sound-pop .diag-btn { align-self: flex-end; color: var(--ink-3); font-size: 12px; }
+/* cheats: like the volume popover, hung off the bar's right edge */
+.cheat-wrap { display: inline-flex; }
+.cheat-pop { position: absolute; bottom: calc(100% + 10px); right: 0; z-index: 8; display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: min(280px, calc(100vw - 32px));
+  padding: 10px 12px; background: #18171c; border: 1px solid var(--edge-hi); border-radius: 12px; box-shadow: 0 10px 30px #0009; }
+.cheat-pop .btn { justify-content: center; }
 .mini-head { display: none; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .running-banner { gap: 10px; }

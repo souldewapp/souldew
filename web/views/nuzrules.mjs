@@ -31,6 +31,7 @@ const ruleDefs = () => [
   { key: 'typeClause', kind: 'choice', section: 'clauses', label: t('rules.type', 'Type rule'), hint: t('rules.typeHint', 'Primary types may not repeat in the team.'),
     options: [['off', t('rules.off', 'Off')], ['party', t('nzr.typeParty', 'In the team')]] },
   { key: 'nicknames', kind: 'check', section: 'clauses', label: t('nzr.nicknames', 'Nickname every catch'), hint: t('nz.nicknamesHint', 'A gentle reminder while a team member still has its species name.') },
+  { key: 'cheats', kind: 'check', section: 'clauses', label: t('nzr.cheats', 'Allow cheats (Rare Candies)'), hint: t('nz.cheatsHint', 'From the play screen, to level up to the cap without grinding. Every use is written to the log.') },
   { key: 'levelCaps', kind: 'choice', section: 'hardcore', label: t('nzr.caps', 'Level caps'), hint: t('nz.capsHint', 'The next boss’s ace level. Strict: going over is a rule break, not a hint.'),
     options: [[false, t('rules.off', 'Off')], ['warn', t('nzr.capsWarn', 'Warn')], ['strict', t('nzr.capsStrict', 'Strict')]] },
   { key: 'noBattleItems', kind: 'check', section: 'hardcore', honour: true, label: t('nzr.noItems', 'No items in battle'), hint: t('nz.noItemsHint', 'Poké Balls and held items are fine.') },

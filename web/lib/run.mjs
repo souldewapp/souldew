@@ -28,6 +28,7 @@ export const DEFAULT_RULES = {
   autoAssign: true,
   autoDeath: true,
   sounds: true,
+  cheats: false, // the play screen's cheats (Rare Candies) – off until the run allows them; every use goes to the log
   // (the Discord webhook is not a rule: it stays on this computer – GET/PUT /api/runs/:id/discord)
 };
 
@@ -285,6 +286,27 @@ export function markDead(doc, manifest, area, { slot, cause = '', level = null, 
   feedMsg(doc, manifest, { type: 'death', slot, area, msg: text, cause: cause || null });
   if (runMode(manifest) === 'nuzlocke' && rules(doc, manifest).deathless) failRun(doc, manifest, slot || 'p1', 'deathless', { area });
   return true;
+}
+
+/**
+ * `slot` used a cheat (today: `added` Rare Candies). Everyone in the run sees it in the log – that is the deal for
+ * allowing cheats at all. Refused (false) while the run's rules don't allow cheats.
+ */
+export function logCheat(doc, manifest, slot, { added }) {
+  if (!rules(doc, manifest).cheats) return false;
+  const what = msg('cheat.rareCandies', '{n} Rare Candy|{n} Rare Candies', { n: added, count: added });
+  feedMsg(doc, manifest, { type: 'cheat', slot, cheat: 'rareCandy', count: added, msg: slotsOf(manifest).length === 1
+    ? msg('feed.cheatSolo', 'Cheat used: {what}', { what })
+    : msg('feed.cheat', 'used a cheat: {what}', { what }) });
+  return true;
+}
+
+/** The run's cheat rule was switched (`by` = slot) – logged like the cheats themselves. */
+export function logCheatRule(doc, manifest, by, allowed) {
+  const solo = slotsOf(manifest).length === 1;
+  feedMsg(doc, manifest, { type: 'cheat', slot: by, msg: allowed
+    ? solo ? msg('feed.cheatsOnSolo', 'Cheats allowed for this run') : msg('feed.cheatsOn', 'allowed cheats for this run')
+    : solo ? msg('feed.cheatsOffSolo', 'Cheats turned off for this run') : msg('feed.cheatsOff', 'turned cheats off for this run') });
 }
 
 /** `slot` let the area's encounter get away (fled, knocked out, ball missed): the area is spent. */

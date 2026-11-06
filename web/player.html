@@ -366,6 +366,18 @@
     if (o < 0 || o + len > ram.size) return null;
     return heap().slice(ram.base + o, ram.base + o + len);
   }
+  /**
+   * Write bytes at a console bus address (cheats: shared/live/cheats.mjs checks the place first). The core runs on
+   * this thread between animation frames, so a write made in one go lands between two frames like the game's own.
+   */
+  function write(addr, bytes) {
+    // (the bytes come from the app page – another realm, so `instanceof Uint8Array` would say no)
+    if (ram.base < 0 || !ArrayBuffer.isView(bytes)) return false;
+    const o = toOff(addr);
+    if (o < 0 || o + bytes.length > ram.size) return false;
+    heap().set(bytes, ram.base + o);
+    return true;
+  }
 
   // ---- picture for the partner's mini view ("partner screen") -----------------------------
   const gameCanvas = () => E()?.canvas || document.querySelector('#game canvas') || null;
@@ -801,6 +813,7 @@
     locateRam,
     ramInfo: () => ({ ...ram }),
     read,
+    write,
     paused: () => !!E()?.paused,
     pause: () => E().pause(),
     resume: () => E().play(),

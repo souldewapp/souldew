@@ -349,3 +349,37 @@ Gen 4/5 identity: `(PID, OT ID u32)`.
 4. **German Gen 1/2 charset:** the override tables come from PKHeX's union tables, not a disassembly. Gen 1 `0xBA–0xBF` (English contractions vs. accented letters) differ by language.
 5. **Torn reads:** read RAM between frames (after the emulator's frame callback). Gen 3/4 decrypt the struct in place only inside a single function call, so a between-frame read is consistent. Mid-frame reads can catch a decrypted or half-updated struct, which fails the checksum. Retry on the next frame.
 6. **Gen 1 box level (0x03)** is stale in the party. Always use 0x21.
+
+---
+
+## 7. The bag: writing Rare Candies (`shared/live/cheats.mjs`)
+
+Researched 2026-11-06 for the Rare Candy cheat. **Why RAM:** Action Replay / GameShark codes exist per version and
+region and differ in what the cores of this EmulatorJS build accept; UPR has no "start with items" option and
+plain-patch runs don't go through the randomizer at all. The bag sits at known places in RAM (below), the
+randomizer doesn't move it, and the write can be checked first. Every write is refused unless the whole region
+looks like a bag (counts, terminators, ids and quantities in range, plus the neighbouring money / key item /
+TM / Poké Ball data), and read back afterwards.
+
+**Rare Candy item id:** Gen 1 `0x28` (pokered `constants/item_constants.asm`), Gen 2 `0x20` (pokecrystal/pokegold),
+Gen 3 `68` (pokeruby/pokefirered `#define ITEM_RARE_CANDY 68`, pokeemerald enum position 68), Gen 4/5 `50`
+(pokeheartgold `include/constants/items.h`, pokeplatinum `generated/items.txt`). PokeAPI
+`/item/rare-candy` `game_indices` gives the same five values. [src]
+
+| Game | Where | Layout | Source |
+|---|---|---|---|
+| Red/Blue | `wNumBagItems` `0xD31D`, money `0xD347` | count, (id, qty) × n, `0xFF`; 20 slots, 99 per slot | [sym] `pokered.sym`; `BAG_ITEM_CAPACITY` (`constants/menu_constants.asm`), 99 in `engine/items/inventory.asm` |
+| Yellow | `0xD31C`, money `0xD346` | same | [sym] `pokeyellow.sym` |
+| Gold/Silver | `wNumItems` `0xD5B7`, `wNumKeyItems` `0xD5E1` | same; key items: count, ids, `0xFF` (max 25) | [sym] `pokegold.sym`; `MAX_ITEMS`, `MAX_ITEM_STACK`, `MAX_KEY_ITEMS` |
+| Crystal | `0xD892`, key items `0xD8BC` | same | [sym] `pokecrystal.sym` |
+| Ruby/Sapphire (US, DE) | `gSaveBlock1` `0x02025734` + `0x560` (20 slots), balls `+0x600`, money `+0x490` | { u16 id, u16 qty }, plain | [sym] `pokeruby.sym`, `pokeruby_de.sym`; `include/global.h`, `constants/global.h` |
+| Emerald | `*gSaveBlock1Ptr` (`0x03005D8C`) + `0x560` (30), balls `+0x650`, money `+0x490`; key `*gSaveBlock2Ptr` (`0x03005D90`) + `0xAC` | qty XOR low 16 bits of the key, money XOR the key | [sym] `pokeemerald.sym`; `src/item.c` `GetBagItemQuantity` |
+| FireRed/LeafGreen | `*0x03005008` + `0x310` (42), balls `+0x430`, money `+0x290`; key `*0x0300500C` + `0xF20` | same | [sym] `pokefirered.sym`; `include/global.h` |
+| HeartGold/SoulSilver | SaveData + `0x10` (general) + `0x644`; Medicine pocket `+0x520` (40) | { u16 id, u16 qty }, 999 per slot | PKHeX `PlayerBag4HGSS.cs`; **checked against RAM images of a running HeartGold (DeSmuME states) and written live** |
+| Platinum | SaveData + `0x14` + `0x630`; Medicine `+0x51C` | same | PKHeX `PlayerBag4Pt.cs` |
+| Diamond/Pearl | SaveData + `0x214` + `0x624`; Medicine `+0x51C` | same | PKHeX `PlayerBag4DP.cs` |
+| Black/White, B2/W2 | party block − `0xA00`; Medicine `+0x7D8` (48) | same | [derived] PKHeX `SaveBlockAccessor5*.cs`: inventory `0x18400`, party `0x18E00`; `PlayerBag5*.cs`. Assumes RAM keeps the save blocks in file order, like Gen 4 – **not verified in a running game**; the checks refuse otherwise |
+
+Gen 4/5 find SaveData through the party reader: its `saveBase` (pointer chain) or, after a scan, party address +
+8 − `partyMonsOffset`. A bag with nothing in it is refused (zeros pass every other check). Rare Candy is in the
+Items pocket in Gen 1–3 and in the Medicine pocket in Gen 4/5.
