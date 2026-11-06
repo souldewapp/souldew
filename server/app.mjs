@@ -576,6 +576,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         theme: config.theme || 'classic',
         speedGuard: config.speedGuard === true,
         turboMax: config.turboMax === true,
+        fullTurbo: config.fullTurbo !== false,
         pads: config.pads || null,
         gpuBackend: validBackend(config.gpuBackend, process.platform),
         gpuFallback: fallbackNotice(config.gpuFallback),
@@ -588,13 +589,14 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const allowed = {};
     // No path-like keys here: emulatorPaths decides which program /launch runs, libraryFolders which folders are
     // scanned (set via /api/library/folders). Neither may be writable by a plain config POST.
-    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax', 'gpuBackend', 'gpuFallback']) {
+    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax', 'fullTurbo', 'gpuBackend', 'gpuFallback']) {
       if (k in body) allowed[k] = body[k];
     }
     // shape checks for the newer keys – the page validates too, but the config file shouldn't hold junk
     if ('theme' in allowed && !['classic', 'contrast', 'deutan', 'tritan'].includes(allowed.theme)) delete allowed.theme;
     if ('speedGuard' in allowed) allowed.speedGuard = allowed.speedGuard === true;
     if ('turboMax' in allowed) allowed.turboMax = allowed.turboMax === true;
+    if ('fullTurbo' in allowed) allowed.fullTurbo = allowed.fullTurbo !== false; // on unless switched off
     // the graphics backend electron/main.mjs applies at the next start; the fallback notice can only be dismissed
     if ('gpuBackend' in allowed) {
       if (gpuBackends(process.platform).includes(allowed.gpuBackend)) allowed.gpuStart = null; // a new choice starts counting afresh

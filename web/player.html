@@ -64,21 +64,45 @@
       return 0;
     };
   }
+  let fullTurbo = q.get('fullturbo') !== '0'; // Settings › "Full-power turbo" (play.mjs: ?fullturbo=0, __emu.setFullTurbo)
   const pacerReady = import('/lib/pacer.mjs').then(({ Pacer, soundRate }) => {
     // the sound's rate (see "audio_out_rate" below) – set before EmulatorJS starts and the core makes its AudioContext
     outRate = soundRate(deviceRate);
     ctxRate = outRate && outRate !== Math.round(deviceRate) ? outRate : 0;
     pacer = new Pacer({ fps: PACE_FPS });
+    pacer.full = fullTurbo;
     if (early.step) pacer.request(early.step);
+    // Full-power turbo (lib/pacer.mjs): the rest of a display frame's share runs in slices, each as a task of the lowest
+    // priority – whatever the page has to do (input, the live reader, sync, the app's own updates) goes first, the
+    // core takes what is left. No timer is involved. Measured with HeartGold at 4× on an M1: tasks of the app page waited
+    // 13.6 ms (95th percentile) with "background" slices, 52 ms with plain message round trips (the fallback).
+    const more = new MessageChannel();
+    let queued = false;
+    const slice = () => {
+      queued = false;
+      pacer.slice(performance.now());
+      carryOn();
+    };
+    const carryOn = () => {
+      if (queued || !pacer.pending(performance.now())) return;
+      queued = true;
+      if (globalThis.scheduler?.postTask) scheduler.postTask(slice, { priority: 'background' });
+      else more.port2.postMessage(0);
+    };
+    more.port1.onmessage = slice;
     const tick = (now) => {
       nativeRaf(tick);
       pacer.tick(now);
+      carryOn();
     };
     nativeRaf(tick);
     // No display frames (a hidden page, a minimised window): keep fast-forward going from a timer, as before.
     setInterval(() => {
       const now = performance.now();
-      if (now - pacer.last > 120) pacer.tick(now);
+      if (now - pacer.last > 120) {
+        pacer.tick(now);
+        carryOn();
+      }
     }, 25);
   });
 
@@ -112,7 +136,8 @@
     desmume_pointer_type: 'touch', // click = tap at that spot
     desmume_pointer_mouse: 'enabled',
     // Bus-level timing costs ~10–15 % CPU in WASM and HGSS/BW don't need it; frameskip starts at 0 and the
-    // page raises it only when this computer can't hold 60 fps (see the speed check in play.mjs).
+    // page raises it only when this computer can't hold 60 fps (see the speed check in play.mjs); fast-forward sets its
+    // own (applySkip below).
     desmume_advanced_timing: 'disabled',
     lockMouse: 'disabled', // melonDS/DeSmuME report supportsMouse → EmulatorJS would pointer-lock on every click
     'save-save-interval': '15',
@@ -127,7 +152,8 @@
   // RetroArch settings EmulatorJS has no option for, appended to the retroarch.cfg it writes at boot. Fast-forward plays
   // the classic sound – the song at normal pitch in pieces, skipping ahead (RetroArch drops what doesn't fit) – and the
   // turbo mixer plays the music recorded at 1× over it (see TurboMixer.skip); frames fast-forward would throw away
-  // aren't drawn. Until 2.2 every core but DeSmuME played its sound sped up (audio_fastforward_speedup) and the mixer
+  // aren't drawn (fastforward_frameskip – measured with mGBA: 56–60 pictures a second at 4× and at "Max", 750 frames).
+  // Until 2.2 every core but DeSmuME played its sound sped up (audio_fastforward_speedup) and the mixer
   // slowed it back down. Paced from the display (below), that sound is no longer usable: RetroArch speeds each flush
   // up by the time between frames, and with several frames in one display frame it came out chopped (mGBA test tune,
   // 48 kHz: 2.2 ms pieces, 1.5 ms of zeros between them, 37 % of the sound) or at a pitch jumping between 1× and ~8×
@@ -850,6 +876,22 @@
 
   let speed = 1;
   let ffRatio = 3; // the last fast-forward step (the play view's indicator falls back to it)
+  // DeSmuME draws every frame in software. RetroArch already shows at most 60 of them per second while fast-forwarding
+  // (fastforward_frameskip), but the core still renders each one – so it skips rendering some itself while
+  // fast-forwarding: every other frame, and at full power (lib/pacer.mjs) as many as nobody sees anyway – 2 of 3 at 3×,
+  // 3 of 4 from 4×. HeartGold on an M1 (town, ~10 ms per frame): ~10 % faster than with 1 (more barely helps – the
+  // emulated CPUs, not the drawing, take the time there). Here and not in the play view, so that holding Tab gets it too.
+  // At 1× the page's own setting applies (play.mjs raises it on a computer that can't hold 60 fps).
+  const isDesmume = () => window.EJS_core === 'desmume';
+  let skip1x = '0';
+  let skipNow = null;
+  const ffSkip = () => (fullTurbo ? String(Math.min(3, Math.max(1, Number.isFinite(speed) ? Math.ceil(speed) - 1 : 3))) : '1');
+  function applySkip() {
+    const v = speed > 1 ? ffSkip() : skip1x;
+    if (!isDesmume() || v === skipNow || !E()?.menuOptionChanged) return;
+    skipNow = v;
+    E().menuOptionChanged('desmume_frameskip', v);
+  }
   window.__emu = {
     ready: false,
     system: () => E()?.getCore(true),
@@ -889,8 +931,16 @@
         E().isFastForward = false;
         GM().toggleFastForward(0);
       }
+      applySkip();
     },
     speed: () => speed,
+    /** Settings › "Full-power turbo": fast-forward may use (nearly) every display frame in full (lib/pacer.mjs). */
+    setFullTurbo(on) {
+      fullTurbo = !!on;
+      if (pacer) pacer.full = fullTurbo;
+      perfLog.at = 0;
+      if (window.__emu.ready) applySkip();
+    },
     /** Emulated frames so far – the page measures the real speed with it. */
     frames: () => GM().getFrameNum(),
     /** Actual fast-forward state (may also be switched by EmulatorJS itself) and the ratio it runs at. */
@@ -988,12 +1038,16 @@
           mixers: audio.chains?.counts() ?? null, // live (1 once attached), built in all, contexts the core left behind and closed here
           mode: audio.mode,
         },
-        pacing: { fps: PACE_FPS, displayHz: pacer?.disp ? +(1000 / pacer.disp).toFixed(1) : null, speed: speed === Infinity ? 'max' : speed, threads: !!window.EJS_threads, core: window.EJS_core },
+        pacing: { fps: PACE_FPS, displayHz: pacer?.disp ? +(1000 / pacer.disp).toFixed(1) : null, speed: speed === Infinity ? 'max' : speed, fullTurbo, threads: !!window.EJS_threads, core: window.EJS_core },
         last: perfLog.last,
         totals: { underruns: sound.underruns, ffHoles: sound.ffHoles, longTasks: sound.longTasks },
       };
     },
     setOption(k, v) {
+      if (k === 'desmume_frameskip') {
+        skip1x = String(v); // the page's choice for 1× – fast-forward picks its own (applySkip)
+        return applySkip();
+      }
       if (/screens?_layout$/.test(k)) sideBySide = /left/i.test(v);
       E().menuOptionChanged(k, v);
     },

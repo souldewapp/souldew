@@ -14,6 +14,19 @@
 - Sound cards set to 96 or 192 kHz: the emulator's sound now runs at 48 kHz (44.1 kHz for 88.2/176.4 kHz) and the
   browser converts it once – the same as on most PCs, with half the work for the turbo mixer or less.
 
+**Turbo without a brake** – players asked for it.
+
+- New in Settings › General: "Full-power turbo" (on by default). While fast-forwarding the game may now use almost
+  every display frame in full instead of three quarters of it, in short slices that let the app's own work and your
+  clicks and keys go first. DS games on DeSmuME (HeartGold/SoulSilver, Black/White) also skip drawing more of the
+  frames nobody sees at that pace. Turbo never steps down with it ("Step down when the computer can't keep up" is off
+  then). Normal speed is unchanged. Measured on an M1: GBA "Max" 12.2× → 13.6×, HeartGold's opening 4× 3.2× → 3.6×,
+  and the app stays at the display's full rate while fast-forwarding (45 → 75 Hz on a 75 Hz screen), with clicks
+  answered about twice as fast.
+- Where a game still can't reach the chosen speed, the computer itself is the limit: the built-in DS emulator runs on
+  a single CPU core, and HeartGold in town takes ~10 ms per frame on an M1 – about 1.5× is all it can do there, with or
+  without the brake. The "≈" next to the speed shows what your computer really reaches.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.

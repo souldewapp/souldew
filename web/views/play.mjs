@@ -820,15 +820,13 @@ export function GameSession({ session, mode }) {
     setPaused(true);
   }, [runStatus?.at, phase]);
 
-  // DeSmuME draws every frame in software – that, not the game logic, is what keeps fast-forward from reaching
-  // its speed (HGSS on an M1: 3× ≈ 2.5×, 4× swinging between 2× and 3×). Skipping every other frame's drawing
-  // while fast-forwarding makes 3× exact and 4× steady; nobody sees the skipped frames at that pace.
-  // (A frameskip of 3 stalls the core – 1 is the safe step.)
-  const baseSkip = useRef('0');
+  // Settings › "Full-power turbo" (on unless switched off): fast-forward may use nearly every display frame in full
+  // and DeSmuME skips drawing more frames while fast-forwarding (player.html, lib/pacer.mjs). The frame gets it with
+  // its URL; a change in the settings applies right away.
+  const fullTurbo = status?.config?.fullTurbo !== false;
   useEffect(() => {
-    if (phase !== 'running' || core !== 'desmume') return;
-    emu()?.setOption?.('desmume_frameskip', speed > 1 ? '1' : baseSkip.current);
-  }, [phase, core, speed]);
+    if (phase === 'running') emu()?.setFullTurbo?.(fullTurbo);
+  }, [phase, fullTurbo]);
 
   // DS on a slower computer: when DeSmuME can't hold full speed at 1× for a while, let it skip every other
   // frame's rendering (the game itself keeps its speed and timing). Stays on for this session.
@@ -849,8 +847,7 @@ export function GameSession({ session, mode }) {
         slow = fps < 55 ? slow + 1 : 0;
         if (slow >= 3) {
           done = true;
-          baseSkip.current = '1';
-          e.setOption?.('desmume_frameskip', '1');
+          e.setOption?.('desmume_frameskip', '1'); // (for 1× – fast-forward has its own, see player.html applySkip)
           flash(t('play.frameskipOn', 'Smoother play: frame skipping on'));
         }
       }
@@ -862,7 +859,8 @@ export function GameSession({ session, mode }) {
   // Measure the real speed: the bar shows it next to the setting when a scene can't keep up. The chosen level is
   // never changed behind the player's back – only with Settings › "Step down when the computer can't keep up" on
   // does a level that isn't reached for ~5 s drop to the highest one that holds (going up again is the player's call).
-  const speedGuard = status?.config?.speedGuard === true;
+  // "Full-power turbo" never steps down: the player asked for everything the computer can give.
+  const speedGuard = status?.config?.speedGuard === true && !fullTurbo;
   useEffect(() => {
     if (phase !== 'running' || speed <= 1) {
       setRealSpeed(null);
@@ -938,7 +936,7 @@ export function GameSession({ session, mode }) {
     const romKey = `${hash(new TextEncoder().encode(target.key)).replace(/\D/g, '')}`;
     const romUrl = `/rom/g${romKey}.${target.system}?src=${encodeURIComponent(target.rom)}`;
     const lay = layout === 'lr' ? '&layout=Left%2FRight&dlayout=left%2Fright' : '';
-    return `/player.html?system=${target.system}${core ? `&core=${core}` : ''}${lay}&rom=${encodeURIComponent(romUrl)}&name=${encodeURIComponent(target.name)}&save=${encodeURIComponent(target.saveUrl)}&tap=${encodeURIComponent(t('play.tapToStart', 'Click to start'))}`;
+    return `/player.html?system=${target.system}${core ? `&core=${core}` : ''}${lay}${fullTurbo ? '' : '&fullturbo=0'}&rom=${encodeURIComponent(romUrl)}&name=${encodeURIComponent(target.name)}&save=${encodeURIComponent(target.saveUrl)}&tap=${encodeURIComponent(t('play.tapToStart', 'Click to start'))}`;
   });
   const arn = isDs ? (layout === 'lr' ? 512 / 192 : 256 / 384) : target.system === 'gba' ? 3 / 2 : 10 / 9;
   const names = isRun && doc && manifest ? getPlayers(doc, manifest) : null;

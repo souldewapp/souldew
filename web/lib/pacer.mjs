@@ -9,10 +9,21 @@
 // hands them to this pacer, which runs the steps from the display's frames: as many as the chosen speed needs since the
 // last display frame. One per refresh on a 60 Hz screen, 4 in 5 at 75 Hz, 2 in 5 at 144 Hz – no timers in the game loop.
 //
+// While fast-forwarding the core gets 75 % of each display frame and whatever doesn't fit is left out: the page (the
+// app shares this thread) stays smooth, but a heavy core or a slow computer then stays below the chosen speed. Settings ›
+// "Full-power turbo" (`full`) lifts that brake: the core may use the display frame up to FULL_SHARE of it, counted from
+// the frame's start, in slices of at most FULL_SLICE ms – between them player.html yields (a message round trip, no
+// timer), so clicks, keys and the app's own work still get through – and what is still owed when the frame is over is
+// dropped as before (no burst afterwards). At 1× nothing changes.
+//
 // Plain logic without DOM types: test/pacer.test.mjs drives it with a fake clock.
 
 /** The rate RetroArch makes its sound for (video_refresh_rate in player.html's RetroArch config). */
 export const PACE_FPS = 60;
+/** Share of a display frame the core may use while fast-forwarding at full power (the rest: drawing the page). */
+export const FULL_SHARE = 0.92;
+/** Longest stretch (ms) the core runs at full power before the page gets its turn. */
+export const FULL_SLICE = 6;
 
 /**
  * The sample rate the emulator's sound runs at (its AudioContext, RetroArch's audio_out_rate), for a sound card running
@@ -45,6 +56,8 @@ export class Pacer {
     this.last = 0; // timestamp of the last display frame
     this.disp = 0; // the display's frame interval, smoothed
     this.lastFrame = 0; // when the core last ran a frame
+    this.full = false; // Settings › "Full-power turbo": fast-forward may use (nearly) the whole display frame
+    this.deadline = 0; // full power: the end of the current display frame's share (0 = no slices to come)
     this.resetStats();
   }
 
@@ -79,6 +92,7 @@ export class Pacer {
     this.last = t;
     if (dt > 0 && dt < 60) this.disp = this.disp ? this.disp * 0.95 + dt * 0.05 : dt;
     this.ticks++;
+    if (this.deadline) this.settle(this.due()); // full power: the last frame's slices didn't come round (busy page)
     if (!this.step) {
       this.acc = 0; // paused, or a step still under way: no debt builds up meanwhile
       return 0;
@@ -95,20 +109,47 @@ export class Pacer {
     }
     this.acc += d;
     const start = this.now();
+    const frame = Math.min(this.disp || 1000 / 60, 33);
+    if (this.full && this.speed > 1) {
+      // full power: FULL_SHARE of a display frame, in slices
+      this.deadline = start + frame * FULL_SHARE;
+      return this.run(start, Math.min(this.deadline, start + FULL_SLICE));
+    }
     // the rest of the display frame belongs to the page (the app shares this thread)
-    const budget = Math.max(4, Math.min(this.disp || 1000 / 60, 33) * 0.75);
-    const slack = Math.min(2, period * 0.12);
+    return this.run(start, start + Math.max(4, frame * 0.75));
+  }
+
+  /** Full power: steps are still due in this display frame's share – player.html then calls slice() after a yield. */
+  pending(t) {
+    return !!this.deadline && t < this.deadline && this.due();
+  }
+
+  /** Full power: the next slice of the current display frame (after the page had its turn). Returns how many ran. */
+  slice(t) {
+    if (this.pending(t)) return this.run(this.now(), Math.min(this.deadline, t + FULL_SLICE));
+    if (this.deadline) this.settle(t >= this.deadline && this.due()); // the page's turn took the rest of the frame
+    return 0;
+  }
+
+  /** The core asks for its next step and the game time owed covers it. */
+  due() {
+    const period = this.period();
+    return !!this.step && (period === 0 || this.acc >= period - Math.min(2, period * 0.12));
+  }
+
+  /** Runs the steps that are due until `until` (ms; the first one always runs). Returns how many ran. */
+  run(start, until) {
+    const period = this.period();
     let n = 0;
-    while (this.step && (period === 0 || this.acc >= period - slack)) {
-      if (n > 0 && this.now() - start > budget) {
-        // this computer can't do more right now: forget the rest instead of catching up in a burst later
-        this.budgetHits++;
-        this.acc = Math.min(this.acc, period);
+    let out = false; // this display frame's share is used up
+    while (this.due()) {
+      const s = this.now();
+      if (n > 0 && s > until) {
+        out = !this.deadline || s >= this.deadline;
         break;
       }
       const step = this.step;
       this.step = null;
-      const s = this.now();
       if (this.lastFrame) this.maxGap = Math.max(this.maxGap, s - this.lastFrame);
       this.lastFrame = s;
       step();
@@ -116,8 +157,22 @@ export class Pacer {
       this.frames++;
       n++;
     }
-    this.busy += this.now() - start;
-    this.acc = period === 0 ? 0 : Math.max(-period, Math.min(this.acc, 2 * period));
+    const end = this.now();
+    this.busy += end - start;
+    if (!out && this.pending(end)) return n; // full power: the next slice carries on with what is owed
+    this.settle(out);
     return n;
+  }
+
+  /** The display frame's work is done. `out`: time ran out with frames still owed. */
+  settle(out) {
+    const period = this.period();
+    if (out) {
+      // this computer can't do more right now: forget the rest instead of catching up in a burst later
+      this.budgetHits++;
+      this.acc = Math.min(this.acc, period);
+    }
+    this.acc = period === 0 ? 0 : Math.max(-period, Math.min(this.acc, 2 * period));
+    this.deadline = 0;
   }
 }
