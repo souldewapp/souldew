@@ -308,8 +308,8 @@ test('platform on Linux: Ctrl shortcuts, ~ for the home folder', () => {
 test('texts: Windows and Linux wording only behind a platform switch, translated everywhere', () => {
   const i18n = (lang) => JSON.parse(readFileSync(new URL(`../web/i18n/${lang}.json`, import.meta.url), 'utf8'));
   const en = i18n('en');
-  const WIN_ONLY = ['disc.searchingPc', 'menu.revealLibraryWin', 'upd.dataSafeWin', 'upd.manual2Win', 'upd.smartscreen'];
-  const LINUX_ONLY = ['disc.searchingLinux', 'menu.revealLibraryLinux', 'upd.dataSafeLinux', 'upd.manual2Linux'];
+  const WIN_ONLY = ['disc.searchingPc', 'ext.revealPc', 'menu.revealLibraryWin', 'upd.dataSafeWin', 'upd.manual2Win', 'upd.smartscreen'];
+  const LINUX_ONLY = ['disc.searchingLinux', 'ext.revealLinux', 'menu.revealLibraryLinux', 'upd.dataSafeLinux', 'upd.manual2Linux'];
   const winish = Object.keys(en).filter((k) => /Explorer|AppData|SmartScreen|OneDrive/.test(en[k]));
   assert.deepEqual(winish.sort(), [...WIN_ONLY].sort());
   const linuxish = Object.keys(en).filter((k) => /AppImage|~\/\.config|file manager|EmuDeck|RetroDECK/.test(en[k]));

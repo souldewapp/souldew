@@ -1,7 +1,7 @@
 import { html, useState, useEffect, useRef, useCallback } from '/vendor/htm-preact.mjs';
 import { useApp, Led, saveDiagnostics, copy } from '../lib/ui.mjs';
 import { bridgeState } from '../lib/livebridge.mjs';
-import { IS_MAC } from '../lib/platform.mjs';
+import { IS_MAC, IS_WIN } from '../lib/platform.mjs';
 import { diag } from '../lib/diag.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, ago } from '../lib/i18n.mjs';
@@ -1184,7 +1184,7 @@ function ScriptBridge({ fresh }) {
     <div class="row"><span class="code grow" title=${path}>${path}</span>
       <button class="btn small ghost" onClick=${() => { copy(path); toast({ kind: 'ok', title: t('common.copied', 'Copied'), text: t('ext.pathCopied', 'Paste the path into the file name field of mGBA’s “Load script” window.') }); }}>${t('common.copy', 'Copy')}</button>
       ${window.sls && html`<button class="btn small ghost" onClick=${() => api.post('/api/live/reveal', {}).catch((err) => toast({ kind: 'death', title: 'mGBA', text: err.message }))}>
-        <${Icon} name="folder" size=${14} />${IS_MAC ? t('ext.revealMac', 'Show in Finder') : t('ext.revealPc', 'Show in Explorer')}</button>`}</div>
+        <${Icon} name="folder" size=${14} />${IS_MAC ? t('ext.revealMac', 'Show in Finder') : IS_WIN ? t('ext.revealPc', 'Show in Explorer') : t('ext.revealLinux', 'Show in the file manager')}</button>`}</div>
     <div class="row nowrap" role="status" aria-live="polite"><${Led} on=${key !== 'waiting'} color=${color} blink=${key === 'connected'} /><span class="small grow">${text}</span></div>
     ${outdated && key !== 'rejected' && html`<p class="tiny faint">${t('ext.liveOutdated', 'mGBA is running an older version of the script. It works, but the new one reconnects on its own and explains problems in mGBA’s scripting window: choose File › Reset there, then load the file again.')}</p>`}
   </div>`;

@@ -373,6 +373,7 @@
   "ext.liveRejected": "mGBA intentó conectarse con un script antiguo o de otra instalación de souldew. En la ventana de scripting de mGBA elige File › Reset y vuelve a cargar el archivo de arriba.",
   "ext.liveUnsupported": "El script está conectado, pero souldew no tiene datos en directo para {game}.",
   "ext.pathCopied": "Pega la ruta en el campo del nombre de archivo de la ventana «Load script» de mGBA.",
+  "ext.revealLinux": "Mostrar en el gestor de archivos",
   "ext.revealMac": "Mostrar en el Finder",
   "ext.revealPc": "Mostrar en el Explorador",
   "ext.saveText": "{emu} no puede compartir datos en directo. Guarda en el juego con frecuencia: souldew lee el archivo de guardado junto a la ROM después de cada guardado en el juego.",

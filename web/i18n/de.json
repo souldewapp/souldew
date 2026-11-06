@@ -373,6 +373,7 @@
   "ext.liveRejected": "mGBA wollte sich mit einem veralteten Skript oder einem aus einer anderen souldew-Installation verbinden. Wähle im Scripting-Fenster von mGBA Datei › Zurücksetzen (File › Reset) und lade die Datei oben erneut.",
   "ext.liveUnsupported": "Das Skript ist verbunden, aber souldew hat keine Live-Daten für {game}.",
   "ext.pathCopied": "Füge den Pfad im Fenster „Skript laden“ von mGBA ins Feld für den Dateinamen ein.",
+  "ext.revealLinux": "Im Dateimanager zeigen",
   "ext.revealMac": "Im Finder zeigen",
   "ext.revealPc": "Im Explorer zeigen",
   "ext.saveText": "{emu} kann keine Live-Daten teilen. Speichere regelmäßig im Spiel – souldew liest nach jedem Speichern den Spielstand neben der ROM.",
