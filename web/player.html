@@ -117,7 +117,8 @@
   window.EJS_CacheLimit = 0;            // don't keep a second copy of the ROM in IndexedDB
   window.EJS_disableLocalStorage = true; // our options win over settings remembered by EmulatorJS
   // Multi-threaded cores whenever the page may use threads (the server sends cross-origin isolation headers):
-  // DeSmuME holds 3× exactly and 4× in nearly every scene with them. ?threads=0 forces the single-threaded core.
+  // they don't make the DS cores faster, though (HeartGold in town with DeSmuME: ~10 ms per frame on an M1 with and
+  // without – the emulated CPUs run on one thread either way, lib/reach.mjs). ?threads=0 forces the single-threaded core.
   window.EJS_threads = q.get('threads') !== '0' && !!self.crossOriginIsolated;
   window.EJS_language = 'en-US';
   window.EJS_disableAutoLang = true;

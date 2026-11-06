@@ -684,8 +684,10 @@ details.group details.group { margin: 0 14px 8px; }
 .session-bar .btn.icon { width: 28px; height: 28px; min-width: 28px; padding: 0; }
 .session-bar .sep { width: 1px; height: 16px; background: var(--edge-hi); margin: 0 5px; }
 .session-bar .spacer { flex: 0 0 10px; }
-.session-bar .speed { position: relative; font-family: var(--font-pixel); font-size: 12px; min-width: 22px; text-align: center; color: var(--ink-2); }
-/* "≈2.7×" when the computer can't keep up: a small tag above the number, so the bar never changes width (and wraps) */
+.session-bar .speed { position: relative; font-family: var(--font-pixel); font-size: 12px; min-width: 32px; text-align: center; color: var(--ink-2); }
+/* the scene can't keep up: the number is what the game really runs at (the chosen step sits in the tag above) */
+.session-bar .speed.behind { color: var(--warn); }
+/* "set: 4×" when the computer can't keep up: a small tag above the number, so the bar never changes width (and wraps) */
 .session-bar .speed-real { position: absolute; left: 50%; bottom: calc(100% + 7px); transform: translateX(-50%); white-space: nowrap; padding: 1px 6px;
   border-radius: 999px; background: #141318; box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn) 45%, transparent), 0 4px 10px #0008; line-height: 15px; pointer-events: none; }
 .session-side { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 12px; }

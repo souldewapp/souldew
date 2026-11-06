@@ -24,8 +24,21 @@
   and the app stays at the display's full rate while fast-forwarding (45 → 75 Hz on a 75 Hz screen), with clicks
   answered about twice as fast.
 - Where a game still can't reach the chosen speed, the computer itself is the limit: the built-in DS emulator runs on
-  a single CPU core, and HeartGold in town takes ~10 ms per frame on an M1 – about 1.5× is all it can do there, with or
-  without the brake. The "≈" next to the speed shows what your computer really reaches.
+  a single CPU core, and HeartGold in town takes ~10 ms per frame on an M1 – about 1.6× is all it can do there, with or
+  without the brake. We measured every way around it on an M1 (HeartGold, Azalea Town): frame skipping (none or 9 of
+  10 frames – the same), DeSmuME's 3D and timing options, the single- and multi-threaded build and the older
+  "DeSmuME 2015" all take 9.7–10.8 ms per frame; melonDS still can't load HeartGold/SoulSilver and Black/White saves
+  ("A communication error has occurred") and is slower than DeSmuME in the 2D menus anyway.
+
+**Honest turbo steps**
+
+- When a scene can't keep up, the speed in the bar now shows what the game really runs at ("≈1.6×", in yellow) –
+  the step you picked moves to the small tag above it ("set: 4×").
+- souldew remembers per game how fast fast-forward gets on your computer. Steps it never reaches there aren't offered
+  any more: with HeartGold on an M1, `T` and the +/– buttons go 1× → 4× instead of 2× → 3× → 4× that all play at the
+  same ~1.6×. The highest step stays – it runs as fast as your computer manages, up to 4×, so lighter scenes (menus,
+  houses, the opening) still get the full speed – and says so when you switch to it ("4× – this computer usually
+  manages ≈1.6× in this game"). On a faster computer, or in games that hold the steps, nothing changes.
 
 ## 2.2.0
 

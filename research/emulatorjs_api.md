@@ -230,6 +230,26 @@ Measured in headless Chrome on this Mac (arm64) with the HG (USA) ROM, non-threa
   - #615: on Mac, mouse/stylus only moves while the button is held. That is mouse mode; use `melonds_touch_mode = Touch`.
 - Screen layout: set `melonds_screen_layout` (values above). `Hybrid Top` and `Left/Right` work for wide windows.
 
+**3D overworld, measured 11/2026** (souldew 2.2.1 in Electron on an M1, 75 Hz, HeartGold in Azalea Town – the same
+in-game save booted on each core; "ms" = core time per emulated frame while fast-forwarding at "Max"):
+
+| Core / setting | ms per frame | Max speed |
+|---|---|---|
+| desmume (thread build, as shipped) | 9.7–10.6 | 1.5–1.6× |
+| desmume, `?threads=0` | 9.7 | 1.6× |
+| desmume, `desmume_frameskip` 0 / 3 / 9 | 9.9 / 9.9 / 9.7 | ~1.6× |
+| desmume, edgemark off, linehack off, txthack on, cpu_mode jit (ignored), num_cores 4, 16-bit colour, internal resolution 256×192, texture scaling 1 | 10.4–12.1 (noise) | 1.3–1.5× |
+| desmume2015 | 10.7–10.9 | 1.5× |
+| desmume, `--js-flags=--no-liftoff` | 10.0 | 1.6× |
+| melonds | – | can't load the save: "A communication error has occurred" (with a HG save present; a fresh game boots) |
+
+Same scene at 1×: 11.9 ms per frame (71 % of the time) – drawing every frame adds ~2 ms. 2D menu ("I will first tell
+you important things…", no save) for comparison: desmume 1.6 ms (Max 9.6×), melonds 2.9 ms (Max 5.5×). The DS `-thread`
+builds are real pthread builds but gain nothing: the emulated ARM9/ARM7 run on one thread, and frame skipping shows
+the drawing isn't the cost. So 4× in HeartGold's towns is out of reach on an M1 with every bundled core; the app
+offers only the steps a computer reaches per game instead (web/lib/reach.mjs). The bundled melonDS is 0.9.3
+(18a057d, with an IR cartridge class); a newer melonDS core build would be needed to try it on HG/SS again.
+
 **GB/GBC:** `gambatte` (EmulatorJS default for `gb`; accurate; small 26 KB states; `.srm` = raw SRAM). **GBA:** `mgba` (the only GBA core in EJS; also runs GB/GBC). Both run at thousands of fps unlimited, so speed is not a concern.
 
 ---

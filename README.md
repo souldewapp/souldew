@@ -188,7 +188,7 @@ On Windows and Linux, use `Ctrl` where the table says `⌘` and `Shift` for `⇧
 | Key | Action |
 |---|---|
 | `Tab` (hold) | Fast-forward |
-| `T` | Turbo 2× → 3× → 4× (→ Max) → off |
+| `T` | Turbo 2× → 3× → 4× (→ Max) → off – steps your computer never reaches in that game are skipped |
 | `P` | Pause |
 | `F5` / `F8` | Save / load the selected save-state slot |
 | `⇧1–4` / `1–4` | Save / load slot 1–4 |
@@ -210,7 +210,7 @@ In-game controls (default, change under **Settings › Controls**): arrow keys, 
 - **Windows** was tested on GitHub's Windows runners (build, install, start, uninstall, randomizer, emulator downloads) – please report anything that behaves differently on your PC. Windows paths with characters outside your system's code page (e.g. a Cyrillic user name on a German Windows) may trip up the Java randomizer.
 - **Live tracking** was checked in a running game with HeartGold (US), Definitive HeartGold and Silver; the other generations and languages are covered by unit tests built on the pret disassemblies and the NDS Ironmon tracker.
 - **HeartGold/SoulSilver and Black/White run on DeSmuME** instead of melonDS: EmulatorJS's melonDS core doesn't emulate these carts' infrared chip correctly ("A communication error has occurred" once a save exists).
-- **Fast-forward on DeSmuME** (HeartGold/SoulSilver, Black/White) is limited by the computer: the built-in DS emulator runs on one CPU core, and HeartGold in town takes ~10 ms per frame on an M1 – about 1.5× there, lighter scenes 3–4×. The "≈" next to the speed shows what your computer reaches.
+- **Fast-forward on DeSmuME** (HeartGold/SoulSilver, Black/White) is limited by the computer: the built-in DS emulator runs on one CPU core, and HeartGold in town takes ~10 ms per frame on an M1 – about 1.6× there, lighter scenes 3–4×. No core option, frame skipping, the multi-threaded build or "DeSmuME 2015" changes that (measured), and melonDS can't load these games' saves. The bar shows what your computer really reaches ("≈1.6×", the chosen step above it), and turbo steps it never reaches in a game aren't offered – the highest step then runs as fast as the computer manages.
 - **Turbo music from the ROM** covers DS music only (no sound effects); Platinum/Diamond/Pearl have no known song-number address yet, and melonDS is untested. After loading a save state the song restarts from its beginning.
 - **Rare Candies** go into the bag only where its place in memory is known and checked: Red/Blue/Yellow, Gold/Silver/Crystal (English), Ruby/Sapphire (English, German), Emerald/FireRed/LeafGreen (English), and every DS game from Diamond to Black 2/White 2 (in any language whose team live tracking finds). Other builds show "Not available for this game". Checked in a running game with HeartGold; Black/White's bag position follows the save layout and is untested in a running game – if it doesn't match, the app refuses instead of writing.
 - **Level caps** exist for HeartGold/SoulSilver (route list) and Red/Blue/Yellow/Gold/Silver/Crystal (gym leaders' ace levels); randomizer options like "trainer levels +20 %" aren't factored in. No caps yet for Gen 3, DP/Platinum and Gen 5.

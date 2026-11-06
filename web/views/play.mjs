@@ -20,6 +20,7 @@ import { LocationSign, readHere, nextHere, musicInfo } from './location.mjs';
 import { RulesTab } from './board.mjs';
 import { CartInsert } from './cartinsert.mjs';
 import { play as playCue } from '../lib/sound.mjs';
+import { addSample, typicalReach, offeredSteps, beyondReach, HELD } from '../lib/reach.mjs';
 
 let TABLES = null;
 async function liveTables() {
@@ -224,7 +225,20 @@ export function GameSession({ session, mode }) {
   const lastSpeed = useRef(2);
   const speedRef = useRef(1);
   speedRef.current = speed;
-  const steps = status?.config?.turboMax === true ? [...SPEEDS, MAX] : SPEEDS;
+  const isDs = target.system === 'nds';
+  // Games with an IR cartridge (HeartGold/SoulSilver, Black/White 1+2) answer the main menu with
+  // "A communication error has occurred" in the melonDS core once a save exists (any save, DeSmuME's too – still so in
+  // the bundled melonDS 0.9.3, checked 11/2026). DeSmuME runs them fine and is the faster core for them anyway: in town
+  // ~10 ms per frame on an M1, the same as "DeSmuME 2015" and with any core option (lib/reach.mjs).
+  const core = isDs && /^(IPK|IPG|IRB|IRA|IRE|IRD)/.test(target.code || '') ? 'desmume' : '';
+  // What fast-forward really reaches in this game on this computer (lib/reach.mjs), remembered per game and core: the
+  // turbo steps it can't reach aren't offered – the highest one then plays as fast as the computer manages.
+  const reachKey = `sl-reach-${target.system}-${target.code || target.key}-${core || 'default'}`;
+  const [reachList, setReachList] = useState(() => ls.get(reachKey, []));
+  const reach = typicalReach(reachList);
+  const reachRef = useRef(reach);
+  reachRef.current = reach;
+  const steps = offeredSteps(status?.config?.turboMax === true ? [...SPEEDS, MAX] : SPEEDS, reach);
   const stepsRef = useRef(steps);
   stepsRef.current = steps;
   const modeRef = useRef(mode);
@@ -267,10 +281,6 @@ export function GameSession({ session, mode }) {
     const fight = battle?.enemy?.species ? { kind: battle.kind || 'wild', species: battle.enemy.species, level: battle.enemy.level ?? null } : null;
     doc.set(`where:${me}`, { gen: here.gen, id: here.id, name: here.name, at: Date.now(), ...(fight ? { fight } : {}) });
   }, [whereKey, isRun, doc, me]);
-  const isDs = target.system === 'nds';
-  // Games with an IR cartridge (HeartGold/SoulSilver, Black/White 1+2) answer the main menu with
-  // "A communication error has occurred" in the melonDS core once a save exists – DeSmuME runs them fine.
-  const core = isDs && /^(IPK|IPG|IRB|IRA|IRE|IRD)/.test(target.code || '') ? 'desmume' : '';
   const stateUrl = (slot) => `/api/saves/state?id=${encodeURIComponent(target.stateId)}&slot=${slot}`;
 
   const armLoad = (p) => {
@@ -290,13 +300,18 @@ export function GameSession({ session, mode }) {
     flash.timer = setTimeout(() => setOsd(null), ms);
   }, []);
 
+  // "▶▶ 4×" – and when this computer usually can't get there in this game, what it does get to
+  const turboFlash = (s) => (beyondReach(s, reachRef.current)
+    ? flash(t('play.speedReach', '▶▶ {set} – this computer usually manages ≈{n}× in this game', { set: speedText(s), n: reachRef.current }), 2500)
+    : flash(`▶▶ ${speedText(s)}`));
   const setSpeedRef = useRef(null);
   const setSpeed = useCallback((s) => {
     speedRef.current = s; // quick repeated clicks build on each other
     emu()?.setSpeed(s);
     setSpeedState(s);
     if (s > 1) lastSpeed.current = s;
-    flash(s > 1 ? `▶▶ ${speedText(s)}` : '▶ 1×');
+    if (s > 1) turboFlash(s);
+    else flash('▶ 1×');
   }, []);
   setSpeedRef.current = setSpeed;
 
@@ -313,8 +328,8 @@ export function GameSession({ session, mode }) {
       flash(e.paused() ? t('play.paused', 'Paused') : '▶');
     },
     turbo: () => {
-      const st = stepsRef.current;
-      setSpeed(st[(st.indexOf(speedRef.current) + 1) % st.length]);
+      // the next step up, after the highest back to 1× (the current one may no longer be on offer, lib/reach.mjs)
+      setSpeed(stepsRef.current.find((s) => s > speedRef.current) ?? 1);
     },
     faster: () => setSpeed(stepsRef.current.find((s) => s > speedRef.current) ?? stepsRef.current.at(-1)),
     slower: () => setSpeed([...stepsRef.current].reverse().find((s) => s < speedRef.current) ?? 1),
@@ -484,7 +499,7 @@ export function GameSession({ session, mode }) {
       if (!turboHeld.current) {
         turboHeld.current = true;
         emu()?.setSpeed(lastSpeed.current > 1 ? lastSpeed.current : 3);
-        flash(`▶▶ ${speedText(lastSpeed.current > 1 ? lastSpeed.current : 3)}`);
+        turboFlash(lastSpeed.current > 1 ? lastSpeed.current : 3);
       }
       return true;
     }
@@ -856,7 +871,8 @@ export function GameSession({ session, mode }) {
     return () => clearInterval(id);
   }, [phase, core]);
 
-  // Measure the real speed: the bar shows it next to the setting when a scene can't keep up. The chosen level is
+  // Measure the real speed: when a scene can't keep up, the bar shows it in place of the step (the step moves to the
+  // small tag above), and every window goes into the game's reach (lib/reach.mjs – which steps are offered). The chosen level is
   // never changed behind the player's back – only with Settings › "Step down when the computer can't keep up" on
   // does a level that isn't reached for ~5 s drop to the highest one that holds (going up again is the player's call).
   // "Full-power turbo" never steps down: the player asked for everything the computer can give.
@@ -877,8 +893,13 @@ export function GameSession({ session, mode }) {
       const now = { f: e.frames(), t: performance.now() };
       if (last && now.t > last.t) {
         const x = (now.f - last.f) / ((now.t - last.t) / 1000) / 60;
-        const behind = x > 0 && x < speed * 0.92;
+        const behind = x > 0 && x < speed * HELD;
         setRealSpeed(behind ? Math.round(x * 10) / 10 : null);
+        setReachList((prev) => {
+          const next = addSample(prev, speed, x);
+          ls.set(reachKey, next);
+          return next;
+        });
         short.push(behind ? x : null);
         if (short.length > 4) short.shift();
         if (speedGuard && speed !== MAX && short.length === 4 && short.every((v) => v !== null)) {
@@ -1030,7 +1051,8 @@ export function GameSession({ session, mode }) {
           ${btn('reset', t('keys.reset', 'Reset the game (asks first)') + ' (R)', actions.reset)}
           <span class="sep"></span>
           <button class="btn icon" title=${t('play.slower', 'Slower')} aria-label=${t('play.slower', 'Slower')} onClick=${actions.slower}><span aria-hidden="true">–</span></button>
-          <span class="speed" aria-live="polite" title=${realSpeed ? t('play.realSpeed', 'Your computer manages about {n}× in this scene', { n: realSpeed }) : ''}>${speedText(speed)}${realSpeed ? html`<small class="speed-real">≈${realSpeed}×</small>` : ''}</span>
+          <span class=${`speed ${realSpeed ? 'behind' : ''}`} aria-live="polite"
+            title=${realSpeed ? t('play.realSpeedOf', 'Set to {set} – your computer manages about {n}× in this scene', { set: speedText(speed), n: realSpeed }) : ''}>${realSpeed ? `≈${realSpeed}×` : speedText(speed)}${realSpeed ? html`<small class="speed-real">${t('play.speedSet', 'set: {set}', { set: speedText(speed) })}</small>` : ''}</span>
           ${btn('fast', t('play.faster', 'Faster') + ' (T)', actions.faster)}
           <span class="sep"></span>
           ${btn('save', t('states.quicksave', 'Quick save to slot {n}', { n: sel }) + ' (F5)', () => actions.quicksave())}
@@ -1072,7 +1094,7 @@ export function GameSession({ session, mode }) {
                 </select>
               </label>
               <button class="btn small ghost diag-btn" title=${t('play.diagHint', 'Saves what souldew recorded about the music and live tracking this session – attach the file to a bug report. No ROM, save or invite data.')}
-                onClick=${() => saveDiagnostics({ turboAudio, speed: speed === MAX ? 'max' : speed, volume, perf: emu()?.perf?.() ?? null })}><${Icon} name="save" size=${14} />${t('play.diag', 'Save diagnostics')}</button>
+                onClick=${() => saveDiagnostics({ turboAudio, speed: speed === MAX ? 'max' : speed, reach, steps: steps.map((x) => (x === MAX ? 'max' : x)), volume, perf: emu()?.perf?.() ?? null })}><${Icon} name="save" size=${14} />${t('play.diag', 'Save diagnostics')}</button>
             </div>`}
           </span>
           ${btn(fs ? 'shrink' : 'full', (fs ? t('play.exitFullscreen', 'Leave fullscreen') : t('keys.fullscreen', 'Fullscreen game')) + ' (F)', actions.fullscreen)}
