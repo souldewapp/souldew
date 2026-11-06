@@ -398,7 +398,7 @@ test('platform: the app says which one, the browser is the fallback; shortcuts r
 test('Mac wording only where the page picks texts by platform', () => {
   // Every text that speaks of ⌘, the Finder, Applications or "Mac" is either shown behind a platform switch
   // (IS_MAC / isWin) or only reachable on macOS (states only the macOS updater produces). New ones must be added here.
-  const SWITCHED = ['disc.button', 'disc.title', 'disc.privacy', 'menu.revealLibrary', 'upd.dataSafe', 'upd.gatekeeper', 'upd.manual1', 'upd.manual2'];
+  const SWITCHED = ['disc.button', 'disc.title', 'disc.privacy', 'ext.revealMac', 'menu.revealLibrary', 'upd.dataSafe', 'upd.gatekeeper', 'upd.manual1', 'upd.manual2'];
   const MAC_STATES = ['upd.reasonBlocked', 'upd.reasonDmg', 'upd.reasonTranslocated', 'upd.stepMount'];
   const en = JSON.parse(readFileSync(new URL('../web/i18n/en.json', import.meta.url), 'utf8'));
   const macish = Object.keys(en).filter((k) => /⌘|⇧|⌥|\bMacs?\b|Finder|macOS|Applications|Apple|disk image|Library folder/.test(en[k]));

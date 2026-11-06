@@ -29,6 +29,7 @@ const TEXTS = {
   badWebhook: () => t('err.badWebhook', 'Invalid Discord webhook URL'),
   unknownEmulator: () => t('err.unknownEmulator', 'Unknown emulator'),
   badEmulatorPath: () => t('err.badEmulatorPath', 'Invalid emulator path'),
+  scriptMissing: () => t('err.scriptMissing', 'The mGBA script is missing – restart souldew to create it again'),
   emulatorRunning: () => t('err.emulatorRunning', 'The external emulator is still running. Save in the game, close the emulator, then try again.'),
   noWatchedSave: () => t('err.noWatchedSave', 'No watched save file for this run.'),
   graveyardCheckFailed: () => t('err.graveyardCheckFailed', 'The check after editing failed – the save file was not changed.'),

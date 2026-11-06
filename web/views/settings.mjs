@@ -1,5 +1,5 @@
 import { html, useState, useEffect, useRef } from '/vendor/htm-preact.mjs';
-import { useApp, openExternal } from '../lib/ui.mjs';
+import { useApp, openExternal, copy } from '../lib/ui.mjs';
 import { LINKS } from '../lib/links.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, LANGS, setLang, currentLang } from '../lib/i18n.mjs';
@@ -276,7 +276,8 @@ export function SettingsView() {
           <div class=${`tiny faint ${e.installed ? 'sm-secret' : ''}`}>${e.installed ? e.path : t('set.notInstalled', 'not installed')}</div></div>
         ${e.installed ? html`<span class="chip ok">${t('set.installed', 'Installed')}</span>` : html`<button class="btn small" disabled=${!!busy} onClick=${() => install(id)}>${busy === id ? t('set.installing', 'Installing …') : t('set.install', 'Install')}</button>`}
       </div>`)}
-      ${status?.emulators?.mgba?.installed && html`<div class="note">${t('set.mgbaScript', 'For live data with mGBA: Tools › Scripting › File › Load script and pick this file once:')} <span class="code">${status.live?.script}</span></div>`}
+      ${status?.emulators?.mgba?.installed && html`<div class="note">${t('set.mgbaScriptAgain', 'For live data with mGBA: Tools › Scripting… › File › Load script… and pick this file (again after every mGBA restart):')} <span class="code">${status.live?.script}</span>
+        <button class="btn small ghost" onClick=${() => { copy(status.live?.script || ''); toast({ kind: 'ok', title: t('common.copied', 'Copied'), text: status.live?.script }); }}>${t('common.copy', 'Copy')}</button></div>`}
     </section>
 
     <section class="panel stack">
