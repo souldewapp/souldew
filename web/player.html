@@ -36,7 +36,7 @@
 
   // ---- frame pacing (lib/pacer.mjs) -------------------------------------------------------------------
   // RetroArch's own timing sleeps on setTimeout, which a coarse system timer (Windows) stretches – fast-forward capped
-  // near 2×, stalls at 1×. Its audio sync and fast-forward limit are off (RA_CFG below); the core's requests for its next
+  // near 2×, stalls at 1×. Its audio sync and fast-forward limit are off (raCfg below); the core's requests for its next
   // main-loop step land here and the pacer runs them from the display's frames. The module is loaded before EmulatorJS
   // (see the end of this script); anything asking before that waits in `early`.
   const RUNNER = 'MainLoop_runner'; // Emscripten's main-loop step (both its rAF and its setImmediate scheduler run it)
@@ -64,7 +64,10 @@
       return 0;
     };
   }
-  const pacerReady = import('/lib/pacer.mjs').then(({ Pacer }) => {
+  const pacerReady = import('/lib/pacer.mjs').then(({ Pacer, soundRate }) => {
+    // the sound's rate (see "audio_out_rate" below) – set before EmulatorJS starts and the core makes its AudioContext
+    outRate = soundRate(deviceRate);
+    ctxRate = outRate && outRate !== Math.round(deviceRate) ? outRate : 0;
     pacer = new Pacer({ fps: PACE_FPS });
     if (early.step) pacer.request(early.step);
     const tick = (now) => {
@@ -121,30 +124,51 @@
   const E = () => window.EJS_emulator;
   const GM = () => E() && E().gameManager;
 
-  // RetroArch settings EmulatorJS has no option for, appended to the retroarch.cfg it writes at boot:
-  // fast-forward plays the sound sped up (instead of dropping most of it), so the turbo mixer can slow it back
-  // down and still hear which music is playing; frames that fast-forward would throw away aren't drawn.
-  // DeSmuME is the exception: its sped-up sound comes out chopped (~45 % holes, sound lost in between – noise once
-  // slowed down, and noise in "original" too). Without the speed-up RetroArch plays the classic fast-forward sound
-  // instead: the song at normal pitch in pieces, skipping ahead – played as it is (see TurboMixer.skip).
-  const FF_SKIP = /^desmume/.test(window.EJS_core);
+  // RetroArch settings EmulatorJS has no option for, appended to the retroarch.cfg it writes at boot. Fast-forward plays
+  // the classic sound – the song at normal pitch in pieces, skipping ahead (RetroArch drops what doesn't fit) – and the
+  // turbo mixer plays the music recorded at 1× over it (see TurboMixer.skip); frames fast-forward would throw away
+  // aren't drawn. Until 2.2 every core but DeSmuME played its sound sped up (audio_fastforward_speedup) and the mixer
+  // slowed it back down. Paced from the display (below), that sound is no longer usable: RetroArch speeds each flush
+  // up by the time between frames, and with several frames in one display frame it came out chopped (mGBA test tune,
+  // 48 kHz: 2.2 ms pieces, 1.5 ms of zeros between them, 37 % of the sound) or at a pitch jumping between 1× and ~8×
+  // (96 kHz) – slowed down, the turbo music sounded fast and garbled. Without the speed-up it is the clean song at
+  // normal pitch at every speed, 4× and "Max" alike (measured at 48 and 96 kHz: no holes, every note at its pitch).
+  const FF_SKIP = true;
   // Pacing (see "frame pacing" above): no audio sync and no fast-forward limit inside RetroArch – the pacer runs the
   // frames, RetroArch's rate control keeps the sound in step (later lines win over EmulatorJS' own). Its sound is made
-  // at the sound card's rate, so the browser doesn't resample each 2.9 ms OpenAL buffer on its own (44.1 kHz buffers in
-  // a 48 kHz context – the usual case on Windows). 128 ms of buffer (EmulatorJS: 64) is RetroArch's own default for
-  // this OpenAL driver: half of it is the cushion when the page is busy for a moment.
-  const outRate = (() => {
+  // at the rate of its AudioContext, so the browser doesn't resample each 2.9 ms OpenAL buffer on its own (44.1 kHz
+  // buffers in a 48 kHz context – the usual case on Windows). That rate is the sound card's up to 48 kHz and 48 kHz
+  // above it (lib/pacer.mjs soundRate – a card at 96 kHz doubled the mixer's work for nothing); the AudioContexts the
+  // core makes get it below. 128 ms of buffer (EmulatorJS: 64) is RetroArch's own default for this OpenAL driver: half
+  // of it is the cushion when the page is busy for a moment.
+  const NativeAudioContext = window.AudioContext;
+  const deviceRate = (() => {
     try {
-      const ac = new AudioContext();
+      const ac = new NativeAudioContext();
       const r = ac.sampleRate;
       ac.close().catch(() => {});
-      return r >= 22050 && r <= 192000 ? Math.round(r) : 0;
+      return r;
     } catch {
       return 0;
     }
   })();
+  let outRate = 0; // soundRate(deviceRate), once lib/pacer.mjs is loaded (before EmulatorJS starts)
+  let ctxRate = 0; // the rate asked of the core's AudioContexts (0: the card's own)
+  if (NativeAudioContext) {
+    window.AudioContext = function AudioContext(opts) {
+      if (ctxRate && !opts?.sampleRate) {
+        try {
+          return new NativeAudioContext({ ...opts, sampleRate: ctxRate });
+        } catch {
+          ctxRate = 0; // refused: the card's own rate (the browser then resamples each OpenAL buffer, as before 2.2)
+        }
+      }
+      return new NativeAudioContext(opts);
+    };
+    window.AudioContext.prototype = NativeAudioContext.prototype;
+  }
   const AUDIO_LATENCY = 128;
-  const RA_CFG = [
+  const raCfg = () => [
     `audio_fastforward_speedup = "${FF_SKIP ? 'false' : 'true'}"`,
     'fastforward_frameskip = "true"',
     'fastforward_ratio = "0.000000"',
@@ -164,9 +188,10 @@
       if (base && !base.patched) {
         // replace EmulatorJS' lines for the same keys: with a key twice in the file RetroArch keeps the first
         const key = (l) => l.split('=')[0].trim();
-        const ours = new Set(RA_CFG.split('\n').map(key).filter(Boolean));
         C.prototype.getRetroArchCfg = function () {
-          return `${base.call(this).split('\n').filter((l) => !ours.has(key(l))).join('\n')}\n${RA_CFG}`;
+          const cfg = raCfg();
+          const ours = new Set(cfg.split('\n').map(key).filter(Boolean));
+          return `${base.call(this).split('\n').filter((l) => !ours.has(key(l))).join('\n')}\n${cfg}`;
         };
         C.prototype.getRetroArchCfg.patched = true;
       }
@@ -956,6 +981,8 @@
           baseLatencyMs: ac?.baseLatency != null ? +(ac.baseLatency * 1000).toFixed(1) : null,
           outputLatencyMs: ac?.outputLatency != null ? +(ac.outputLatency * 1000).toFixed(1) : null,
           coreOutRate: outRate || 44100, // what RetroArch was told to make
+          deviceRate: Math.round(deviceRate) || null, // the sound card's own rate (the context runs at ≤ 48 kHz)
+          ffSound: FF_SKIP ? 'normal pitch' : 'sped up',
           bufferMs: AUDIO_LATENCY,
           mixer: audio.kind || (audio.failed ? 'failed' : null),
           mixers: audio.chains?.counts() ?? null, // live (1 once attached), built in all, contexts the core left behind and closed here
