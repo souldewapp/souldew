@@ -17,6 +17,18 @@
 - "Save diagnostics" now includes the sound card (sample rate, latency), the display's refresh rate, the speed really
   reached, drop-outs in the sound and the longest gap between frames.
 
+**mGBA live data works again for GBA games** – on every system the panel stayed at "Waiting for the script …".
+
+- mGBA 0.10 reports GBA games as "AGB-BPEE" (Game Boy as "CGB-…"/"DMG-…"); souldew only knew "BPEE", so it never
+  asked the script for the party. Scripts loaded from older versions work again once souldew is updated.
+- The mGBA panel says what is going on: no connection yet, script connected but no game data yet, no live data for
+  this game, an outdated script or one from another installation tried to connect. The script's path has Copy and
+  Show in Finder/Explorer buttons (on Windows it lives in a hidden folder).
+- The script (version 2) reconnects on its own when souldew restarts or uses another port, tries every port souldew
+  may use, finishes partial sends instead of losing data, re-announces the game after a reset and writes what it
+  does and why it failed into mGBA's scripting window. It also avoids an mGBA 0.10 bug that closes a reused socket
+  number when an old socket is garbage-collected.
+
 ## 2.1.0
 
 **Windows support** – souldew now runs on Windows 10 and 11 (x64), and Mac and Windows players can play together.

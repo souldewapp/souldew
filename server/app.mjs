@@ -943,6 +943,12 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
 
   route('GET', /^\/api\/live$/, () => live.status());
+  // The mGBA script lives in a hidden folder on Windows (%APPDATA%) – show it instead of making people type the path.
+  route('POST', /^\/api\/live\/reveal$/, () => {
+    if (!existsSync(live.luaScriptPath())) throw httpError(404, 'Skript fehlt', 'scriptMissing');
+    revealInFileManager(live.luaScriptPath());
+    return { ok: true };
+  });
 
   // ---- Discord webhook: local to this computer (config.discordWebhooks[runId]), never in the shared rules ----
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/discord$/, (req, m) => {

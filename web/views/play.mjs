@@ -1,5 +1,7 @@
 import { html, useState, useEffect, useRef, useCallback } from '/vendor/htm-preact.mjs';
-import { useApp, Led, saveDiagnostics } from '../lib/ui.mjs';
+import { useApp, Led, saveDiagnostics, copy } from '../lib/ui.mjs';
+import { bridgeState } from '../lib/livebridge.mjs';
+import { IS_MAC } from '../lib/platform.mjs';
 import { diag } from '../lib/diag.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, ago } from '../lib/i18n.mjs';
@@ -1089,6 +1091,46 @@ function MissedPrompt({ missed, onDone }) {
   </div>`;
 }
 
+/** The mGBA script: where it is, how to load it, and what the bridge sees right now (polled – SSE can be missed). */
+function ScriptBridge({ fresh }) {
+  const { status, toast, liveInfo } = useApp();
+  const [live, setLive] = useState(status.live || null);
+  useEffect(() => {
+    let stop = false;
+    const poll = () => api.get('/api/live').then((s) => !stop && setLive(s)).catch(() => {});
+    poll();
+    const id = setInterval(poll, 2000);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, []);
+  useEffect(() => {
+    if (liveInfo?.status) setLive(liveInfo.status);
+  }, [liveInfo?.status]);
+  const { key, outdated, game } = bridgeState(live, { fresh });
+  const path = live?.script || status.live?.script || '';
+  const gameName = game ? [game.title, game.code && `(${game.code})`].filter(Boolean).join(' ') : '';
+  const text = {
+    live: () => t('ext.liveOn', 'Live data is coming in'),
+    noPort: () => t('ext.liveNoPort', 'The live bridge couldn’t start: its network ports on this computer are taken. Restart souldew.'),
+    unsupported: () => t('ext.liveUnsupported', 'The script is connected, but souldew has no live data for {game}.', { game: gameName || '?' }),
+    connected: () => t('ext.liveConnected', 'Script connected – waiting for game data …'),
+    rejected: () => t('ext.liveRejected', 'mGBA tried to connect with an outdated script or one from another souldew installation. In mGBA’s scripting window choose File › Reset, then load the file above again.'),
+    waiting: () => t('ext.liveNoConnection', 'No connection yet – load the script in mGBA (see above). It connects as soon as a game runs.'),
+  }[key]();
+  const color = key === 'live' || key === 'connected' ? 'green' : 'amber';
+  return html`<div class="stack-s">
+    <p class="small muted">${t('ext.scriptSteps', 'For live data: in mGBA open Tools › Scripting…, then File › Load script… and choose this file. mGBA doesn’t load it by itself – after restarting mGBA, load it again (File › Load recent script).')}</p>
+    <div class="row"><span class="code grow" title=${path}>${path}</span>
+      <button class="btn small ghost" onClick=${() => { copy(path); toast({ kind: 'ok', title: t('common.copied', 'Copied'), text: t('ext.pathCopied', 'Paste the path into the file name field of mGBA’s “Load script” window.') }); }}>${t('common.copy', 'Copy')}</button>
+      ${window.sls && html`<button class="btn small ghost" onClick=${() => api.post('/api/live/reveal', {}).catch((err) => toast({ kind: 'death', title: 'mGBA', text: err.message }))}>
+        <${Icon} name="folder" size=${14} />${IS_MAC ? t('ext.revealMac', 'Show in Finder') : t('ext.revealPc', 'Show in Explorer')}</button>`}</div>
+    <div class="row nowrap" role="status" aria-live="polite"><${Led} on=${key !== 'waiting'} color=${color} blink=${key === 'connected'} /><span class="small grow">${text}</span></div>
+    ${outdated && key !== 'rejected' && html`<p class="tiny faint">${t('ext.liveOutdated', 'mGBA is running an older version of the script. It works, but the new one reconnects on its own and explains problems in mGBA’s scripting window: choose File › Reset there, then load the file again.')}</p>`}
+  </div>`;
+}
+
 function ExternalPlay({ target, emu }) {
   const { status, toast, liveInfo, applySnap, manifest, me, route } = useApp();
   const e = status.emulators[emu];
@@ -1134,9 +1176,7 @@ function ExternalPlay({ target, emu }) {
       <h2>${t('ext.title', 'Playing with {emu}', { emu: e.name })}</h2>
       <div><button class="btn primary big" disabled=${launching} onClick=${launch}><${Icon} name="play" size=${16} />${t('ext.launch', 'Launch {emu}', { emu: e.name })}</button></div>
       ${e.live === 'script'
-        ? html`<div class="stack-s"><p class="small muted">${t('ext.scriptText', 'For live data: in mGBA open Tools › Scripting, then File › Load script and choose this file (only once – mGBA remembers it):')}</p>
-            <span class="code">${status.live?.script}</span>
-            <div class="row"><${Led} on=${fresh} color="green" /><span class="small">${fresh ? t('ext.liveOn', 'Live data is coming in') : t('ext.liveWaiting', 'Waiting for the script …')}</span></div></div>`
+        ? html`<${ScriptBridge} fresh=${fresh} />`
         : html`<p class="small muted">${t('ext.saveText', '{emu} can’t share live data. Save in the game regularly – souldew reads the save file next to the ROM after every in-game save.', { emu: e.name })}</p>`}
       <p class="tiny faint">${t('ext.switch', 'You can switch back to the built-in emulator in the settings.')}</p>
     </section>
