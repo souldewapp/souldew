@@ -21,6 +21,7 @@ import { LiveBridge } from './lib/livebridge.mjs';
 import { moveToGraveyard, parseHgssSave } from '../shared/gen4save.mjs';
 import { listPresets, savePreset, deletePreset } from './lib/presets.mjs';
 import { pageHeaders } from './lib/csp.mjs';
+import { gpuBackends, validBackend, fallbackNotice } from '../shared/gpu.mjs';
 import { hostAllowed, apiRequestError } from './lib/guard.mjs';
 import { overlaySnapshot, TEST_SPECIES } from '../shared/overlay.mjs';
 import { startPokelinkBridge, pokelinkPlayers, POKELINK_PORT } from './lib/pokelink.mjs';
@@ -576,6 +577,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         speedGuard: config.speedGuard === true,
         turboMax: config.turboMax === true,
         pads: config.pads || null,
+        gpuBackend: validBackend(config.gpuBackend, process.platform),
+        gpuFallback: fallbackNotice(config.gpuFallback),
       },
     };
   });
@@ -585,13 +588,19 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const allowed = {};
     // No path-like keys here: emulatorPaths decides which program /launch runs, libraryFolders which folders are
     // scanned (set via /api/library/folders). Neither may be writable by a plain config POST.
-    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax']) {
+    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax', 'gpuBackend', 'gpuFallback']) {
       if (k in body) allowed[k] = body[k];
     }
     // shape checks for the newer keys – the page validates too, but the config file shouldn't hold junk
     if ('theme' in allowed && !['classic', 'contrast', 'deutan', 'tritan'].includes(allowed.theme)) delete allowed.theme;
     if ('speedGuard' in allowed) allowed.speedGuard = allowed.speedGuard === true;
     if ('turboMax' in allowed) allowed.turboMax = allowed.turboMax === true;
+    // the graphics backend electron/main.mjs applies at the next start; the fallback notice can only be dismissed
+    if ('gpuBackend' in allowed) {
+      if (gpuBackends(process.platform).includes(allowed.gpuBackend)) allowed.gpuStart = null; // a new choice starts counting afresh
+      else delete allowed.gpuBackend;
+    }
+    if ('gpuFallback' in allowed && allowed.gpuFallback !== null) delete allowed.gpuFallback;
     if ('pads' in allowed) {
       const p = allowed.pads;
       const ok = p === null || (typeof p === 'object' && !Array.isArray(p) && (!p.preset || ['nintendo', 'xbox'].includes(p.preset))

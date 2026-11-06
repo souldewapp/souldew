@@ -170,10 +170,15 @@ export function download(name, text, type = 'application/json') {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-/** "Save diagnostics": what the live tracker and the turbo mixer recorded this session, as a JSON file to attach to a bug report. */
+/**
+ * "Save diagnostics": what the live tracker and the turbo mixer recorded this session, plus the graphics setup, as a
+ * JSON file to attach to a bug report.
+ */
 export async function saveDiagnostics(extra = {}) {
   const info = await window.sls?.appInfo?.().catch(() => null);
-  const dump = diagDump({ app: info ? { version: info.version, packaged: info.packaged } : null, userAgent: navigator.userAgent, lang: document.documentElement.lang, ...extra });
+  // graphics backend, Chromium switches, GPU feature status and graphics cards (desktop app only)
+  const gpu = await window.sls?.gpuInfo?.().catch(() => null) ?? null;
+  const dump = diagDump({ app: info ? { version: info.version, packaged: info.packaged, platform: info.platform } : null, gpu, userAgent: navigator.userAgent, lang: document.documentElement.lang, ...extra });
   const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
   download(`souldew-diagnostics-${stamp}.json`, JSON.stringify(dump));
 }

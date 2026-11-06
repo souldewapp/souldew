@@ -3,7 +3,11 @@
 import { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeTheme, session, powerSaveBlocker, screen } from 'electron';
 import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync, mkdirSync } from 'node:fs';
 import { setupUpdater } from './updater.mjs';
+import { appImageFromEnv, appImageRelaunch } from './update-core.mjs';
+import { writeFileAtomic } from '../server/lib/fsutil.mjs';
+import { chromiumSwitches, startDecision, crashDecision, gpuInfoSummary } from '../shared/gpu.mjs';
 import { sameOrigin, safeExternalUrl, subframeNavigationAllowed, permissionAllowed, isTrustedIpcSender, titleBarColors, initialWindowSize } from './guards.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -43,6 +47,58 @@ process.env.SLS_USER_DIRS = JSON.stringify(['downloads', 'desktop', 'documents']
 // and a window of its own while app.quit() is still on its way.
 const primary = app.requestSingleInstanceLock();
 if (!primary) app.quit();
+
+// config.json in the data folder – the file the server reads and writes (server/lib/paths.mjs CONFIG_PATH with
+// SLS_DATA_DIR = userData). The graphics backend has to be read from it here, before the app is ready.
+const CONFIG_FILE = join(app.getPath('userData'), 'config.json');
+function readConfig() {
+  try {
+    return JSON.parse(readFileSync(CONFIG_FILE, 'utf8')) || {};
+  } catch {
+    return {};
+  }
+}
+function patchConfig(patch) {
+  if (!patch) return;
+  try {
+    mkdirSync(dirname(CONFIG_FILE), { recursive: true });
+    writeFileAtomic(CONFIG_FILE, JSON.stringify({ ...readConfig(), ...patch }, null, 2));
+  } catch (e) {
+    console.warn('writing config.json failed:', e.message);
+  }
+}
+
+// Graphics backend (Settings › General, shared/gpu.mjs) plus the power-user flags from SOULDEW_CHROMIUM_FLAGS. Only
+// the first instance counts its start – a second one quits right away. A start that never shows the window with a
+// chosen backend is remembered (gpuStart); after a few of them the backend goes back to "Automatic".
+const gpu = { backend: 'auto', switches: [], pending: false };
+if (primary) {
+  const { backend, patch } = startDecision(readConfig(), process.platform);
+  patchConfig(patch);
+  gpu.backend = backend;
+  gpu.pending = backend !== 'auto';
+  gpu.switches = chromiumSwitches({ backend, platform: process.platform, envFlags: process.env.SOULDEW_CHROMIUM_FLAGS || '' });
+  for (const [name, value] of gpu.switches) {
+    if (value == null) app.commandLine.appendSwitch(name);
+    else app.commandLine.appendSwitch(name, value);
+  }
+}
+/** The window showed (or the start failed for another reason): this start doesn't count against the backend. */
+function gpuStartOk() {
+  if (!gpu.pending) return;
+  gpu.pending = false;
+  patchConfig({ gpuStart: null });
+}
+// A GPU process that keeps crashing with a chosen backend: the next start uses "Automatic" (and says so once). Only
+// while the setting still is the backend this session runs with – a newer choice of the user stays.
+let gpuCrashes = 0;
+app.on('child-process-gone', (e, details) => {
+  if (details?.type !== 'GPU' || details.reason === 'clean-exit') return;
+  gpuCrashes++;
+  console.warn(`GPU process gone (${details.reason}, ${gpuCrashes}×)`);
+  const patch = crashDecision(gpu.backend, gpuCrashes);
+  if (patch && readConfig().gpuBackend === gpu.backend) patchConfig(patch);
+});
 
 let win = null;
 let serverUrl = null;
@@ -102,7 +158,10 @@ function createWindow() {
       backgroundThrottling: false, // keep the emulator and live sync running when the window is behind others
     },
   });
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => {
+    gpuStartOk();
+    win.show();
+  });
   // Window fullscreen (macOS: green button / ⌃⌘F, Windows / Linux: F11): the page folds the side rail away
   win.on('enter-full-screen', () => send('fullscreen', true));
   win.on('leave-full-screen', () => send('fullscreen', false));
@@ -300,6 +359,37 @@ handle('reveal', (e, path) => {
 });
 handle('open-external', (e, url) => openExternalSafe(url));
 handle('app-info', () => ({ version: app.getVersion(), packaged: app.isPackaged, dataDir: app.getPath('userData'), platform: process.platform }));
+// The graphics backend this session runs with (Settings compares it with the saved one) and, for "Save diagnostics",
+// the switches, Chromium's feature status and the graphics cards with their drivers.
+handle('gpu-info', async () => {
+  let info = null;
+  try {
+    info = gpuInfoSummary(await app.getGPUInfo('basic'));
+  } catch {
+    // no GPU information (e.g. the GPU process is down)
+  }
+  let featureStatus = null;
+  try {
+    featureStatus = app.getGPUFeatureStatus();
+  } catch {}
+  return { backend: gpu.backend, switches: gpu.switches.map(([n, v]) => (v == null ? `--${n}` : `--${n}=${v}`)), featureStatus, info };
+});
+// "Restart now" (e.g. after changing the graphics backend): quit as usual – the unsaved-progress question may still
+// keep the game open – and start again once quitting is final. Linux: the AppImage file, as the updater does.
+let relaunching = false;
+handle('relaunch', () => {
+  relaunching = true;
+  app.quit();
+});
+app.on('sls-quit-cancelled', () => {
+  relaunching = false;
+});
+app.on('will-quit', () => {
+  if (!relaunching) return;
+  const appImage = app.isPackaged && LINUX ? appImageFromEnv() : null;
+  if (appImage) app.relaunch(appImageRelaunch(appImage));
+  else app.relaunch();
+});
 
 app.on('second-instance', () => {
   if (win) {
@@ -335,6 +425,7 @@ app.whenReady().then(async () => {
   try {
     await boot();
   } catch (e) {
+    gpuStartOk(); // not the graphics backend's fault – it doesn't count as a failed start
     dialog.showErrorBox('souldew konnte nicht starten', String(e?.stack || e));
     app.quit();
   }

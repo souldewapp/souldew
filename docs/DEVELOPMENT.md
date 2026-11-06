@@ -35,6 +35,14 @@ npm run dist:linux     # Linux: build the AppImage and the .deb (fetches the Lin
 
 **Platform differences in the code:** the window frame and the menu (`electron/main.mjs`: traffic lights vs. Windows' title bar buttons over the page vs. the Linux desktop's own frame; no visible menu bar on Windows and Linux, the shortcuts stay), the updater (`electron/updater.mjs`: swap the .app vs. run the NSIS installer vs. replace the AppImage), "Search my Mac / PC" (`server/lib/library.mjs` → `discoverCandidates`; on Linux also EmuDeck, RetroDECK, RetroArch and SD cards), the emulator downloads (`server/lib/emulator.mjs`; on Windows/Linux unpacked in JavaScript by `server/lib/archive.mjs` / `sevenzip.mjs`), and texts and shortcuts in the UI (`web/lib/platform.mjs`: `IS_MAC` / `IS_WIN` / `IS_LINUX`, `shortcut('Mod+B')` → ⌘B / Ctrl+B; `styles.css` `.platform-win32` / `.platform-linux`). The tests run on Ubuntu and Windows in CI; `test/windows.test.mjs` and `test/linux.test.mjs` check each platform's path rules on any OS.
 
+**Graphics backend and Chromium switches:** Settings › General › "Graphics backend" (Windows and Linux) is stored as `gpuBackend` in `config.json` and read by `electron/main.mjs` before the app is ready (`shared/gpu.mjs`): Windows `--use-angle=d3d11|vulkan|gl`, Linux `--use-gl=angle --use-angle=gl|vulkan`, "Automatic" sets nothing. A start with a chosen backend that never shows the window is remembered (`gpuStart`); after two of them in a row – or three GPU process crashes in one session – the next start uses "Automatic" again and the page says so once (`gpuFallback`). For experiments, `SOULDEW_CHROMIUM_FLAGS` takes any Chromium switches, space-separated as `name` or `name=value` (leading dashes optional, `use_angle` is read as `use-angle`); a backend chosen in Settings replaces the variable's `use-angle` / `use-gl`, "Automatic" leaves them alone. "Save diagnostics" lists the switches in effect, Chromium's GPU feature status and the graphics cards with their drivers.
+
+```sh
+SOULDEW_CHROMIUM_FLAGS="use_angle=vulkan ignore-gpu-blocklist" npm run app -- --user-data-dir=/tmp/souldew-gfx
+```
+
+(PowerShell: `$env:SOULDEW_CHROMIUM_FLAGS="use_angle=vulkan"; npm run app -- --user-data-dir="$env:TEMP\souldew-gfx"`.)
+
 New visible text always goes through `t('area.key', 'English default', { vars })`; then translate it for de/fr/es/it – `node scripts/extract-i18n.mjs` must end with "0 missing, 0 stale" for every language. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Releasing updates
@@ -79,7 +87,7 @@ The Electron shell (`electron/`) starts the local server (`server/`) in the same
 
 | Folder / file | Contents |
 |---|---|
-| `electron/` | App shell: window, menu, updater (macOS, Windows, Linux AppImage), IPC guards |
+| `electron/` | App shell: window, menu, Chromium switches (graphics backend), updater (macOS, Windows, Linux AppImage), IPC guards |
 | `server/` | Local HTTP server: library, runs, saves, builds (patch + randomizer), overlay API, Pokélink bridge |
 | `web/` | The UI (`app.mjs`, `views/`, `lib/`), the emulator page `player.html`, `overlay.html`, translations in `i18n/` |
 | `web/lib/run.mjs` | Run logic: encounters, pairs/groups, deaths, rules, checks, stats, live reconciliation (`applySnapshot`) |

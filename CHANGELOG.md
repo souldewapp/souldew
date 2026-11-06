@@ -17,6 +17,17 @@
 - "Save diagnostics" now includes the sound card (sample rate, latency), the display's refresh rate, the speed really
   reached, drop-outs in the sound and the longest gap between frames.
 
+**Graphics backend setting (Windows and Linux)** – thanks to a player's report.
+
+- New in Settings › General: "Graphics backend" – Automatic (default), Direct3D 11, Vulkan or OpenGL on Windows,
+  Automatic, OpenGL or Vulkan on Linux. If the built-in emulator stutters or its sound crackles, try Vulkan: on one
+  player's Windows PC that made both go away. The change applies after a restart ("Restart now").
+- If souldew doesn't open with the chosen backend (twice in a row) or its graphics process keeps crashing, the next
+  start uses "Automatic" again and says so once.
+- "Save diagnostics" now includes the graphics backend, Chromium's GPU status and the graphics card with its driver.
+- For experiments: the environment variable `SOULDEW_CHROMIUM_FLAGS` passes extra Chromium switches (see
+  docs/DEVELOPMENT.md).
+
 **mGBA live data works again for GBA games** – on every system the panel stayed at "Waiting for the script …".
 
 - mGBA 0.10 reports GBA games as "AGB-BPEE" (Game Boy as "CGB-…"/"DMG-…"); souldew only knew "BPEE", so it never

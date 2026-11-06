@@ -9,6 +9,10 @@ contextBridge.exposeInMainWorld('sls', {
   reveal: (path) => ipcRenderer.invoke('reveal', path),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   appInfo: () => ipcRenderer.invoke('app-info'),
+  // Graphics backend of this session, Chromium switches, GPU feature status and graphics cards (Settings, diagnostics).
+  gpuInfo: () => ipcRenderer.invoke('gpu-info'),
+  // Quit and start again (asks first when the game has unsaved progress).
+  relaunch: () => ipcRenderer.invoke('relaunch'),
   // Progress since the last in-game save: { title, text, keep, quit } (UI language) or null – closing asks first.
   setUnsaved: (info) => ipcRenderer.send('unsaved', info || null),
   // A game is running: the display stays awake (a controller is no input the OS notices).

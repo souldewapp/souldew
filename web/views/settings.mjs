@@ -9,6 +9,8 @@ import { BUTTONS, RESERVED, PRESETS, bindable, keyLabel, resolve as resolveContr
   PAD_LABELS, PAD_PRESETS, PAD_HOTKEYS, padMap, padFamily, padLabel } from '../lib/controls.mjs';
 import { SHORTCUTS, buttonLabel } from './guide.mjs';
 import { UpdateSection } from './update.mjs';
+import { PLATFORM } from '../lib/platform.mjs';
+import { gpuBackends } from '/shared/gpu.mjs';
 
 const SYSTEMS = [['gb', 'Game Boy'], ['gbc', 'Game Boy Color'], ['gba', 'Game Boy Advance'], ['nds', 'Nintendo DS']];
 const SYS_SHORT = { nds: 'DS', gba: 'GBA', gb: 'GB' };
@@ -81,6 +83,40 @@ function ControlsSection({ saved, save }) {
       <button class="btn small ghost" onClick=${() => setMsg(null)}>${t('common.cancel', 'Cancel')}</button></div>`}
     <div class="row"><span class="small faint">${t('ctl.touch', 'Touch screen (DS): mouse click.')}</span></div>
   </section>`;
+}
+
+export const GPU_LABELS = () => ({ auto: t('set.gpuAuto', 'Automatic'), d3d11: 'Direct3D 11', vulkan: 'Vulkan', gl: 'OpenGL' });
+
+/**
+ * Graphics backend (Windows and Linux, desktop app only – shared/gpu.mjs): Chromium reads it at start, so a change
+ * needs a restart. The app tells which backend this session runs with; while that differs from the saved choice,
+ * the hint with "Restart now" stays.
+ */
+function GraphicsSetting({ cfg, save }) {
+  const [active, setActive] = useState(null);
+  const native = typeof window.sls?.gpuInfo === 'function' && gpuBackends(PLATFORM).length > 1;
+  useEffect(() => {
+    if (native) window.sls.gpuInfo().then((g) => setActive(g?.backend || 'auto')).catch(() => {});
+  }, [native]);
+  if (!native) return null;
+  const value = cfg.gpuBackend || 'auto';
+  const labels = GPU_LABELS();
+  return html`<div class="stack">
+    <div class="grid-2"><label class="field"><span>${t('set.gpu', 'Graphics backend')}</span>
+      <select value=${value} onChange=${(e) => save({ gpuBackend: e.target.value })}>
+        ${gpuBackends(PLATFORM).map((b) => html`<option value=${b}>${labels[b]}</option>`)}</select></label></div>
+    <span class="small faint">${t('set.gpuHint', 'If the game stutters or the sound crackles, try Vulkan. Automatic lets the system decide.')}</span>
+    ${active && active !== value && html`<div class="note row" role="status"><span class="grow">${t('set.gpuRestart', 'The new graphics backend is used after a restart of souldew.')}</span>
+      <button class="btn small" onClick=${() => window.sls.relaunch?.()}>${t('upd.restart', 'Restart now')}</button></div>`}
+  </div>`;
+}
+
+/** The notice after souldew put the graphics backend back to "Automatic" itself (shown once, see app.mjs). */
+export function gpuFallbackText(notice) {
+  const backend = GPU_LABELS()[notice.from] || notice.from;
+  return notice.reason === 'gpu-crash'
+    ? t('set.gpuFallbackCrash', 'The graphics backend {backend} kept crashing. souldew uses “Automatic” again from the next start – you can change it in Settings.', { backend })
+    : t('set.gpuFallbackStart', 'souldew didn’t open with the graphics backend {backend}, so it uses “Automatic” again. You can change it in Settings.', { backend });
 }
 
 /** Connected controllers (polled – the Gamepad API has no "button pressed" event). */
@@ -250,6 +286,7 @@ export function SettingsView() {
       <label class="check"><input type="checkbox" checked=${cfg.sounds !== false} onChange=${(e) => save({ sounds: e.target.checked })} /><span>${t('set.soundsAll', 'Sounds on this computer (start-up chime, catches, deaths, badges, pings)')}</span></label>
       <label class="check"><input type="checkbox" checked=${cfg.shareScreen !== false} onChange=${(e) => save({ shareScreen: e.target.checked })} /><span>${t('set.shareScreenAll', 'Share my screen with the other players')}
         <span class="hint">${t('set.shareScreenHint', 'While you play, the others see your game small in a corner. It is only sent while someone is watching.')}</span></span></label>
+      <${GraphicsSetting} cfg=${cfg} save=${save} />
       <div><button class="btn ghost small" onClick=${() => save({ onboarded: false })}>${t('set.replayOnboarding', 'Show the welcome tour again')}</button></div>
     </section>
 

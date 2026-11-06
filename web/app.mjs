@@ -19,7 +19,7 @@ import { SoulLinkView, NuzlockeView } from './views/soullink.mjs';
 import { PlayView, GameSession } from './views/play.mjs';
 import { unsavedProgress, unsavedTexts } from './views/savestates.mjs';
 import { LinkView } from './views/link.mjs';
-import { SettingsView } from './views/settings.mjs';
+import { SettingsView, gpuFallbackText } from './views/settings.mjs';
 import { GuideView } from './views/guide.mjs';
 import { StreamView } from './views/stream.mjs';
 import { useStreamer } from './lib/streamer.mjs';
@@ -195,7 +195,7 @@ function App() {
   const toast = useCallback((x) => {
     const id = Math.random().toString(36).slice(2);
     setToasts((ts) => [...ts.slice(-4), { id, ...x }]);
-    setTimeout(() => setToasts((ts) => ts.filter((y) => y.id !== id)), x.kind === 'death' ? 12000 : 6000);
+    setTimeout(() => setToasts((ts) => ts.filter((y) => y.id !== id)), x.ttl || (x.kind === 'death' ? 12000 : 6000));
   }, []);
 
   const reloadStatus = useCallback(async () => {
@@ -335,6 +335,15 @@ function App() {
   const soundOn = useRef(true);
   soundOn.current = status?.config?.sounds !== false;
   const sfx = useCallback((name) => play(name, soundOn.current), []);
+
+  // souldew put the graphics backend back to "Automatic" (electron/main.mjs): say so once, then forget the notice.
+  // (Once the app language is loaded and the start-up animation is over.)
+  const gpuFallback = ready && !boot ? status?.config?.gpuFallback : null;
+  useEffect(() => {
+    if (!gpuFallback) return;
+    toast({ kind: 'warn', title: t('set.gpuFallbackTitle', 'Graphics backend reset'), text: gpuFallbackText(gpuFallback), ttl: 20000 });
+    api.post('/api/config', { gpuFallback: null }).catch(() => {});
+  }, [gpuFallback?.from, gpuFallback?.reason]);
 
   // ---- partner events → toasts & sounds --------------------------------------------
   useEffect(() => {
