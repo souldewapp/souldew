@@ -1104,3 +1104,82 @@ test('every speed, mode, pause and cut command leaves a state for diagnostics', 
   assert.ok(ev[0].seg > 15, `seconds recorded: ${ev[0].seg}`);
   assert.equal(ev[3].sr, SR);
 });
+
+// ---- 2.2.0-beta.3: every core without the sound speed-up, the mixer at up to 96 kHz --------------------------------
+// Paced from the display, RetroArch's sped-up sound came out chopped (48 kHz) or at a pitch jumping between 1× and ~8×
+// (96 kHz); slowed down it sounded fast (a player with a 96 kHz sound card, GBA). Now every core plays the classic
+// fast-forward sound – the song at normal pitch, skipping ahead – and the mixer runs in its skip mode. player.html runs
+// the sound at ≤ 48 kHz (lib/pacer.mjs soundRate), but if the browser refuses, the mixer gets the card's 96 kHz.
+
+/** A little tune at `rate`, as tune() (sine notes, a new one every 0.2 s, repeating every `period` s). */
+function tuneAt(rate, { period = 6.4, seed = 1 } = {}) {
+  let s = seed;
+  const rnd = () => ((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648);
+  const step = Math.round(0.2 * rate);
+  const steps = Math.round((period * rate) / step);
+  const notes = Array.from({ length: steps }, () => 220 * 2 ** (Math.floor(rnd() * 15) / 12));
+  const loud = Array.from({ length: steps }, () => 0.4 + rnd() * 0.6);
+  const P = steps * step;
+  return (t) => {
+    const p = ((t % P) + P) % P;
+    const k = Math.floor(p / step);
+    const x = (p - k * step) / rate;
+    return 0.3 * loud[k] * Math.min(1, x / 0.005) * Math.exp(-x * 6) * Math.sin(2 * Math.PI * notes[k] * x);
+  };
+}
+/** Feeds fn(i) for `seconds` at `rate` in 128-sample blocks; returns the output and what played per block. */
+function feedAt(m, rate, fn, seconds) {
+  const n = Math.round(seconds * rate);
+  const out = new Float32Array(n);
+  const srcs = [];
+  const l = new Float32Array(128);
+  const oL = new Float32Array(128);
+  const oR = new Float32Array(128);
+  for (let i = 0; i < n; i += 128) {
+    for (let j = 0; j < 128; j++) l[j] = fn(i + j);
+    m.process(l, null, oL, oR, 128);
+    out.set(oL.subarray(0, Math.min(128, n - i)), i);
+    srcs.push(m.playing().src);
+  }
+  return { out, srcs };
+}
+/** The classic fast-forward sound at `rate`: 20 ms pieces of the song at normal pitch, `ratio`× as far apart. */
+const skippingAt = (rate, music, ratio, from = 0) => {
+  const piece = Math.round(0.02 * rate);
+  return (i) => {
+    const k = Math.floor(i / piece);
+    return music(from + k * piece * ratio + (i - k * piece));
+  };
+};
+
+for (const rate of [48000, 96000]) {
+  test(`skip mode at ${rate / 1000} kHz (GBA, song keys): the loop plays in every fast-forward, a new scene's song plays at normal pitch, never slowed down`, () => {
+    const A = tuneAt(rate, { seed: 1 });
+    const C = tuneAt(rate, { seed: 7 });
+    const m = new TurboMixer(rate, { seconds: 60 });
+    m.command({ type: 'skip', on: true }); // (player.html, every core)
+    m.command({ type: 'song', key: 'p3.84' });
+    let t = feedAt(m, rate, A, 14).out.length;
+    assert.ok(m.lib.has('p3.84'), 'the route’s loop is kept');
+    assert.ok(Math.abs(m.found.lag - 6.4 * rate) < 0.002 * rate, `loop of ${(m.found.lag / rate).toFixed(3)} s`);
+    for (const [round, step] of [[1, 4], [2, 16]]) {
+      m.command({ type: 'speed', ratio: step }); // (16: "Max", as player.html sends it)
+      const ff = feedAt(m, rate, skippingAt(rate, A, step, t), 3);
+      assert.ok(ff.srcs.slice(Math.round((0.2 * rate) / 128)).every((s) => s === 'loop' || s === 'lib'), `round ${round}: the loop (${[...new Set(ff.srcs)]})`);
+      assert.ok(longestQuiet(ff.out, 0, ff.out.length) * (SR / rate) < 0.1, `round ${round}: no silence`);
+      m.command({ type: 'speed', ratio: 1 });
+      const back = feedAt(m, rate, (i) => A(t + i), 3);
+      t += back.out.length;
+      assert.ok(back.srcs.slice(Math.round((0.3 * rate) / 128)).every((s) => s === 'game'), `round ${round}: the game’s sound again`);
+    }
+    // a scene change while fast-forwarding, to a song never heard at 1× (the player's "m405"): the game's own sound,
+    // the song at its normal pitch – nothing slowed down
+    m.command({ type: 'speed', ratio: 4 });
+    feedAt(m, rate, skippingAt(rate, A, 4, t), 1);
+    m.command({ type: 'song', key: 'm405' });
+    const src = skippingAt(rate, C, 4, 0);
+    const scene = feedAt(m, rate, src, 2);
+    assert.ok(corr(scene.out, src, -m.dc.D, Math.round(0.4 * rate), scene.out.length) > 0.9, 'the game’s own sound');
+    assert.ok(!scene.srcs.includes('stream'), 'never the slowed-down stream');
+  });
+}
