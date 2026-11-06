@@ -163,6 +163,11 @@ test('config: theme and controller settings are stored only in a valid shape', a
     assert.equal(c.speedGuard, false, 'only a real true switches it on');
     c = await post({ speedGuard: true });
     assert.equal(c.speedGuard, true);
+    assert.equal(c.turboMax, undefined, 'the "Max" turbo step is off unless switched on');
+    c = await post({ turboMax: 1 });
+    assert.equal(c.turboMax, false, 'only a real true adds it');
+    c = await post({ turboMax: true });
+    assert.equal(c.turboMax, true);
     c = await post({ pads: { map: { a: 'BUTTON_2', 'x-y': 'BUTTON_1' } } });
     assert.deepEqual(c.pads, { map: { a: 'BUTTON_2' } }, 'odd button names are dropped');
   } finally {

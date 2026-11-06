@@ -2,6 +2,21 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## Unreleased
+
+**Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.
+
+- Fast-forward reaches the speed you pick: on many Windows PCs 4× got stuck around 2.2× (and 2× around 1.7×), because
+  the emulator timed its frames with browser timers that only fire every ~15.6 ms there. souldew now times the game
+  itself from the display's frames – the same on every system and at every refresh rate (60, 75, 120, 144, 165 Hz).
+- No more stutter and crackling at normal speed when the computer is briefly busy: the game no longer waits on its
+  sound, keeps a larger sound buffer (128 ms) and makes its sound at the sound card's own rate.
+- New turbo step "Max" (Settings): as fast as the computer can, without any limit.
+- New turbo audio option "Plain": the emulator's own sound with no recording or mixing at all – for anyone who
+  hears crackling.
+- "Save diagnostics" now includes the sound card (sample rate, latency), the display's refresh rate, the speed really
+  reached, drop-outs in the sound and the longest gap between frames.
+
 ## 2.1.0
 
 **Windows support** – souldew now runs on Windows 10 and 11 (x64), and Mac and Windows players can play together.

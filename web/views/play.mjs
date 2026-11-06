@@ -30,10 +30,14 @@ async function liveTables() {
 }
 
 const SPEEDS = [1, 2, 3, 4];
+// Settings › "Max" turbo step (config.turboMax): after 4× comes "as fast as this computer can" – no limit at all.
+const MAX = Infinity;
+const speedText = (s) => (s === MAX ? t('play.speedMax', 'Max') : `${s}×`);
 // A wild battle ended and no new Pokémon showed up this long after → it got away (Nuzlocke: ask about the area).
 // Long enough for the catch to land in the party / box (the box is read every few seconds).
 const MISSED_WAIT = 10000;
-const TURBO_AUDIO = ['music', 'mute', 'original']; // what you hear while fast-forwarding
+// what you hear while fast-forwarding; 'plain' takes the turbo mixer out of the sound path altogether
+const TURBO_AUDIO = ['music', 'mute', 'original', 'plain'];
 
 /** What to play: a run (slot = me) or a single library game. */
 function useTarget() {
@@ -213,6 +217,9 @@ export function GameSession({ session, mode }) {
   const lastSpeed = useRef(2);
   const speedRef = useRef(1);
   speedRef.current = speed;
+  const steps = status?.config?.turboMax === true ? [...SPEEDS, MAX] : SPEEDS;
+  const stepsRef = useRef(steps);
+  stepsRef.current = steps;
   const modeRef = useRef(mode);
   modeRef.current = mode;
   const rulesRef = useRef(false); // the rules drawer owns the keyboard while it is open
@@ -282,7 +289,7 @@ export function GameSession({ session, mode }) {
     emu()?.setSpeed(s);
     setSpeedState(s);
     if (s > 1) lastSpeed.current = s;
-    flash(s > 1 ? `▶▶ ${s}×` : '▶ 1×');
+    flash(s > 1 ? `▶▶ ${speedText(s)}` : '▶ 1×');
   }, []);
   setSpeedRef.current = setSpeed;
 
@@ -299,11 +306,11 @@ export function GameSession({ session, mode }) {
       flash(e.paused() ? t('play.paused', 'Paused') : '▶');
     },
     turbo: () => {
-      const i = SPEEDS.indexOf(speedRef.current);
-      setSpeed(SPEEDS[(i + 1) % SPEEDS.length]);
+      const st = stepsRef.current;
+      setSpeed(st[(st.indexOf(speedRef.current) + 1) % st.length]);
     },
-    faster: () => setSpeed(Math.min(4, speedRef.current + 1)),
-    slower: () => setSpeed(Math.max(1, speedRef.current - 1)),
+    faster: () => setSpeed(stepsRef.current.find((s) => s > speedRef.current) ?? stepsRef.current.at(-1)),
+    slower: () => setSpeed([...stepsRef.current].reverse().find((s) => s < speedRef.current) ?? 1),
     quicksave: async (slot = selRef.current) => {
       if (!emu()?.ready) return;
       let ok = false;
@@ -466,7 +473,7 @@ export function GameSession({ session, mode }) {
       if (!turboHeld.current) {
         turboHeld.current = true;
         emu()?.setSpeed(lastSpeed.current > 1 ? lastSpeed.current : 3);
-        flash(`▶▶ ${lastSpeed.current > 1 ? lastSpeed.current : 3}×`);
+        flash(`▶▶ ${speedText(lastSpeed.current > 1 ? lastSpeed.current : 3)}`);
       }
       return true;
     }
@@ -863,7 +870,7 @@ export function GameSession({ session, mode }) {
         setRealSpeed(behind ? Math.round(x * 10) / 10 : null);
         short.push(behind ? x : null);
         if (short.length > 4) short.shift();
-        if (speedGuard && short.length === 4 && short.every((v) => v !== null)) {
+        if (speedGuard && speed !== MAX && short.length === 4 && short.every((v) => v !== null)) {
           const holds = Math.max(1, Math.floor(Math.min(...short) / 0.97));
           const next = Math.min(speed - 1, holds);
           short.length = 0;
@@ -875,6 +882,21 @@ export function GameSession({ session, mode }) {
     }, 1300);
     return () => clearInterval(id);
   }, [phase, speed, speedGuard]);
+
+  // Diagnostics: the sound card and the pacing once, then every 10 s what the game really did (speed reached, display
+  // rate, drop-outs in the sound, the longest gap between frames) – a report about crackling or slow-down then shows why.
+  useEffect(() => {
+    if (phase !== 'running') return undefined;
+    let first = true;
+    const id = setInterval(() => {
+      const p = emu()?.perf?.();
+      if (!p) return;
+      if (first) diag('perf', { type: 'setup', ...p.sound, ...p.pacing });
+      first = false;
+      if (p.last) diag('perf', { type: 'window', ...p.last });
+    }, 10000);
+    return () => clearInterval(id);
+  }, [phase]);
 
   // Keep the speed indicator honest if EmulatorJS switches fast-forward by itself.
   useEffect(() => {
@@ -960,7 +982,7 @@ export function GameSession({ session, mode }) {
           ${btn('reset', t('keys.reset', 'Reset the game (asks first)') + ' (R)', actions.reset)}
           <span class="sep"></span>
           <button class="btn icon" title=${t('play.slower', 'Slower')} aria-label=${t('play.slower', 'Slower')} onClick=${actions.slower}><span aria-hidden="true">–</span></button>
-          <span class="speed" aria-live="polite" title=${realSpeed ? t('play.realSpeed', 'Your computer manages about {n}× in this scene', { n: realSpeed }) : ''}>${speed}×${realSpeed ? html`<small class="speed-real">≈${realSpeed}×</small>` : ''}</span>
+          <span class="speed" aria-live="polite" title=${realSpeed ? t('play.realSpeed', 'Your computer manages about {n}× in this scene', { n: realSpeed }) : ''}>${speedText(speed)}${realSpeed ? html`<small class="speed-real">≈${realSpeed}×</small>` : ''}</span>
           ${btn('fast', t('play.faster', 'Faster') + ' (T)', actions.faster)}
           <span class="sep"></span>
           ${btn('save', t('states.quicksave', 'Quick save to slot {n}', { n: sel }) + ' (F5)', () => actions.quicksave())}
@@ -987,10 +1009,11 @@ export function GameSession({ session, mode }) {
                   <option value="music">${t('play.turboAudioMusic', 'Music continues')}</option>
                   <option value="mute">${t('play.turboAudioMute', 'Mute')}</option>
                   <option value="original">${t('play.turboAudioOriginal', 'Sped-up original')}</option>
+                  <option value="plain" title=${t('play.turboAudioPlainHint', 'The emulator’s sound only – no recording, no mixer. Try it if the sound crackles.')}>${t('play.turboAudioPlain', 'Plain (no extra processing)')}</option>
                 </select>
               </label>
               <button class="btn small ghost diag-btn" title=${t('play.diagHint', 'Saves what souldew recorded about the music and live tracking this session – attach the file to a bug report. No ROM, save or invite data.')}
-                onClick=${() => saveDiagnostics({ turboAudio, speed, volume })}><${Icon} name="save" size=${14} />${t('play.diag', 'Save diagnostics')}</button>
+                onClick=${() => saveDiagnostics({ turboAudio, speed: speed === MAX ? 'max' : speed, volume, perf: emu()?.perf?.() ?? null })}><${Icon} name="save" size=${14} />${t('play.diag', 'Save diagnostics')}</button>
             </div>`}
           </span>
           ${btn(fs ? 'shrink' : 'full', (fs ? t('play.exitFullscreen', 'Leave fullscreen') : t('keys.fullscreen', 'Fullscreen game')) + ' (F)', actions.fullscreen)}

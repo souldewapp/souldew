@@ -574,6 +574,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         controls: config.controls || null,
         theme: config.theme || 'classic',
         speedGuard: config.speedGuard === true,
+        turboMax: config.turboMax === true,
         pads: config.pads || null,
       },
     };
@@ -584,12 +585,13 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const allowed = {};
     // No path-like keys here: emulatorPaths decides which program /launch runs, libraryFolders which folders are
     // scanned (set via /api/library/folders). Neither may be writable by a plain config POST.
-    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard']) {
+    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax']) {
       if (k in body) allowed[k] = body[k];
     }
     // shape checks for the newer keys – the page validates too, but the config file shouldn't hold junk
     if ('theme' in allowed && !['classic', 'contrast', 'deutan', 'tritan'].includes(allowed.theme)) delete allowed.theme;
     if ('speedGuard' in allowed) allowed.speedGuard = allowed.speedGuard === true;
+    if ('turboMax' in allowed) allowed.turboMax = allowed.turboMax === true;
     if ('pads' in allowed) {
       const p = allowed.pads;
       const ok = p === null || (typeof p === 'object' && !Array.isArray(p) && (!p.preset || ['nintendo', 'xbox'].includes(p.preset))
