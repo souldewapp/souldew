@@ -4,14 +4,16 @@ name: Release
 # The tag must match "version" in package.json, and CHANGELOG.md needs a "## 2.1.0" section (the release notes).
 #
 # Windows: the installer is always built here (windows-latest).
+# Linux: the AppImage and the .deb are always built here (ubuntu-latest).
 # macOS: the DMG is built here only when the repository variable MACOS_RELEASE is "true" (Settings › Secrets and
 # variables › Actions › Variables) – macOS runners don't start for this repository at the moment.
 #
-# - DMG built here and SLS_RELEASE_KEY set: the release is published right away with the DMG, the Windows installer
-#   and one signed latest.json for both. Installed apps find it within a few hours.
-# - Otherwise: a DRAFT release with the Windows installer is created (installed apps don't see drafts). Finish it on
-#   a Mac – see docs/DEVELOPMENT.md › "Releasing": build the DMG, download the installer from the draft, run
-#   `npm run release` (signs one latest.json for both), upload DMG + latest.json to the draft and publish it.
+# - DMG built here and SLS_RELEASE_KEY set: the release is published right away with the DMG, the Windows installer,
+#   the AppImage, the .deb and one signed latest.json for all of them. Installed apps find it within a few hours.
+# - Otherwise: a DRAFT release with the Windows installer and the Linux packages is created (installed apps don't see
+#   drafts). Finish it on a Mac – see docs/DEVELOPMENT.md › "Releasing": build the DMG, download the installer and the
+#   AppImage from the draft, run `npm run release` (signs one latest.json for all), upload DMG + latest.json to the
+#   draft and publish it.
 #
 # One-time setup for the automatic route: Settings › Secrets and variables › Actions › New repository secret
 #   SLS_RELEASE_KEY = the full contents of ~/.config/soullink-studio/release-key.pem
@@ -70,6 +72,38 @@ jobs:
           path: dist/souldew-${{ steps.version.outputs.version }}-win-x64-setup.exe
           if-no-files-found: error
 
+  linux:
+    name: Build the Linux AppImage and .deb
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Virtual display for the smoke test; user namespaces for Chromium's sandbox (see linux.yml)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+      - run: node scripts/fetch-jre.mjs x64
+      - name: Build the AppImage and the .deb
+        run: npx electron-builder --linux AppImage deb --x64 --publish never
+      - name: Smoke test
+        run: xvfb-run -a node scripts/smoke-app.mjs dist/linux-unpacked/souldew
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: linux
+          path: |
+            dist/souldew-*-linux-x86_64.AppImage
+            dist/souldew-*-linux-amd64.deb
+          if-no-files-found: error
+
   macos:
     name: Build the macOS DMG
     if: vars.MACOS_RELEASE == 'true'
@@ -97,9 +131,9 @@ jobs:
 
   publish:
     name: Publish the GitHub release
-    needs: [windows, macos]
-    # runs when Windows succeeded and macOS either succeeded or was skipped (not built here)
-    if: always() && needs.windows.result == 'success' && (needs.macos.result == 'success' || needs.macos.result == 'skipped')
+    needs: [windows, linux, macos]
+    # runs when Windows and Linux succeeded and macOS either succeeded or was skipped (not built here)
+    if: always() && needs.windows.result == 'success' && needs.linux.result == 'success' && (needs.macos.result == 'success' || needs.macos.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write # gh release create
@@ -114,7 +148,7 @@ jobs:
         with:
           path: dist
           merge-multiple: true
-      - name: Publish (DMG + installer + signed feed) or create a draft (installer only)
+      - name: Publish (DMG + installer + Linux packages + signed feed) or create a draft (without the DMG)
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.windows.outputs.version }}
@@ -123,16 +157,19 @@ jobs:
           ls -la dist
           dmg="dist/souldew-$VERSION-arm64.dmg"
           exe="dist/souldew-$VERSION-win-x64-setup.exe"
+          appimage="dist/souldew-$VERSION-linux-x86_64.AppImage"
+          deb="dist/souldew-$VERSION-linux-amd64.deb"
           if [ -f "$dmg" ] && [ -n "$RELEASE_KEY" ]; then
             key="$RUNNER_TEMP/release-key.pem"
             (umask 077 && printf '%s\n' "$RELEASE_KEY" > "$key")
-            node scripts/release.mjs --key "$key" --dmg "$dmg" --win-exe "$exe"
+            node scripts/release.mjs --key "$key" --dmg "$dmg" --win-exe "$exe" --appimage "$appimage" --deb "$deb"
             rm -f "$key"
             out="dist/release-$VERSION"
             # not a draft or pre-release: the apps read releases/latest/download/latest.json
-            gh release create "v$VERSION" "$out/souldew-$VERSION-arm64.dmg" "$out/souldew-$VERSION-win-x64-setup.exe" "$out/latest.json" \
+            gh release create "v$VERSION" "$out/souldew-$VERSION-arm64.dmg" "$out/souldew-$VERSION-win-x64-setup.exe" \
+              "$out/souldew-$VERSION-linux-x86_64.AppImage" "$out/souldew-$VERSION-linux-amd64.deb" "$out/latest.json" \
               --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file "$out/notes.md" --verify-tag
-            echo "Published v$VERSION with macOS + Windows and a signed latest.json." >> "$GITHUB_STEP_SUMMARY"
+            echo "Published v$VERSION with macOS + Windows + Linux and a signed latest.json." >> "$GITHUB_STEP_SUMMARY"
           else
             [ -f "$dmg" ] && echo "::warning::SLS_RELEASE_KEY is not set – the feed can't be signed, creating a draft instead"
             node --input-type=module -e "
@@ -141,13 +178,13 @@ jobs:
               const notes = changelogSection(readFileSync('CHANGELOG.md', 'utf8'), process.env.VERSION);
               if (notes == null) { console.error('CHANGELOG.md has no ## ' + process.env.VERSION + ' section'); process.exit(1); }
               writeFileSync('notes.md', notes + '\n');"
-            gh release create "v$VERSION" "$exe" --draft --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file notes.md --verify-tag
+            gh release create "v$VERSION" "$exe" "$appimage" "$deb" --draft --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file notes.md --verify-tag
             {
-              echo "### Draft release v$VERSION created (Windows installer only)"
+              echo "### Draft release v$VERSION created (Windows installer + Linux packages)"
               echo "Installed apps don't see it yet. Finish it on a Mac (docs/DEVELOPMENT.md › Releasing):"
               echo '```'
               echo "npm run dist"
-              echo "gh release download v$VERSION --pattern '*-win-x64-setup.exe' --dir dist"
+              echo "gh release download v$VERSION --pattern '*-win-x64-setup.exe' --pattern '*-linux-*' --dir dist"
               echo "npm run release"
               echo "gh release upload v$VERSION dist/release-$VERSION/souldew-$VERSION-arm64.dmg dist/release-$VERSION/latest.json"
               echo "gh release edit v$VERSION --draft=false --latest"

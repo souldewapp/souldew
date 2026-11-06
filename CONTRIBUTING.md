@@ -14,7 +14,8 @@ Thanks for helping! This guide covers the setup, the conventions the code follow
 ## Setup
 
 Requirements: **Node.js ≥ 22.15**. The app, the server and the tests run on macOS, Windows and Linux; the DMG is built on
-a Mac, the Windows installer on Windows (`npm run dist:win`, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)).
+a Mac, the Windows installer on Windows (`npm run dist:win`), the AppImage and .deb on Linux (`npm run dist:linux`, see
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)).
 
 ```sh
 npm ci
@@ -32,7 +33,7 @@ npm run app -- --user-data-dir=/tmp/souldew-p3
 (PowerShell: `$env:PORT=47400; $env:SLS_DATA_DIR="$env:TEMP\souldew-p2"; $env:NO_OPEN=1; node server/index.mjs`.)
 
 Use separate folders for testing – never point a test instance at your real data in
-`~/Library/Application Support/SoulLink Studio` (Windows: `%APPDATA%\SoulLink Studio`).
+`~/Library/Application Support/SoulLink Studio` (Windows: `%APPDATA%\SoulLink Studio`, Linux: `~/.config/SoulLink Studio`).
 
 ## Checks
 
@@ -43,8 +44,8 @@ node scripts/extract-i18n.mjs    # must end with "0 missing, 0 stale" for every 
 ```
 
 CI runs the same on Ubuntu and Windows with Node 22 and 24 (macOS runners don't start for this repository right now).
-Paths in code and tests go through `node:path` (and `path.win32` where Windows rules are tested) – no hard-coded `/`.
-Visible text that differs per platform (⌘ / Ctrl, Finder / Explorer, "Mac" / "PC") uses `web/lib/platform.mjs`. Add a test for every bug you fix and every rule you add –
+Paths in code and tests go through `node:path` (and `path.win32` / `path.posix` where Windows / Linux rules are tested) – no hard-coded `/`.
+Visible text that differs per platform (⌘ / Ctrl, Finder / Explorer / file manager, "Mac" / "PC") uses `web/lib/platform.mjs`. Add a test for every bug you fix and every rule you add –
 `test/` has examples for run logic, live-memory parsing (synthetic RAM), sync, invite codes, the server and the
 overlay API.
 

@@ -1,0 +1,134 @@
+name: Linux build
+
+# Builds the Linux packages (AppImage + .deb, x64) and checks that they really work, on a virtual display (xvfb):
+# `npm run app` starts from the checkout; the unpacked app starts, its server answers, the bundled Java runs the
+# randomizer and the one-click emulator downloads (melonDS + mGBA AppImages) install through the app; the AppImage
+# starts and finds itself the way the in-app updater needs it (APPIMAGE / APPDIR); the .deb installs, starts and
+# uninstalls. The packages are kept as Actions artifacts.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [linux-port]
+  pull_request:
+    paths:
+      - 'electron/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/smoke-app.mjs'
+      - 'scripts/fetch-jre.mjs'
+      - '.github/workflows/linux.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & smoke-test the Linux app
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Virtual display, FUSE (to run AppImages) and ImageMagick (screenshots)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth imagemagick
+          # FUSE 2 for the AppImage runtime: libfuse2t64 on Ubuntu 24.04, libfuse2 before
+          sudo apt-get install -y --no-install-recommends libfuse2t64 || sudo apt-get install -y --no-install-recommends libfuse2
+      - name: Let Chromium's sandbox use user namespaces (Ubuntu 24.04 restricts them through AppArmor)
+        # The unpacked build's chrome-sandbox isn't setuid root, so the sandbox needs unprivileged user namespaces –
+        # like on most desktops. (The AppImage falls back to --no-sandbox by itself where they are missing.)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+
+      - name: Java runtime (Temurin 17, jlinked) – cached
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: tools/jre/linux-x64
+          key: jre-linux-x64-${{ hashFiles('scripts/fetch-jre.mjs') }}
+      - run: node scripts/fetch-jre.mjs x64
+
+      - name: Smoke test – `npm run app` from the checkout
+        run: xvfb-run -a node scripts/smoke-app.mjs --dev
+
+      - name: Build the AppImage and the .deb
+        run: npx electron-builder --linux AppImage deb --x64 --publish never
+
+      - name: Packages exist under their release names
+        run: |
+          v=$(node -p "require('./package.json').version")
+          ls -la dist
+          appimage="dist/souldew-$v-linux-x86_64.AppImage"
+          deb="dist/souldew-$v-linux-amd64.deb"
+          test -f "$appimage" || { echo "::error::missing $appimage"; exit 1; }
+          test -f "$deb" || { echo "::error::missing $deb"; exit 1; }
+          printf '%s  %s MB\n' "$appimage" "$(( $(stat -c %s "$appimage") / 1048576 ))" "$deb" "$(( $(stat -c %s "$deb") / 1048576 ))"
+          test -x dist/linux-unpacked/souldew
+          test -x dist/linux-unpacked/resources/tools/jre/linux-x64/bin/java || { echo '::error::JRE not bundled'; exit 1; }
+          test -f dist/linux-unpacked/resources/app/build/icon.png || { echo '::error::window icon not bundled'; exit 1; }
+          dpkg-deb --info "$deb"
+          dpkg-deb --contents "$deb" | grep -E '/opt/souldew/resources/tools/jre/linux-x64/bin/java$'
+
+      - name: Smoke test – unpacked app (incl. one-click melonDS + mGBA AppImages through the app)
+        run: xvfb-run -a node scripts/smoke-app.mjs dist/linux-unpacked/souldew --screenshot smoke-unpacked.png --emulators
+
+      - name: Smoke test – the AppImage
+        run: |
+          v=$(node -p "require('./package.json').version")
+          # Where people keep it: a folder of their own, under any name (the updater keeps that name)
+          mkdir -p "$RUNNER_TEMP/Applications"
+          app="$RUNNER_TEMP/Applications/souldew.AppImage"
+          cp "dist/souldew-$v-linux-x86_64.AppImage" "$app"
+          chmod +x "$app"
+          xvfb-run -a node scripts/smoke-app.mjs "$app" --screenshot smoke-appimage.png --lang de
+
+          # What the in-app updater relies on: inside the AppImage, APPIMAGE / APPDIR point at this file and its mount,
+          # and the folder is writable – so "Download & install" replaces the file in place. (Electron runs as Node here.)
+          out=$(ELECTRON_RUN_AS_NODE=1 "$app" -e "import(process.env.APPDIR + '/resources/app/electron/update-core.mjs').then((m) => { const p = m.appImageFromEnv(); console.log(JSON.stringify({ appImage: p, replace: m.canReplaceAppImage(p), staged: p && m.appImageStagedPath(p) })); })")
+          echo "$out"
+          echo "$out" | grep -qF "\"appImage\":\"$app\"" || { echo '::error::the AppImage does not recognise itself (APPIMAGE / APPDIR)'; exit 1; }
+          echo "$out" | grep -qF '"replace":{"ok":true}' || { echo '::error::the AppImage would not replace itself'; exit 1; }
+
+      - name: Smoke test – install the .deb, start it, remove it
+        run: |
+          v=$(node -p "require('./package.json').version")
+          sudo apt-get install -y "./dist/souldew-$v-linux-amd64.deb"
+          test -x /opt/souldew/souldew
+          desktop=/usr/share/applications/souldew.desktop
+          cat "$desktop"
+          grep -q '^StartupWMClass=souldew$' "$desktop" || { echo '::error::StartupWMClass does not match the app id'; exit 1; }
+          grep -q '^Categories=Game;' "$desktop" || { echo '::error::not listed under Games'; exit 1; }
+          command -v souldew
+          xvfb-run -a node scripts/smoke-app.mjs /opt/souldew/souldew
+          sudo apt-get remove -y souldew
+          if [ -e /opt/souldew/souldew ]; then echo '::error::apt left the app behind'; exit 1; fi
+          echo 'install / start / remove: ok'
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: souldew-linux
+          path: |
+            dist/souldew-*-linux-x86_64.AppImage
+            dist/souldew-*-linux-amd64.deb
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: smoke-test-linux
+          path: |
+            smoke-*.png
+            smoke-app.log
+          if-no-files-found: ignore
+          retention-days: 7

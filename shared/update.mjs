@@ -1,14 +1,16 @@
 // Update feed: version comparison and validation of latest.json. Pure functions, no Node or DOM APIs,
 // shared by the Electron updater, scripts/release.mjs and the tests.
 //
-// Feed format (latest.json, published next to the DMG and the Windows installer of each GitHub release):
+// Feed format (latest.json, published next to the DMG, the Windows installer and the Linux AppImage of each GitHub release):
 //   { version: '2.1.0', notes: '…', url: 'https://…/souldew-2.1.0-arm64.dmg',
 //     sha256: '<64 hex>', size: 123456789, minVersion?: '2.0.0', page?: 'https://…', pubDate?: '…',
-//     assets?: { 'win32-x64': { name: 'souldew-2.1.0-win-x64-setup.exe', url: 'https://…', sha256: '<64 hex>', size: 98765432 } },
+//     assets?: { 'win32-x64': { name: 'souldew-2.1.0-win-x64-setup.exe', url: 'https://…', sha256: '<64 hex>', size: 98765432 },
+//                'linux-x64': { name: 'souldew-2.1.0-linux-x86_64.AppImage', url: 'https://…', sha256: '<64 hex>', size: 123456789 } },
 //     sig?: '<base64 Ed25519 signature of canonicalFeed(feed)>' }
 // The top-level url/sha256/size are the macOS DMG – that is all souldew ≤ 2.0 knows. Other platforms live in
-// `assets` (added in 2.1): older apps ignore unknown fields, and the signature covers every field, `assets` included,
-// so the same signed latest.json serves both (test/update.test.mjs runs the 2.0.0 code against such a feed).
+// `assets` (Windows added in 2.1, Linux after it): older apps ignore unknown fields and unknown `assets` keys, and the
+// signature covers every field, `assets` included, so the same signed latest.json serves all of them
+// (test/update.test.mjs runs the 2.0.0 and 2.1.0 code against such a feed).
 
 // semver.org 2.0.0 (no leading "v", no leading zeros in numeric parts).
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
@@ -96,14 +98,17 @@ export function validateFeed(feed, { allowLocal = false } = {}) {
   };
 }
 
-/** Platforms with an `assets` entry: what file type each one installs from. */
-export const ASSET_PLATFORMS = { 'win32-x64': 'exe', 'win32-arm64': 'exe' };
+/**
+ * Platforms with an `assets` entry: what file type each one installs from (compared case-insensitively). Linux updates
+ * itself from the AppImage; a .deb install is pointed to the download page instead (it can't replace itself).
+ */
+export const ASSET_PLATFORMS = { 'win32-x64': 'exe', 'win32-arm64': 'exe', 'linux-x64': 'appimage', 'linux-arm64': 'appimage' };
 
-/** 'win32-x64' for this platform / architecture (process.platform, process.arch). */
+/** 'win32-x64' / 'linux-x64' for this platform / architecture (process.platform, process.arch). */
 export const platformKey = (platform, arch) => `${platform}-${arch}`;
 
 /**
- * The `assets` block: { 'win32-x64': { name, url, sha256, size } }. Unknown platform keys are dropped (a newer
+ * The `assets` block: { 'win32-x64': { name, url, sha256, size }, 'linux-x64': … }. Unknown platform keys are dropped (a newer
  * feed may list platforms this version doesn't know); a known one that is malformed makes the whole feed invalid.
  */
 function validateAssets(assets, { allowLocal }) {
@@ -115,7 +120,7 @@ function validateAssets(assets, { allowLocal }) {
     if (a === undefined) continue;
     if (!a || typeof a !== 'object' || Array.isArray(a)) throw feedError(`Update asset ${key} is invalid`);
     const { name, url, sha256, size } = a;
-    if (typeof name !== 'string' || name.length > 200 || !/^[\w.+-]+$/.test(name) || !name.toLowerCase().endsWith(`.${ext}`)) throw feedError(`Update asset ${key} has an invalid file name`);
+    if (typeof name !== 'string' || name.length > 200 || !/^[\w.+-]+$/.test(name) || !name.toLowerCase().endsWith(`.${ext.toLowerCase()}`)) throw feedError(`Update asset ${key} has an invalid file name`);
     if (typeof url !== 'string' || !isAllowedUrl(url, { allowLocal })) throw feedError(`Update asset ${key} must be an https:// URL`);
     if (!new URL(url).pathname.endsWith(`/${name}`)) throw feedError(`Update asset ${key}: the URL does not end with its file name`);
     if (typeof sha256 !== 'string' || !/^[0-9a-f]{64}$/i.test(sha256)) throw feedError(`Update asset ${key} has no valid sha256`);
@@ -158,11 +163,11 @@ export function updateAction(feed, current, { platform, arch } = {}) {
 
 /**
  * updateAction for the running app's platform. minVersion exists for macOS bundles that can't be swapped in place;
- * the Windows installer updates any installed version, so there it never means "by hand".
+ * the Windows installer and the Linux AppImage replace any installed version, so there it never means "by hand".
  */
 export function actionFor(feed, current, { platform, arch }) {
   const action = updateAction(feed, current, { platform, arch });
-  return platform === 'win32' && action === 'manual' ? 'install' : action;
+  return (platform === 'win32' || platform === 'linux') && action === 'manual' ? 'install' : action;
 }
 
 /** Constant-shape comparison of two hex digests (case-insensitive). */
@@ -212,3 +217,13 @@ export const dmgAssetName = (version, arch = 'arm64') => `souldew-${version}-${a
 
 /** The Windows installer of a release (package.json → build.win.artifactName builds exactly this name). */
 export const winAssetName = (version, arch = 'x64') => `souldew-${version}-win-${arch}-setup.exe`;
+
+// electron-builder names the architecture the way each Linux package format does: x86_64 for AppImages, amd64 for .deb.
+const APPIMAGE_ARCH = { x64: 'x86_64', arm64: 'arm64' };
+const DEB_ARCH = { x64: 'amd64', arm64: 'arm64' };
+
+/** The Linux AppImage of a release (package.json → build.linux.artifactName builds exactly this name). */
+export const linuxAssetName = (version, arch = 'x64') => `souldew-${version}-linux-${APPIMAGE_ARCH[arch] || arch}.AppImage`;
+
+/** The Debian / Ubuntu package of a release – only uploaded next to the AppImage, never in the feed (it can't self-update). */
+export const debAssetName = (version, arch = 'x64') => `souldew-${version}-linux-${DEB_ARCH[arch] || arch}.deb`;

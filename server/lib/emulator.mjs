@@ -1,14 +1,17 @@
 // External emulators: detection, one-click install from GitHub releases, launching.
 // The integrated emulator (EmulatorJS inside the app) needs none of this.
 import { existsSync, mkdirSync, writeFileSync, readdirSync, rmSync, cpSync, statSync, chmodSync } from 'node:fs';
-import { join, basename, dirname, isAbsolute, resolve } from 'node:path';
+import { join, basename, dirname, isAbsolute, resolve, posix } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { TOOLS_DIR } from './paths.mjs';
 import { httpError } from './fsutil.mjs';
 import { extractArchiveAsync } from './archive.mjs';
 
 // assets: which file of the emulator's latest GitHub release to download – per platform, and per architecture
-// where the project builds for several (an arm64 Windows PC runs the x64 build of mGBA through emulation).
+// where the project builds for several (an arm64 Windows PC runs the x64 build of mGBA through emulation). On Linux
+// both ship AppImages (melonDS inside a zip as melonDS-x86_64.AppImage, mGBA as mGBA-0.10.5-appimage-x64.appimage).
+// exe: the program file names the app accepts – the official builds and, on Linux, the distribution packages
+// (melonDS, mgba-qt) and Flathub's launchers (net.kuribo64.melonDS, io.mgba.mGBA).
 export const EMULATORS = {
   melonds: {
     name: 'melonDS',
@@ -17,7 +20,7 @@ export const EMULATORS = {
     live: 'save', // reads the .sav after every in-game save
     assets: { darwin: /macOS-universal\.zip$/i, win32: { x64: /windows-x86_64\.zip$/i, arm64: /windows-aarch64\.zip$/i }, linux: { x64: /appimage-x86_64\.zip$/i, arm64: /appimage-aarch64\.zip$/i } },
     app: /^melonDS.*\.app$/i,
-    exe: /^melonDS(\.exe|\.AppImage)?$/i,
+    exe: /^(?:melonDS(?:\.exe)?|melonDS[\w.+-]*\.AppImage|net\.kuribo64\.melonDS)$/i,
   },
   mgba: {
     name: 'mGBA',
@@ -26,7 +29,7 @@ export const EMULATORS = {
     live: 'script', // Lua bridge streams the party in real time
     assets: { darwin: /-macos\.dmg$/i, win32: /-win64\.7z$/i, linux: { x64: /appimage-x64\.appimage$/i, arm64: /appimage-arm64\.appimage$/i } },
     app: /^mGBA\.app$/i,
-    exe: /^mGBA(\.exe)?$/i,
+    exe: /^(?:mGBA(?:\.exe)?|mgba-qt|mGBA[\w.+-]*\.AppImage|io\.mgba\.mGBA)$/i,
   },
 };
 
@@ -56,6 +59,25 @@ export function windowsSystemPaths(id, env = process.env) {
   const bases = [env.ProgramFiles, env['ProgramFiles(x86)'], env.LOCALAPPDATA && join(env.LOCALAPPDATA, 'Programs')].filter(Boolean);
   const exe = id === 'mgba' ? ['mGBA', 'mGBA.exe'] : id === 'melonds' ? ['melonDS', 'melonDS.exe'] : null;
   return exe ? bases.map((b) => join(b, ...exe)) : [];
+}
+
+/**
+ * Where Linux installs put the emulators: AppImages in ~/Applications (EmuDeck on the Steam Deck, AppImageLauncher),
+ * the distribution's packages, and Flatpak's launchers (system-wide and per user). Pure – posix paths for `home`.
+ */
+export function linuxSystemPaths(id, home = process.env.HOME || '') {
+  const names = {
+    melonds: { appimage: ['melonDS.AppImage', 'melonDS-x86_64.AppImage'], bin: ['melonDS'], flatpak: 'net.kuribo64.melonDS' },
+    mgba: { appimage: ['mGBA.AppImage', 'mgba.AppImage'], bin: ['mgba-qt'], flatpak: 'io.mgba.mGBA' },
+  }[id];
+  if (!names) return [];
+  const h = (...p) => (home && posix.isAbsolute(home) ? [posix.join(home, ...p)] : []);
+  return [
+    ...names.appimage.flatMap((n) => h('Applications', n)),
+    ...names.bin.flatMap((n) => ['/usr/bin', '/usr/local/bin', '/usr/games'].map((d) => posix.join(d, n))),
+    ...h('.local', 'share', 'flatpak', 'exports', 'bin', names.flatpak),
+    posix.join('/var/lib/flatpak/exports/bin', names.flatpak),
+  ];
 }
 
 const dirFor = (id) => join(TOOLS_DIR, 'emulators', id);
@@ -116,6 +138,9 @@ export function detectEmulator(id, customPath) {
   }
   if (process.platform === 'win32') {
     for (const path of windowsSystemPaths(id)) candidates.push({ path, source: 'system' });
+  }
+  if (process.platform === 'linux') {
+    for (const path of linuxSystemPaths(id)) candidates.push({ path, source: 'system' });
   }
   const found = candidates.find((c) => existsSync(c.path));
   return found ? { installed: true, ...found } : { installed: false };
@@ -197,17 +222,27 @@ export async function launchRom(id, romPath, { customPath, script } = {}) {
   return { ...emu, script };
 }
 
-/** The command that shows `path` selected in the file manager (Finder / Explorer), as [command, args, options]. */
-export function revealCommand(path, platform = process.platform) {
+/**
+ * The command that shows `path` selected in the file manager (Finder / Explorer), as [command, args, options].
+ * Linux has no common "select this file" command: xdg-open opens the folder (a file's own folder – xdg-open on the
+ * file itself would open it, e.g. start an emulator with a ROM).
+ */
+export function revealCommand(path, platform = process.platform, { isDir = false } = {}) {
   if (platform === 'darwin') return ['open', ['-R', path], {}];
   // Explorer parses its own command line: /select,"C:\path with spaces\file" – passed verbatim, quoted by hand
   // (Windows paths can't contain quotes).
   if (platform === 'win32') return ['explorer.exe', [`/select,"${path.replace(/"/g, '')}"`], { windowsVerbatimArguments: true }];
-  return ['xdg-open', [path], {}];
+  return ['xdg-open', [isDir ? path : posix.dirname(path)], {}];
 }
 
 export function revealInFileManager(path) {
-  const [cmd, args, opts] = revealCommand(path);
+  let isDir = false;
+  try {
+    isDir = statSync(path).isDirectory();
+  } catch {
+    // gone meanwhile – its folder is still worth showing
+  }
+  const [cmd, args, opts] = revealCommand(path, process.platform, { isDir });
   const child = spawn(cmd, args, { detached: true, stdio: 'ignore', ...opts });
   child.on('error', (e) => console.warn('reveal failed:', e.message));
   child.unref();
@@ -220,7 +255,8 @@ export function emulatorRunning() {
     if (process.platform === 'win32') {
       return names.test(spawnSync('tasklist', ['/FO', 'CSV', '/NH'], { encoding: 'utf8', windowsHide: true }).stdout || '');
     }
-    const out = spawnSync('ps', ['-axo', 'comm='], { encoding: 'utf8' }).stdout || '';
+    // every process's command name (procps on Linux spells "all processes" -e, BSD / macOS ps -ax)
+    const out = spawnSync('ps', process.platform === 'linux' ? ['-eo', 'comm='] : ['-axo', 'comm='], { encoding: 'utf8' }).stdout || '';
     return out.split('\n').some((line) => names.test(line.split('/').pop()));
   } catch {
     return false;

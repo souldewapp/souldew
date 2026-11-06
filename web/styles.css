@@ -1254,3 +1254,15 @@ html.platform-win32 .rail:not(.web) .rail-toggle { top: 25px; }
 /* the onboarding covers the whole window: its step bar starts below the window buttons */
 html.platform-win32 .onboard { padding-top: max(44px, min(8vh, 70px)); }
 @media (max-height: 840px) { html.platform-win32 .onboard { padding-top: 44px; } }
+
+/* ---------- Linux: the desktop's own window frame ---------- */
+/* The window keeps its normal title bar (electron/main.mjs): nothing is drawn over the page, so it is laid out like the
+   browser version – no drag strip, no room for traffic lights or window buttons at the top. */
+html.platform-linux .titlebar-drag { display: none; }
+html.platform-linux .drag { -webkit-app-region: no-drag; }
+html.platform-linux .rail:not(.web) { padding-top: 18px; }
+html.platform-linux .rail .brand { padding-right: 36px; }
+html.platform-linux .app-native .main-inner { padding-top: 30px; }
+html.platform-linux .app-native .session.full { padding-top: 16px; }
+html.platform-linux .app-native .rail-open { top: 12px; left: 12px; width: 34px; height: 34px; }
+html.platform-linux .app-native .rules-drawer-wrap { padding-top: 14px; }

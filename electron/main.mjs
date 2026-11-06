@@ -1,21 +1,22 @@
-// souldew – desktop app shell (macOS and Windows).
+// souldew – desktop app shell (macOS, Windows and Linux).
 // Starts the local server in-process on a free port and shows the UI in a native window.
-import { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeTheme, session, powerSaveBlocker } from 'electron';
+import { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeTheme, session, powerSaveBlocker, screen } from 'electron';
 import { join, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setupUpdater } from './updater.mjs';
-import { sameOrigin, safeExternalUrl, subframeNavigationAllowed, permissionAllowed, isTrustedIpcSender, titleBarColors } from './guards.mjs';
+import { sameOrigin, safeExternalUrl, subframeNavigationAllowed, permissionAllowed, isTrustedIpcSender, titleBarColors, initialWindowSize } from './guards.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const MAC = process.platform === 'darwin';
 const WIN = process.platform === 'win32';
+const LINUX = process.platform === 'linux';
 app.setName('souldew');
 // Windows: the same id as the installer's shortcuts (package.json → build.appId), so the taskbar groups the window
 // with a pinned shortcut and shows the app's own name and icon.
 if (WIN) app.setAppUserModelId('studio.soullink.app');
 // The app used to be called "SoulLink Studio": its data folder keeps that name, so runs, saves, settings and the
 // web storage (localStorage, EmulatorJS' IndexedDB) carry over after the rename. (macOS: ~/Library/Application
-// Support/SoulLink Studio, Windows: %APPDATA%\SoulLink Studio.)
+// Support/SoulLink Studio, Windows: %APPDATA%\SoulLink Studio, Linux: ~/.config/SoulLink Studio – $XDG_CONFIG_HOME.)
 // An explicit --user-data-dir (tests, a second profile) still wins.
 if (!app.commandLine.hasSwitch('user-data-dir')) app.setPath('userData', join(app.getPath('appData'), 'SoulLink Studio'));
 // Boot chime + emulator audio without a prior click.
@@ -29,7 +30,7 @@ app.commandLine.appendSwitch('disable-renderer-backgrounding');
 process.env.SLS_DATA_DIR = app.getPath('userData');
 process.env.SLS_TOOLS_DIR = app.isPackaged ? join(process.resourcesPath, 'tools') : join(here, '..', 'tools');
 // Where "Search my Mac / PC" looks first: the real Downloads / Desktop / Documents folders (Windows may have moved
-// them to OneDrive or another drive – only Electron knows).
+// them to OneDrive or another drive, Linux names them per language in ~/.config/user-dirs.dirs – Electron knows both).
 process.env.SLS_USER_DIRS = JSON.stringify(['downloads', 'desktop', 'documents'].map((k) => {
   try {
     return app.getPath(k);
@@ -65,7 +66,10 @@ const TITLEBAR_HEIGHT = 36;
  * The window frame per platform. macOS: the page reaches under the title bar, traffic lights inset at the top left.
  * Windows: likewise, with the minimize / maximize / close buttons drawn by Windows over the top right corner in the
  * app's colours (titleBarOverlay; the page keeps that corner free and makes the top strip draggable). There is no
- * visible menu bar on Windows – the menu's keyboard shortcuts still work. Linux: a normal frame.
+ * visible menu bar on Windows – the menu's keyboard shortcuts still work. Linux: the desktop's own frame and title
+ * bar (window decorations differ between GNOME, KDE, Steam Deck's desktop mode … and X11 / Wayland, so the app doesn't
+ * draw its own); the menu bar stays hidden until Alt is pressed. The page needs no room for window buttons there
+ * (styles.css .platform-linux).
  */
 function windowChrome() {
   if (MAC) return { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 18 } };
@@ -75,16 +79,21 @@ function windowChrome() {
 
 function createWindow() {
   nativeTheme.themeSource = 'dark';
+  // Never larger than the screen: the Steam Deck's is 1280×800, smaller than the window's usual size.
+  let workArea = null;
+  try {
+    workArea = screen.getPrimaryDisplay().workAreaSize;
+  } catch {
+    // no display information – the usual size
+  }
   win = new BrowserWindow({
-    width: 1360,
-    height: 880,
-    minWidth: 980,
-    minHeight: 640,
+    ...initialWindowSize(workArea),
     title: 'souldew',
     backgroundColor: '#1b1a1f',
     ...windowChrome(),
-    // the window / taskbar icon when running from source (`npm run app`); a packaged app uses its own
-    ...(!app.isPackaged && !MAC ? { icon: join(here, '..', 'build', 'icon.png') } : {}),
+    // the window / taskbar icon when running from source (`npm run app`) – and always on Linux, where X11 window
+    // managers take it from the window (a packaged app elsewhere uses the icon of its .exe / .app)
+    ...((!app.isPackaged && !MAC) || LINUX ? { icon: join(here, '..', 'build', 'icon.png') } : {}),
     show: false,
     webPreferences: {
       preload: join(here, 'preload.cjs'),
@@ -94,7 +103,7 @@ function createWindow() {
     },
   });
   win.once('ready-to-show', () => win.show());
-  // Window fullscreen (macOS: green button / ⌃⌘F, Windows: F11): the page folds the side rail away
+  // Window fullscreen (macOS: green button / ⌃⌘F, Windows / Linux: F11): the page folds the side rail away
   win.on('enter-full-screen', () => send('fullscreen', true));
   win.on('leave-full-screen', () => send('fullscreen', false));
   win.webContents.on('did-finish-load', () => send('fullscreen', win.isFullScreen()));
@@ -202,7 +211,8 @@ ipcMain.on('titlebar-colors', (e, colors) => {
 /**
  * labels: the page's texts in the app language (see 'menu-labels'); German until the page has sent them.
  * macOS gets the usual app menu; Windows has no visible menu bar (titleBarOverlay), so there the menu only carries
- * the keyboard shortcuts (Ctrl instead of ⌘, F11 for fullscreen) – Settings and Quit move into "File".
+ * the keyboard shortcuts (Ctrl instead of ⌘, F11 for fullscreen) – Settings and Quit move into "File". Linux: the same
+ * menu as Windows, hidden until Alt is pressed (autoHideMenuBar).
  */
 function buildMenu(labels = {}) {
   const l = (key, fallback) => (typeof labels[key] === 'string' && labels[key] ? labels[key].slice(0, 80) : fallback);
@@ -226,7 +236,7 @@ function buildMenu(labels = {}) {
       label: l('file', 'Ablage'),
       submenu: [
         { label: l('addGames', 'Spiele hinzufügen …'), accelerator: 'CmdOrCtrl+O', click: () => send('menu', 'add-games') },
-        { label: l('revealLibrary', MAC ? 'Bibliotheksordner im Finder' : 'Bibliotheksordner im Explorer'), click: () => send('menu', 'reveal-library') },
+        { label: l('revealLibrary', MAC ? 'Bibliotheksordner im Finder' : WIN ? 'Bibliotheksordner im Explorer' : 'Bibliotheksordner im Dateimanager'), click: () => send('menu', 'reveal-library') },
         { type: 'separator' },
         // Windows: no Ctrl+W – it would close the window and with it the app; Alt+F4 does that the Windows way
         ...(MAC ? [{ role: 'close' }] : [settings, { type: 'separator' }, { role: 'quit', label: l('quit', 'Beenden') }]),
@@ -284,7 +294,7 @@ handle('pick-files', async (e, opts) => {
   return r.canceled ? [] : r.filePaths;
 });
 handle('reveal', (e, path) => {
-  // an absolute local path of this platform (/Users/… on macOS, C:\… on Windows) – no network or device paths
+  // an absolute local path of this platform (/Users/… on macOS, C:\… on Windows, /home/… on Linux) – no network or device paths
   // (\\server\…, \\?\…, \\.\…): showing one would make Windows contact that server or open a device
   if (typeof path === 'string' && path.length < 4096 && isAbsolute(path) && !/^[\\/]{2}/.test(path) && !path.includes('\0')) shell.showItemInFolder(path);
 });

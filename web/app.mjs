@@ -28,7 +28,7 @@ import { DeathAlert } from './views/session-info.mjs';
 import { RestartOffer, RunOverNotice } from './views/restart.mjs';
 import { FirstStepsPill } from './views/firststeps.mjs';
 import { mySlotIn } from './lib/restart.mjs';
-import { IS_MAC, shortcut } from './lib/platform.mjs';
+import { IS_MAC, IS_WIN, shortcut } from './lib/platform.mjs';
 
 applyStoredTheme(); // before the first render: no flash of the wrong colours
 
@@ -54,7 +54,8 @@ const pref = {
 function sendMenuLabels() {
   window.sls?.setMenuLabels?.({
     settings: t('menu.settings', 'Settings …'), file: t('menu.file', 'File'), addGames: t('menu.addGames', 'Add games …'),
-    revealLibrary: IS_MAC ? t('menu.revealLibrary', 'Show library folder in Finder') : t('menu.revealLibraryWin', 'Show library folder in Explorer'),
+    revealLibrary: IS_MAC ? t('menu.revealLibrary', 'Show library folder in Finder') : IS_WIN ? t('menu.revealLibraryWin', 'Show library folder in Explorer')
+      : t('menu.revealLibraryLinux', 'Show library folder in the file manager'),
     go: t('menu.go', 'Go'), quit: t('menu.quit', 'Quit'),
     library: t('nav.library', 'Library'), soullink: t('nav.soullink', 'SoulLink'), nuzlocke: t('nav.nuzlocke', 'Nuzlocke'), link: t('nav.link', 'Connection'), stream: t('nav.stream', 'Stream'),
     emulator: t('menu.emulator', 'Emulator'), pause: t('keys.pause', 'Pause / resume'), turbo: t('menu.turbo', 'Toggle turbo'),

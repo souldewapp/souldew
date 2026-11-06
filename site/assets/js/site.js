@@ -8,17 +8,17 @@
   const REPO = 'souldewapp/souldew';
   const RELEASES = `https://github.com/${REPO}/releases/latest`;
   const T = DE ? {
-    dl: { mac: 'Für macOS laden', win: 'Für Windows laden' },
-    winSoon: 'Windows – kommt mit 2.1',
-    winSoonMeta: 'Auf der Release-Seite erscheint der Installer',
-    arch: { mac: 'Apple silicon', win: 'Windows x64' },
+    dl: { mac: 'Für macOS laden', win: 'Für Windows laden', linux: 'Für Linux laden' },
+    soon: { win: 'Windows – kommt mit 2.1', linux: 'Linux – kommt mit dem nächsten Release' },
+    soonMeta: { win: 'Auf der Release-Seite erscheint der Installer', linux: 'Auf der Release-Seite erscheint die AppImage' },
+    arch: { mac: 'Apple silicon', win: 'Windows x64', linux: 'Linux x64 · AppImage' },
     free: 'Kostenlos · Open Source (GPL-3.0)',
     status: ['Verlinkt auf Route 29', 'Ein Geodude eines Trainers greift an!', 'Ember wurde besiegt.', 'Das Link-Kabel reißt.', 'Chomp ist auch weg. Route 29 ist verloren.'],
   } : {
-    dl: { mac: 'Download for macOS', win: 'Download for Windows' },
-    winSoon: 'Windows – coming with 2.1',
-    winSoonMeta: 'The installer will appear on the releases page',
-    arch: { mac: 'Apple silicon', win: 'Windows x64' },
+    dl: { mac: 'Download for macOS', win: 'Download for Windows', linux: 'Download for Linux' },
+    soon: { win: 'Windows – coming with 2.1', linux: 'Linux – coming with the next release' },
+    soonMeta: { win: 'The installer will appear on the releases page', linux: 'The AppImage will appear on the releases page' },
+    arch: { mac: 'Apple silicon', win: 'Windows x64', linux: 'Linux x64 · AppImage' },
     free: 'Free · open source (GPL-3.0)',
     status: ['Linked on Route 29', 'A trainer’s Geodude attacks!', 'Ember fainted.', 'The link cable snaps.', 'Chomp is gone too. Route 29 is lost.'],
   };
@@ -167,10 +167,12 @@
     if (/android|iphone|ipad|ipod/i.test(ua)) return 'other';
     if (/win/i.test(platform) || /windows/i.test(ua)) return 'win';
     if (/mac/i.test(platform) || /macintosh/i.test(ua)) return navigator.maxTouchPoints > 1 ? 'other' : 'mac';
+    if (/cros/i.test(ua)) return 'other'; // ChromeOS
+    if (/linux/i.test(platform) || /linux|x11/i.test(ua)) return 'linux'; // desktop Linux and the Steam Deck
     return 'other';
   };
   const os = detectOS();
-  const primary = os === 'win' ? 'win' : 'mac';
+  const primary = os === 'win' || os === 'linux' ? os : 'mac';
   document.documentElement.dataset.os = os;
   const yours = $(`[data-platform="${primary}"]`);
   if (yours && os !== 'other') {
@@ -182,25 +184,28 @@
 
   const mb = (bytes) => `${Math.round(bytes / 1048576)} MB`;
   const apply = (rel) => {
-    const asset = { mac: rel.mac, win: rel.win };
-    for (const key of ['mac', 'win']) {
+    const asset = { mac: rel.mac, win: rel.win, linux: rel.linux };
+    for (const key of ['mac', 'win', 'linux']) {
       for (const a of $$(`[data-dl="${key}"]`)) {
         if (asset[key]) a.href = asset[key].url;
-        else if (key === 'win') label(a, T.winSoon);
+        else if (T.soon[key]) label(a, T.soon[key]);
       }
       for (const m of $$(`[data-dl-meta="${key}"]`)) {
-        m.textContent = asset[key] ? `${asset[key].name} · v${rel.version} · ${mb(asset[key].size)}` : T.winSoonMeta;
+        if (asset[key]) m.textContent = `${asset[key].name} · v${rel.version} · ${mb(asset[key].size)}`;
+        else if (T.soonMeta[key]) m.textContent = T.soonMeta[key];
       }
     }
+    // the .deb: a second link in the Linux panel (it can't update itself, so the AppImage stays the main download)
+    for (const a of $$('[data-dl="deb"]')) if (rel.deb) a.href = rel.deb.url;
     const pick = asset[primary];
     for (const a of $$('[data-dl="primary"]')) {
       a.href = pick ? pick.url : RELEASES;
-      if (!pick && !a.classList.contains('btn-sm')) label(a, primary === 'win' ? T.winSoon : T.dl.mac);
+      if (!pick && !a.classList.contains('btn-sm')) label(a, T.soon[primary] || T.dl.mac);
     }
     const meta = $('.hero-meta');
     if (meta && pick) meta.textContent = `v${rel.version} · ${mb(pick.size)} · ${T.arch[primary]} · ${T.free}`;
   };
-  const CACHE_KEY = 'souldew-release-v2';
+  const CACHE_KEY = 'souldew-release-v3'; // v3: with the Linux assets
   const load = async () => {
     try {
       const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
@@ -211,7 +216,8 @@
     const data = await res.json();
     const assets = Array.isArray(data.assets) ? data.assets : [];
     const find = (re) => { const x = assets.find((a) => re.test(a.name)); return x ? { url: x.browser_download_url, size: x.size, name: x.name } : null; };
-    const rel = { version: String(data.tag_name || '').replace(/^v/, ''), mac: find(/^souldew-.+-arm64\.dmg$/i), win: find(/^souldew-.+-win-x64-setup\.exe$/i) };
+    const rel = { version: String(data.tag_name || '').replace(/^v/, ''), mac: find(/^souldew-.+-arm64\.dmg$/i), win: find(/^souldew-.+-win-x64-setup\.exe$/i),
+      linux: find(/^souldew-.+-linux-x86_64\.AppImage$/i), deb: find(/^souldew-.+-linux-amd64\.deb$/i) };
     try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), rel })); } catch { /* fine */ }
     return rel;
   };

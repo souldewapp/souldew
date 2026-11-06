@@ -27,13 +27,13 @@
 <script>document.documentElement.classList.replace('no-js', 'js');</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"SoftwareApplication","name":"souldew","applicationCategory":"GameApplication","operatingSystem":"macOS, Windows","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"license":"https://www.gnu.org/licenses/gpl-3.0.html","url":"https://souldewapp.github.io/souldew/de/","downloadUrl":"https://github.com/souldewapp/souldew/releases/latest","codeRepository":"https://github.com/souldewapp/souldew","description":"Pokémon-SoulLinks für 2–4 Spieler und Solo-Nuzlockes: Emulator, Live-Tracking aus dem Spielspeicher, Randomizer, Echtzeit-Sync und OBS-Overlays in einer App."},
+ {"@type":"SoftwareApplication","name":"souldew","applicationCategory":"GameApplication","operatingSystem":"macOS, Windows, Linux","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"license":"https://www.gnu.org/licenses/gpl-3.0.html","url":"https://souldewapp.github.io/souldew/de/","downloadUrl":"https://github.com/souldewapp/souldew/releases/latest","codeRepository":"https://github.com/souldewapp/souldew","description":"Pokémon-SoulLinks für 2–4 Spieler und Solo-Nuzlockes: Emulator, Live-Tracking aus dem Spielspeicher, Randomizer, Echtzeit-Sync und OBS-Overlays in einer App."},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Ist souldew kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja – kostenlos und Open Source unter der GNU GPL v3.0 oder neuer. Keine Werbung, keine In-App-Käufe."}},
   {"@type":"Question","name":"Sind bei souldew Spiele dabei?","acceptedAnswer":{"@type":"Answer","text":"Nein. Du spielst deine eigenen, legal erworbenen ROMs. souldew erkennt sie an Header und Prüfsumme, auch in ZIP-Dateien, und wenn es deinen Computer durchsucht, liest es nur Dateinamen und Header."}},
   {"@type":"Question","name":"Brauche ich einen Server oder ein Konto?","acceptedAnswer":{"@type":"Answer","text":"Nein. Die Apps finden sich über öffentliche Relays und verbinden sich dann direkt. Blockiert ein Router das, laufen die Daten stattdessen über ein verschlüsseltes öffentliches Relay – ganz ohne Portfreigabe."}},
   {"@type":"Question","name":"Brauchen meine Freunde dieselbe ROM?","acceptedAnswer":{"@type":"Answer","text":"Alle nutzen ihre eigene Kopie desselben Spiels – auch eine andere Sprachversion funktioniert. Bei Randomizer-Runs baut souldew für alle Spieler das identische Spiel und vergleicht die Prüfsummen."}},
-  {"@type":"Question","name":"Auf welchen Systemen läuft souldew?","acceptedAnswer":{"@type":"Answer","text":"macOS auf Apple silicon und Windows 10/11 (x64)."}}
+  {"@type":"Question","name":"Auf welchen Systemen läuft souldew?","acceptedAnswer":{"@type":"Answer","text":"macOS auf Apple silicon, Windows 10/11 (x64) und 64-Bit-Linux (AppImage oder .deb), auch auf dem Steam Deck."}}
  ]}
 ]}
 </script>
@@ -72,7 +72,7 @@
       <div class="hero-cta" data-reveal>
         <a class="btn btn-play" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="primary"><svg class="ic" aria-hidden="true"><use href="../assets/img/icons.svg#i-download"/></svg><span data-dl-label>Download</span></a>
         <a class="tlink" href="https://github.com/souldewapp/souldew" data-dl="secondary"><span data-dl-label>Auf GitHub ansehen</span></a>
-        <p class="hero-meta" data-dl-meta>Kostenlos · Open Source (GPL-3.0) · macOS &amp; Windows</p>
+        <p class="hero-meta" data-dl-meta>Kostenlos · Open Source (GPL-3.0) · macOS, Windows &amp; Linux</p>
       </div>
     </div>
   </div>
@@ -275,6 +275,17 @@
         <ol>
           <li>Starte den Installer – souldew installiert nur für dich, ohne Adminrechte.</li>
           <li>Der Installer ist noch nicht signiert: Erscheint SmartScreen, klick auf <b>Weitere Informationen › Trotzdem ausführen</b>.</li>
+        </ol>
+      </article>
+      <article class="platform" data-platform="linux">
+        <h3>Linux</h3>
+        <p class="req">64 Bit (x86_64) · Steam Deck</p>
+        <a class="btn btn-play" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="linux"><svg class="ic" aria-hidden="true"><use href="../assets/img/icons.svg#i-download"/></svg><span data-dl-label>Für Linux laden</span></a>
+        <p class="dl-meta" data-dl-meta="linux">AppImage von GitHub Releases</p>
+        <p class="dl-alt">Debian, Ubuntu, Mint: <a class="tlink" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="deb">.deb-Paket</a></p>
+        <ol>
+          <li>Mach die AppImage ausführbar (<b>Eigenschaften › Berechtigungen</b> oder <code>chmod +x</code>) und starte sie – sie aktualisiert sich selbst. Ubuntu ab 22.04 braucht einmal <code>libfuse2</code>.</li>
+          <li>Steam Deck: im Desktop-Modus, dann <b>Spiel außerhalb von Steam hinzufügen</b>, um sie im Spielmodus zu starten.</li>
         </ol>
       </article>
     </div>

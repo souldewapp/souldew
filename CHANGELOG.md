@@ -35,6 +35,22 @@
   cheat: 99 Rare Candies"), as does switching the rule. The bag is checked before anything is written; games
   whose bag isn't known say "Not available for this game".
 
+**Linux support** – souldew now runs on 64-bit Linux, the Steam Deck included, and plays together with Mac and
+Windows players.
+
+- Two packages: an **AppImage** (`souldew-<version>-linux-x86_64.AppImage`) that runs on almost every distribution and
+  updates itself, and a **.deb** for Debian, Ubuntu, Mint and friends (updates through the download page).
+- Automatic updates for the AppImage: the app downloads the new one next to the old file, checks its signature and
+  checksum and swaps it on restart – under the old file name, so desktop and Steam shortcuts keep working. The same
+  signed update feed serves all three systems; apps on 2.0 and 2.1 keep updating as before.
+- Steam Deck: the window fits the 1280×800 screen; add the AppImage as a non-Steam game to play in Game Mode.
+- "Search my PC" on Linux looks in your (localized) Downloads, Desktop and Documents, in EmuDeck's, RetroDECK's and
+  RetroArch's folders and on SD cards and USB drives.
+- One-click melonDS and mGBA install the official Linux AppImages; emulators from your distribution (`mgba-qt`,
+  `melonDS`) and from Flathub are found too. The Java runtime for the randomizer ships with the app.
+- The window uses your desktop's own title bar; shortcuts use Ctrl, the menu bar appears with Alt, and the app speaks
+  of the file manager. Your data lives in `~/.config/SoulLink Studio`.
+
 ## 2.1.0
 
 **Windows support** – souldew now runs on Windows 10 and 11 (x64), and Mac and Windows players can play together.

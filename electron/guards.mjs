@@ -1,4 +1,4 @@
-// Security checks for the Electron shell: navigation, external links, permissions and IPC senders.
+// Security checks for the Electron shell: navigation, external links, permissions and IPC senders – and the window size.
 // Pure functions (no 'electron' import), so they are testable with node --test (test/guards.test.mjs).
 
 /** Origin of a URL ('http://localhost:47390'), or null when it can't be parsed / has no real origin. */
@@ -75,4 +75,18 @@ export function titleBarColors(colors) {
   const color = hex(colors.color);
   const symbolColor = hex(colors.symbolColor);
   return color && symbolColor ? { color, symbolColor } : null;
+}
+
+/**
+ * The window's first size: 1360×880 (at least 980×640), but never larger than the screen's work area – the Steam Deck
+ * has 1280×800, small laptops less. `workArea` is screen.getPrimaryDisplay().workAreaSize (null: unknown).
+ */
+export function initialWindowSize(workArea) {
+  const size = { width: 1360, height: 880, minWidth: 980, minHeight: 640 };
+  const w = Number(workArea?.width);
+  const h = Number(workArea?.height);
+  if (!(w > 0 && h > 0)) return size;
+  const width = Math.min(size.width, Math.floor(w));
+  const height = Math.min(size.height, Math.floor(h));
+  return { width, height, minWidth: Math.min(size.minWidth, width), minHeight: Math.min(size.minHeight, height) };
 }

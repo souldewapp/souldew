@@ -1,14 +1,16 @@
 // Update check and install for the desktop app (main process). Checks the feed at start and every few
 // hours, pushes its state to the window ('update' channel) and does the download / install on request.
-// The platform work itself is in update-core.mjs: macOS swaps the .app bundle, Windows runs the NSIS installer.
+// The platform work itself is in update-core.mjs: macOS swaps the .app bundle, Windows runs the NSIS installer,
+// Linux replaces the AppImage file.
 import { app, ipcMain, shell } from 'electron';
 import { readFileSync, existsSync, mkdirSync, rmSync, renameSync, copyFileSync, writeFileSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { feedUrlFrom, updateAction, actionFor, assetFor, dmgAssetName, winAssetName } from '../shared/update.mjs';
+import { feedUrlFrom, updateAction, actionFor, assetFor, dmgAssetName, winAssetName, linuxAssetName } from '../shared/update.mjs';
 import {
   fetchFeed, downloadFile, verifyFile, bundleFromExe, canReplace, cleanupStaging, stageFromDmg, swapBundle,
   nsisInstallDir, launchInstaller, windowsInstallPlan, cleanupWorkDir,
+  appImageFromEnv, appImageStagedPath, canReplaceAppImage, makeExecutable, swapAppImage, cleanupAppImageStaging, appImageRelaunch,
 } from './update-core.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -17,6 +19,7 @@ const CHECK_EVERY = 4 * 60 * 60 * 1000;
 const BUSY = ['downloading', 'installing', 'ready', 'manual'];
 const MAC = process.platform === 'darwin';
 const WIN = process.platform === 'win32';
+const LINUX = process.platform === 'linux';
 
 function readUpdatesConfig() {
   try {
@@ -27,7 +30,7 @@ function readUpdatesConfig() {
 }
 
 /** File name of this platform's download (the feed names it; older feeds only have the DMG's URL). */
-const assetName = (u) => basename(u.asset?.name || '') || (WIN ? winAssetName(u.version, process.arch) : dmgAssetName(u.version));
+const assetName = (u) => basename(u.asset?.name || '') || (WIN ? winAssetName(u.version, process.arch) : LINUX ? linuxAssetName(u.version, process.arch) : dmgAssetName(u.version));
 
 /**
  * @param {{ send: Function, trusted: (e: Electron.IpcMainInvokeEvent) => boolean }} opts
@@ -40,10 +43,12 @@ export function setupUpdater({ send, trusted = () => false }) {
   // never takes its update source from the environment. Plain http://localhost is likewise development-only.
   const feedUrl = (!app.isPackaged && process.env.SLS_UPDATE_FEED) || feedUrlFrom(cfg);
   const allowLocal = !app.isPackaged;
-  // What can replace itself: the installed .app on macOS, an app installed by the NSIS installer on Windows.
-  // Anything else (`npm run app`, an unpacked or portable build) gets the verified download handed over instead.
+  // What can replace itself: the installed .app on macOS, an app installed by the NSIS installer on Windows, the
+  // AppImage on Linux. Anything else (`npm run app`, an unpacked or portable build) gets the verified download handed
+  // over instead – and a Linux install from the .deb (owned by root) the download page.
   const bundle = app.isPackaged && MAC ? bundleFromExe(app.getPath('exe')) : null;
   const installDir = app.isPackaged && WIN ? nsisInstallDir(app.getPath('exe')) : null;
+  const appImage = app.isPackaged && LINUX ? appImageFromEnv() : null;
   const workDir = join(app.getPath('temp'), 'souldew Update');
   const repo = typeof cfg.repo === 'string' ? cfg.repo.trim() : '';
   // Ed25519 key the feed must be signed with (see scripts/release.mjs --init-key). Without it the feed is only
@@ -58,7 +63,7 @@ export function setupUpdater({ send, trusted = () => false }) {
     current,
     platform: process.platform, // the page picks its texts by it (Finder / Explorer …)
     configured: !!feedUrl,
-    canInstall: !!(bundle || installDir), // only the installed app replaces itself – never `npm run app`'s Electron
+    canInstall: !!(bundle || installDir || appImage), // only the installed app replaces itself – never `npm run app`'s Electron
     update: null, // validated feed + { action, page, asset }
     progress: null, // { received, total }
     step: null, // installing: verify · mount · copy (macOS) · launch (Windows)
@@ -85,8 +90,8 @@ export function setupUpdater({ send, trusted = () => false }) {
       // only the toast depends on it
     }
   };
-  let staged = null;
-  let download = null; // the verified DMG / installer
+  let staged = null; // macOS: the new bundle next to the old one; Linux: the new AppImage next to the old one
+  let download = null; // the verified DMG / installer / AppImage
   let abort = null;
   let swapped = false;
   const plan = windowsInstallPlan(); // Windows: when the installer may start (only once the quit is certain)
@@ -108,6 +113,9 @@ export function setupUpdater({ send, trusted = () => false }) {
     }
   } else if (installDir) {
     cleanupWorkDir(workDir, { keep: download });
+  } else if (appImage) {
+    cleanupAppImageStaging(appImage);
+    cleanupWorkDir(workDir);
   }
 
   async function check({ manual = false } = {}) {
@@ -129,7 +137,8 @@ export function setupUpdater({ send, trusted = () => false }) {
   }
 
   // Not replaceable in place (read-only location, translocated, blocked, not installed by the installer): hand the
-  // verified download to the user – macOS opens the DMG's Finder window, Windows shows the installer in Explorer.
+  // verified download to the user – macOS opens the DMG's Finder window, Windows shows the installer in Explorer,
+  // Linux shows the (executable) AppImage in the file manager.
   async function manualRoute(reason) {
     const dest = join(app.getPath('downloads'), assetName(state.update));
     if (download !== dest) {
@@ -143,7 +152,14 @@ export function setupUpdater({ send, trusted = () => false }) {
       download = dest;
     }
     let err = null;
-    if (WIN) shell.showItemInFolder(dest); // never run it from here – the user starts it once the app is closed
+    if (LINUX) {
+      try {
+        makeExecutable(dest); // ready to double-click
+      } catch (e) {
+        console.warn('chmod of the downloaded AppImage failed:', e.message);
+      }
+    }
+    if (WIN || LINUX) shell.showItemInFolder(dest); // never run it from here – the user starts it once the app is closed
     else err = await shell.openPath(dest); // mounts it and opens its Finder window
     return set({ phase: 'manual', reason, step: null, progress: null, error: err || null });
   }
@@ -155,7 +171,9 @@ export function setupUpdater({ send, trusted = () => false }) {
     const asset = u.asset;
     if (!asset) return set({ phase: 'error', error: 'This update has no download for this computer' });
     abort = new AbortController();
-    const file = join(workDir, assetName(u));
+    // Linux: straight into the AppImage's folder when it can be replaced there (the swap is then a single rename).
+    const inPlace = appImage && canReplaceAppImage(appImage).ok ? appImageStagedPath(appImage) : null;
+    const file = inPlace || join(workDir, assetName(u));
     set({ phase: 'downloading', progress: { received: 0, total: asset.size }, error: null, step: null });
     try {
       mkdirSync(workDir, { recursive: true });
@@ -174,6 +192,13 @@ export function setupUpdater({ send, trusted = () => false }) {
       if (WIN) {
         if (!installDir) return manualRoute(app.isPackaged ? 'portable' : 'dev');
         // The installer runs when the app quits ("Restart now", or later) – it closes the app to replace it.
+        return set({ phase: 'ready', step: null, progress: null });
+      }
+      if (LINUX) {
+        if (!appImage) return manualRoute(app.isPackaged ? 'not-appimage' : 'dev');
+        if (!inPlace) return manualRoute(canReplaceAppImage(appImage).reason || 'read-only');
+        makeExecutable(file);
+        staged = file; // put in place on "Restart now", or when the app quits after "Later"
         return set({ phase: 'ready', step: null, progress: null });
       }
       if (!bundle || u.action === 'manual') return manualRoute(!bundle ? 'dev' : 'minVersion');
@@ -199,7 +224,8 @@ export function setupUpdater({ send, trusted = () => false }) {
 
   function swap() {
     if (swapped || !staged) return false;
-    swapBundle(bundle, staged);
+    if (LINUX) swapAppImage(appImage, staged);
+    else swapBundle(bundle, staged);
     swapped = true;
     writeMarker();
     return true;
@@ -221,15 +247,31 @@ export function setupUpdater({ send, trusted = () => false }) {
       app.quit();
       return state;
     }
+    if (LINUX) {
+      set({ phase: 'installing', step: 'verify' });
+      try {
+        await verifyFile(staged, state.update.asset); // it sat next to the AppImage since the download
+      } catch (e) {
+        staged = null;
+        download = null;
+        cleanupAppImageStaging(appImage);
+        return set({ phase: 'error', error: e.message, step: null });
+      }
+      // back to "ready": if the unsaved-progress question keeps the app open, the card offers the restart again
+      set({ phase: 'ready', step: null });
+    }
     try {
       swap();
     } catch (e) {
       // e.g. macOS "App Management" privacy setting blocked replacing the app – let the user do it in the Finder.
       console.warn('replacing the app failed:', e.message);
       staged = null;
-      return manualRoute('blocked');
+      return manualRoute(LINUX ? 'copy-failed' : 'blocked');
     }
-    app.relaunch(); // starts the (new) app once this one has exited
+    // Starts the (new) app once this one has exited. Linux: the AppImage file itself – the binary this process runs
+    // from lives in the old AppImage's mount, which goes away with it.
+    if (LINUX) app.relaunch(appImageRelaunch(appImage));
+    else app.relaunch();
     app.quit();
     return state;
   }
@@ -241,7 +283,7 @@ export function setupUpdater({ send, trusted = () => false }) {
 
   // Quitting for good. Windows: start the installer now – after "Restart now" it starts the new version when done,
   // after "Later" it only installs. (The spawn happens synchronously, before the app is gone; it was verified.)
-  // macOS: a staged update ("Later") is put in place, so the next start is the new version.
+  // macOS / Linux: a staged update ("Later") is put in place, so the next start is the new version.
   app.on('will-quit', () => {
     if (WIN) {
       const go = plan.willQuit({ ready: state.phase === 'ready', installer: download });
@@ -274,7 +316,7 @@ export function setupUpdater({ send, trusted = () => false }) {
   handle('update-restart', () => restart());
   handle('update-show', () => {
     if (!download || !existsSync(download)) return null;
-    if (WIN) return shell.showItemInFolder(download); // showing, not running the installer
+    if (WIN || LINUX) return shell.showItemInFolder(download); // showing, not running the installer / AppImage
     return shell.openPath(download);
   });
 

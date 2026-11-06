@@ -1,12 +1,14 @@
-// Prepares an app update for publishing on GitHub Releases (run after `npm run dist`, and with the Windows installer
-// from `npm run dist:win` / the Windows workflow in dist/): hashes the DMG and the Windows installer, writes the
-// update feed latest.json (one feed for both platforms) and prints the `gh release create` command.
-// It does not upload anything itself.
+// Prepares an app update for publishing on GitHub Releases (run after `npm run dist`, with the Windows installer from
+// `npm run dist:win` / the Windows workflow and the Linux AppImage + .deb from `npm run dist:linux` / the Linux workflow
+// in dist/): hashes the DMG, the Windows installer and the AppImage, writes the update feed latest.json (one feed for
+// all platforms) and prints the `gh release create` command. It does not upload anything itself.
 //
 // Usage: npm run release -- [--notes "text" | --notes-file file] [--repo owner/name] [--dmg path] [--win-exe path | --no-win]
-//                           [--min-version x.y.z] [--out dir] [--key file]
+//                           [--appimage path | --no-linux] [--deb path] [--min-version x.y.z] [--out dir] [--key file]
 // Without --notes/--notes-file the notes come from the "## <version>" section of CHANGELOG.md.
-// Without --win-exe the installer is picked up from dist/souldew-<version>-win-x64-setup.exe when it is there.
+// Without --win-exe the installer is picked up from dist/souldew-<version>-win-x64-setup.exe when it is there; likewise
+// dist/souldew-<version>-linux-x86_64.AppImage and dist/souldew-<version>-linux-amd64.deb. The .deb is only uploaded –
+// it isn't in the feed, because a package installed as root can't replace itself (those apps link to the release page).
 // latest.json is signed (Ed25519) with the private key from --key, $SLS_RELEASE_KEY or ~/.config/soullink-studio/release-key.pem.
 //
 // One-time setup: npm run release -- --init-key [--key file]
@@ -16,7 +18,7 @@ import { join, dirname, resolve, relative, sep } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { generateKeyPairSync, createPrivateKey } from 'node:crypto';
-import { parseVersion, validateFeed, feedUrlFrom, dmgAssetName, winAssetName } from '../shared/update.mjs';
+import { parseVersion, validateFeed, feedUrlFrom, dmgAssetName, winAssetName, linuxAssetName, debAssetName } from '../shared/update.mjs';
 import { sha256File, signFeed, publicKeyBase64, verifyFeedSignature } from '../electron/update-core.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -59,9 +61,10 @@ export function loadReleaseKey(keyPath, expectedPublicKey) {
 
 /**
  * The unsigned feed: the DMG at the top level (all that souldew ≤ 2.0 reads), every other platform under `assets`.
- * dmg / win: { sha256, size } of the files as they will be uploaded (named dmgAssetName / winAssetName).
+ * dmg / win / linux: { sha256, size } of the files as they will be uploaded (named dmgAssetName / winAssetName /
+ * linuxAssetName – the AppImage).
  */
-export function buildFeed({ version, notes, repo, dmg, win = null, minVersion = null, pubDate = new Date().toISOString() }) {
+export function buildFeed({ version, notes, repo, dmg, win = null, linux = null, minVersion = null, pubDate = new Date().toISOString() }) {
   const base = `https://github.com/${repo}/releases/download/v${version}`;
   const feed = validateFeed({
     version,
@@ -72,13 +75,16 @@ export function buildFeed({ version, notes, repo, dmg, win = null, minVersion = 
     ...(minVersion ? { minVersion } : {}),
     page: `https://github.com/${repo}/releases/tag/v${version}`,
     pubDate,
-    ...(win ? { assets: { 'win32-x64': { name: winAssetName(version), url: `${base}/${winAssetName(version)}`, sha256: win.sha256, size: win.size } } } : {}),
+    assets: {
+      ...(win ? { 'win32-x64': { name: winAssetName(version), url: `${base}/${winAssetName(version)}`, sha256: win.sha256, size: win.size } } : {}),
+      ...(linux ? { 'linux-x64': { name: linuxAssetName(version), url: `${base}/${linuxAssetName(version)}`, sha256: linux.sha256, size: linux.size } } : {}),
+    },
   });
   if (!Object.keys(feed.assets).length) delete feed.assets;
   return Object.fromEntries(Object.entries(feed).filter(([, v]) => v !== null));
 }
 
-const FLAGS = new Set(['init-key', 'no-win']);
+const FLAGS = new Set(['init-key', 'no-win', 'no-linux']);
 
 function args(argv) {
   const out = {};
@@ -160,8 +166,17 @@ Apps built from now on only install updates signed with this key.`);
   const winExe = a['no-win'] ? null : a['win-exe'] ? resolve(a['win-exe']) : existsSync(winDefault) ? winDefault : null;
   if (winExe && !existsSync(winExe)) throw new Error(`Windows installer not found: ${winExe}`);
   if (!winExe && !a['no-win']) {
-    console.warn(`Warning: no Windows installer (${show(winDefault)}) – this update is macOS only; the Windows app won't offer it.
+    console.warn(`Warning: no Windows installer (${show(winDefault)}) – the Windows app won't offer this update.
   Build it with \`npm run dist:win\` on Windows or download it from the Windows workflow, or pass --win-exe path (--no-win silences this).`);
+  }
+  const appImageDefault = join(root, 'dist', linuxAssetName(version));
+  const debDefault = join(root, 'dist', debAssetName(version));
+  const appImage = a['no-linux'] ? null : a.appimage ? resolve(a.appimage) : existsSync(appImageDefault) ? appImageDefault : null;
+  const deb = a['no-linux'] ? null : a.deb ? resolve(a.deb) : existsSync(debDefault) ? debDefault : null;
+  for (const [what, file] of [['AppImage', appImage], ['.deb', deb]]) if (file && !existsSync(file)) throw new Error(`Linux ${what} not found: ${file}`);
+  if (!appImage && !a['no-linux']) {
+    console.warn(`Warning: no Linux AppImage (${show(appImageDefault)}) – the Linux app won't offer this update.
+  Build it with \`npm run dist:linux\` on Linux or download it from the Linux workflow, or pass --appimage path (--no-linux silences this).`);
   }
 
   let notes = a.notes ?? (a['notes-file'] ? readFileSync(resolve(a['notes-file']), 'utf8').trim() : null);
@@ -175,7 +190,9 @@ Apps built from now on only install updates signed with this key.`);
   mkdirSync(out, { recursive: true });
   const mac = await stage(dmg, out, dmgAssetName(version));
   const win = winExe ? await stage(winExe, out, winAssetName(version)) : null;
-  let clean = buildFeed({ version, notes, repo, dmg: mac, win, minVersion: a['min-version'] || null });
+  const linux = appImage ? await stage(appImage, out, linuxAssetName(version)) : null;
+  const debPkg = deb ? await stage(deb, out, debAssetName(version)) : null;
+  let clean = buildFeed({ version, notes, repo, dmg: mac, win, linux, minVersion: a['min-version'] || null });
   if (signing) {
     clean = signFeed(clean, signing.key);
     verifyFeedSignature(JSON.parse(JSON.stringify(clean)), signing.publicKey); // exactly what the apps will do
@@ -184,11 +201,12 @@ Apps built from now on only install updates signed with this key.`);
   writeFileSync(join(out, 'notes.md'), notes + '\n');
 
   const feedUrl = feedUrlFrom({ ...pkg.updates, repo });
-  const assets = [mac, win].filter(Boolean);
+  const assets = [mac, win, linux, debPkg].filter(Boolean);
+  const platforms = ['macOS', win && 'Windows', linux && 'Linux'].filter(Boolean).join(' + ');
   console.log(`
 Update ${version} is ready in ${show(out)}:
 ${assets.map((x) => `  ${x.name}  ${(x.size / 1024 / 1024).toFixed(1)} MB\n  sha256 ${x.sha256}`).join('\n')}
-  latest.json (${signing ? `signed with ${show(keyPath)}` : 'NOT signed'}${win ? ', macOS + Windows' : ', macOS only'}), notes.md
+  latest.json (${signing ? `signed with ${show(keyPath)}` : 'NOT signed'}, ${platforms}${debPkg ? '; the .deb is uploaded but not in the feed' : ''}), notes.md
 
 Publish it from the project folder (the installed apps read ${feedUrl}):
 
