@@ -21,6 +21,13 @@
   fast-forward off no longer reached it. The old one is now shut down. Game Boy square-wave music and short sound
   drop-outs while fast-forwarding are no longer mistaken for broken sound, which made the next fast-forward silent.
   "Save diagnostics" now records the mixer's state after every speed, mode and pause change, and how many mixers run.
+- Turbo music no longer sounds fast after a scene change (2.2.0-beta.2, GBA and Game Boy): with the new timing the
+  emulator's sped-up sound came out chopped or at a jumping pitch, and slowing it back down didn't help. While
+  fast-forwarding every game now plays its sound at normal pitch, skipping ahead, as DS games already did: "Music
+  continues" plays the music recorded at 1× over it, a song not heard at 1× yet plays from the game itself at its
+  normal pitch, and "Sped-up original" is that skipping sound.
+- Sound cards set to 96 or 192 kHz: the emulator's sound now runs at 48 kHz (44.1 kHz for 88.2/176.4 kHz) and the
+  browser converts it once – the same as on most PCs, with half the work for the turbo mixer or less.
 
 **Graphics backend setting (Windows and Linux)** – thanks to a player's report.
 
