@@ -95,6 +95,7 @@ async function bridgeSession(token, lines) {
     await new Promise((r) => sock.once('connect', r));
     const closed = new Promise((r) => sock.once('close', () => r(true)));
     sock.on('error', () => {});
+    sock.resume(); // read what the bridge answers, like the script does (an unread stream never sees the server's end)
     sock.write(lines);
     const result = await Promise.race([closed, new Promise((r) => setTimeout(() => r(false), 300))]);
     const clients = bridge.clients.size;
@@ -112,7 +113,9 @@ test('live bridge: HTTP requests and wrong tokens are dropped, the real script i
   assert.equal(http.emitted.length, 0);
   const wrong = await bridgeSession(token, `HELLO ${'f'.repeat(32)} 0 BPEE X\nF 1\n`);
   assert.equal(wrong.closed, true);
-  assert.equal(wrong.emitted.length, 0);
+  assert.equal(wrong.clients, 0);
+  // only the hint for the UI ("a script from another install tried") – no data, no client
+  assert.deepEqual(wrong.emitted.map(([ev, d]) => [ev, d.rejected?.reason, d.clients]), [['live-status', 'token', 0]]);
   const frameFirst = await bridgeSession(token, 'F 1\n');
   assert.equal(frameFirst.closed, true);
   assert.equal(frameFirst.emitted.length, 0);
