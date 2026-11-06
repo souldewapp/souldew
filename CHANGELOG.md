@@ -2,6 +2,14 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## Unreleased
+
+- **Rare Candy cheat** for Nuzlockes and SoulLinks with level caps: "Add 99 Rare Candies" in the play screen's new
+  cheats menu puts them straight into the bag in game memory – Gen 1–5, randomized games included. A run allows it
+  only once its rules say so (off by default), and every use shows up in the log for all players ("Tim used a
+  cheat: 99 Rare Candies"), as does switching the rule. The bag is checked before anything is written; games
+  whose bag isn't known say "Not available for this game".
+
 ## 2.1.0
 
 **Windows support** – souldew now runs on Windows 10 and 11 (x64), and Mac and Windows players can play together.

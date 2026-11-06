@@ -7,7 +7,7 @@ import { speciesName, gameById, hackById, gameTitle } from '../lib/data.mjs';
 import { play } from '../lib/sound.mjs';
 import {
   progression, pairState, setEncounter, markDead, revive, party, live, counts, checks, feedList, feed, feedText, causeText, msg, areaName, joinNames,
-  players as getPlayers, rules as getRules, levelCap, dupeOf, resumeRun, slotsOf, encounter, openAreas, runStats, isNuzlocke,
+  players as getPlayers, rules as getRules, levelCap, dupeOf, resumeRun, slotsOf, encounter, openAreas, runStats, isNuzlocke, logCheatRule,
 } from '../lib/run.mjs';
 import { PartyPanel, PartyGrid, TeamColumns } from './party.mjs';
 import { HostCode } from './invitecode.mjs';
@@ -806,7 +806,7 @@ function StatsTab() {
 }
 
 export function RulesTab() {
-  const { doc, manifest, toast } = useApp();
+  const { doc, manifest, toast, me } = useApp();
   const r = getRules(doc, manifest);
   const n = slotsOf(manifest).length;
   const solo = isNuzlocke(manifest);
@@ -832,8 +832,11 @@ export function RulesTab() {
     const next = { ...(doc.get('rules') || {}), ...patch };
     delete next.discordWebhook;
     if (next.preset === null) delete next.preset;
+    // switching cheats on or off is everyone's business: it goes to the log like the cheats themselves
+    const cheatsWere = !!r.cheats;
     doc.set('rules', next);
     api.post(`/api/runs/${manifest.id}/meta`, { rules: next }).catch(() => {});
+    if ('cheats' in patch && !!patch.cheats !== cheatsWere) logCheatRule(doc, manifest, me, !!patch.cheats);
   };
   const blackoutText = { party: t('rules.b4Solo', 'If your whole team faints (blackout), the run is over.'), box: t('rules.b4SoloBox', 'The run is over once no living Pokémon is left – in the team or in the box.'), off: t('rules.b4SoloOff', 'A blackout doesn’t end the run – you decide when it’s over.') }[r.blackout];
   return html`<div class="stack-l">
@@ -865,6 +868,9 @@ export function RulesTab() {
       <label class="check"><input type="checkbox" checked=${r.failKillsPair} onChange=${(e) => set({ failKillsPair: e.target.checked })} /><span>${n > 2 ? t('rules.failGroup', 'A missed encounter costs the whole group') : t('rules.fail', 'A missed encounter costs the whole pair')}</span></label>
       <label class="check"><input type="checkbox" checked=${r.shinyClause} onChange=${(e) => set({ shinyClause: e.target.checked })} /><span>${t('rules.shiny', 'Shiny clause: shinies may always be caught and stay unlinked')}</span></label>
       <label class="check"><input type="checkbox" checked=${!!r.levelCaps} onChange=${(e) => set({ levelCaps: e.target.checked })} /><span>${t('rules.caps', 'Check level caps')}</span></label>
+      <label class="check"><input type="checkbox" checked=${!!r.cheats} onChange=${(e) => set({ cheats: e.target.checked })} /><span>${t('rules.cheats', 'Allow cheats (Rare Candies)')}<span class="hint">${n > 2
+        ? t('rules.cheatsHintGroup', 'From the play screen. Every use shows up in the log for all of you.')
+        : t('rules.cheatsHint', 'From the play screen. Every use shows up in the log for both of you.')}</span></span></label>
     </section>`}
     <section class="panel stack">
       <h2>${t('rules.auto', 'Automatic')}</h2>
