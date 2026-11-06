@@ -6,12 +6,13 @@
   <a href="https://github.com/souldewapp/souldew/releases/latest"><img src="https://img.shields.io/github/v/release/souldewapp/souldew?label=download&color=3f6b55&style=flat-square" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/macOS-Apple%20silicon-1b1a1f?style=flat-square&logo=apple" alt="macOS on Apple silicon">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011%20(x64)-1b1a1f?style=flat-square&logo=windows" alt="Windows 10 and 11 (x64)">
+  <img src="https://img.shields.io/badge/Linux-AppImage%20%7C%20.deb%20(x64)-1b1a1f?style=flat-square&logo=linux&logoColor=white" alt="Linux: AppImage and .deb (x64), Steam Deck">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-8cb0ff?style=flat-square" alt="License: GPL-3.0"></a>
   <a href="https://buymeacoffee.com/souldew"><img src="https://img.shields.io/badge/buy%20me%20a%20coffee-ffdd00?style=flat-square&logo=buymeacoffee&logoColor=000" alt="Buy me a coffee"></a>
 </p>
 
 <p align="center">
-  <b><a href="https://github.com/souldewapp/souldew/releases/latest">Download for macOS &amp; Windows</a></b> ·
+  <b><a href="https://github.com/souldewapp/souldew/releases/latest">Download for macOS, Windows &amp; Linux</a></b> ·
   <a href="https://souldewapp.github.io/souldew/">Website</a> ·
   <a href="#how-a-soullink-works">How it works</a> ·
   <a href="#a-look-inside">Screenshots</a> ·
@@ -20,7 +21,7 @@
   <a href="https://github.com/souldewapp/souldew/issues/new/choose">Report a bug</a>
 </p>
 
-**souldew** is a free app for macOS and Windows for Pokémon SoulLinks with 2–4 players and solo Nuzlockes. It bundles your game library, a built-in emulator, the Universal Pokémon Randomizer, ROM-hack patching, live tracking straight from the running game and real-time sync with your friends – no server, no account, no spreadsheet. The look borrows from the Game Boy and the PS1, boot animation included.
+**souldew** is a free app for macOS, Windows and Linux (Steam Deck included) for Pokémon SoulLinks with 2–4 players and solo Nuzlockes. It bundles your game library, a built-in emulator, the Universal Pokémon Randomizer, ROM-hack patching, live tracking straight from the running game and real-time sync with your friends – no server, no account, no spreadsheet. The look borrows from the Game Boy and the PS1, boot animation included.
 
 > [!NOTE]
 > souldew contains **no games**. You play your own, legally obtained ROMs – see [Legal](#legal).
@@ -150,7 +151,7 @@ English and German versions are supported for the team; “You are here” reads
 
 ## Install
 
-souldew runs on **macOS with Apple silicon (arm64)** and on **Windows 10 and 11 (x64)**. Players on different systems can play a SoulLink together.
+souldew runs on **macOS with Apple silicon (arm64)**, on **Windows 10 and 11 (x64)** and on **Linux (x64)** – the Steam Deck included. Players on different systems can play a SoulLink together.
 
 **macOS**
 
@@ -163,16 +164,25 @@ souldew runs on **macOS with Apple silicon (arm64)** and on **Windows 10 and 11 
 2. First start: the installer isn't signed with a paid code-signing certificate, so **Microsoft Defender SmartScreen** may say "Windows protected your PC". Click **More info › Run anyway**. That is only needed for the downloaded installer – updates installed by the app itself don't ask again.
 3. Uninstall it like any other app (Settings › Apps); your runs and saves are kept.
 
-**Then, on both:** the onboarding walks you through language, your name, the SoulLink rules, colour scheme and accessibility, controls and adding your games. At the end you pick: host a SoulLink, start a Nuzlocke, join with a code, or just look around. A "First steps" checklist then guides you to your first linked catch.
+**Linux**
+
+Two packages, both 64-bit (x86_64), from the [releases page](https://github.com/souldewapp/souldew/releases/latest):
+
+- **AppImage** (`souldew-<version>-linux-x86_64.AppImage`) – one file that runs on almost every distribution and **updates itself**. Put it where you keep apps (e.g. `~/Applications`), make it executable (file manager: Properties › Permissions › *Allow executing as program*, or `chmod +x souldew-*.AppImage`) and double-click it. AppImages need FUSE 2: on Ubuntu 22.04 and newer install it once with `sudo apt install libfuse2t64` (22.04: `libfuse2`). Tools like Gear Lever or AppImageLauncher add it to your app menu.
+- **.deb** (`souldew-<version>-linux-amd64.deb`) for Debian, Ubuntu, Linux Mint, Pop!_OS …: `sudo apt install ./souldew-<version>-linux-amd64.deb`. It adds souldew to the app menu. A package installed this way can't replace itself – when an update is out, the app links to the download page.
+
+**Steam Deck:** in Desktop Mode, download the AppImage with the browser, move it to `~/Applications`, make it executable (Dolphin: right-click › Properties › Permissions › *Is executable*) and start it. For Game Mode, add it in Steam with **Games › Add a Non-Steam Game to My Library** (browse to the AppImage). Controllers work in the built-in emulator; the window fits the Deck's 1280×800 screen. "Search my PC" also looks in EmuDeck's and RetroDECK's ROM folders, on the internal drive and on the SD card. Updates replace the AppImage under its old name, so the Steam shortcut keeps working.
+
+**Then, on every system:** the onboarding walks you through language, your name, the SoulLink rules, colour scheme and accessibility, controls and adding your games. At the end you pick: host a SoulLink, start a Nuzlocke, join with a code, or just look around. A "First steps" checklist then guides you to your first linked catch.
 
 **Updates:** the app looks for a new version at start and every four hours. When there is one, the sidebar offers it; souldew downloads it, checks it and installs it on the next restart – your runs and saves stay where they are. You can also check by hand under **Settings › About**.
 
-Nothing else to install: the emulator and the Java runtime for the randomizer ship with the app. Your data lives in `~/Library/Application Support/SoulLink Studio` on macOS and in `%APPDATA%\SoulLink Studio` on Windows – the folder keeps the app's former name so runs and saves survived the rename.
+Nothing else to install: the emulator and the Java runtime for the randomizer ship with the app. Your data lives in `~/Library/Application Support/SoulLink Studio` on macOS, in `%APPDATA%\SoulLink Studio` on Windows and in `~/.config/SoulLink Studio` on Linux – the folder keeps the app's former name so runs and saves survived the rename.
 
 <details>
 <summary><b>Keyboard shortcuts</b></summary>
 
-On Windows, use `Ctrl` where the table says `⌘` and `Shift` for `⇧` (the app shows the right keys under Help › Controls & shortcuts). Fullscreen for the window: `⌃⌘F` on macOS, `F11` on Windows.
+On Windows and Linux, use `Ctrl` where the table says `⌘` and `Shift` for `⇧` (the app shows the right keys under Help › Controls & shortcuts). Fullscreen for the window: `⌃⌘F` on macOS, `F11` on Windows and Linux. On Linux, `Alt` shows the menu bar.
 
 | Key | Action |
 |---|---|
@@ -194,7 +204,8 @@ In-game controls (default, change under **Settings › Controls**): arrow keys, 
 <details>
 <summary><b>Known limitations</b></summary>
 
-- **Packaged for macOS arm64 and Windows x64** (Windows on ARM runs the x64 build through emulation; no Linux package yet). Neither is signed by Apple / with a Windows certificate, so macOS asks once on first start and SmartScreen may warn about the downloaded installer.
+- **Packaged for macOS arm64, Windows x64 and Linux x64** (Windows on ARM runs the x64 build through emulation; no Linux ARM package yet). Neither is signed by Apple / with a Windows certificate, so macOS asks once on first start and SmartScreen may warn about the downloaded installer.
+- **Linux** was tested on GitHub's Ubuntu runners (build, AppImage and .deb start, .deb install and removal, randomizer, emulator downloads) – please report anything that behaves differently on your distribution or desktop. The one-click melonDS and mGBA are AppImages too (FUSE 2 needed, see Install); emulators from your distribution (`mgba-qt`, `melonDS`) or Flathub are found as well – a Flatpak emulator may only see ROMs in folders it has access to. Where the system doesn't allow Chromium's sandbox (some distributions restrict user namespaces), the AppImage starts without it.
 - **Windows** was tested on GitHub's Windows runners (build, install, start, uninstall, randomizer, emulator downloads) – please report anything that behaves differently on your PC. Windows paths with characters outside your system's code page (e.g. a Cyrillic user name on a German Windows) may trip up the Java randomizer.
 - **Live tracking** was checked in a running game with HeartGold (US), Definitive HeartGold and Silver; the other generations and languages are covered by unit tests built on the pret disassemblies and the NDS Ironmon tracker.
 - **HeartGold/SoulSilver and Black/White run on DeSmuME** instead of melonDS: EmulatorJS's melonDS core doesn't emulate these carts' infrared chip correctly ("A communication error has occurred" once a save exists).
@@ -229,7 +240,7 @@ Everyone uses their own copy of the same game – a different language version w
 <details>
 <summary><b>Windows, Mac or Linux?</b></summary>
 
-souldew runs on Macs with Apple silicon (M1 or newer) and on Windows 10 and 11 (64-bit) – and a Mac player can play a SoulLink with a Windows player. There’s no Linux package yet (`npm start` runs it in the browser) – contributions are welcome.
+All three: Macs with Apple silicon (M1 or newer), Windows 10 and 11 (64-bit) and 64-bit Linux – as an AppImage that updates itself or as a .deb, and on the Steam Deck. Players on different systems play a SoulLink together.
 </details>
 
 <details>

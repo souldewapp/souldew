@@ -244,8 +244,36 @@ function uniqueDirs(dirs, platform) {
   });
 }
 
-/** Every place worth a look on this platform, existing or not (pure – path rules of `platform`, testable anywhere). */
-export function discoverCandidates(home = homedir(), { platform = process.platform, env = process.env } = {}) {
+const listNames = (dir) => {
+  try {
+    return readdirSync(dir);
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Linux: the usual places plus the emulation setups – EmuDeck (~/Emulation/roms), RetroDECK (~/retrodeck/roms),
+ * RetroArch (native and Flatpak) – and the same folders on SD cards and USB drives: /run/media/<user>/<label>
+ * (SteamOS 3.5+, Fedora, Arch …), /run/media/<label> (older SteamOS: mmcblk0p1) and /media/<user>/<label> (Ubuntu,
+ * Debian). `list` reads a folder's entries (only the mount folders are listed).
+ */
+function linuxCandidates(home, env, h, list) {
+  const P = posix;
+  const config = typeof env.XDG_CONFIG_HOME === 'string' && P.isAbsolute(env.XDG_CONFIG_HOME) ? env.XDG_CONFIG_HOME : h('.config');
+  const user = typeof env.USER === 'string' && /^[\w.-]+$/.test(env.USER) ? env.USER : P.basename(home);
+  const under = (dir) => list(dir).filter((n) => typeof n === 'string' && n && !n.startsWith('.')).map((n) => P.join(dir, n));
+  const mounts = [...under(P.join('/run/media', user)), ...under('/run/media').filter((m) => P.basename(m) !== user), ...under(P.join('/media', user))];
+  const onDrive = (m) => [P.join(m, 'Emulation', 'roms'), P.join(m, 'retrodeck', 'roms'), P.join(m, 'ROMs'), P.join(m, 'Roms'), P.join(m, 'roms')];
+  return [h('Emulation', 'roms'), h('retrodeck', 'roms'), P.join(config, 'retroarch', 'downloads'),
+    h('.var', 'app', 'org.libretro.RetroArch', 'config', 'retroarch', 'downloads'), ...mounts.flatMap(onDrive)];
+}
+
+/**
+ * Every place worth a look on this platform, existing or not (path rules of `platform`, testable anywhere; on Linux the
+ * mount folders of SD cards and drives are listed through `list`).
+ */
+export function discoverCandidates(home = homedir(), { platform = process.platform, env = process.env, list = listNames } = {}) {
   const P = platform === 'win32' ? win32 : posix;
   const h = (...p) => P.join(home, ...p);
   const common = [...userDirs(env, P), h('Downloads'), h('Desktop'), h('Documents'), h('Games'), h('ROMs'), h('Roms'), h('roms'), h('Emulation')];
@@ -258,6 +286,7 @@ export function discoverCandidates(home = homedir(), { platform = process.platfo
       P.join(drive, 'RetroArch-Win64', 'roms'), P.join(drive, 'RetroArch-Win64', 'downloads'), P.join(drive, 'RetroBat', 'roms'),
       P.join(drive, 'ROMs'), P.join(drive, 'Games'), P.join(drive, 'Emulation'), P.join(drive, 'Emulators')];
   }
+  if (platform === 'linux') return [...common, ...linuxCandidates(home, env, h, list)];
   return [...common, h('Library', 'Mobile Documents', 'com~apple~CloudDocs'), h('Library', 'Application Support', 'OpenEmu', 'Game Library')];
 }
 

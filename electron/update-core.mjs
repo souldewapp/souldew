@@ -5,10 +5,12 @@
 // and is never touched.
 // Windows: download the NSIS installer → verify sha256 + size → on restart run it silently; it waits for the app to
 // quit, replaces it and starts the new version. User data lives in %APPDATA%\SoulLink Studio and is never touched.
-import { createWriteStream, createReadStream, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, readdirSync, accessSync, constants, statSync } from 'node:fs';
+// Linux: download the new AppImage next to the running one → verify sha256 + size → on restart rename it over the old
+// file and start it. User data lives in ~/.config/SoulLink Studio and is never touched.
+import { createWriteStream, createReadStream, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, readdirSync, accessSync, chmodSync, constants, statSync } from 'node:fs';
 import { createHash, createPublicKey, createPrivateKey, sign as cryptoSign, verify as cryptoVerify } from 'node:crypto';
 import { execFile, spawn } from 'node:child_process';
-import { join, dirname, basename, sep, win32 } from 'node:path';
+import { join, dirname, basename, sep, win32, posix } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Readable } from 'node:stream';
 import { validateFeed, isAllowedUrl, digestsMatch, canonicalFeed, MAX_UPDATE_SIZE } from '../shared/update.mjs';
@@ -415,3 +417,75 @@ export function cleanupWorkDir(dir, { keep = null, rm = rmSync, list = readdirSy
     }
   }
 }
+
+// ---- Linux: the AppImage ---------------------------------------------------------------------
+// An AppImage is a single executable file. Its runtime mounts it and tells the app where it came from: APPIMAGE (the
+// file) and APPDIR (the mount point the app runs from). Updating: download the new AppImage into the same folder (same
+// file system → the final rename is atomic), verify it, make it executable, and on restart / quit rename it over the old
+// file. The running app keeps its mount of the old file until it exits – Linux keeps a replaced file alive while it is
+// open. The file keeps its path and name, even when the name still carries the old version number: a desktop entry, an
+// AppImageLauncher integration or a Steam shortcut (Steam Deck: "Add a Non-Steam Game") must keep pointing at it.
+// .deb installs (/opt/souldew, owned by root) and unpacked builds can't do this – they get the download page instead.
+// Path handling uses path.posix, so this is testable on any OS.
+
+/**
+ * The AppImage file this app runs from, or null (installed from the .deb, unpacked build, development). APPIMAGE is
+ * only trusted when this very process runs from inside the AppImage's mount (APPDIR) – an app started from another
+ * AppImage (a launcher, a terminal opened from one) inherits that one's APPIMAGE.
+ */
+export function appImageFromEnv({ env = process.env, execPath = process.execPath, exists = existsSync } = {}) {
+  const file = env.APPIMAGE;
+  const mount = env.APPDIR;
+  if (typeof file !== 'string' || typeof mount !== 'string' || file.includes('\0') || mount.includes('\0')) return null;
+  if (!posix.isAbsolute(file) || !posix.isAbsolute(mount) || !/\.appimage$/i.test(file)) return null;
+  const root = posix.normalize(mount).replace(/\/+$/, '');
+  if (!root || typeof execPath !== 'string' || !posix.normalize(execPath).startsWith(`${root}/`)) return null;
+  const path = posix.normalize(file);
+  return exists(path) ? path : null;
+}
+
+/** Hidden file next to the AppImage the new version is downloaded to (same folder, so the swap is a single rename). */
+export const appImageStagedPath = (appImage) => posix.join(posix.dirname(appImage), `.${posix.basename(appImage)}.update`);
+
+/** Can the AppImage be replaced in place? { ok } or { ok: false, reason } – callers fall back to handing over the file. */
+export function canReplaceAppImage(appImage, { access = accessSync } = {}) {
+  if (!appImage) return { ok: false, reason: 'not-appimage' };
+  try {
+    access(posix.dirname(appImage), constants.W_OK); // the rename needs a writable folder, not a writable old file
+  } catch {
+    return { ok: false, reason: 'read-only' };
+  }
+  return { ok: true };
+}
+
+/** The verified AppImage must be executable (rwxr-xr-x, like a downloaded AppImage marked "allow executing"). */
+export function makeExecutable(path, { chmod = chmodSync } = {}) {
+  chmod(path, 0o755);
+}
+
+/** Puts the staged AppImage in place of the running one – a single rename on the same file system. */
+export function swapAppImage(target, staged, { rename = renameSync, exists = existsSync } = {}) {
+  if (!exists(staged)) throw fail('NO_STAGED', 'The downloaded update is missing');
+  if (posix.dirname(target) !== posix.dirname(staged)) throw fail('NO_STAGED', 'The update must sit next to the AppImage it replaces');
+  rename(staged, target);
+  return target;
+}
+
+/** Removes an unused staged AppImage (downloaded but never put in place, or a half download). */
+export function cleanupAppImageStaging(appImage, { rm = rmSync } = {}) {
+  if (!appImage) return;
+  const staged = appImageStagedPath(appImage);
+  for (const p of [staged, `${staged}.part`]) {
+    try {
+      rm(p, { force: true });
+    } catch {
+      // the next update overwrites it
+    }
+  }
+}
+
+/**
+ * How to start the new version after the swap: the AppImage file itself, with this run's arguments (e.g.
+ * --user-data-dir) – the old mount and the binary inside it go away with this process.
+ */
+export const appImageRelaunch = (appImage, argv = process.argv) => ({ execPath: appImage, args: argv.slice(1) });

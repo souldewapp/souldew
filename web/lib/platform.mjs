@@ -1,5 +1,5 @@
 // Which computer the app runs on – for texts and shortcuts: ⌘ / Finder / "Search my Mac" on macOS,
-// Ctrl / Explorer / "Search my PC" on Windows (and Linux). The desktop app says it (preload: window.sls.platform);
+// Ctrl / Explorer / "Search my PC" on Windows, Ctrl / the file manager / "Search my PC" on Linux. The desktop app says it (preload: window.sls.platform);
 // in a browser (`npm start`) the browser's platform is used – the server runs on the same computer.
 import { t } from './i18n.mjs';
 
@@ -19,8 +19,10 @@ export function detectPlatform(env = globalThis) {
 export const PLATFORM = detectPlatform();
 export const IS_MAC = PLATFORM === 'darwin';
 export const IS_WIN = PLATFORM === 'win32';
+export const IS_LINUX = PLATFORM === 'linux';
 
 // <html class="platform-win32"> – styles.css keeps the corner under the Windows title bar buttons free
+// (platform-linux: a normal window frame, no room needed)
 if (typeof document !== 'undefined') document.documentElement.classList.add(`platform-${PLATFORM}`);
 
 /**
@@ -39,10 +41,14 @@ export function shortcut(combo, { mac = IS_MAC, space = false } = {}) {
   return [...mods, key].join('+');
 }
 
-/** A file's place for display, shortened: ~/…, iCloud Drive, OpenEmu on a Mac; ~\\…, OneDrive… on Windows. */
+/**
+ * A file's place for display, shortened: ~/…, iCloud Drive, OpenEmu on a Mac; ~\\…, OneDrive… on Windows; ~/… on
+ * Linux (/home/<user>, /var/home/<user> on Fedora Atomic / Bazzite).
+ */
 export function shortPath(p) {
   return String(p)
     .replace(/^\/Users\/[^/]+\/Library\/Mobile Documents\/com~apple~CloudDocs/, 'iCloud Drive')
     .replace(/^\/Users\/[^/]+\/Library\/Application Support\/OpenEmu\/Game Library/, 'OpenEmu').replace(/^\/Users\/[^/]+/, '~')
+    .replace(/^\/(?:var\/)?home\/[^/]+(?=\/|$)/, '~')
     .replace(/^[A-Za-z]:\\Users\\[^\\]+\\(OneDrive[^\\]*)/i, '$1').replace(/^[A-Za-z]:\\Users\\[^\\]+/i, '~');
 }

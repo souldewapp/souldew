@@ -57,6 +57,7 @@ const STEPS = () => ({
 
 /** The platform the update is for (the main process says it; older states don't have it). */
 const isWin = (s) => (s?.platform || PLATFORM) === 'win32';
+const isLinux = (s) => (s?.platform || PLATFORM) === 'linux';
 
 function NotesModal({ u, open, onClose, footer }) {
   return html`<${Modal} open=${open} onClose=${onClose} title=${t('upd.notesTitle', 'What’s new in {version}', { version: u?.version })} footer=${footer}>
@@ -76,6 +77,12 @@ function ManualModal({ s, open, onClose }) {
     </ol>
     <p class="small muted">${t('upd.dataSafeWin', 'Your runs, saves and settings are kept: they live in your user folder (AppData), not inside the app.')}</p>
     <p class="small muted">${t('upd.smartscreen', 'If Windows SmartScreen says it protected your PC, click “More info” › “Run anyway”. That is needed because souldew is not signed with a paid certificate.')}</p>`
+    : isLinux(s) ? html`<ol class="small">
+      <li>${t('upd.manual1Win', 'Quit souldew ({keys}).', { keys: shortcut('Ctrl+Q') })}</li>
+      <li>${t('upd.manual2Linux', 'In the folder that opened is {file}, already executable. Replace your old souldew AppImage with it – under the old file name if a Steam or desktop shortcut points to it.', { file: s.update?.asset?.name || 'souldew.AppImage' })}</li>
+      <li>${t('upd.manual3', 'Open souldew again.')}</li>
+    </ol>
+    <p class="small muted">${t('upd.dataSafeLinux', 'Your runs, saves and settings are kept: they live in ~/.config/SoulLink Studio, not inside the app.')}</p>`
     : html`<ol class="small">
       <li>${t('upd.manual1', 'Quit souldew (⌘Q).')}</li>
       <li>${t('upd.manual2', 'In the Finder window that opened, drag souldew onto Applications and choose “Replace”.')}</li>

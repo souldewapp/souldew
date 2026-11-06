@@ -2,7 +2,7 @@
 // Downloads a Temurin JDK 17, then jlinks only the modules the randomizer needs
 // (java.base, java.desktop, java.logging) → ~46 MB instead of ~150 MB.
 // Both players use this exact runtime, so seeded randomization stays byte-identical.
-// Usage: node scripts/fetch-jre.mjs [arm64|x64]   (run on the platform you build for: macOS → darwin-*, Windows → win32-*)
+// Usage: node scripts/fetch-jre.mjs [arm64|x64]   (run on the platform you build for: macOS → darwin-*, Windows → win32-*, Linux → linux-*)
 import { mkdirSync, rmSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
