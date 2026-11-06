@@ -938,3 +938,169 @@ test('DS: a bed of only a few seconds is a stutter – the game’s own sound pl
   const out = feed(m, src, 0, 2);
   assert.ok(corr(out, src, -m.dc.D, Math.round(0.2 * SR), out.length) > 0.9, 'the game’s own sound');
 });
+
+// ---- the frame pacer (2.2): a GBA game at the sound card's own rate --------------------------------------------------
+// Measured in the app (synthetic GBA tune in mGBA, 48 kHz, pacer at 75 Hz): the sped-up sound is sped up (median pitch
+// 450 → 1275 Hz at 4×), OpenAL runs dry ~8 times a second for ~6 ms (late, not lost), and the low half waves of the Game
+// Boy square waves are runs of exact zeros (0.5–1.9 ms). The page clamps "Max" to 16 and reports the speed reached.
+
+/** A PSG-like tune at `rate`: square waves whose low half is exact zero, a new note every 0.2 s, repeating every 6.4 s. */
+function squareTune(rate, { seed = 1, period = 6.4 } = {}) {
+  let s = seed;
+  const rnd = () => ((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648);
+  const step = Math.round(0.2 * rate);
+  const steps = Math.round((period * rate) / step);
+  const notes = Array.from({ length: steps }, () => 220 * 2 ** (Math.floor(rnd() * 15) / 12));
+  const P = steps * step;
+  return (c) => {
+    const p = ((c % P) + P) % P;
+    const k = Math.floor(p / step);
+    const x = (p - k * step) / rate;
+    return (x * notes[k]) % 1 < 0.5 ? 0.3 * Math.exp(-x * 4) : 0;
+  };
+}
+
+/** The emulator under the pacer at `rate`: drives a mixer as player.html does; run() returns what it played. */
+function pacedGame(rate, music) {
+  const m = new TurboMixer(rate, { seconds: 60 });
+  const ev = [];
+  m.onEvent = (e) => ev.push(e);
+  const B = 128;
+  const l = new Float32Array(B);
+  const oL = new Float32Array(B);
+  const oR = new Float32Array(B);
+  const hole = { every: Math.round(rate / 8), len: Math.round(0.006 * rate) };
+  const g = { m, ev, c: 0, i: 0, step: 1, real: 1, music };
+  g.speed = (ratio, reached = Math.min(ratio, 16)) => {
+    g.step = ratio;
+    g.real = ratio > 1 ? reached : 1;
+    m.command({ type: 'speed', ratio: Math.min(ratio, 16) }); // (player.html: "Max" is Infinity, the mixer gets 16)
+    if (ratio > 1 && reached < Math.min(ratio, 16)) m.command({ type: 'rate', ratio: reached });
+  };
+  /** `sec` seconds of play (input false: the core gives no sound at all); returns { out, srcs }. */
+  g.run = (sec, { input = true } = {}) => {
+    const n = Math.round(sec * rate);
+    const out = new Float32Array(n);
+    const srcs = [];
+    for (let k = 0; k < n; k += B) {
+      for (let j = 0; j < B; j++, g.i++) {
+        if (g.step > 1 && g.i % hole.every < hole.len) l[j] = 0; // OpenAL ran dry: the sound comes later
+        else {
+          l[j] = g.music(g.c);
+          g.c += g.real;
+        }
+      }
+      m.process(input ? l : null, null, oL, oR, B);
+      out.set(oL.subarray(0, Math.min(B, n - k)), k);
+      srcs.push(m.playing().src);
+    }
+    return { out, srcs };
+  };
+  return g;
+}
+/** Longest stretch of out[a..b) whose 20 ms windows are all near silence, in seconds. */
+function quietest(out, rate, a, b = out.length) {
+  const W = Math.round(0.02 * rate);
+  let run = 0;
+  let worst = 0;
+  for (let s = a; s + W <= b; s += W) {
+    let e = 0;
+    for (let i = s; i < s + W; i++) e += out[i] * out[i];
+    run = Math.sqrt(e / W) < 1e-3 ? run + W : 0;
+    worst = Math.max(worst, run);
+  }
+  return worst / rate;
+}
+
+for (const rate of [44100, 48000]) {
+  for (const [label, step, reached] of [['2×', 2, 2], ['4×', 4, 4], ['Max', Infinity, 7.3]]) {
+    test(`pacer, ${rate} Hz, ${label}: 1× → fast-forward → 1× → fast-forward plays the loop both times, the game’s sound in between`, () => {
+      const A = squareTune(rate);
+      const g = pacedGame(rate, A);
+      g.run(10);
+      assert.ok(g.m.found, 'a loop was found at 1×');
+      for (const round of [1, 2]) {
+        const c0 = g.c;
+        g.speed(step, reached);
+        const ff = g.run(5);
+        assert.ok(ff.srcs.slice(-Math.round((4.8 * rate) / 128)).every((s) => s === 'loop'), `round ${round}: the loop plays (${[...new Set(ff.srcs)]})`);
+        assert.ok(quietest(ff.out, rate, Math.round(0.1 * rate)) < 0.1, `round ${round}: no silence`);
+        if (round === 1) assert.ok(corr(ff.out, A, c0, Math.round(0.2 * rate), ff.out.length) > 0.99, 'the tune goes on exactly');
+        g.speed(1);
+        const back = g.run(5);
+        assert.ok(back.srcs.slice(Math.round((0.3 * rate) / 128)).every((s) => s === 'game'), `round ${round}: the game’s sound again`);
+      }
+      assert.deepEqual(g.ev.filter((e) => e.changed || e.type === 'chop'), [], 'no song change, never "choppy"');
+      assert.equal(g.m.chop.level, 0);
+    });
+  }
+
+  test(`pacer, ${rate} Hz: a new song after a fast-forward streams in the next one (square waves and OpenAL’s holes are not "choppy")`, () => {
+    const g = pacedGame(rate, squareTune(rate));
+    g.run(10);
+    g.speed(2);
+    g.run(5);
+    g.speed(1);
+    g.run(1);
+    // a state is loaded: another place, another song (square waves over a sampled instrument), too little of it for a loop
+    g.m.command({ type: 'cut' });
+    const sq = squareTune(rate, { seed: 9 });
+    g.music = (c) => sq(c) + 0.05 * Math.sin((2 * Math.PI * 330 * c) / rate);
+    g.run(2);
+    g.speed(2);
+    const ff = g.run(3);
+    assert.equal(g.m.chop.level, 0, 'not judged choppy');
+    assert.ok(g.m.carry?.stream, `the new song streams (${g.m.carry ? 'something else' : 'nothing'})`);
+    assert.ok(quietest(ff.out, rate, Math.round(0.6 * rate)) < 0.15, 'music, not silence');
+  });
+}
+
+test('pacer: step changes 2× → 3× → 4× → Max, pause and resume while the loop plays – it plays on, no song change', () => {
+  const rate = 48000;
+  const g = pacedGame(rate, squareTune(rate));
+  g.run(10);
+  g.speed(2);
+  g.run(1);
+  for (const s of [3, 4, Infinity]) {
+    g.speed(s, s === Infinity ? 9 : s);
+    const o = g.run(1);
+    assert.ok(o.srcs.slice(-100).every((x) => x === 'loop'), `${s}×: the loop`);
+  }
+  g.m.command({ type: 'paused', paused: true });
+  const p = g.run(1, { input: false });
+  assert.equal(rms(p.out.subarray(Math.round(0.1 * rate))), 0, 'quiet while paused');
+  g.m.command({ type: 'paused', paused: false });
+  const r = g.run(2);
+  assert.ok(quietest(r.out, rate, Math.round(0.1 * rate)) < 0.1, 'back after the pause');
+  assert.ok(r.srcs.slice(-100).every((x) => x === 'loop'));
+  assert.deepEqual(g.ev.filter((e) => e.changed), []);
+});
+
+test('a mixer whose sound stops right after the switch to fast-forward goes quiet instead of looping forever', () => {
+  // (the core rebuilt its audio: this mixer's context gets nothing any more – player.html retires it now, but on its
+  // own it must not keep playing either)
+  const rate = 48000;
+  const g = pacedGame(rate, squareTune(rate));
+  g.run(10);
+  g.speed(4);
+  g.run(0.1);
+  const after = g.run(3, { input: false });
+  assert.equal(rms(after.out.subarray(Math.round(2 * rate))), 0, 'quiet within two seconds');
+});
+
+test('every speed, mode, pause and cut command leaves a state for diagnostics', () => {
+  const m = new TurboMixer(SR, { seconds: 30 });
+  const ev = [];
+  m.onEvent = (e) => e.type === 'state' && ev.push(e);
+  feed(m, tune(), 0, 16);
+  m.command({ type: 'speed', ratio: 3 });
+  m.command({ type: 'mode', mode: 'mute' });
+  m.command({ type: 'paused', paused: true });
+  m.command({ type: 'cut' });
+  m.command({ type: 'song', key: 'm1' }); // (not a control command: no state)
+  assert.deepEqual(ev.map((e) => [e.cmd, e.arg]), [['speed', 3], ['mode', 'mute'], ['paused', true], ['cut', null]]);
+  assert.equal(ev[0].turbo, true);
+  assert.equal(ev[0].carry, 'loop');
+  assert.ok(ev[0].seg > 15, `seconds recorded: ${ev[0].seg}`);
+  assert.equal(ev[3].sr, SR);
+});

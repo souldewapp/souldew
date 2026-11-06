@@ -16,6 +16,11 @@
   hears crackling.
 - "Save diagnostics" now includes the sound card (sample rate, latency), the display's refresh rate, the speed really
   reached, drop-outs in the sound and the longest gap between frames.
+- Turbo audio "Music continues" works every time again (2.2.0-beta.1): when the emulator rebuilt its sound – e.g. after
+  the graphics process restarted on Windows – the old music mixer kept playing on its own, and Mute or turning
+  fast-forward off no longer reached it. The old one is now shut down. Game Boy square-wave music and short sound
+  drop-outs while fast-forwarding are no longer mistaken for broken sound, which made the next fast-forward silent.
+  "Save diagnostics" now records the mixer's state after every speed, mode and pause change, and how many mixers run.
 
 **Graphics backend setting (Windows and Linux)** – thanks to a player's report.
 

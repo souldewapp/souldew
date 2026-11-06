@@ -354,9 +354,16 @@ export class TurboMixer {
     // in between, 40–47 % of the time and ~75 times a second, and the pieces don't join up (sound is lost). Slowed
     // down that is a loud buzz, not music – so while the sped-up sound is choppy, nothing is recorded or streamed
     // (a loop recorded at 1× still plays). Judged per 0.25 s; kept across fast-forwards, so the next one knows.
+    // Only holes of 2–30 ms, at least 60 a second, count (DeSmuME's: ~5 ms, 75–95 a second). The low half waves of a
+    // Game Boy square wave (PSG) are runs of exact zeros too – measured on a GBA tune in mGBA at 48 kHz: 0.5–1.9 ms at
+    // 1× and sped up, 20–45 % of the time –, and OpenAL running dry while the pacer fast-forwards leaves ~6 ms holes
+    // ~8 times a second. Neither loses sound, but counted they made the level stick at "choppy" after the first
+    // fast-forward, and the next one without a loop stayed silent.
     this.k.chopWin = S(0.25);
+    this.k.minHole = Math.max(HOLE, S(0.002));
     this.k.maxHole = S(0.03);
-    this.chop = { z: 0, n: 0, run: 0, level: 0 };
+    this.k.chopHoles = Math.ceil(60 * 0.25);
+    this.chop = { z: 0, n: 0, run: 0, k: 0, level: 0 };
     // The game says which song plays ({ type: 'song', key } – its music id from RAM, else the map): a loop or bed
     // found at 1× is copied out of the ring per song, so on a route change during fast-forward the new route's
     // music plays (or, for DeSmuME, the game's own skipping sound), never the old route's. Without a key the
@@ -388,8 +395,41 @@ export class TurboMixer {
     }
   }
 
+  /** What the mixer is doing (diagnostics: "Save diagnostics" keeps one after every speed, mode, pause and cut command). */
+  state() {
+    const kind = (v) => (!v ? null : v.lib ? 'lib' : v.stream ? 'stream' : v.bed ? 'bed' : 'loop');
+    const sec = (x) => (Number.isFinite(x) ? +(x / this.sr).toFixed(2) : null);
+    return {
+      turbo: this.turbo,
+      mode: this.mode,
+      paused: this.paused,
+      ratio: this.ratio,
+      rate: +this.rate.toFixed(2),
+      skip: this.skip,
+      chop: this.chop.level,
+      rec: this.tRec,
+      open: this.open,
+      seg: this.seg ? sec(this.ring.written - this.seg.start) : null, // seconds recorded in the current stretch
+      carry: kind(this.carry),
+      carrySec: sec(this.carry?.lag),
+      voice: kind(this.voice),
+      found: sec(this.found?.lag),
+      lib: this.lib.size,
+      key: this.key,
+      song: this.song,
+      grace: sec(Math.max(0, this.tGrace)),
+      silent: sec(this.silent),
+      sr: this.sr,
+    };
+  }
+
   command(m) {
     if (!m) return;
+    this.cmd(m);
+    if (['speed', 'mode', 'paused', 'cut', 'skip'].includes(m.type)) this.emit({ type: 'state', cmd: m.type, arg: m.ratio ?? m.mode ?? m.paused ?? m.on ?? null, ...this.state() });
+  }
+
+  cmd(m) {
     if (m.type === 'speed') {
       const change = this.turbo && m.ratio > 1 && m.ratio !== this.ratio;
       if (m.ratio > 1) this.ratio = m.ratio;
@@ -534,7 +574,7 @@ export class TurboMixer {
       this.tSil = 0;
       this.tGrace = this.k.tgrace;
       this.tSkip = this.k.tskip;
-      this.chop.z = this.chop.n = this.chop.run = 0;
+      this.chop.z = this.chop.n = this.chop.run = this.chop.k = 0;
       this.tail.n = 0; // a new stretch: nothing to crossfade with
       this.tail.xf = false;
       this.zrun = 0;
@@ -985,16 +1025,22 @@ export class TurboMixer {
       for (let i = 0; i < n; i++) {
         if (l[i] === 0 && r[i] === 0) c.run++;
         else if (c.run) {
-          if (c.run >= HOLE && c.run <= this.k.maxHole) c.z += c.run;
+          if (c.run >= this.k.minHole && c.run <= this.k.maxHole) {
+            c.z += c.run;
+            c.k++;
+          }
           c.run = 0;
         }
       }
     c.n += n;
     if (c.n < this.k.chopWin) return;
     const share = c.z / c.n;
-    c.z = c.n = 0;
-    if (share < 0.1) c.level = Math.max(0, c.level - 1);
+    const many = c.k >= this.k.chopHoles;
+    c.z = c.n = c.k = 0;
+    const was = c.level;
+    if (share < 0.1 || !many) c.level = Math.max(0, c.level - 1);
     else if (share > 0.2) c.level = Math.min(3, c.level + 1);
+    if (c.level !== was) this.emit({ type: 'chop', level: c.level, share: +share.toFixed(2) });
     if (c.level >= 2 && (this.carry?.stream || (!this.carry && this.tRec && this.bed))) {
       // the song being streamed would turn into buzz: the music bed takes over (or nothing); a new stretch
       // starts once the sound is clean again
@@ -1118,6 +1164,10 @@ export class TurboMixer {
     if (this.paused) return;
     if (this.turbo) {
       if (this.mode !== 'music') return;
+      // the grace after the switch runs out in real time, sound or not: counted only on blocks with sound, a mixer whose
+      // input stopped right after the switch (the core rebuilt its audio, player.html) never judged the silence and
+      // played its loop on forever
+      if (this.tGrace > 0) this.tGrace -= n;
       if (!this.tRec || this.noStream) return this.turboQuiet(n); // nothing recorded: judged on the sped-up sound
       n = Math.round(n * this.rate); // in slowed-down time
     } else if (this.settle > 0) {

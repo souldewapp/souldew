@@ -512,6 +512,10 @@
     // set outright: only sound the mixer doesn't handle yet passes here (automation on a context that isn't running
     // yet was seen to never apply)
     for (const g of gates) {
+      if (g.context.state === 'closed') {
+        gates.delete(g); // (a context the core left behind, closed by turbochain.mjs)
+        continue;
+      }
       g.gain.cancelScheduledValues(0);
       g.gain.value = gateLevel();
     }
@@ -612,25 +616,32 @@
     }
     audio.plain = plain;
   }
+  // Every chain built so far (lib/turbochain.mjs): when the core rebuilds its audio, the old chain is taken down – it kept
+  // playing in the AudioContext OpenAL left behind, out of reach of every later command.
+  const chainsReady = import('/lib/turbochain.mjs').then(({ MixerChains }) => (audio.chains = new MixerChains()));
+  /** The core still plays through this OpenAL context (it destroys a replaced one, but never closes its AudioContext). */
+  const alInUse = (al) => Object.values(GM()?.Module?.AL?.contexts || {}).includes(al);
   async function attachAudio() {
     const al = GM()?.Module?.AL?.currentCtx;
     if (!al?.audioCtx || !al.gain || al === audio.al || audio.busy || audio.failed) return;
     audio.busy = true;
     const ac = al.audioCtx;
     try {
+      const chains = await chainsReady;
+      const id = chains.nextId();
       let node;
       let post;
       let kind = 'worklet';
       try {
         await ac.audioWorklet.addModule('/lib/turboaudio-worklet.mjs');
         node = new AudioWorkletNode(ac, 'turbo-audio', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit', channelInterpretation: 'speakers' });
-        node.port.onmessage = (e) => onAudioEvent(e.data);
+        node.port.onmessage = (e) => onAudioEvent({ ...e.data, mixer: id });
         post = (m) => node.port.postMessage(m);
       } catch (err) {
         // no AudioWorklet: the same mixer in a ScriptProcessor (runs on this thread, in larger blocks)
         console.warn('turbo audio: no AudioWorklet, using a ScriptProcessor', err);
         const { TurboMixer } = await import('/lib/turboaudio.mjs');
-        const mixer = new TurboMixer(ac.sampleRate, { onEvent: onAudioEvent });
+        const mixer = new TurboMixer(ac.sampleRate, { onEvent: (e) => onAudioEvent({ ...e, mixer: id }) });
         let broken = false;
         node = ac.createScriptProcessor(2048, 2, 2);
         node.onaudioprocess = (e) => {
@@ -652,13 +663,20 @@
         post = (m) => mixer.command(m);
         kind = 'script';
       }
-      if (GM()?.Module?.AL?.currentCtx !== al) return; // the core replaced its context meanwhile – next round
+      if (GM()?.Module?.AL?.currentCtx !== al) {
+        // the core replaced its context meanwhile – next round (this mixer was never wired up)
+        if (node.port) node.port.onmessage = null;
+        else node.onaudioprocess = null;
+        return;
+      }
       const vol = ac.createGain();
       vol.gain.value = audio.volume;
       ownNodes.add(vol);
       vol.connect(ac.destination);
       E().volume = 1;
       E().setVolume(1);
+      chains.adopt({ id, al, node, vol, post }, alInUse);
+      onAudioEvent({ type: 'attach', mixer: id, sampleRate: ac.sampleRate, ...chains.counts() });
       Object.assign(audio, { al, vol, node, post, kind, attachedOnce: true, plain: null });
       routeAudio();
       refreshGates(); // (from now on a context the mixer hasn't taken over yet holds its sound back)
@@ -927,7 +945,7 @@
     /** Turbo audio state for checks from the console: how it is attached and the last search / switch. */
     /** The nodes that feed the speakers (the gates and the volume) – for level checks. */
     speakerNodes: () => [...gates, audio.vol].filter(Boolean),
-    turboAudio: () => ({ attached: audio.kind, current: !!audio.al && audio.al === GM()?.Module?.AL?.currentCtx, gates: [...gates].map((g) => +g.gain.value.toFixed(3)), gate: gateLevel(), once: !!audio.attachedOnce, failed: audio.failed, mode: audio.mode, speed: audio.speed, paused: audio.paused, volume: audio.volume, key: audio.key, sampleRate: audio.al?.audioCtx.sampleRate, ...audio.info, log: audio.log.slice() }),
+    turboAudio: () => ({ attached: audio.kind, current: !!audio.al && audio.al === GM()?.Module?.AL?.currentCtx, gates: [...gates].map((g) => +g.gain.value.toFixed(3)), gate: gateLevel(), once: !!audio.attachedOnce, failed: audio.failed, mode: audio.mode, speed: audio.speed, paused: audio.paused, volume: audio.volume, key: audio.key, sampleRate: audio.al?.audioCtx.sampleRate, mixers: audio.chains?.counts() ?? null, ...audio.info, log: audio.log.slice() }),
     /** Timing and sound facts for "Save diagnostics": the sound card, the pacing, the last measuring window, totals. */
     perf() {
       const ac = GM()?.Module?.AL?.currentCtx?.audioCtx;
@@ -940,6 +958,7 @@
           coreOutRate: outRate || 44100, // what RetroArch was told to make
           bufferMs: AUDIO_LATENCY,
           mixer: audio.kind || (audio.failed ? 'failed' : null),
+          mixers: audio.chains?.counts() ?? null, // live (1 once attached), built in all, contexts the core left behind and closed here
           mode: audio.mode,
         },
         pacing: { fps: PACE_FPS, displayHz: pacer?.disp ? +(1000 / pacer.disp).toFixed(1) : null, speed: speed === Infinity ? 'max' : speed, threads: !!window.EJS_threads, core: window.EJS_core },
