@@ -2,7 +2,7 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
-## Unreleased
+## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.
 
@@ -45,8 +45,9 @@
   does and why it failed into mGBA's scripting window. It also avoids an mGBA 0.10 bug that closes a reused socket
   number when an old socket is garbage-collected.
 
-- **Rare Candy cheat** for Nuzlockes and SoulLinks with level caps: "Add 99 Rare Candies" in the play screen's new
-  cheats menu puts them straight into the bag in game memory – Gen 1–5, randomized games included. A run allows it
+**Rare Candy cheat** – for Nuzlockes and SoulLinks with level caps.
+
+- "Add 99 Rare Candies" in the play screen's new cheats menu puts them straight into the bag in game memory – Gen 1–5, randomized games included. A run allows it
   only once its rules say so (off by default), and every use shows up in the log for all players ("Tim used a
   cheat: 99 Rare Candies"), as does switching the rule. The bag is checked before anything is written; games
   whose bag isn't known say "Not available for this game".
@@ -66,6 +67,11 @@ Windows players.
   `melonDS`) and from Flathub are found too. The Java runtime for the randomizer ships with the app.
 - The window uses your desktop's own title bar; shortcuts use Ctrl, the menu bar appears with Alt, and the app speaks
   of the file manager. Your data lives in `~/.config/SoulLink Studio`.
+
+**Known issue:** on sound cards set to 88.2 or 96 kHz (some Windows PCs), "Music keeps playing" during fast-forward
+can play the sped-up music instead – especially after a scene change. A fix follows in the next update. Until then:
+set the playback device to 48000 Hz (Windows: Sound settings › your device › Properties › Advanced) or pick another
+turbo audio option.
 
 ## 2.1.0
 
