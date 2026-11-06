@@ -81,6 +81,7 @@ The Electron shell (`electron/`) starts the local server (`server/`) in the same
 | `web/lib/sync.mjs`, `web/lib/doc.mjs` | Live sync (WebRTC + relay) and the shared run document (last writer wins per key) |
 | `web/lib/invitecode.mjs` | Inviting with a 6-digit code |
 | `web/lib/turboaudio.mjs`, `web/lib/sdat*.mjs` | Turbo music: recorded loops and the DS sound-archive player |
+| `web/lib/pacer.mjs` | Frame pacing for the built-in emulator: runs the core's frames from the display's refresh (RetroArch's own sleeps are off – they depend on the system timer) |
 | `shared/live/` | Reading team, battle and location from game memory (Gen 1–5) |
 | `shared/overlay.mjs` | The overlay snapshot (what stream tools may see) |
 | `server/lib/build.mjs` | Building runs (patch, randomizer, one ROM per player) |

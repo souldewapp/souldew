@@ -15,7 +15,7 @@
 // pause was tried: on real Game Boy music the same song scored as low as a different one – false alarms.)
 //
 // Around a speed command the sped-up sound is unreliable (measured in the app): OpenAL still plays sound made at
-// the old speed, a step change re-toggles fast-forward (a stretch of 1× sound) and OpenAL runs dry for a while
+// the old speed, RetroArch's speed-up of the sound settles over a few frames and OpenAL runs dry for a while
 // (holes of digital silence). Slowed down, that came out as drop-outs and stretches at the wrong pitch. So the
 // recording leaves out the first moments after a command, takes the holes out, and crossfades where it skips.
 //
@@ -335,10 +335,10 @@ export class TurboMixer {
     this.sx = { t: 3, hl: new Float32Array(3), hr: new Float32Array(3), bl: null, br: null, L: null, R: null }; // slow-down state
     this.k.tquiet = S(0.25); // …but never shorter than this in real time: a stutter of the emulator isn't a song change
     this.k.tgrace = S(0.8); // after switching to fast-forward OpenAL hiccups (a gap, then sped-up sound): not judged
-    // After a speed command the sound is not yet at the new speed: OpenAL still plays ~60 ms made at the old one,
-    // and a step change while fast-forwarding (2× → 3×) switches fast-forward off for ~70 ms (player.html), so 1×
-    // sound follows. Slowed down by the new ratio both would come out at the wrong pitch (a 1× stretch at 3× sounds
-    // an octave and a fifth too low) – that stretch is not recorded.
+    // After a speed command the sound is not yet at the new speed: OpenAL still plays ~60 ms made at the old one, and
+    // RetroArch's speed-up of the sound follows the new pace over a few frames (until souldew 2.1 a step change even
+    // switched fast-forward off for ~70 ms). Slowed down by the new ratio that would come out at the wrong pitch (a 1×
+    // stretch at 3× sounds an octave and a fifth too low) – that stretch is not recorded.
     this.k.tskip = S(0.25);
     this.k.lead = S(0.1); // a streamed song starts once this much of it is recorded – never right at the write head
     this.tSkip = 0; // fast-forward: samples of sound still to leave out of the recording after a speed command

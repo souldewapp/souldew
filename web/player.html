@@ -33,6 +33,52 @@
     }));
   }
   const q = new URLSearchParams(location.search);
+
+  // ---- frame pacing (lib/pacer.mjs) -------------------------------------------------------------------
+  // RetroArch's own timing sleeps on setTimeout, which a coarse system timer (Windows) stretches – fast-forward capped
+  // near 2×, stalls at 1×. Its audio sync and fast-forward limit are off (RA_CFG below); the core's requests for its next
+  // main-loop step land here and the pacer runs them from the display's frames. The module is loaded before EmulatorJS
+  // (see the end of this script); anything asking before that waits in `early`.
+  const RUNNER = 'MainLoop_runner'; // Emscripten's main-loop step (both its rAF and its setImmediate scheduler run it)
+  const PACE_FPS = 60; // = lib/pacer.mjs PACE_FPS, the rate RetroArch makes its sound for (video_refresh_rate)
+  let pacer = null;
+  let fallback = false;
+  const early = { step: null };
+  const toPacer = (cb) => (pacer ? pacer.request(cb) : fallback ? nativeRaf(cb) : (early.step = cb));
+  const nativeRaf = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = function (cb) {
+    if (cb?.name !== RUNNER) return nativeRaf(cb);
+    toPacer(cb);
+    return 0;
+  };
+  // Browsers have no setImmediate – Emscripten looks for one when the core switches to fast-forward. Anything else that
+  // asks gets a real one (a message round trip).
+  {
+    const ch = new MessageChannel();
+    const later = [];
+    ch.port1.onmessage = () => later.shift()?.();
+    window.setImmediate = function (cb, ...args) {
+      if (cb?.name === RUNNER) return toPacer(cb), 0;
+      later.push(() => cb(...args));
+      ch.port2.postMessage(0);
+      return 0;
+    };
+  }
+  const pacerReady = import('/lib/pacer.mjs').then(({ Pacer }) => {
+    pacer = new Pacer({ fps: PACE_FPS });
+    if (early.step) pacer.request(early.step);
+    const tick = (now) => {
+      nativeRaf(tick);
+      pacer.tick(now);
+    };
+    nativeRaf(tick);
+    // No display frames (a hidden page, a minimised window): keep fast-forward going from a timer, as before.
+    setInterval(() => {
+      const now = performance.now();
+      if (now - pacer.last > 120) pacer.tick(now);
+    }, 25);
+  });
+
   const CORE ={ nds: 'melonds', gba: 'mgba', gbc: 'gambatte', gb: 'gambatte' };
   const system = q.get('system');
   window.EJS_player = '#game';
@@ -82,7 +128,32 @@
   // slowed down, and noise in "original" too). Without the speed-up RetroArch plays the classic fast-forward sound
   // instead: the song at normal pitch in pieces, skipping ahead – played as it is (see TurboMixer.skip).
   const FF_SKIP = /^desmume/.test(window.EJS_core);
-  const RA_CFG = `audio_fastforward_speedup = "${FF_SKIP ? 'false' : 'true'}"\nfastforward_frameskip = "true"\n`;
+  // Pacing (see "frame pacing" above): no audio sync and no fast-forward limit inside RetroArch – the pacer runs the
+  // frames, RetroArch's rate control keeps the sound in step (later lines win over EmulatorJS' own). Its sound is made
+  // at the sound card's rate, so the browser doesn't resample each 2.9 ms OpenAL buffer on its own (44.1 kHz buffers in
+  // a 48 kHz context – the usual case on Windows). 128 ms of buffer (EmulatorJS: 64) is RetroArch's own default for
+  // this OpenAL driver: half of it is the cushion when the page is busy for a moment.
+  const outRate = (() => {
+    try {
+      const ac = new AudioContext();
+      const r = ac.sampleRate;
+      ac.close().catch(() => {});
+      return r >= 22050 && r <= 192000 ? Math.round(r) : 0;
+    } catch {
+      return 0;
+    }
+  })();
+  const AUDIO_LATENCY = 128;
+  const RA_CFG = [
+    `audio_fastforward_speedup = "${FF_SKIP ? 'false' : 'true'}"`,
+    'fastforward_frameskip = "true"',
+    'fastforward_ratio = "0.000000"',
+    'audio_sync = "false"',
+    'audio_rate_control = "true"',
+    `audio_latency = "${AUDIO_LATENCY}"`,
+    `video_refresh_rate = "${PACE_FPS}.000000"`,
+    outRate ? `audio_out_rate = "${outRate}"` : '',
+  ].filter(Boolean).join('\n') + '\n';
   let gmClass;
   Object.defineProperty(window, 'EJS_GameManager', {
     configurable: true,
@@ -91,7 +162,12 @@
       gmClass = C;
       const base = C?.prototype?.getRetroArchCfg;
       if (base && !base.patched) {
-        C.prototype.getRetroArchCfg = function () { return base.call(this) + RA_CFG; };
+        // replace EmulatorJS' lines for the same keys: with a key twice in the file RetroArch keeps the first
+        const key = (l) => l.split('=')[0].trim();
+        const ours = new Set(RA_CFG.split('\n').map(key).filter(Boolean));
+        C.prototype.getRetroArchCfg = function () {
+          return `${base.call(this).split('\n').filter((l) => !ours.has(key(l))).join('\n')}\n${RA_CFG}`;
+        };
         C.prototype.getRetroArchCfg.patched = true;
       }
     },
@@ -410,7 +486,7 @@
   // while fast-forwarding it mutes the sped-up sound and, in "music" mode, loops the recorded music at
   // normal speed. The volume moves to our gain then (EmulatorJS' per-source gains stay at 1), so the
   // recording doesn't depend on the volume slider. Until it is attached, volume works as before.
-  const audio = { volume: window.EJS_volume, mode: 'music', speed: 1, key: null, paused: false, al: null, vol: null, post: null, kind: null, busy: false, failed: false, info: {}, log: [], seq: 0, subs: new Set() };
+  const audio = { volume: window.EJS_volume, mode: 'music', speed: 1, key: null, paused: false, al: null, vol: null, node: null, plain: null, post: null, kind: null, busy: false, failed: false, info: {}, log: [], seq: 0, subs: new Set() };
   const tellAudio = (m) => audio.post?.(m);
   // The core's sound never reaches the speakers on its own: every connection straight to an AudioContext's output
   // goes through a gate. Until the mixer has taken a context's sound over (attachAudio), the gate holds what should
@@ -507,6 +583,23 @@
       }
     }
   };
+  // "Plain" turbo audio: the core's sound goes straight to the volume, the mixer is out of the path and idle (paused) –
+  // no recording, no loop search, nothing extra on the audio thread. The other modes run through the mixer.
+  const mixerMode = () => (audio.mode === 'plain' ? 'original' : audio.mode);
+  const mixerPaused = () => audio.paused || audio.mode === 'plain';
+  function routeAudio() {
+    const { al, node, vol } = audio;
+    const plain = audio.mode === 'plain';
+    if (!al || !node || !vol || audio.plain === plain) return;
+    try { al.gain.disconnect(); } catch { /* not connected */ }
+    try { node.disconnect(); } catch { /* not connected */ }
+    if (plain) al.gain.connect(vol);
+    else {
+      al.gain.connect(node);
+      node.connect(vol);
+    }
+    audio.plain = plain;
+  }
   async function attachAudio() {
     const al = GM()?.Module?.AL?.currentCtx;
     if (!al?.audioCtx || !al.gain || al === audio.al || audio.busy || audio.failed) return;
@@ -551,16 +644,15 @@
       const vol = ac.createGain();
       vol.gain.value = audio.volume;
       ownNodes.add(vol);
-      node.connect(vol).connect(ac.destination);
+      vol.connect(ac.destination);
       E().volume = 1;
       E().setVolume(1);
-      al.gain.disconnect();
-      al.gain.connect(node);
-      Object.assign(audio, { al, vol, post, kind, attachedOnce: true });
+      Object.assign(audio, { al, vol, node, post, kind, attachedOnce: true, plain: null });
+      routeAudio();
       refreshGates(); // (from now on a context the mixer hasn't taken over yet holds its sound back)
-      post({ type: 'mode', mode: audio.mode });
-      post({ type: 'paused', paused: audio.paused });
-      post({ type: 'speed', ratio: audio.speed });
+      post({ type: 'mode', mode: mixerMode() });
+      post({ type: 'paused', paused: mixerPaused() });
+      post({ type: 'speed', ratio: Math.min(audio.speed, MAX_SOUND_RATIO) });
       post({ type: 'skip', on: FF_SKIP });
       if (audio.key) post({ type: 'song', key: audio.key });
       startSdat();
@@ -586,13 +678,113 @@
     }
     if (!ff || !rate.t || now - rate.t >= 450) Object.assign(rate, { t: ff ? now : 0, f });
   }
+  // ---- what the game and its sound really do (the pacer's sound target, "Save diagnostics") -------------
+  const MAX_SOUND_RATIO = 16; // RetroArch speeds its fast-forward sound up at most 16× (AUDIO_MIN_RATIO)
+  const sound = { underruns: 0, ffHoles: 0, lead: null, leadMin: null, hooked: null, longTasks: 0, longMs: 0 };
+  // OpenAL (Emscripten) stops a source that runs dry; RetroArch starts it again with its next sound. At 1× that is an
+  // audible drop-out – the clearest sign the sound didn't arrive in time. (While fast-forwarding it is expected now and then.)
+  function hookAl() {
+    const AL = GM()?.Module?.AL;
+    if (!AL?.setSourceState || sound.hooked === AL) return;
+    sound.hooked = AL;
+    const set = AL.setSourceState;
+    AL.setSourceState = function (src, state) {
+      if (src?.state === 0x1012 && state === 0x1014 && !E()?.paused && document.visibilityState !== 'hidden') {
+        if (speed > 1) sound.ffHoles++;
+        else sound.underruns++;
+      }
+      return set.apply(this, arguments);
+    };
+  }
+  /** Seconds of the game's sound queued in OpenAL and not yet heard; 0 when it ran dry, null without sound. */
+  function soundLead() {
+    const AL = GM()?.Module?.AL;
+    const ctx = AL?.currentCtx;
+    if (!ctx?.audioCtx || !AL.updateSourceTime) return null;
+    for (const src of Object.values(ctx.sources || {})) {
+      if (!src?.bufQueue) continue;
+      if (src.state !== 0x1012) return 0; // (not playing)
+      AL.updateSourceTime(src); // what alGetSourcei does too: moves past what has been heard
+      let lead = 0;
+      for (let i = src.bufsProcessed; i < src.bufQueue.length; i++) lead += src.bufQueue[i]?.audioBuf?.duration || 0;
+      const head = src.audioQueue?.[0];
+      if (head) lead -= Math.max(0, ctx.audioCtx.currentTime - head._startTime);
+      return Math.max(0, lead);
+    }
+    return null;
+  }
+  // At 1× the pacer runs the game a few percent faster or slower while the sound buffer is far from half full –
+  // where RetroArch's rate control (±0.5 %) wants it too. That fills the cushion within a second or two after the
+  // start, a pause or a drop-out instead of half a minute.
+  function steerSound() {
+    const lead = soundLead();
+    if (!pacer) return;
+    if (lead == null || speed > 1 || E()?.paused) {
+      pacer.corr = 0;
+      sound.lead = null;
+      return;
+    }
+    sound.lead = sound.lead == null ? lead : sound.lead * 0.6 + lead * 0.4; // (the audio clock moves in 10 ms steps on Windows)
+    sound.leadMin = sound.leadMin == null ? lead : Math.min(sound.leadMin, lead);
+    const target = AUDIO_LATENCY / 2000;
+    const err = (target - sound.lead) / target;
+    pacer.corr = Math.abs(err) < 0.15 ? 0 : Math.max(-0.02, Math.min(0.04, err * 0.04));
+  }
+  try {
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) {
+        sound.longTasks++;
+        sound.longMs = Math.max(sound.longMs, e.duration);
+      }
+    }).observe({ type: 'longtask', buffered: false });
+  } catch {
+    // no long task timing here
+  }
+  // Every couple of seconds: the speed reached, the display, how the frames were spread, the sound buffer.
+  const perfLog = { at: 0, f: 0, u: 0, h: 0, lt: 0, last: null };
+  function perfWindow() {
+    const pace = pacer;
+    if (!pace) return;
+    const now = performance.now();
+    const f = GM()?.getFrameNum?.() ?? 0;
+    const restart = () => {
+      Object.assign(perfLog, { at: now, f, u: sound.underruns, h: sound.ffHoles, lt: sound.longTasks });
+      pace.resetStats();
+      sound.leadMin = null;
+      sound.longMs = 0;
+    };
+    if (!perfLog.at || f < perfLog.f || E()?.paused || document.visibilityState === 'hidden') return restart();
+    const s = (now - perfLog.at) / 1000;
+    if (s < 2) return;
+    const fps = (f - perfLog.f) / s;
+    perfLog.last = {
+      speed: speed === Infinity ? 'max' : speed,
+      fps: +fps.toFixed(1),
+      reached: +(fps / pace.fps).toFixed(2),
+      displayHz: pace.disp ? +(1000 / pace.disp).toFixed(1) : null,
+      busyPct: Math.round((pace.busy / (s * 1000)) * 100), // of the time, running the core
+      budgetHits: pace.budgetHits, // display frames in which the core used up its share and frames were left out
+      maxFrameGapMs: Math.round(pace.maxGap), // longest stretch without a new game frame
+      underruns: sound.underruns - perfLog.u,
+      ffHoles: sound.ffHoles - perfLog.h,
+      soundMs: sound.lead == null ? null : Math.round(sound.lead * 1000),
+      soundMinMs: sound.leadMin == null ? null : Math.round(sound.leadMin * 1000),
+      corr: +pace.corr.toFixed(3),
+      longTasks: sound.longTasks - perfLog.lt,
+      longestTaskMs: Math.round(sound.longMs),
+    };
+    restart();
+  }
   function syncAudio() {
     attachAudio();
+    hookAl();
+    steerSound();
+    perfWindow();
     measureRate();
     const paused = !!E()?.paused || document.visibilityState === 'hidden';
     if (paused !== audio.paused) {
       audio.paused = paused;
-      tellAudio({ type: 'paused', paused });
+      tellAudio({ type: 'paused', paused: mixerPaused() });
     }
   }
   // the game jumped (state loaded, reset): the recorded music doesn't lead into what comes next
@@ -602,8 +794,7 @@
   };
 
   let speed = 1;
-  let ffRatio = 3; // ratio EmulatorJS uses when fast-forward is switched on (RetroArch default: 3)
-  let speedSeq = 0; // the latest setSpeed call wins
+  let ffRatio = 3; // the last fast-forward step (the play view's indicator falls back to it)
   window.__emu = {
     ready: false,
     system: () => E()?.getCore(true),
@@ -618,27 +809,26 @@
       cutAudio();
       return GM().restart();
     },
+    /** 1–4, or Infinity: as fast as this computer can. */
     setSpeed(ratio) {
+      ratio = ratio === Infinity ? Infinity : Math.max(1, Number(ratio) || 1);
       speed = ratio;
       audio.speed = ratio;
       refreshGates();
       rate.t = 0; // measure the new step afresh
-      tellAudio({ type: 'speed', ratio });
-      const seq = ++speedSeq;
+      // (the mixer slows the sped-up sound down by the speed reached, measured – "Max" starts from RetroArch's limit)
+      tellAudio({ type: 'speed', ratio: Math.min(ratio, MAX_SOUND_RATIO) });
+      pacer?.setSpeed(ratio);
+      perfLog.at = 0; // a fresh measuring window for the new step
       if (ratio > 1) {
-        const on = () => {
-          if (seq !== speedSeq) return;
-          ffRatio = ratio;
-          GM().setFastForwardRatio(ratio);
+        ffRatio = ratio;
+        // RetroArch runs fast-forward unlimited (fastforward_ratio 0) – the pacer sets the speed, so a step change
+        // (2× → 4×) needs no off/on round trip
+        if (!E().isFastForward) {
+          GM().setFastForwardRatio(0);
           E().isFastForward = true;
           GM().toggleFastForward(1);
-        };
-        // RetroArch latches the ratio when fast-forward switches on: changing it while it runs (2× → 4×)
-        // does nothing. So switch off, let a few frames pass, then on again with the new ratio.
-        if (E().isFastForward && ffRatio !== ratio) {
-          GM().toggleFastForward(0);
-          setTimeout(on, 60);
-        } else on();
+        }
       } else {
         E().isFastForward = false;
         GM().toggleFastForward(0);
@@ -699,10 +889,15 @@
       }
     },
     muted: () => audio.volume === 0,
-    /** What happens to the sound while fast-forwarding: 'music' (the song at normal speed – synthesized from the ROM or recorded at 1×) | 'mute' | 'original'. */
+    /**
+     * What happens to the sound while fast-forwarding: 'music' (the song at normal speed – synthesized from the ROM or
+     * recorded at 1×) | 'mute' | 'original' | 'plain' (the sped-up original without the mixer – no extra audio work).
+     */
     setTurboAudio(mode) {
       audio.mode = mode;
-      tellAudio({ type: 'mode', mode });
+      routeAudio();
+      tellAudio({ type: 'mode', mode: mixerMode() });
+      tellAudio({ type: 'paused', paused: mixerPaused() });
     },
     /** The music the game plays now (location.mjs musicKey; null = unknown): the turbo mixer follows it. */
     songKey(key) {
@@ -720,6 +915,25 @@
     /** The nodes that feed the speakers (the gates and the volume) – for level checks. */
     speakerNodes: () => [...gates, audio.vol].filter(Boolean),
     turboAudio: () => ({ attached: audio.kind, current: !!audio.al && audio.al === GM()?.Module?.AL?.currentCtx, gates: [...gates].map((g) => +g.gain.value.toFixed(3)), gate: gateLevel(), once: !!audio.attachedOnce, failed: audio.failed, mode: audio.mode, speed: audio.speed, paused: audio.paused, volume: audio.volume, key: audio.key, sampleRate: audio.al?.audioCtx.sampleRate, ...audio.info, log: audio.log.slice() }),
+    /** Timing and sound facts for "Save diagnostics": the sound card, the pacing, the last measuring window, totals. */
+    perf() {
+      const ac = GM()?.Module?.AL?.currentCtx?.audioCtx;
+      return {
+        sound: {
+          contextRate: ac?.sampleRate ?? null,
+          state: ac?.state ?? null,
+          baseLatencyMs: ac?.baseLatency != null ? +(ac.baseLatency * 1000).toFixed(1) : null,
+          outputLatencyMs: ac?.outputLatency != null ? +(ac.outputLatency * 1000).toFixed(1) : null,
+          coreOutRate: outRate || 44100, // what RetroArch was told to make
+          bufferMs: AUDIO_LATENCY,
+          mixer: audio.kind || (audio.failed ? 'failed' : null),
+          mode: audio.mode,
+        },
+        pacing: { fps: PACE_FPS, displayHz: pacer?.disp ? +(1000 / pacer.disp).toFixed(1) : null, speed: speed === Infinity ? 'max' : speed, threads: !!window.EJS_threads, core: window.EJS_core },
+        last: perfLog.last,
+        totals: { underruns: sound.underruns, ffHoles: sound.ffHoles, longTasks: sound.longTasks },
+      };
+    },
     setOption(k, v) {
       if (/screens?_layout$/.test(k)) sideBySide = /left/i.test(v);
       E().menuOptionChanged(k, v);
@@ -817,6 +1031,13 @@
       startPads(c);
     })
     .catch((e) => console.warn('controls not applied', e))
+    .then(() => pacerReady)
+    .catch((e) => {
+      // (can't happen short of a broken install) – the display's frames drive the core directly then
+      console.warn('frame pacer not loaded', e);
+      fallback = true;
+      if (early.step) nativeRaf(early.step);
+    })
     .finally(() => {
       const s = document.createElement('script');
       s.src = '/vendor/emulatorjs/loader.js';
