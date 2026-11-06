@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Pacer } from '../web/lib/pacer.mjs';
+import { Pacer, soundRate } from '../web/lib/pacer.mjs';
 
 /**
  * Drives a pacer with a fake clock: a display at `hz` for `seconds`, the core's step costs `cost` ms and asks for the
@@ -114,4 +114,23 @@ test('player.html: RetroArch neither syncs on its sound nor limits fast-forward 
   assert.match(html, /window\.requestAnimationFrame = function/);
   assert.match(html, /window\.setImmediate = function/);
   assert.match(html, /GM\(\)\.setFastForwardRatio\(0\)/);
+});
+
+test('the sound runs at the card’s rate up to 48 kHz, above it at 48 (or 44.1) kHz', () => {
+  for (const [card, rate] of [[44100, 44100], [48000, 48000], [32000, 32000], [96000, 48000], [192000, 48000], [88200, 44100], [176400, 44100], [384000, 48000], [95999.7, 48000], [0, 0], [null, 0], [8000, 0]]) {
+    assert.equal(soundRate(card), rate, `${card} Hz`);
+  }
+});
+
+test('player.html: fast-forward sound at normal pitch for every core, the sound at soundRate()', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync(new URL('../web/player.html', import.meta.url), 'utf8');
+  // sped up and paced from the display, RetroArch's sound came out chopped or at a jumping pitch (2.2.0-beta.2)
+  assert.match(html, /const FF_SKIP = true;/);
+  assert.match(html, /audio_fastforward_speedup = "\$\{FF_SKIP \? 'false' : 'true'\}"/);
+  assert.match(html, /post\(\{ type: 'skip', on: FF_SKIP \}\)/);
+  // the core's AudioContexts get the capped rate, and RetroArch makes its sound at it
+  assert.match(html, /outRate = soundRate\(deviceRate\)/);
+  assert.match(html, /new NativeAudioContext\(\{ \.\.\.opts, sampleRate: ctxRate \}\)/);
+  assert.match(html, /audio_out_rate = "\$\{outRate\}"/);
 });

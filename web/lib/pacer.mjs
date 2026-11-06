@@ -14,6 +14,21 @@
 /** The rate RetroArch makes its sound for (video_refresh_rate in player.html's RetroArch config). */
 export const PACE_FPS = 60;
 
+/**
+ * The sample rate the emulator's sound runs at (its AudioContext, RetroArch's audio_out_rate), for a sound card running
+ * at `device` Hz: the card's own rate up to 48 kHz, above it 48 kHz (44.1 kHz for 88.2 / 176.4 kHz). A card set to
+ * 96 or 192 kHz (a player's Windows PC: 96 kHz) gains nothing for Game Boy and DS sound, but doubles or quadruples
+ * the work on the audio thread – the turbo mixer filters and searches every sample – and its loops and the
+ * slowdowns were only ever measured up to 48 kHz. Chrome converts the finished mix to the card's rate in one piece.
+ * 0 = unknown (RetroArch's and the browser's defaults then).
+ */
+export function soundRate(device) {
+  const r = Math.round(Number(device) || 0);
+  if (r < 22050 || r > 768000) return 0;
+  if (r <= 48000) return r;
+  return r % 44100 === 0 ? 44100 : 48000;
+}
+
 export class Pacer {
   /**
    * @param {object} [o]
