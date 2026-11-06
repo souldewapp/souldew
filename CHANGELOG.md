@@ -68,10 +68,9 @@ Windows players.
 - The window uses your desktop's own title bar; shortcuts use Ctrl, the menu bar appears with Alt, and the app speaks
   of the file manager. Your data lives in `~/.config/SoulLink Studio`.
 
-**Known issue:** on sound cards set to 88.2 or 96 kHz (some Windows PCs), "Music keeps playing" during fast-forward
-can play the sped-up music instead – especially after a scene change. A fix follows in the next update. Until then:
-set the playback device to 48000 Hz (Windows: Sound settings › your device › Properties › Advanced) or pick another
-turbo audio option.
+**Known issue:** on some Windows PCs, "Music continues" plays the sped-up music during fast-forward, especially
+after a scene change. A fix follows in the next update. Until then another turbo audio option helps ("Mute" or
+"Plain (no extra processing)").
 
 ## 2.1.0
 
