@@ -25,6 +25,7 @@ import { gpuBackends, validBackend, fallbackNotice } from '../shared/gpu.mjs';
 import { hostAllowed, apiRequestError } from './lib/guard.mjs';
 import { overlaySnapshot, TEST_SPECIES } from '../shared/overlay.mjs';
 import { startPokelinkBridge, pokelinkPlayers, POKELINK_PORT } from './lib/pokelink.mjs';
+import { romLocationsFor } from './lib/romloc.mjs';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -687,6 +688,29 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     if (!bytes.length) throw httpError(400, 'Leerer Spielstand – nicht gespeichert', 'emptySave');
     writeFileAtomic(join(SOLO_SAVES, `${keyOf(url.searchParams.get('id'))}.sav`), bytes);
     return { ok: true, size: bytes.length };
+  });
+
+  // The ROM's own location data for the play view's place sign: `src` is the same /api/… URL the emulator loads
+  // (a run's file, a library ROM – zipped ones unpacked –, or a patched ROM). { data: null } = none for this game.
+  route('GET', /^\/api\/rom\/locations$/, (req, m, url) => {
+    const src = new URL(url.searchParams.get('src') || '', 'http://local');
+    const env = { sharedDir: SHARED_DIR, cacheDir: CACHE_DIR };
+    const run = src.pathname.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
+    if (run) {
+      const file = safeJoin(runDir(run[1]), src.searchParams.get('name') || '');
+      if (!file) throw httpError(400, 'bad name');
+      return { data: romLocationsFor({ file }, env) };
+    }
+    if (src.pathname === '/api/library/rom') {
+      const id = src.searchParams.get('id');
+      const { abs, entry } = resolveId(id, loadConfig());
+      return { data: entry ? romLocationsFor({ bytes: loadFile(id, loadConfig()), key: id }, env) : romLocationsFor({ file: abs }, env) };
+    }
+    if (src.pathname === '/api/library/patched') {
+      const r = preparePatchedRom(src.searchParams.get('romId'), src.searchParams.get('patchId'), () => {}, loadConfig());
+      return { data: romLocationsFor({ file: r.path }, env) };
+    }
+    throw httpError(400, 'bad src');
   });
 
   // ---- ROM inspection & run building ----------------------------------------------

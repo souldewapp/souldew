@@ -121,3 +121,76 @@ export function diffRoms(a, b) {
   }
   return changed;
 }
+
+/**
+ * Undoes the NDS "backward LZ" compression of an ARM9 binary (or overlay). `data` ends with the footer: u32 packed
+ * length (low 24 bits) + header length (high byte), u32 size increase. A binary without compression (increase 0) is
+ * returned as is. Same algorithm as ndstool/CUE's blz.
+ */
+export function blzDecompress(data) {
+  const len = data.length;
+  if (len < 8) return data;
+  const inc = u32(data, len - 4);
+  if (!inc) return data;
+  const hdr = data[len - 5];
+  const enc = u32(data, len - 8) & 0xffffff;
+  if (enc > len || hdr < 8 || hdr > enc) throw new Error('bad BLZ footer');
+  const keep = len - enc;
+  const raw = new Uint8Array(len + inc);
+  raw.set(data.subarray(0, keep));
+  let pak = len - hdr;
+  let r = raw.length;
+  let mask = 0;
+  let flags = 0;
+  while (r > keep) {
+    mask >>= 1;
+    if (!mask) {
+      if (pak <= keep) break;
+      flags = data[--pak];
+      mask = 0x80;
+    }
+    if (!(flags & mask)) {
+      if (pak <= keep) break;
+      raw[--r] = data[--pak];
+    } else {
+      if (pak - 2 < keep) break;
+      let pos = data[--pak] << 8;
+      pos |= data[--pak];
+      let l = (pos >> 12) + 3;
+      pos = (pos & 0xfff) + 3;
+      if (r - l < keep) l = r - keep;
+      while (l--) {
+        r--;
+        raw[r] = raw[r + pos];
+      }
+    }
+  }
+  return raw;
+}
+
+/**
+ * The ARM9 binary as it runs (decompressed), plus its RAM address and the NitroSDK module params: { bytes, ram,
+ * bssStart, bssEnd } – `bssStart` is where the static data of the main program begins in RAM.
+ */
+export function ndsArm9(rom) {
+  const h = ndsHeader(rom);
+  const ram = u32(rom, 0x28);
+  let bin = rom.subarray(h.arm9.offset, h.arm9.offset + h.arm9.size);
+  // module params: 8 words ending with the magic 0xDEC00621, near the start of the binary (the compressed part is at its end)
+  let params = -1;
+  for (let i = 0; i + 4 <= Math.min(bin.length, 0x8000); i += 4) {
+    if (u32(bin, i) === 0xdec00621 && i >= 0x1c) {
+      params = i - 0x1c;
+      break;
+    }
+  }
+  const compEnd = params >= 0 ? u32(bin, params + 0x14) : 0;
+  if (compEnd > ram && compEnd - ram <= bin.length) bin = blzDecompress(bin.subarray(0, compEnd - ram));
+  return { bytes: bin, ram, bssStart: params >= 0 ? u32(bin, params + 0x0c) : null, bssEnd: params >= 0 ? u32(bin, params + 0x10) : null };
+}
+
+/** One file of the ROM by its path ("a/0/2/7"), or null. */
+export function ndsFile(rom, path, files = listNdsFiles(rom)) {
+  const f = files.find((x) => x.path === path);
+  return f && f.end > f.start && f.end <= rom.length ? rom.subarray(f.start, f.end) : null;
+}

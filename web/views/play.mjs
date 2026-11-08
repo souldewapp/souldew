@@ -16,7 +16,7 @@ import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
 import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer } from './session-info.mjs';
-import { LocationSign, readHere, nextHere, musicInfo } from './location.mjs';
+import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations } from './location.mjs';
 import { RulesTab } from './board.mjs';
 import { CartInsert } from './cartinsert.mjs';
 import { play as playCue } from '../lib/sound.mjs';
@@ -712,6 +712,8 @@ export function GameSession({ session, mode }) {
       if (!tables) return setLiveState({ status: 'unsupported' });
       const { T, addresses } = tables;
       entry = findEntry(addresses, { platform: target.system === 'gbc' ? 'gbc' : target.system, code: target.code, title: target.title });
+      // the ROM's own place names and map → location step (randomized games, other languages, hacks, Gen 5)
+      if (entry) loadRomLocations(target.rom);
       setLiveState({ status: entry ? 'searching' : 'unsupported', entry: entry?.name });
       liveRef.current = { entry, state };
       setCheatGame(cheatSupported(entry));
@@ -751,7 +753,7 @@ export function GameSession({ session, mode }) {
             e.locateRam();
           }
           if (e.ramInfo().base >= 0) {
-            setHere((p) => nextHere(p, readHere(entry, e.read)));
+            setHere((p) => nextHere(p, readHere(entry, e.read, state)));
             const res = readLiveParty(entry, e.read, T, state);
             if (res?.party) {
               const fight = readLiveBattle(entry, e.read, T, state, res.party);

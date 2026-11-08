@@ -40,6 +40,17 @@
   houses, the opening) still get the full speed – and says so when you switch to it ("4× – this computer usually
   manages ≈1.6× in this game"). On a faster computer, or in games that hold the steps, nothing changes.
 
+**"You are here" for Black/White and Black 2/White 2, read from the game itself** – thanks to a player's report (#1).
+
+- The place sign in the play view now works in Black, White, Black 2 and White 2 (randomized ones included): the
+  route or town you're in, and in a run whether its first encounter is still open.
+- souldew now reads the place names and which map belongs to which place straight from the ROM – the same names the
+  game shows when you enter a route – instead of only from its own tables. ROM hacks with their own maps and place
+  names show those. The Gen 4 games in other languages than English can now show the sign as well, in the game's
+  language (not tested on every language yet).
+- A game without location data no longer says "Location appears once you're in the game" forever; it says the
+  location isn't available for this game yet.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.

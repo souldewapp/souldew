@@ -5,7 +5,7 @@ import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
 import { useApp } from '../lib/ui.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
 import { speciesName, gen4data } from '../lib/data.mjs';
-import { readLocation, readMusicInfo, locationLabel, sameLocation, mapEntryFor } from '/shared/live/location.mjs';
+import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation } from '/shared/live/location.mjs';
 import { areaForMetLocation } from '/shared/routes.mjs';
 import { profileOf, progression, pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun } from '../lib/run.mjs';
 
@@ -20,18 +20,42 @@ const load = () => {
   return load.p;
 };
 
+// The running ROM's own location data (shared/live/romloc.mjs, computed by the server from the file): its map →
+// location step and place names. `pending` while it loads; `data` null = the ROM has none (the tables still serve).
+const ROMLOC = { src: null, data: null, pending: false };
+
+/** Starts loading the location data of the ROM at `src` (the /api/… URL the emulator loads); resolves when done. */
+export function loadRomLocations(src) {
+  if (!src || ROMLOC.src === src) return ROMLOC.p || Promise.resolve();
+  Object.assign(ROMLOC, { src, data: null, pending: true });
+  const p = fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`)
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null)
+    .then((j) => {
+      if (ROMLOC.src !== src) return;
+      Object.assign(ROMLOC, { data: j?.data || null, pending: false });
+    });
+  ROMLOC.p = p;
+  return p;
+}
+
 /**
  * Current location for the live loop: { gen, id, name } or null. `entry` is the addresses.json entry,
- * `read` the emulator's bus read. Cheap (a few bytes) – the tables load on the first call.
+ * `read` the emulator's bus read, `state` the live party reader's state (it knows where the save data is).
+ * Cheap (a few bytes) – the tables load on the first call. The name is the game's own (from the ROM) when the
+ * ROM speaks the app's language or the tables don't know the place (a hack's own map); else the tables' name.
  */
-export function readHere(entry, read) {
+export function readHere(entry, read, state = null) {
   if (!MAPS) {
     load();
     return null;
   }
-  const r = readLocation(MAPS, entry, read);
+  const rom = ROMLOC.data;
+  const r = readLocation(MAPS, entry, read, { rom, state });
   if (!r) return null;
-  const name = locationLabel(r.gen, r.id, { maps: MAPS, ...LOC, gen4: gen4data() }, currentLang() === 'de' ? 'de' : 'en');
+  const lang = currentLang();
+  const table = locationLabel(r.gen, r.id, { maps: MAPS, ...LOC, gen4: gen4data() }, lang === 'de' ? 'de' : 'en');
+  const name = (rom?.lang && rom.lang === lang && r.romName) || table || r.romName;
   return name ? { gen: r.gen, id: r.id, name } : null;
 }
 
@@ -46,12 +70,13 @@ export function musicInfo(entry, read) {
 
 /**
  * Can this game show where the player is? true, false (no location data for it), or null while that isn't known
- * yet (the tables are still loading). `entry` = the addresses.json entry of the running game.
+ * yet (the tables or the ROM's own location data are still loading). `entry` = the addresses.json entry of the running game.
  */
 export function locationSupport(entry) {
   if (!entry) return false;
   if (!MAPS) return null;
-  return !!mapEntryFor(MAPS, entry);
+  if (canReadLocation(MAPS, entry, ROMLOC.data)) return true;
+  return ROMLOC.pending ? null : false;
 }
 
 /** Keeps the previous object while the place is the same (so the sign doesn't re-render every read). */
