@@ -1017,7 +1017,7 @@ export function GameSession({ session, mode }) {
     </div>
     <div class=${`session-body ${isRun || battle?.enemy || here ? 'has-left' : ''}`}>
       ${(isRun || battle?.enemy || here) && html`<aside class="session-left">
-        <${LocationSign} here=${here} live=${liveState.status === 'live'} isRun=${isRun} />
+        <${LocationSign} here=${here} live=${liveState.status === 'live'} isRun=${isRun} game=${liveRef.current?.entry} />
         ${isRun && names && html`<${RunStrip} mine=${myParty} onRules=${() => setRulesOpen(true)} />`}
         <${BattlePanel} battle=${battle} mine=${myParty} gen=${GEN[target.system]} isRun=${isRun} />
       </aside>`}

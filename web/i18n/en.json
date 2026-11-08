@@ -707,6 +707,7 @@
   "loc.label": "You are here: {place}",
   "loc.open": "First encounter open",
   "loc.unknown": "Location appears once you’re in the game",
+  "loc.none": "Location isn’t available for this game yet",
   "loc.used": "Area used up",
   "log.add": "Add",
   "log.empty": "Catches, deaths, badges and messages from both of you show up here.",

@@ -707,6 +707,7 @@
   "loc.label": "Sei qui: {place}",
   "loc.open": "Primo incontro libero",
   "loc.unknown": "Il luogo appare appena sei in gioco",
+  "loc.none": "La posizione non è ancora disponibile per questo gioco",
   "loc.used": "Zona esaurita",
   "log.add": "Aggiungi",
   "log.empty": "Qui compaiono catture, morti, medaglie e messaggi di entrambi.",

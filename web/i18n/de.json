@@ -707,6 +707,7 @@
   "loc.label": "Du bist hier: {place}",
   "loc.open": "Erste Begegnung offen",
   "loc.unknown": "Der Ort erscheint, sobald du im Spiel bist",
+  "loc.none": "Für dieses Spiel gibt es noch keine Ortsanzeige",
   "loc.used": "Gebiet verbraucht",
   "log.add": "Hinzufügen",
   "log.empty": "Fänge, Tode, Orden und Nachrichten von euch beiden erscheinen hier.",

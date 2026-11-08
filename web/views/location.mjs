@@ -5,7 +5,7 @@ import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
 import { useApp } from '../lib/ui.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
 import { speciesName, gen4data } from '../lib/data.mjs';
-import { readLocation, readMusicInfo, locationLabel, sameLocation } from '/shared/live/location.mjs';
+import { readLocation, readMusicInfo, locationLabel, sameLocation, mapEntryFor } from '/shared/live/location.mjs';
 import { areaForMetLocation } from '/shared/routes.mjs';
 import { profileOf, progression, pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun } from '../lib/run.mjs';
 
@@ -42,6 +42,16 @@ export function musicInfo(entry, read) {
     return null;
   }
   return readMusicInfo(MAPS, entry, read);
+}
+
+/**
+ * Can this game show where the player is? true, false (no location data for it), or null while that isn't known
+ * yet (the tables are still loading). `entry` = the addresses.json entry of the running game.
+ */
+export function locationSupport(entry) {
+  if (!entry) return false;
+  if (!MAPS) return null;
+  return !!mapEntryFor(MAPS, entry);
 }
 
 /** Keeps the previous object while the place is the same (so the sign doesn't re-render every read). */
@@ -88,9 +98,9 @@ const Post = () => html`<svg class="loc-post" viewBox="0 0 16 16" width="18" hei
 
 /**
  * The sign. `here` = readHere() result (null: nothing known yet), `live` = the live read is running,
- * `isRun` = show the area status.
+ * `isRun` = show the area status, `game` = the addresses.json entry of the running game.
  */
-export function LocationSign({ here, live, isRun }) {
+export function LocationSign({ here, live, isRun, game }) {
   const { doc, manifest, runData, me } = useApp();
   const [, force] = useState(0);
   const prev = useRef(null);
@@ -105,7 +115,9 @@ export function LocationSign({ here, live, isRun }) {
   }, [here?.gen, here?.id]);
   if (!here) {
     if (!live) return null;
-    return html`<section class="loc-sign quiet" aria-live="polite"><${Post} /><span class="loc-wait">${t('loc.unknown', 'Location appears once you’re in the game')}</span></section>`;
+    // a game without location data would wait forever: say so instead of "appears once you're in the game"
+    const text = locationSupport(game) === false ? t('loc.none', 'Location isn’t available for this game yet') : t('loc.unknown', 'Location appears once you’re in the game');
+    return html`<section class="loc-sign quiet" aria-live="polite"><${Post} /><span class="loc-wait">${text}</span></section>`;
   }
   const area = isRun ? areaOfHere(doc, manifest, genOfRun(manifest, runData), here) : null;
   const mine = area && doc && me ? chipFor(pairState(doc, area, manifest).state, encounter(doc, area, me)).cls : null;

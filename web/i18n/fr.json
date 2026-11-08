@@ -707,6 +707,7 @@
   "loc.label": "Tu es ici : {place}",
   "loc.open": "Première rencontre libre",
   "loc.unknown": "Le lieu s’affiche dès que tu es en jeu",
+  "loc.none": "L’affichage du lieu n’est pas encore disponible pour ce jeu",
   "loc.used": "Zone épuisée",
   "log.add": "Ajouter",
   "log.empty": "Les captures, morts, badges et messages de vous deux apparaissent ici.",
