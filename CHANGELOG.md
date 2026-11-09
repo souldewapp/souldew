@@ -51,6 +51,11 @@
 - A game without location data no longer says "Location appears once you're in the game" forever; it says the
   location isn't available for this game yet.
 
+**Smaller changes**
+
+- The library no longer links to ROM hacks or their download pages. The known hacks are still listed – with
+  description, difficulty and base game – so souldew recognises them and applies a patch file you add yourself.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.

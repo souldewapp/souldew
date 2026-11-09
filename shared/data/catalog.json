@@ -1469,10 +1469,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "no",
    "uprNote": "CFRU/DPE-expanded ROM (new species tables, engine); UPR ZX cannot randomize it.",
-   "url": "https://www.pokecommunity.com/threads/437688/",
-   "links": [
-    "https://patch.radicalred.net/"
-   ],
    "color": "#9C3B32",
    "notes": "Thread title states version 4.1 (first post last edited 2024-03-22). Patch must be applied to FireRed USA 1.0 (not Rev 1)."
   },
@@ -1499,10 +1495,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "no",
    "uprNote": "CFRU/DPE-expanded ROM; UPR ZX cannot randomize it.",
-   "url": "https://www.pokecommunity.com/threads/382178/",
-   "links": [
-    "https://github.com/Skeli789/Complete-Fire-Red-Upgrade"
-   ],
    "color": "#3F4E7A",
    "notes": "Version 2.1.1.1 is the newest listed in the first post (last edited 2025-04-14).",
    "uncertain": true,
@@ -1532,7 +1524,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "no",
    "uprNote": "Expanded species/data tables; not supported by UPR ZX.",
-   "url": "https://www.pokecommunity.com/threads/326118/",
    "color": "#4E7B5A",
    "notes": "Patch file named pokemon_gaia_v3.2.ups in the official instructions (FireRed USA).",
    "uncertain": true,
@@ -1561,12 +1552,8 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Binary hack on vanilla Emerald data structures; UPR may load it but hacks are unsupported and untested here.",
-   "url": "https://www.pokecommunity.com/threads/395830/",
-   "links": [
-    "https://www.romhacking.net/hacks/4291/"
-   ],
    "color": "#2F5E46",
-   "notes": "romhacking.net link taken from the official thread; not re-verified (Cloudflare challenge)."
+   "notes": "Download location taken from the official thread; not re-verified (Cloudflare challenge)."
   },
   {
    "id": "inclement-emerald",
@@ -1591,10 +1578,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "no",
    "uprNote": "Built from pokeemerald with battle-engine upgrade; data layout differs from vanilla, not UPR-compatible.",
-   "url": "https://www.pokecommunity.com/threads/457039/",
-   "links": [
-    "https://github.com/BuffelSaft/pokeemerald/releases"
-   ],
    "color": "#3D6B7A",
    "notes": "GitHub release v1.13 (2021-11-28) ships as a zip; patch format inside not inspected.",
    "uncertain": true,
@@ -1624,10 +1607,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "no",
    "uprNote": "Decomp-based with heavily changed game flow; randomization is built into the hack itself.",
-   "url": "https://www.pokecommunity.com/threads/479406/",
-   "links": [
-    "https://github.com/Pokabbie/pokeemerald-rogue"
-   ],
    "color": "#5B4A7A",
    "notes": "GitHub releases 'Vanilla v2.1' and 'EX v2.1' published 2026-05-17; the forum post header still says V2.0.1.",
    "uncertain": true,
@@ -1658,7 +1637,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "no",
    "uprNote": "Decomp/expansion-based ROM; not UPR-compatible.",
-   "url": "https://www.pokecommunity.com/threads/493223/",
    "color": "#7A5A3A",
    "notes": "Thread title says v1.07 (body references 1.06 download). Patch applied to Emerald (U).",
    "uncertain": true,
@@ -1689,10 +1667,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "no",
    "uprNote": "Decomp-based with expanded data; not UPR-compatible.",
-   "url": "https://www.pokecommunity.com/threads/499227/",
-   "links": [
-    "https://elite-redux.com/"
-   ],
    "color": "#6B3A5A",
    "uncertain": true,
    "uncertainFields": [
@@ -1719,10 +1693,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "no",
    "uprNote": "Decomp/expansion-based ROM; not UPR-compatible.",
-   "url": "https://www.pokecommunity.com/threads/534582/",
-   "links": [
-    "https://danayatsuta.github.io/emerald-imperium-patcher/"
-   ],
    "color": "#7A3B3B",
    "notes": "Thread announces version 1.0 (posted 2025-01-24, edited 2025-04-11); later updates may exist.",
    "uncertain": true,
@@ -1751,7 +1721,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "no",
    "uprNote": "pokeemerald-expansion ROM; not UPR-compatible.",
-   "url": "https://www.pokecommunity.com/threads/529230/",
    "color": "#8A8F99",
    "uncertain": true,
    "uncertainFields": [
@@ -1780,7 +1749,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "no",
    "uprNote": "Decomp-based; not UPR-compatible.",
-   "url": "https://www.pokecommunity.com/threads/494005/",
    "color": "#4A7A6A",
    "uncertain": true,
    "uncertainFields": [
@@ -1808,7 +1776,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "unknown",
    "uprNote": "Not tested.",
-   "url": "https://ko-fi.com/nemo622",
    "color": "#5A8A8A",
    "notes": "Author's Ko-fi page hosts the patch; release (Aug 2024) details from the author's announcement, version number not verified.",
    "uncertain": true,
@@ -1838,7 +1805,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "unknown",
    "uprNote": "Binary hack; not tested with UPR.",
-   "url": "https://www.pokecommunity.com/threads/158324/",
    "color": "#8A7A4A",
    "notes": "Thread offers patches for Ruby (U) v1.0 (F0815EE7) and v1.1 (61641576).",
    "uncertain": true,
@@ -1872,10 +1838,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "no",
    "uprNote": "Rebuilt from source with different data layout; UPR ZX only supports vanilla Crystal (and Speedchoice).",
-   "url": "https://www.pokecommunity.com/threads/373172/",
-   "links": [
-    "https://github.com/Rangi42/polishedcrystal/releases"
-   ],
    "color": "#4A6F8A",
    "notes": "v3.2.3 (GitHub, 2025-12-12) ships prebuilt .gbc files plus 3DS VC .patch files, no IPS/BPS; older releases had IPS patches for Crystal (UE) 1.0.",
    "uncertain": true,
@@ -1904,7 +1866,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "unknown",
    "uprNote": "Not tested.",
-   "url": "https://shockslayer.com/crystal-clear/",
    "color": "#5F9AAE",
    "notes": "Official page states the .bps patch is distributed only via the Crystal Clear Discord; current version not verifiable from public pages.",
    "uncertain": true,
@@ -1933,7 +1894,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "no",
    "uprNote": "Heavily rebuilt Crystal mod; not UPR-compatible.",
-   "url": "https://rainbowdevs.com/title/prism/",
    "color": "#7A4A8A",
    "notes": "Status: maintained by RainbowDevs; latest listed 0.95.0254 (released 2023-08-24). Patched via the site's in-browser patcher (format not stated, believed to be BSP). The PokéCommunity 'Final Version' thread is an April Fools post.",
    "uncertain": true,
@@ -1964,7 +1924,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "pret-based build with shifted data; UPR uses fixed offsets for Gen 2, so expect issues.",
-   "url": "https://github.com/cRz-Shadows/Pokemon_Crystal_Legacy",
    "color": "#5C7FA0",
    "notes": "Release 1.3.1 (2024-08-30); 1.3.0 assets named 'IPS Patches'.",
    "uncertain": true,
@@ -1993,7 +1952,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "pret-based build; UPR expects vanilla Yellow, expect issues.",
-   "url": "https://github.com/cRz-Shadows/Pokemon_Yellow_Legacy",
    "color": "#C2A04A",
    "notes": "Release notes give base Yellow SHA-1 cc7d0326…, which matches No-Intro Yellow (USA, Europe) CRC 7D527D62.",
    "uncertain": true,
@@ -2021,7 +1979,6 @@
    "nuzlockeFriendly": false,
    "uprCompatible": "unknown",
    "uprNote": "pret-based build; not tested with UPR.",
-   "url": "https://github.com/jojobear13/shinpokered",
    "color": "#A84A44",
    "notes": "Red patches target USA Red (CRC 9F7FDD53); Blue/Green patches target USA Blue (CRC D6DA8A1A)."
   },
@@ -2044,7 +2001,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Binary hack on vanilla data; not tested.",
-   "url": "https://www.pokecommunity.com/threads/322127/",
    "color": "#2E4A6E",
    "uncertain": true,
    "uncertainFields": [
@@ -2071,10 +2027,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Binary hack on vanilla data; not tested.",
-   "url": "https://www.pokecommunity.com/threads/334713/",
-   "links": [
-    "https://www.romhacking.net/hacks/2178/"
-   ],
    "color": "#2F5F70",
    "uncertain": true,
    "uncertainFields": [
@@ -2104,7 +2056,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Uses vanilla Gen 4 file formats but edited scripts; UPR is not officially supported for hacks.",
-   "url": "https://projectpokemon.org/home/forums/topic/52294-pok%C3%A9mon-renegade-platinum/",
    "color": "#5A5570",
    "notes": "Latest Version v1.3.0 (2019-04-16) per Drayano's Project Pokémon post. Applies to Platinum USA; exact revision not verified.",
    "uncertain": true,
@@ -2134,7 +2085,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Vanilla Gen 4 formats with edited scripts; not tested.",
-   "url": "https://gbatemp.net/threads/pok%C3%A9mon-sacred-gold-storm-silver.327567/",
    "color": "#A88A3A",
    "notes": "Drayano's GBAtemp thread lists 'Current Version 1.05' with Complete and Classic patches; requires a clean HeartGold ROM.",
    "uncertain": true,
@@ -2164,7 +2114,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Vanilla Gen 4 formats with edited scripts; not tested.",
-   "url": "https://gbatemp.net/threads/pok%C3%A9mon-sacred-gold-storm-silver.327567/",
    "color": "#7A8696",
    "uncertain": true,
    "uncertainFields": [
@@ -2193,19 +2142,14 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Not tested; Gen 5 formats are vanilla but hack data is edited.",
-   "url": "https://x.com/Drayano60",
-   "links": [
-    "https://projectpokemon.org/home/files/file/2465-pok%C3%A9mon-blaze-black-2-pok%C3%A9mon-volt-white-2/"
-   ],
    "color": "#2F3A44",
-   "notes": "No dedicated official Redux web page found; url is the author's X account. Version 1.4.1 seen only in community tools. The Project Pokémon link is the original (non-Redux) 1.1 release.",
+   "notes": "No dedicated official Redux release page found. Version 1.4.1 seen only in community tools; the original (non-Redux) release is 1.1.",
    "uncertain": true,
    "uncertainFields": [
     "latestVersion",
     "patchFormat",
     "features",
-    "baseCrc32",
-    "url"
+    "baseCrc32"
    ]
   },
   {
@@ -2229,10 +2173,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Not tested.",
-   "url": "https://x.com/Drayano60",
-   "links": [
-    "https://projectpokemon.org/home/files/file/2465-pok%C3%A9mon-blaze-black-2-pok%C3%A9mon-volt-white-2/"
-   ],
    "color": "#B0A898",
    "notes": "See Blaze Black 2 Redux.",
    "uncertain": true,
@@ -2240,8 +2180,7 @@
     "latestVersion",
     "patchFormat",
     "features",
-    "baseCrc32",
-    "url"
+    "baseCrc32"
    ]
   },
   {
@@ -2264,10 +2203,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Not tested.",
-   "url": "https://www.pokecommunity.com/threads/247696/",
-   "links": [
-    "https://projectpokemon.org/home/files/file/2466-pok%C3%A9mon-blaze-black-pok%C3%A9mon-volt-white/"
-   ],
    "color": "#34343A",
    "notes": "Current Version 3.1 (24 Dec 2011) per the PokéCommunity thread.",
    "uncertain": true,
@@ -2296,10 +2231,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Not tested.",
-   "url": "https://www.pokecommunity.com/threads/247696/",
-   "links": [
-    "https://projectpokemon.org/home/files/file/2466-pok%C3%A9mon-blaze-black-pok%C3%A9mon-volt-white/"
-   ],
    "color": "#B5B0A4",
    "uncertain": true,
    "uncertainFields": [
@@ -2329,7 +2260,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Not tested.",
-   "url": "https://www.pokecommunity.com/threads/485328/",
    "color": "#2A333C",
    "notes": "Public release thread opened 2022-10-31.",
    "uncertain": true,
@@ -2361,7 +2291,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "yes",
    "uprNote": "Stock UPR ZX 4.6.1 crashes on this hack; souldew's randomizer bridge skips the broken static-encounter offsets and protects two intro scripts, so randomizing works.",
-   "url": "https://www.pokecommunity.com/threads/539556/",
    "color": "#B0904A",
    "notes": "Release thread 2025-12-20, marked COMPLETE; no version number published. Base HeartGold (USA) CRC C180A0E9 confirmed by the patch ReadMe.",
    "patchSha1": "80fa3c0b16a72240e55eeeac9a017000275d36ae",
@@ -2387,7 +2316,6 @@
    "nuzlockeFriendly": true,
    "uprCompatible": "unknown",
    "uprNote": "Not tested; the HeartGold sibling breaks stock UPR, so expect similar problems.",
-   "url": "https://www.pokecommunity.com/threads/539178/",
    "color": "#6A6672",
    "notes": "Thread says to use a Platinum Rev. 1 ROM -> No-Intro 'Pokemon - Platinum Version (USA) (Rev 1)' CRC 69D628E8 (USA assumed).",
    "uncertain": true,

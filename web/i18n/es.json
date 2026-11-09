@@ -618,7 +618,6 @@
   "lib.hackMissing": "no instalado",
   "lib.hacks": "ROM hacks",
   "lib.hacksFor": "ROM hacks para este juego",
-  "lib.hacksHint": "Versiones hechas por fans. Descarga el parche de la página oficial, añádelo aquí y souldew lo aplica a tu propia ROM.",
   "lib.hard": "Difícil",
   "lib.importing": "Importando …",
   "lib.kaizo": "Kaizo",
@@ -637,7 +636,6 @@
   "lib.notInstalled": "Instálalo primero en los ajustes",
   "lib.notOwned": "No está en tu biblioteca",
   "lib.nuzlocke": "Apto para Nuzlocke",
-  "lib.officialPage": "Página oficial",
   "lib.onlyMine": "Solo mis juegos",
   "lib.patch": "Parche",
   "lib.play": "Jugar",
@@ -1827,5 +1825,6 @@
   "upd.updatedTitle": "Actualizado",
   "upd.version": "Versión {version}",
   "upd.whatsNew": "Novedades",
-  "upd.youHave": "Tienes la versión {version}."
+  "upd.youHave": "Tienes la versión {version}.",
+  "lib.hacksHint2": "Versiones hechas por fans. Si tienes un archivo de parche para alguna, añádelo aquí y souldew lo aplica a tu propia ROM."
 }

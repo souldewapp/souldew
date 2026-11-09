@@ -618,7 +618,6 @@
   "lib.hackMissing": "nicht installiert",
   "lib.hacks": "ROM-Hacks",
   "lib.hacksFor": "ROM-Hacks für dieses Spiel",
-  "lib.hacksHint": "Fan-Versionen. Hol dir den Patch von der offiziellen Seite, füge ihn hier hinzu, und souldew wendet ihn auf deine eigene ROM an.",
   "lib.hard": "Schwer",
   "lib.importing": "Importiere …",
   "lib.kaizo": "Kaizo",
@@ -637,7 +636,6 @@
   "lib.notInstalled": "Zuerst in den Einstellungen installieren",
   "lib.notOwned": "Nicht in deiner Bibliothek",
   "lib.nuzlocke": "Nuzlocke-geeignet",
-  "lib.officialPage": "Offizielle Seite",
   "lib.onlyMine": "Nur meine Spiele",
   "lib.patch": "Patch",
   "lib.play": "Spielen",
@@ -1827,5 +1825,6 @@
   "upd.updatedTitle": "Aktualisiert",
   "upd.version": "Version {version}",
   "upd.whatsNew": "Was ist neu",
-  "upd.youHave": "Du hast {version}."
+  "upd.youHave": "Du hast {version}.",
+  "lib.hacksHint2": "Fan-Versionen. Wenn du eine Patch-Datei dafür hast, füge sie hier hinzu, und souldew wendet sie auf deine eigene ROM an."
 }
