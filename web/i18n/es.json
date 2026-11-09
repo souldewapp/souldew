@@ -1826,5 +1826,18 @@
   "upd.version": "Versión {version}",
   "upd.whatsNew": "Novedades",
   "upd.youHave": "Tienes la versión {version}.",
-  "lib.hacksHint2": "Versiones hechas por fans. Si tienes un archivo de parche para alguna, añádelo aquí y souldew lo aplica a tu propia ROM."
+  "lib.hacksHint2": "Versiones hechas por fans. Si tienes un archivo de parche para alguna, añádelo aquí y souldew lo aplica a tu propia ROM.",
+  "rules.battleHelp": "Ayuda en combate",
+  "rules.typeHelp": "Mostrar la ayuda de tipos",
+  "rules.typeHelpHint": "En combate: cómo pegan tus movimientos, qué te afecta y las debilidades de cada Pokémon. Desactivada, nadie la ve.",
+  "rules.typeHelpHintSolo": "En combate: cómo pegan tus movimientos, qué te afecta y las debilidades de cada Pokémon. Desactívala para una partida en la que te las sepas de memoria.",
+  "rules.hostOnlyName": "Solo {name} puede cambiarlo (anfitrión).",
+  "rules.hostOnly": "Solo el anfitrión puede cambiarlo.",
+  "battle.helpOff": "La ayuda de tipos está desactivada en esta partida.",
+  "new.rulesHintLink": "La regla de tipos, la cláusula de duplicados, los límites de nivel y lo demás lo ajustáis juntos en el tablero (pestaña Reglas). Esto lo decides tú como anfitrión: vale para los dos y solo tú puedes cambiarlo luego.",
+  "new.rulesHintGroup": "La regla de tipos, la cláusula de duplicados, los límites de nivel y lo demás lo ajustáis juntos en el tablero (pestaña Reglas). Esto lo decides tú como anfitrión: vale para todos y solo tú puedes cambiarlo luego.",
+  "feed.typeHelpOn": "activó la ayuda de tipos para todos",
+  "feed.typeHelpOff": "desactivó la ayuda de tipos para todos",
+  "feed.typeHelpOnSolo": "Ayuda de tipos activada en esta partida",
+  "feed.typeHelpOffSolo": "Ayuda de tipos desactivada en esta partida"
 }

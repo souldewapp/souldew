@@ -207,6 +207,9 @@ label.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; 
 label.check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; padding: 5px 0; }
 label.check input { margin-top: 3px; accent-color: var(--tri); width: 16px; height: 16px; flex: none; }
 label.check .hint { display: block; font-size: 12.5px; color: var(--ink-3); }
+label.check.locked { cursor: default; }
+label.check .hint.host-only { margin-top: 3px; color: var(--warn-ink); }
+.rule-sep { border-top: 1px solid #ffffff0d; padding-top: 8px; }
 /* One row of options. When the space runs out (a narrow sheet, long German labels) the options get narrower and
    their text wraps inside the button – the control keeps its shape instead of breaking into a second pill row. */
 .seg { align-self: flex-start; display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, auto); max-width: 100%;
@@ -375,6 +378,7 @@ button.hack-card:hover { background: var(--shell-4); }
 .feed-item.catch .k { background: var(--tri); }
 .feed-item.chat .k { background: var(--crs); }
 .feed-item.cheat .k { background: var(--warn); }
+.feed-item.rule .k { background: var(--crs); }
 .feed-item time { color: var(--ink-3); font-size: 12px; white-space: nowrap; }
 .who-p1 { color: var(--p1); font-weight: 500; }
 .who-p2 { color: var(--p2); font-weight: 500; }

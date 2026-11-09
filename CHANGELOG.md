@@ -55,6 +55,10 @@
 
 - The library no longer links to ROM hacks or their download pages. The known hacks are still listed – with
   description, difficulty and base game – so souldew recognises them and applies a patch file you add yourself.
+- New run rule "Show type matchup help" (on by default): the host decides when creating a SoulLink or Nuzlocke whether
+  the battle helper in the play view shows how your moves land, what hits you and the weakness charts. Off hides it
+  for every player. Only the host can change it later (board › Rules), and every change shows up in the log. Runs
+  from before keep the help.
 
 ## 2.2.0
 

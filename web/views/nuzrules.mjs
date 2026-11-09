@@ -140,3 +140,17 @@ export function NuzlockeRules({ value, onChange, variant = 'board' }) {
     </section>
   </div>`;
 }
+
+/**
+ * "Show type matchup help" – a rule the host sets for everyone (SoulLink and solo). Off hides the battle helper's
+ * move effectiveness, "what hits you" and the weakness charts on every player's play view. `locked`: this player
+ * isn't the host – they see the setting but can't change it.
+ */
+export function TypeHelpRule({ value, onChange, locked, hostName, solo }) {
+  const hint = solo
+    ? t('rules.typeHelpHintSolo', 'In battle: how your moves land, what hits you and each Pokémon’s weaknesses. Off for a run where you work them out yourself.')
+    : t('rules.typeHelpHint', 'In battle: how your moves land, what hits you and each Pokémon’s weaknesses. Off hides it for every player.');
+  return html`<label class=${`check ${locked ? 'locked' : ''}`}><input type="checkbox" checked=${value !== false} disabled=${locked} onChange=${(e) => onChange(e.target.checked)} />
+    <span>${t('rules.typeHelp', 'Show type matchup help')}<span class="hint">${hint}</span>
+      ${locked && html`<span class="hint host-only">${hostName ? t('rules.hostOnlyName', 'Only {name} can change this (host).', { name: hostName }) : t('rules.hostOnly', 'Only the host can change this.')}</span>`}</span></label>`;
+}

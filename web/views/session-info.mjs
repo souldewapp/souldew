@@ -8,7 +8,7 @@ import { t } from '../lib/i18n.mjs';
 import { speciesName, typeLabel, moveName } from '../lib/data.mjs';
 import {
   party as partyAreas, live, pairState, encounter, levelCap, rules as getRules, dupeOf, players as getPlayers,
-  areaName, causeText, slotsOf, othersOf, openAreas, isNuzlocke, pairTypeClash,
+  areaName, causeText, slotsOf, othersOf, openAreas, isNuzlocke, pairTypeClash, typeHelpOn,
 } from '../lib/run.mjs';
 import { statusOf, statusLabel, shownLevel } from './party.mjs';
 import { effectiveness, defenseChart, moveInfo } from '/shared/typechart.mjs';
@@ -266,6 +266,8 @@ export function BattlePanel({ battle, mine, gen, isRun }) {
   const stab = foeTypes.map((ty) => ({ type: ty, m: effectiveness(ty, monTypes, gen) }));
   const r = isRun && doc ? getRules(doc, manifest) : null;
   const solo = isRun && isNuzlocke(manifest);
+  // the host can switch the matchup help off for the whole run: then only who's out there and the catch rules stay
+  const help = !isRun || typeHelpOn(doc, manifest);
   let rule = null;
   const notes = [];
   if (battle.kind === 'wild' && r) {
@@ -310,22 +312,23 @@ export function BattlePanel({ battle, mine, gen, isRun }) {
     </div>
     ${rule && html`<p class=${`bt-rule ${rule.ok ? 'ok' : 'no'} ${rule.clash ? 'clash' : ''}`}>${rule.clash && html`<span class="bt-clash"><${Types} types=${foeTypes.slice(0, 1)} /> ${t('battle.typeTwice', 'same type')}</span>`}${rule.text}</p>`}
     ${notes.length > 0 && html`<div class="bt-notes">${notes.map((x) => html`<span class="rs-chip honour" title=${t('nz.honourHint', 'The app can’t check this – it only reminds you. Keep it yourself.')}>${x}</span>`)}</div>`}
-    ${myMoves.length > 0 && html`<div class="bt-block">
+    ${!help && html`<p class="tiny faint bt-nohelp">${t('battle.helpOff', 'Type matchup help is off in this run.')}</p>`}
+    ${help && myMoves.length > 0 && html`<div class="bt-block">
       <h4>${t('battle.yourMoves', '{mon}’s moves', { mon: mon.nickname || speciesName(mon.species) })}</h4>
       <ul class="bt-moves">${myMoves.map(({ id, info }) => {
         const m = info.cls === 'status' || !info.type ? null : effectiveness(info.type, foeTypes, gen);
         return html`<li><span class=${`type t-${info.type || 'normal'}`}>${moveName(id)}</span>
           ${m === null ? html`<span class="mult x1">${t('fx.status', 'status')}</span>` : html`<span class=${`mult ${multClass(m)}`}>${multText(m)} ${multLabel(m)}</span>`}</li>`;
       })}</ul></div>`}
-    <div class="bt-block">
+    ${help && html`<div class="bt-block">
       <h4>${t('battle.danger', 'What hits {mon}', { mon: mon ? mon.nickname || speciesName(mon.species) : '' })}</h4>
       <ul class="bt-moves">
         ${(foeMoves.length ? foeMoves.map(({ id, info }) => ({ label: moveName(id), type: info.type, m: effectiveness(info.type, monTypes, gen) })) : stab.map((s) => ({ label: t('battle.stab', '{type} attacks', { type: typeLabel(s.type) }), type: s.type, m: s.m })))
           .map((x) => html`<li><span class=${`type t-${x.type}`}>${x.label}</span><span class=${`mult ${multClass(x.m)} foe`}>${multText(x.m)} ${multLabel(x.m)}</span></li>`)}
       </ul>
-    </div>
-    ${chart && html`<${TypeChart} title=${t('battle.chart', '{mon} against types', { mon: speciesName(foe.species) })} chart=${chart} />`}
-    ${myChart && html`<${TypeChart} title=${t('battle.myChart', 'Your {mon} against types', { mon: mon.nickname || speciesName(mon.species) })} chart=${myChart} mine />`}
+    </div>`}
+    ${help && chart && html`<${TypeChart} title=${t('battle.chart', '{mon} against types', { mon: speciesName(foe.species) })} chart=${chart} />`}
+    ${help && myChart && html`<${TypeChart} title=${t('battle.myChart', 'Your {mon} against types', { mon: mon.nickname || speciesName(mon.species) })} chart=${myChart} mine />`}
   </section>`;
 }
 

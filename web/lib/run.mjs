@@ -29,6 +29,9 @@ export const DEFAULT_RULES = {
   autoDeath: true,
   sounds: true,
   cheats: false, // the play screen's cheats (Rare Candies) – off until the run allows them; every use goes to the log
+  // the battle helper's type matchups (move effectiveness, what hits you, weaknesses) in the play view. The host
+  // sets it when creating the run; runs from before it have no `typeHelp` and keep the help (true).
+  typeHelp: true,
   // (the Discord webhook is not a rule: it stays on this computer – GET/PUT /api/runs/:id/discord)
 };
 
@@ -307,6 +310,31 @@ export function logCheatRule(doc, manifest, by, allowed) {
   feedMsg(doc, manifest, { type: 'cheat', slot: by, msg: allowed
     ? solo ? msg('feed.cheatsOnSolo', 'Cheats allowed for this run') : msg('feed.cheatsOn', 'allowed cheats for this run')
     : solo ? msg('feed.cheatsOffSolo', 'Cheats turned off for this run') : msg('feed.cheatsOff', 'turned cheats off for this run') });
+}
+
+/** The run's host: the player who created it (P1 – the one who sends the invite). */
+export const HOST_SLOT = 'p1';
+export const isHost = (me) => (me || HOST_SLOT) === HOST_SLOT;
+
+/** Is the type matchup help shown in this run? On unless the host switched it off (older runs: on). */
+export const typeHelpOn = (doc, manifest) => !doc || rules(doc, manifest).typeHelp !== false;
+
+/**
+ * Only the host may switch the type matchup help. Returns the rules patch a player may apply: a non-host's
+ * `typeHelp` is dropped (their app doesn't offer the switch either).
+ */
+export function allowedRulesPatch(patch, me) {
+  if (!patch || isHost(me) || !('typeHelp' in patch)) return patch;
+  const { typeHelp, ...rest } = patch; // eslint-disable-line no-unused-vars
+  return rest;
+}
+
+/** Switching the type matchup help is logged for everyone, like the cheats rule. */
+export function logTypeHelpRule(doc, manifest, by, on) {
+  const solo = slotsOf(manifest).length === 1;
+  feedMsg(doc, manifest, { type: 'rule', slot: by, msg: on
+    ? solo ? msg('feed.typeHelpOnSolo', 'Type matchup help turned on for this run') : msg('feed.typeHelpOn', 'turned the type matchup help on for everyone')
+    : solo ? msg('feed.typeHelpOffSolo', 'Type matchup help turned off for this run') : msg('feed.typeHelpOff', 'turned the type matchup help off for everyone') });
 }
 
 /** `slot` let the area's encounter get away (fled, knocked out, ball missed): the area is spent. */

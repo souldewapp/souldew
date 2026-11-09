@@ -8,12 +8,13 @@ import { play } from '../lib/sound.mjs';
 import {
   progression, pairState, setEncounter, markDead, revive, party, live, counts, checks, feedList, feed, feedText, causeText, msg, areaName, joinNames,
   players as getPlayers, rules as getRules, levelCap, dupeOf, resumeRun, slotsOf, encounter, openAreas, runStats, isNuzlocke, logCheatRule,
+  logTypeHelpRule, allowedRulesPatch, isHost, HOST_SLOT,
 } from '../lib/run.mjs';
 import { PartyPanel, PartyGrid, TeamColumns } from './party.mjs';
 import { HostCode } from './invitecode.mjs';
 import { RestartModal } from './restart.mjs';
 import { useStreamer } from '../lib/streamer.mjs';
-import { NuzlockeRules, Choice } from './nuzrules.mjs';
+import { NuzlockeRules, Choice, TypeHelpRule } from './nuzrules.mjs';
 
 const MAX_ID = [0, 151, 251, 386, 493, 649];
 
@@ -828,7 +829,8 @@ export function RulesTab() {
     }
   };
   // Only what was set is stored – the mode's defaults (rules(doc, manifest)) fill in the rest.
-  const set = (patch) => {
+  const set = (asked) => {
+    const patch = allowedRulesPatch(asked, me); // the type matchup help is the host's call
     const next = { ...(doc.get('rules') || {}), ...patch };
     delete next.discordWebhook;
     if (next.preset === null) delete next.preset;
@@ -837,6 +839,7 @@ export function RulesTab() {
     doc.set('rules', next);
     api.post(`/api/runs/${manifest.id}/meta`, { rules: next }).catch(() => {});
     if ('cheats' in patch && !!patch.cheats !== cheatsWere) logCheatRule(doc, manifest, me, !!patch.cheats);
+    if ('typeHelp' in patch && (patch.typeHelp !== false) !== (r.typeHelp !== false)) logTypeHelpRule(doc, manifest, me, patch.typeHelp !== false);
   };
   const blackoutText = { party: t('rules.b4Solo', 'If your whole team faints (blackout), the run is over.'), box: t('rules.b4SoloBox', 'The run is over once no living Pokémon is left – in the team or in the box.'), off: t('rules.b4SoloOff', 'A blackout doesn’t end the run – you decide when it’s over.') }[r.blackout];
   return html`<div class="stack-l">
@@ -872,6 +875,11 @@ export function RulesTab() {
         ? t('rules.cheatsHintGroup', 'From the play screen. Every use shows up in the log for all of you.')
         : t('rules.cheatsHint', 'From the play screen. Every use shows up in the log for both of you.')}</span></span></label>
     </section>`}
+    <section class="panel stack">
+      <h2>${t('rules.battleHelp', 'Battle help')}</h2>
+      <${TypeHelpRule} value=${r.typeHelp} solo=${solo} locked=${!isHost(me)} hostName=${getPlayers(doc, manifest)[HOST_SLOT]?.name}
+        onChange=${(v) => set({ typeHelp: v })} />
+    </section>
     <section class="panel stack">
       <h2>${t('rules.auto', 'Automatic')}</h2>
       <label class="check"><input type="checkbox" checked=${r.autoAssign} onChange=${(e) => set({ autoAssign: e.target.checked })} /><span>${t('rules.autoAssign', 'Enter new catches automatically')}<span class="hint">${t('rules.autoAssignHint', 'Based on where they were caught. Unclear cases land in the inbox.')}</span></span></label>

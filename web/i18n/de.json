@@ -1826,5 +1826,18 @@
   "upd.version": "Version {version}",
   "upd.whatsNew": "Was ist neu",
   "upd.youHave": "Du hast {version}.",
-  "lib.hacksHint2": "Fan-Versionen. Wenn du eine Patch-Datei dafür hast, füge sie hier hinzu, und souldew wendet sie auf deine eigene ROM an."
+  "lib.hacksHint2": "Fan-Versionen. Wenn du eine Patch-Datei dafür hast, füge sie hier hinzu, und souldew wendet sie auf deine eigene ROM an.",
+  "rules.battleHelp": "Kampfhilfe",
+  "rules.typeHelp": "Typ-Effektivität anzeigen",
+  "rules.typeHelpHint": "Im Kampf: wie deine Attacken wirken, was dich trifft und die Schwächen jedes Pokémon. Aus blendet das bei allen Spielern aus.",
+  "rules.typeHelpHintSolo": "Im Kampf: wie deine Attacken wirken, was dich trifft und die Schwächen jedes Pokémon. Aus für einen Run, in dem du das selbst im Kopf hast.",
+  "rules.hostOnlyName": "Nur {name} kann das ändern (Host).",
+  "rules.hostOnly": "Nur der Host kann das ändern.",
+  "battle.helpOff": "Die Typ-Effektivität ist in diesem Run ausgeschaltet.",
+  "new.rulesHintLink": "Typ-Regel, Dupes-Klausel, Level-Caps und den Rest stellt ihr gemeinsam auf dem Board ein (Tab „Regeln“). Das hier entscheidest du als Host – es gilt für euch beide, und nur du kannst es später ändern.",
+  "new.rulesHintGroup": "Typ-Regel, Dupes-Klausel, Level-Caps und den Rest stellt ihr gemeinsam auf dem Board ein (Tab „Regeln“). Das hier entscheidest du als Host – es gilt für alle, und nur du kannst es später ändern.",
+  "feed.typeHelpOn": "hat die Typ-Effektivität für alle eingeschaltet",
+  "feed.typeHelpOff": "hat die Typ-Effektivität für alle ausgeschaltet",
+  "feed.typeHelpOnSolo": "Typ-Effektivität für diesen Run eingeschaltet",
+  "feed.typeHelpOffSolo": "Typ-Effektivität für diesen Run ausgeschaltet"
 }

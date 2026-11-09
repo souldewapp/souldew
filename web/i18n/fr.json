@@ -1826,5 +1826,18 @@
   "upd.version": "Version {version}",
   "upd.whatsNew": "Nouveautés",
   "upd.youHave": "Tu as la version {version}.",
-  "lib.hacksHint2": "Des versions créées par des fans. Si tu as un fichier patch pour l’une d’elles, ajoute-le ici et souldew l’applique à ta propre ROM."
+  "lib.hacksHint2": "Des versions créées par des fans. Si tu as un fichier patch pour l’une d’elles, ajoute-le ici et souldew l’applique à ta propre ROM.",
+  "rules.battleHelp": "Aide au combat",
+  "rules.typeHelp": "Afficher l’aide aux types",
+  "rules.typeHelpHint": "En combat : l’efficacité de tes attaques, ce qui te touche et les faiblesses de chaque Pokémon. Désactivée, plus personne ne la voit.",
+  "rules.typeHelpHintSolo": "En combat : l’efficacité de tes attaques, ce qui te touche et les faiblesses de chaque Pokémon. À désactiver pour un run où tu les connais par cœur.",
+  "rules.hostOnlyName": "Seul·e {name} peut modifier ça (hôte).",
+  "rules.hostOnly": "Seul l’hôte peut modifier ça.",
+  "battle.helpOff": "L’aide aux types est désactivée pour ce run.",
+  "new.rulesHintLink": "Règle des types, clause des doublons, limites de niveau et le reste se règlent ensemble sur le tableau (onglet Règles). Celle-ci, c’est toi qui la choisis en tant qu’hôte : elle vaut pour vous deux, et toi seul·e pourras la changer plus tard.",
+  "new.rulesHintGroup": "Règle des types, clause des doublons, limites de niveau et le reste se règlent ensemble sur le tableau (onglet Règles). Celle-ci, c’est toi qui la choisis en tant qu’hôte : elle vaut pour tout le monde, et toi seul·e pourras la changer plus tard.",
+  "feed.typeHelpOn": "a activé l’aide aux types pour tout le monde",
+  "feed.typeHelpOff": "a désactivé l’aide aux types pour tout le monde",
+  "feed.typeHelpOnSolo": "Aide aux types activée pour ce run",
+  "feed.typeHelpOffSolo": "Aide aux types désactivée pour ce run"
 }
