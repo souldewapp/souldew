@@ -133,6 +133,9 @@
   no team and a place stuck on New Bark Town.
 - Black/White and Black 2/White 2: the battle panel shows the opponent's HP as it goes down (it stayed full) and your
   Pokémon's HP during the fight, and no longer keeps showing the opponent for up to two minutes after a fight.
+- Platinum, Pearl, Black and Black 2: battles show up on the panel when they start and leave it when they end (a wild
+  battle in Platinum showed up late and stayed after running away), and a catching demo is no longer taken for your
+  own battle.
 - Red/Blue/Yellow and Gold/Silver don't store where a Pokémon was caught: a catch right after a wild battle is now
   filed under the place the sign shows (before, every catch went to the inbox). Gifts and trades still go to the inbox.
 
