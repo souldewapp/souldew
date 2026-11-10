@@ -2164,5 +2164,8 @@
   "trophy.tabDex": "Pokédex",
   "trophy.tabMedals": "Orden",
   "trophy.title": "Trophäen",
-  "trophy.unlocked": "Erfolg freigeschaltet"
+  "trophy.unlocked": "Erfolg freigeschaltet",
+  "play.liveHack": "Für diesen Hack noch nicht unterstützt",
+  "play.liveHackRun": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon. Der Run funktioniert trotzdem: Trag Fänge von Hand ein.",
+  "play.liveHackSolo": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon."
 }

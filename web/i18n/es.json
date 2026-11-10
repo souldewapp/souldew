@@ -2164,5 +2164,8 @@
   "trophy.tabDex": "Pokédex",
   "trophy.tabMedals": "Galardones",
   "trophy.title": "Trofeos",
-  "trophy.unlocked": "Logro desbloqueado"
+  "trophy.unlocked": "Logro desbloqueado",
+  "play.liveHack": "Aún no compatible con este hack",
+  "play.liveHackRun": "Este hack de ROM usa un motor ampliado (nuevos números de Pokémon y otra estructura de memoria) que souldew aún no puede leer con fiabilidad, así que no muestra nada antes que Pokémon equivocados. El run funciona igual: introduce las capturas a mano.",
+  "play.liveHackSolo": "Este hack de ROM usa un motor ampliado (nuevos números de Pokémon y otra estructura de memoria) que souldew aún no puede leer con fiabilidad, así que no muestra nada antes que Pokémon equivocados."
 }

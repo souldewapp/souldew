@@ -16,7 +16,8 @@ import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
 import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer } from './session-info.mjs';
-import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations } from './location.mjs';
+import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow } from './location.mjs';
+import { shiftEntry } from '/shared/live/romwram.mjs';
 import { RulesTab } from './board.mjs';
 import { CartInsert } from './cartinsert.mjs';
 import { play as playCue } from '../lib/sound.mjs';
@@ -741,6 +742,7 @@ export function GameSession({ session, mode }) {
       }, 100); // a few bytes: read often, so the turbo music follows a new song within a moment
       // live loop
       let lastLocate = 0;
+      let wramEntry = null;
       const tick = () => {
         if (stopped) return;
         const e = emu();
@@ -752,11 +754,27 @@ export function GameSession({ session, mode }) {
             lastLocate = Date.now();
             e.locateRam();
           }
-          if (e.ramInfo().base >= 0) {
-            setHere((p) => nextHere(p, readHere(entry, e.read, state)));
-            const res = readLiveParty(entry, e.read, T, state);
+          // A GBA ROM hack on an expanded engine (romspecies.mjs) keeps neither the species numbers nor the RAM layout
+          // of the game it was built from: reading it with that game's addresses would show made-up Pokémon. Say so.
+          const sp = entry.gen === 3 ? romSpeciesNow() : null;
+          if (entry.gen <= 3 && !romDataReady()) {
+            // (GB and GBA games are read once the ROM's own data is known – a moment after the start: a hack may keep
+            // its variables elsewhere or other Pokémon in the slots)
+          } else if (sp?.engine === 'expanded') {
+            setLiveState({ status: 'hack', entry: entry.name });
+            setHere(null);
+            setCheatGame(false); // (the bag isn't where the base game keeps it either)
+          } else if (e.ramInfo().base >= 0) {
+            // a Game Boy hack built from the disassembly may have moved its RAM variables (Crystal Legacy: 11 bytes)
+            const wram = entry.gen <= 2 ? romWramNow() : null;
+            if (wram && wramEntry?.from !== entry) wramEntry = { from: entry, entry: { ...shiftEntry(entry, wram), wram } };
+            const ent = wram ? wramEntry.entry : entry;
+            if (liveRef.current?.entry !== ent) liveRef.current = { ...liveRef.current, entry: ent }; // (the cheats use it)
+            setHere((p) => nextHere(p, readHere(ent, e.read, state)));
+            const TT = sp ? T.withSpecies(sp) : T; // a hack's own Pokémon in the slots (Light Platinum)
+            const res = readLiveParty(ent, e.read, TT, state);
             if (res?.party) {
-              const fight = readLiveBattle(entry, e.read, T, state, res.party);
+              const fight = readLiveBattle(ent, e.read, TT, state, res.party);
               const party = withBattleHp(res.party, fight);
               setMine(party);
               setBattle(fight);
@@ -1108,7 +1126,7 @@ export function GameSession({ session, mode }) {
         <section class="screen stack" style="gap:8px">
           <div class="row"><${Led} on=${liveState.status === 'live'} color="green" blink=${liveState.status === 'searching' && phase === 'running'} />
             <b class="px">${names ? names[me].name : t('play.liveOn', 'Live tracking')}</b>
-            <span class="tiny faint grow">${liveState.status === 'live' ? (names ? t('play.liveOn', 'Live tracking') : t('board.liveNow', 'live')) : liveState.status === 'unsupported' ? t('play.liveUnsupported', 'No live data for this game') : t('play.liveSearching', 'Looking for your team …')}</span>
+            <span class="tiny faint grow">${liveState.status === 'live' ? (names ? t('play.liveOn', 'Live tracking') : t('board.liveNow', 'live')) : liveState.status === 'unsupported' ? t('play.liveUnsupported', 'No live data for this game') : liveState.status === 'hack' ? t('play.liveHack', 'Not supported for this hack yet') : t('play.liveSearching', 'Looking for your team …')}</span>
             ${isRun && names && others.map((s) => {
               const on = !!onlineSlots?.has(s);
               const seen = live(doc, s);
@@ -1118,9 +1136,12 @@ export function GameSession({ session, mode }) {
           ${liveState.status === 'unsupported' && html`<span class="small muted">${isRun
             ? t('play.liveUnsupportedRun', 'This ROM isn’t in the memory table (other language or a hack with a changed layout). The run still works – enter catches by hand.')
             : t('play.liveNoneSolo', 'Live tracking reads Pokémon games – this one plays without it.')}</span>`}
+          ${liveState.status === 'hack' && html`<span class="small muted">${isRun
+            ? t('play.liveHackRun', 'This ROM hack runs on an expanded engine (new Pokémon numbers and a different memory layout) that souldew can’t read reliably yet – so it shows nothing rather than wrong Pokémon. The run still works: enter catches by hand.')
+            : t('play.liveHackSolo', 'This ROM hack runs on an expanded engine (new Pokémon numbers and a different memory layout) that souldew can’t read reliably yet – so it shows nothing rather than wrong Pokémon.')}</span>`}
           ${isRun && names
             ? html`<${LinkedPairs} mine=${myParty} gen=${GEN[target.system]} compact=${!!battle?.enemy} />`
-            : liveState.status !== 'unsupported' && html`<${PartyGrid} party=${myParty} gen=${GEN[target.system]} compact accent="var(--p1)" label=${t('play.yourTeam', 'Your team')} />`}
+            : liveState.status !== 'unsupported' && liveState.status !== 'hack' && html`<${PartyGrid} party=${myParty} gen=${GEN[target.system]} compact accent="var(--p1)" label=${t('play.yourTeam', 'Your team')} />`}
         </section>
         ${isRun && names && !solo && mode === 'full' && html`<div class="side-partner"><${PartnerScreen} link=${link} system=${target.system} /></div>`}
       </aside>
@@ -1247,7 +1268,14 @@ function ExternalPlay({ target, emu }) {
       const { regionReader } = await import('/shared/live/parse.mjs');
       const entry = findEntry(addresses, liveInfo.game);
       if (readState.current.game !== entry?.id) readState.current = { game: entry?.id };
-      const res = entry && readLiveParty(entry, regionReader(liveInfo.regions), T, readState.current);
+      // GBA: the ROM's own species table – a hack's other Pokémon; an expanded engine isn't read at all (see the loop above)
+      let sp = null;
+      if (entry?.gen === 3 && target.rom) {
+        await loadRomLocations(target.rom);
+        sp = romSpeciesNow();
+        if (sp?.engine === 'expanded') return;
+      }
+      const res = entry && readLiveParty(entry, regionReader(liveInfo.regions), sp ? T.withSpecies(sp) : T, readState.current);
       if (res?.party) applySnap({ source: 'live', party: res.party, game: entry.id });
     })().catch((err) => console.warn('live frame', err));
   }, [liveInfo?.at]);

@@ -10,6 +10,8 @@
 // data, found through the NitroSDK module params; Gen 5: community addresses, unverified).
 // Garbage in RAM (title screen, a game that is still booting, a hack with another layout) gives null, never throws.
 
+import { shiftEntry } from './romwram.mjs';
+
 const hex = (v) => (typeof v === 'string' ? parseInt(v, 16) : Number(v));
 const u16le = (b, o) => b[o] | (b[o + 1] << 8);
 const u32le = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
@@ -20,7 +22,9 @@ export function mapEntryFor(maps, entry) {
   const id = typeof entry === 'string' ? entry : entry?.id;
   if (!id || !maps?.games) return null;
   // ids like "heartgold_us~IPKD" are another language found by scanning: its addresses are unknown
-  return maps.games[id] || null;
+  const m = maps.games[id] || null;
+  // a Game Boy hack whose variables moved (shared/live/romwram.mjs: the entry carries the shift)
+  return m && entry?.wram ? shiftEntry(m, entry.wram) : m;
 }
 
 function readGen1(m, read, maps) {
@@ -278,6 +282,22 @@ export function locationLabel(gen, id, tables = {}, lang = 'en') {
   if (gen === 3) return pick(tables.loc3?.map?.[String(id)]);
   if (gen === 4) return tables.gen4?.locations?.[id] || '';
   return '';
+}
+
+/**
+ * The name the sign shows for a readLocation result. `rom` = the ROM's location data (romLocations() + `vanilla` from
+ * the server), `table` = the app's own name for the place (locationLabel, in the app's language), `lang` = the app's
+ * language. A modified ROM (randomized, a ROM hack – its CRC isn't a retail one) always shows the game's own name: a
+ * hack's maps may reuse a vanilla place id for somewhere else. An unmodified one shows the game's name when it speaks
+ * the app's language (the name the game itself shows), else the app's translation; a place the tables don't know
+ * keeps the game's name either way.
+ */
+export function placeName(r, { rom = null, table = '', lang = 'en' } = {}) {
+  if (!r) return '';
+  const own = r.romName || '';
+  if (own && rom?.vanilla === false) return own;
+  if (own && rom?.lang && rom.lang === lang) return own;
+  return table || own;
 }
 
 /** Same place? (two readLocation results) */

@@ -83,6 +83,12 @@ function indexMap(json) {
   return arr;
 }
 
+/**
+ * Species numbers above this stand for a Pokémon only the ROM knows (a ROM hack's own, "fakémon"): FAKEMON + its index
+ * in the game. The UI names them from the ROM (web/lib/data.mjs setRomSpecies).
+ */
+export const FAKEMON = 20000;
+
 export class LiveTables {
   constructor({ charsetGen1, charsetGen2, charsetGen3, gen1Index, gen3Index, gen4 }) {
     this.cs1 = charsetMap(charsetGen1);
@@ -90,7 +96,20 @@ export class LiveTables {
     this.cs3 = charsetMap(charsetGen3);
     this.idx1 = indexMap(gen1Index);
     this.idx3 = indexMap(gen3Index);
+    this.fake3 = null;
     this.gen4 = gen4;
+  }
+
+  /**
+   * These tables with a GBA ROM's own species table (shared/live/romspecies.mjs romSpecies()): a ROM hack that put
+   * other Pokémon into the slots reads as what the game shows. Without a changed table the tables stay as they are.
+   */
+  withSpecies(sp) {
+    if (!sp?.map) return this;
+    const t = Object.create(this);
+    t.idx3 = sp.map;
+    t.fake3 = sp.unknown && Object.keys(sp.unknown).length ? sp.unknown : null;
+    return t;
   }
 }
 
@@ -193,7 +212,7 @@ export function parsePk3(d, T) {
   const A = sub('A');
   const M = sub('M');
   const internal = u16le(G, 0);
-  const species = T.idx3?.[internal] || 0;
+  const species = T.idx3?.[internal] || (T.fake3?.[internal] ? FAKEMON + internal : 0);
   if (!species) return null;
   const origins = u16le(M, 2);
   const ivs = u32le(M, 4);
@@ -780,10 +799,17 @@ function battleDS(entry, read, T, state, party) {
     state.enemySig = sig;
     state.enemySince = now;
   }
-  // Without a flag: "an opponent party that changed recently, or a player copy with different HP".
-  const on = flag ?? ((!!enemy && now - (state.enemySince || 0) < 90000) || anyDiff);
+  // Without a flag: "an opponent party that changed recently, or a player copy with different HP". The save party
+  // stays as it was for the whole battle (HP, level, a catch all land in it when the battle ends), so once it differs
+  // from what it was when the battle began, the battle is over – a Potion in battle doesn't touch it. (Black: the
+  // rival's Pokémon stayed on the panel ~2 minutes after the fight otherwise.)
+  const saveSig = party.map((m) => `${m.pid}:${m.level}:${m.hp}:${m.maxHp}`).join();
+  if (enemy && state.battleStartSig === undefined) state.battleStartSig = saveSig;
+  const over = flag === null && state.battleStartSig !== undefined && saveSig !== state.battleStartSig;
+  const on = flag ?? (!over && ((!!enemy && now - (state.enemySince || 0) < 90000) || anyDiff));
   if (!on || !enemy) {
     if (flag === null && state.battle) retireCopies(read, size, entry.gen, T, state); // battle ended (no flag)
+    state.battleStartSig = undefined;
     state.battle = null;
     state.battleHp = state.activePid = null;
     return null;

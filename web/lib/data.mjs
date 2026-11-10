@@ -25,8 +25,17 @@ export const gen4data = () => GEN4;
 
 const nameLang = () => (P?.names?.[currentLang()] ? currentLang() : 'en');
 
+// Pokémon only the running ROM knows (a ROM hack's own: shared/live/parse.mjs FAKEMON + their index in the game),
+// named as the game names them (shared/live/romspecies.mjs `unknown`).
+const FAKEMON = 20000; // = shared/live/parse.mjs FAKEMON (PokeAPI's form ids run from 10001)
+let ROM_SPECIES = null;
+export function setRomSpecies(sp) {
+  ROM_SPECIES = sp?.unknown && Object.keys(sp.unknown).length ? sp.unknown : null;
+}
+
 export function speciesName(id, lang = nameLang()) {
   if (!id) return '';
+  if (id > FAKEMON && ROM_SPECIES?.[id - FAKEMON]) return ROM_SPECIES[id - FAKEMON];
   return P?.names?.[lang]?.[id] || P?.names?.en?.[id] || `#${id}`;
 }
 
@@ -54,7 +63,7 @@ export function moveName(id) {
 
 /** Sprite in the art style of the game's generation (served + cached by the local server). */
 export function spriteUrl(id, { gen = 4, shiny = false } = {}) {
-  if (!id) return '';
+  if (!id || id > FAKEMON) return ''; // (a ROM hack's own Pokémon has no sprite here)
   const g = Math.min(Math.max(gen || 4, 1), 5);
   if (id > [0, 151, 251, 386, 493, 649][g]) return `/sprites/${shiny ? 'shiny' : 'default'}/${id}.png`;
   const set = { 1: 'gen1', 2: shiny ? 'gen2shiny' : 'gen2', 3: shiny ? 'gen3shiny' : 'gen3', 4: shiny ? 'gen4shiny' : 'gen4', 5: shiny ? 'gen5shiny' : 'gen5' }[g];

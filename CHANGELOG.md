@@ -112,6 +112,25 @@
   of a run, the live data while you play) and stays on your computer. Your existing runs count from the first start;
   a deleted run's catches stay in the Pokédex.
 
+**ROM hacks and randomized games: names straight from the game** – checked game by game (see
+[docs/TESTED_GAMES.md](docs/TESTED_GAMES.md)).
+
+- A randomized game or a ROM hack now always shows the game's own place names – also when the game's language
+  isn't the app's. New catches are named the same way, so catches in Black/White and Black 2/White 2 get their place
+  name instead of a number, and a hack's catches get the hack's names.
+- GBA ROM hacks that put other Pokémon into the game (Light Platinum: 141 of them, e.g. Venipede where Weedle was, or
+  Turtwig) now show the Pokémon the game shows – before, souldew showed the original game's Pokémon of that number, or
+  nothing. A Pokémon only the hack has gets the hack's name.
+- Hacks on an expanded engine (Unbound, Radical Red, Run & Bun and other pokeemerald-expansion hacks) now say that
+  live tracking doesn't support them yet, instead of possibly showing wrong Pokémon. Catches can still be entered by
+  hand.
+- Blaze Black 2 Redux (and Gen 5 hacks like it) now gets the place sign.
+- Game Boy hacks that moved the game's memory (Crystal Legacy keeps it 11 bytes further on) are read again: team,
+  battle, place sign and the Rare Candy cheat find their data from the hack's own code. Before, Crystal Legacy showed
+  no team and a place stuck on New Bark Town.
+- Black/White and Black 2/White 2: the battle panel no longer keeps showing the opponent for up to two minutes after a
+  fight.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.

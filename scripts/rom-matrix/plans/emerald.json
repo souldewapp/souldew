@@ -1,0 +1,1035 @@
+{
+"id": "emerald",
+"entries": [
+"emerald_us"
+],
+"hacks": [
+"emerald-kaizo"
+],
+"note": "Emerald (US/EU), also Emerald Kaizo: truck \u2192 home \u2192 rival's house \u2192 Route 101, Birch's bag (Torchic) \u2192 the Zigzagoon battle",
+"pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))",
+"steps": [
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "shot",
+"name": "a0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"START"
+],
+[
+"A"
+]
+],
+"max": 1200
+},
+{
+"do": "shot",
+"name": "a1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "a2"
+},
+{
+"do": "log",
+"name": "p2",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"A"
+],
+[
+"START"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "a3"
+},
+{
+"do": "log",
+"name": "p3",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+],
+[
+"B"
+]
+],
+"hold": 20,
+"every": 4,
+"max": 6000,
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]!==6440 && (((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]!==0"
+}
+},
+{
+"do": "log",
+"name": "p4",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 4000,
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===256"
+}
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "a5"
+},
+{
+"do": "log",
+"name": "p6",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "go",
+"y": 2,
+"x": 8,
+"order": "yx",
+"map": 256,
+"leave": true,
+"required": false
+},
+{
+"do": "log",
+"name": "p7",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "a6"
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"map": 256,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "log",
+"name": "p8",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "a7"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "log",
+"name": "p9",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "go",
+"x": 5,
+"y": 2,
+"order": "xy",
+"map": 257,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "log",
+"name": "p10",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "a8"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "go",
+"y": 2,
+"x": 8,
+"order": "yx",
+"map": 256,
+"leave": true,
+"required": false
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"map": 256,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 300
+},
+{
+"do": "go",
+"x": 5,
+"y": 2,
+"order": "xy"
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 4
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"A"
+]
+],
+"max": 900
+},
+{
+"do": "shot",
+"name": "b1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 900
+},
+{
+"do": "shot",
+"name": "b2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "log",
+"name": "q1",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "go",
+"x": 7,
+"y": 2,
+"order": "xy"
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"map": 257,
+"leave": true
+},
+{
+"do": "shot",
+"name": "d1"
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 16
+},
+{
+"do": "shot",
+"name": "d2"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 16
+},
+{
+"do": "shot",
+"name": "d3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "b3"
+},
+{
+"do": "log",
+"name": "q2",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "go",
+"x": 8,
+"y": 9,
+"order": "xy",
+"map": 256,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "log",
+"name": "q3",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "b4"
+},
+{
+"do": "check",
+"name": "littleroot"
+},
+{
+"do": "go",
+"x": 14,
+"y": 9,
+"order": "xy"
+},
+{
+"do": "go",
+"y": 7,
+"order": "y",
+"map": 9,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "log",
+"name": "r1",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "e1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "log",
+"name": "r2",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "e2"
+},
+{
+"do": "go",
+"y": 0,
+"order": "y",
+"map": 258,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "log",
+"name": "r3",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "e3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "log",
+"name": "r4",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "e4"
+},
+{
+"do": "go",
+"x": 8,
+"y": 3,
+"order": "yx",
+"required": false,
+"patience": 4
+},
+{
+"do": "log",
+"name": "r4b",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 4
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "log",
+"name": "r5",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "e5"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"x": 1,
+"y": 2,
+"order": "yx",
+"map": 259,
+"leave": true
+},
+{
+"do": "go",
+"y": 0,
+"order": "y",
+"map": 259,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "f0a"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "f0b"
+},
+{
+"do": "log",
+"name": "s0",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 200
+},
+{
+"do": "go",
+"x": 2,
+"y": 9,
+"order": "xy",
+"map": 258,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "shot",
+"name": "f0c"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2000
+},
+{
+"do": "shot",
+"name": "f0d"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 200
+},
+{
+"do": "log",
+"name": "s0b",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "go",
+"x": 2,
+"y": 9,
+"order": "xy",
+"map": 258,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "log",
+"name": "s1",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "f1"
+},
+{
+"do": "go",
+"y": 10,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "go",
+"x": 10,
+"order": "x",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "g4"
+},
+{
+"do": "log",
+"name": "t1",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "go",
+"x": 10,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500
+},
+{
+"do": "go",
+"x": 10,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1200,
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]!==9"
+},
+"required": false
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1200,
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]!==9"
+},
+"required": false
+},
+{
+"do": "go",
+"x": 11,
+"y": -2,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "log",
+"name": "s2",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "f2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 600
+},
+{
+"do": "log",
+"name": "s3",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "f3"
+},
+{
+"do": "check",
+"name": "route101"
+},
+{
+"do": "go",
+"x": 7,
+"y": 15,
+"order": "yx",
+"required": false
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 4
+},
+{
+"do": "log",
+"name": "s4",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "shot",
+"name": "h1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 900
+},
+{
+"do": "shot",
+"name": "h2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000,
+"until": "party"
+},
+{
+"do": "shot",
+"name": "h3"
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000,
+"until": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "check",
+"name": "battle"
+},
+{
+"do": "shot",
+"name": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 8000,
+"until": "nobattle"
+},
+{
+"do": "check",
+"name": "afterbattle"
+},
+{
+"do": "shot",
+"name": "h4"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "h5"
+},
+{
+"do": "log",
+"name": "s5",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "h6"
+},
+{
+"do": "log",
+"name": "s6",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "check",
+"name": "h6"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "press",
+"keys": "START"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "shot",
+"name": "menu"
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "shot",
+"name": "party"
+},
+{
+"do": "check",
+"name": "party"
+},
+{
+"do": "log",
+"name": "pEnd",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+}
+],
+"expect": {
+"littleroot": {
+"place": "Littleroot Town"
+},
+"route101": {
+"place": "Route 101"
+},
+"starter": {
+"party": {
+"species": [
+252,
+255,
+258
+],
+"level": 5
+}
+},
+"battle": {
+"battle": {
+"kind": "wild",
+"level": 2,
+"species": [
+261,
+263
+]
+}
+},
+"afterbattle": {
+"party": {
+"level": [
+5,
+6
+]
+}
+}
+}
+}

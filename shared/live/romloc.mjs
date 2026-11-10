@@ -33,24 +33,28 @@ export function prettyName(s) {
 // argument bytes of the 0xFC control codes (pokeemerald include/characters.h); the code byte itself not counted
 const FC_ARGS = [1, 1, 1, 1, 3, 1, 1, 0, 1, 0, 0, 2, 1, 1, 1, 0, 2, 1, 1, 1, 1, 0, 0, 0, 0];
 
-/** A Gen 3 string at a ROM pointer, or null when it isn't one (not a ROM address, unknown byte, too long). */
-function gen3String(rom, ptr, table, max = 40) {
+/**
+ * A Gen 3 string at a ROM pointer, or null when it isn't one (not a ROM address, unknown byte, too long). An empty
+ * string (just the terminator) is '' – Emerald's MAPSEC_DYNAMIC has one, in the middle of the table. `ph` = the team
+ * names the game puts in for its placeholders ("{AQUA} HIDEOUT").
+ */
+function gen3String(rom, ptr, table, max = 40, ph = null) {
   if (ptr < 0x08000000 || ptr >= 0x08000000 + rom.length) return null;
   const o = ptr - 0x08000000;
   let s = '';
   for (let k = 0; k < max && o + k < rom.length; k++) {
     const c = rom[o + k];
-    if (c === 0xff) {
-      const t = s.replace(/\s+/g, ' ').trim();
-      return t || null;
-    }
+    if (c === 0xff) return s.replace(/\s+/g, ' ').trim();
     if (c === 0xfc) {
       k += 1 + (FC_ARGS[rom[o + k + 1]] ?? 0); // formatting (colour, spacing): a space at most
       s += ' ';
       continue;
     }
     if (c === 0xfd) {
-      k += 1; // a placeholder ("{AQUA} HIDEOUT"): its text depends on the game state – left out
+      // a placeholder: the team names are known per game (pokeemerald PLACEHOLDER_ID_AQUA 8 / _MAGMA 9), any other
+      // one depends on the game state – left out
+      s += ph?.[rom[o + k + 1]] || '';
+      k += 1;
       continue;
     }
     if (c === 0xfe) {
@@ -63,6 +67,9 @@ function gen3String(rom, ptr, table, max = 40) {
   }
   return null;
 }
+
+/** What the team placeholders say in a game: Ruby swaps them (its villains are Team Magma) – pokeruby src/strings. */
+const gen3Teams = (code) => (String(code || '').startsWith('AXV') ? { 8: 'MAGMA', 9: 'AQUA' } : { 8: 'AQUA', 9: 'MAGMA' });
 
 /** Longest run of `stride`-byte entries passing `ok(offset)`, over 4-byte aligned offsets: { start, len }. */
 function longestRun(bytes, stride, ok, from = 0, to = bytes.length) {
@@ -86,9 +93,10 @@ function longestRun(bytes, stride, ok, from = 0, to = bytes.length) {
  * { u8 x, y, width, height; const u8 *name } – one per section, section 0 first. FireRed/LeafGreen: const u8 *name[]
  * for the Kanto sections, starting at section 0x58.
  */
-export function gen3Names(rom, charset) {
+export function gen3Names(rom, charset, code = String.fromCharCode(...rom.subarray(0xac, 0xb0))) {
   const table = charset?.table || charset || {};
-  const str = (p) => gen3String(rom, p, table);
+  const teams = gen3Teams(code);
+  const str = (p) => gen3String(rom, p, table, 40, teams);
   const struct = longestRun(rom, 8, (o) => rom[o] < 32 && rom[o + 1] < 32 && rom[o + 2] >= 1 && rom[o + 2] <= 16 && rom[o + 3] >= 1 && rom[o + 3] <= 16 && str(u32(rom, o + 4)) !== null);
   if (struct.len >= 60) {
     const names = [];
@@ -98,7 +106,7 @@ export function gen3Names(rom, charset) {
   // FireRed/LeafGreen: short one-line names only (move descriptions & co. are pointer tables too, with longer text)
   const shortName = (p) => {
     const s = str(p);
-    return s !== null && s.length <= 20 && !/[a-z]/.test(s);
+    return !!s && s.length <= 20 && !/[a-z]/.test(s);
   };
   const ptrs = longestRun(rom, 4, (o) => shortName(u32(rom, o)));
   if (ptrs.len >= 60) {
@@ -235,6 +243,16 @@ export function gen5Messages(buf) {
   return out;
 }
 
+/**
+ * The place names of a Gen 5 text file: its strings without the empty ones at the end – a hack may pad the file for
+ * places still to come (Blaze Black 2 Redux: 660 entries, 155 used).
+ */
+export function gen5PlaceNames(buf) {
+  const names = gen5Messages(buf);
+  while (names.length && !names[names.length - 1]) names.pop();
+  return names;
+}
+
 const GEN5 = {
   bw: { msgFile: 89 },
   b2w2: { msgFile: 109 },
@@ -264,7 +282,7 @@ function gen5(rom, h, files) {
   const map = gen5ZoneLocations(parseNarc(zoneNarc)[0]);
   const msg = parseNarc(msgNarc)[GEN5[family].msgFile];
   if (!map || !msg) return null;
-  const names = gen5Messages(msg);
+  const names = gen5PlaceNames(msg);
   // fail closed: nearly every zone must name an existing place, and most places must have a name
   const inRange = map.filter((v) => v < names.length).length;
   if (names.length < 50 || inRange < map.length * 0.95 || names.filter(Boolean).length < names.length * 0.6) return null;

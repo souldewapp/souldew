@@ -1,0 +1,440 @@
+{
+"id": "black2",
+"entries": [
+"black2_us",
+"white2_us"
+],
+"hacks": [
+"blaze-black-2-redux",
+"volt-white-2-redux"
+],
+"core": "desmume",
+"note": "Black 2/White 2 (US/EU), Blaze Black 2 Redux: intro \u2192 house \u2192 Aspertia City. Only the place sign is reached so far (the starter at the Lookout is not); White 2 needs its own position address.",
+"pos": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]",
+"steps": [
+{
+"do": "wait",
+"frames": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"A"
+],
+[
+"START"
+]
+],
+"max": 9000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "shot",
+"name": "room"
+},
+{
+"do": "log",
+"name": "pos:room",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "room"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 6,
+"y": 8
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 6,
+"x": 6
+},
+{
+"do": "shot",
+"name": "h1"
+},
+{
+"do": "log",
+"name": "pos:h1",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "h1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "shot",
+"name": "h2"
+},
+{
+"do": "log",
+"name": "pos:h2",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "h2"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 6,
+"x": 6
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 6,
+"y": 12,
+"map": 428,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "shot",
+"name": "h3"
+},
+{
+"do": "log",
+"name": "pos:h3",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "h3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "h4"
+},
+{
+"do": "log",
+"name": "pos:h4",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "h4"
+},
+{
+"do": "go",
+"order": "yx",
+"required": false,
+"patience": 6,
+"x": 6,
+"y": 8,
+"map": 428,
+"leave": true
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 6,
+"y": 12,
+"map": 428,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "walk",
+"dir": "DOWN",
+"steps": 1,
+"hold": 18,
+"gap": 6
+},
+{
+"do": "shot",
+"name": "h5"
+},
+{
+"do": "log",
+"name": "pos:h5",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "h5"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 6,
+"x": 43
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 650
+},
+{
+"do": "shot",
+"name": "n1"
+},
+{
+"do": "log",
+"name": "pos:n1",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "n1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "n2"
+},
+{
+"do": "log",
+"name": "pos:n2",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "n2"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 650
+},
+{
+"do": "shot",
+"name": "n3"
+},
+{
+"do": "log",
+"name": "pos:n3",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "n3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "n4"
+},
+{
+"do": "log",
+"name": "pos:n4",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "n4"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 650
+},
+{
+"do": "shot",
+"name": "n5"
+},
+{
+"do": "log",
+"name": "pos:n5",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "n5"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 4,
+"x": 36
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 650
+},
+{
+"do": "shot",
+"name": "n7"
+},
+{
+"do": "log",
+"name": "pos:n7",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "n7"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "n8"
+},
+{
+"do": "log",
+"name": "pos:n8",
+"expr": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]"
+},
+{
+"do": "check",
+"name": "n8"
+}
+],
+"expect": {
+"room": {
+"place": "Aspertia City"
+},
+"n1": {
+"place": "Aspertia City"
+}
+}
+}

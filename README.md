@@ -138,9 +138,9 @@ Every main-series game from Red to White 2 plays in souldew. Live tracking reads
 | Gen 2 | Gold, Silver, Crystal | ✓ | ✓ | ✓ |
 | Gen 3 | Ruby, Sapphire, Emerald, FireRed, LeafGreen | ✓ | ✓ | ✓ |
 | Gen 4 | Diamond, Pearl, Platinum, HeartGold, SoulSilver | ✓ | ✓ | ✓ |
-| Gen 5 | Black, White, Black 2, White 2 | ✓ | memory search | – |
+| Gen 5 | Black, White, Black 2, White 2 | ✓ | memory search | ✓ |
 
-English and German versions are supported for the team; “You are here” reads English place names. For other languages and hacks with a changed memory layout (e.g. Radical Red, Unbound) souldew searches for the team, and you can always enter catches by hand. Gen 1/2 store no catch location (except Crystal), so new catches land in an inbox to assign. Checked in a running game with HeartGold (US), Definitive HeartGold and Silver – the rest is covered by tests.
+English and German versions are supported for the team. “You are here” reads the place names from the game itself (Gen 3–5) or from souldew's tables (Gen 1/2): a randomized game or a ROM hack shows its own names. ROM hacks on the same engine as their base game work too – also with other Pokémon in the game (Light Platinum) or a moved memory layout (Crystal Legacy); hacks on an expanded engine (Unbound, Radical Red, Run & Bun and other pokeemerald-expansion hacks) aren't read yet and say so – you can always enter catches by hand. Gen 1/2 store no catch location (except Crystal), so new catches land in an inbox to assign. Which games were checked in the running game, and how: **[docs/TESTED_GAMES.md](docs/TESTED_GAMES.md)**.
 
 ## Your games stay yours
 

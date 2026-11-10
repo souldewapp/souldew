@@ -52,7 +52,14 @@ const DS = {
 function layoutOf(entry) {
   if (!entry) return null;
   const id = String(entry.id || '').replace(/~.*$/, ''); // scanned DS relatives: "heartgold_us~IPKD"
-  if (entry.gen <= 2) return GB[id] ? { kind: 'gb', ...GB[id] } : null;
+  if (entry.gen <= 2) {
+    if (!GB[id]) return null;
+    // a Game Boy hack whose WRAMX bank moved (shared/live/romwram.mjs: the entry carries the shift) keeps its bag there too
+    const d = entry.wram && Object.keys(entry.wram.moved || {}).some((a) => /^0xD/i.test(a)) ? entry.wram.delta : 0;
+    const L = { kind: 'gb', ...GB[id] };
+    for (const k of ['addr', 'money', 'keyItems']) if (L[k] >= 0xd000 && L[k] < 0xe000) L[k] += d;
+    return L;
+  }
   if (entry.gen === 3) {
     const key = /^(ruby|sapphire)_/.test(id) ? 'ruby' : /^emerald_/.test(id) ? 'emerald' : /^(firered|leafgreen)_/.test(id) ? 'firered' : null;
     return key ? { kind: 'gba', ...GBA[key] } : null;

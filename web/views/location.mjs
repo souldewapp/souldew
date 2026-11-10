@@ -4,10 +4,10 @@
 import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
 import { useApp } from '../lib/ui.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
-import { speciesName, gen4data } from '../lib/data.mjs';
-import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation } from '/shared/live/location.mjs';
+import { speciesName, gen4data, setRomSpecies } from '../lib/data.mjs';
+import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation, placeName } from '/shared/live/location.mjs';
 import { areaForMetLocation } from '/shared/routes.mjs';
-import { profileOf, progression, pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun } from '../lib/run.mjs';
+import { profileOf, progression, pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces } from '../lib/run.mjs';
 
 let MAPS = null; // shared/data/maps.json once loaded
 let LOC = null; // { loc2, loc3 } for the names
@@ -20,30 +20,42 @@ const load = () => {
   return load.p;
 };
 
-// The running ROM's own location data (shared/live/romloc.mjs, computed by the server from the file): its map →
-// location step and place names. `pending` while it loads; `data` null = the ROM has none (the tables still serve).
-const ROMLOC = { src: null, data: null, pending: false };
+// The running ROM's own data (server/lib/romloc.mjs, computed by the server from the file): its map → location step
+// and place names (shared/live/romloc.mjs), and for GBA games its species table (shared/live/romspecies.mjs).
+// `pending` while it loads; `data` null = the ROM has no location data (the tables still serve).
+const ROMLOC = { src: null, data: null, species: null, wram: null, pending: false };
 
 /** Starts loading the location data of the ROM at `src` (the /api/… URL the emulator loads); resolves when done. */
 export function loadRomLocations(src) {
   if (!src || ROMLOC.src === src) return ROMLOC.p || Promise.resolve();
-  Object.assign(ROMLOC, { src, data: null, pending: true });
+  Object.assign(ROMLOC, { src, data: null, species: null, wram: null, pending: true });
+  setRomPlaces(null); // (another game's names don't apply any more)
+  setRomSpecies(null);
   const p = fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`)
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null)
     .then((j) => {
       if (ROMLOC.src !== src) return;
-      Object.assign(ROMLOC, { data: j?.data || null, pending: false });
+      Object.assign(ROMLOC, { data: j?.data || null, species: j?.species || null, wram: j?.wram || null, pending: false });
+      setRomPlaces(ROMLOC.data); // catches made now are named like the sign names their place
+      setRomSpecies(ROMLOC.species); // a ROM hack's own Pokémon get the game's names
     });
   ROMLOC.p = p;
   return p;
 }
 
+/** The running ROM's species table (romSpecies(): { engine, map, unknown } – GBA only), null while unknown. */
+export const romSpeciesNow = () => ROMLOC.species;
+/** A Game Boy hack's moved RAM variables (romwram.mjs gbWramShift), null: the retail addresses. */
+export const romWramNow = () => ROMLOC.wram;
+/** Has the running ROM's own data arrived (or failed)? */
+export const romDataReady = () => !ROMLOC.pending;
+
 /**
  * Current location for the live loop: { gen, id, name } or null. `entry` is the addresses.json entry,
  * `read` the emulator's bus read, `state` the live party reader's state (it knows where the save data is).
- * Cheap (a few bytes) – the tables load on the first call. The name is the game's own (from the ROM) when the
- * ROM speaks the app's language or the tables don't know the place (a hack's own map); else the tables' name.
+ * Cheap (a few bytes) – the tables load on the first call. The name: placeName (the game's own for a modified ROM, a
+ * ROM in the app's language or a place the tables don't know; else the tables' translation).
  */
 export function readHere(entry, read, state = null) {
   if (!MAPS) {
@@ -55,7 +67,7 @@ export function readHere(entry, read, state = null) {
   if (!r) return null;
   const lang = currentLang();
   const table = locationLabel(r.gen, r.id, { maps: MAPS, ...LOC, gen4: gen4data() }, lang === 'de' ? 'de' : 'en');
-  const name = (rom?.lang && rom.lang === lang && r.romName) || table || r.romName;
+  const name = placeName(r, { rom, table, lang });
   return name ? { gen: r.gen, id: r.id, name } : null;
 }
 
