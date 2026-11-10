@@ -441,3 +441,41 @@ test('expanded GBA engines (Run & Bun): the team is searched for in EWRAM, the p
   assert.deepEqual(readLocation(maps, emerald, read, { rom, state }), { gen: 3, id: 16, map: '0.16', romName: 'Route 101' });
   assert.equal(state.sb1PtrAddr, 0x03005d9c);
 });
+
+test('Platinum and Pearl: the battle flag (checked live) ends a battle at once, also one that left no HP change', async () => {
+  const { readLiveParty, readLiveBattle, findEntry, LiveTables } = await import('../shared/live/parse.mjs');
+  const { encryptPK4 } = await import('../shared/gen4save.mjs');
+  const T4 = new LiveTables({ gen4: json('gen4.json') });
+  const PT = findEntry(json('addresses.json'), { platform: 'nds', code: 'CPUE' });
+  const m = new Uint8Array(0x400000);
+  const w = (addr, bytes) => m.set(bytes, addr - 0x02000000);
+  const read = (addr, len) => (addr >= 0x02000000 && addr + len <= 0x02400000 ? m.slice(addr - 0x02000000, addr - 0x02000000 + len) : null);
+  const pk4 = ({ pid, species, tid = 4242, level = 5, hp = 20, maxHp = 20 }) => {
+    const d = new Uint8Array(236);
+    const dv = new DataView(d.buffer);
+    dv.setUint32(0, pid, true);
+    dv.setUint16(0x08, species, true);
+    dv.setUint16(0x0c, tid, true);
+    dv.setUint16(0x46, 16, true);
+    d[0x8c] = level;
+    dv.setUint16(0x8e, hp, true);
+    dv.setUint16(0x90, maxHp, true);
+    return encryptPK4(d);
+  };
+  const core = (mons) => [6, 0, 0, 0, mons.length, 0, 0, 0, ...mons.flatMap((x) => [...pk4(x)])];
+  const BASE = 0x0227e14c; // the save data (seen live in Platinum)
+  w(0x02000ba8, [0x2c, 0x1d, 0x10, 0x02]); // module params → *(+0x20) = SaveData pointer at 0x02101D4C
+  w(0x02101d4c, [BASE & 0xff, (BASE >> 8) & 0xff, (BASE >> 16) & 0xff, BASE >>> 24]);
+  w(BASE + 0xb4 - 8, core([{ pid: 0x11111111, species: 387 }]));
+  w(0x02300000, core([{ pid: 0xaaaa0001, species: 399, tid: 7, level: 3, hp: 12, maxHp: 12 }])); // a wild Bidoof
+  const state = {};
+  const poll = (n = 1) => {
+    let f = null;
+    for (let i = 0; i < n; i++) f = readLiveBattle(PT, read, T4, state, readLiveParty(PT, read, T4, state)?.party);
+    return f;
+  };
+  w(0x0224a55a, [0x00, 0x21]);
+  assert.equal(poll(6)?.enemy?.species, 399, 'in battle (flag 0x2100)');
+  w(0x0224a55a, [0x00, 0x28]); // ran away: back on the overworld
+  assert.equal(poll(1), null, 'over at once, not 90 s later');
+});

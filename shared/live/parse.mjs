@@ -681,7 +681,9 @@ function scanStep(read, size, gen, T, state) {
 }
 
 function battleFlag(entry, read) {
-  if (!entry.inBattle?.addr || !/^heartgold|^soulsilver/.test(entry.id)) return null;
+  // only flags checked in a running game (addresses.json `verified`: HeartGold, Platinum, Pearl) – the community
+  // addresses of the others haven't been, and a wrong flag would hide every battle
+  if (!entry.inBattle?.addr || !entry.inBattle.verified) return null;
   const f = read(hex(entry.inBattle.addr), 2);
   if (!f) return null;
   const v = u16le(f, 0);

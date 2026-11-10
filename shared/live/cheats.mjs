@@ -170,7 +170,7 @@ function slotAdd(bag, mem, item, count, cap, enc) {
 // ---------------------------------------------------------------------------
 // Gen 4/5
 
-function dsBag(L, entry, read, state, pocketName = 'medicine') {
+function dsBag(L, entry, read, state, pocketName = 'medicine', allowEmpty = false) {
   let bag = null;
   if (L.gen === 4) {
     // the save data: from the pointer the party reader followed, else from where it found the party
@@ -197,7 +197,7 @@ function dsBag(L, entry, read, state, pocketName = 'medicine') {
     out[name] = b;
   }
   // an all-zero region passes the checks above: a real bag has something in it (a fresh game's empty bag is refused too)
-  if (!used) return null;
+  if (!used && !allowEmpty) return null;
   const name = L.pockets[pocketName] ? pocketName : 'items'; // (Gen 5 keeps the Poké Balls with the items)
   const [off, n] = L.pockets[name];
   return { addr: bag + off, slots: n, bytes: out[name], q: (v) => v };
@@ -234,8 +234,9 @@ export const POKE_BALL = { 1: 0x04, 2: 0x05, 3: 4, 4: 4, 5: 4 };
  * Put `count` of an item into the bag – the same checks as addRareCandies. `pocket` 'balls' puts it into the Poké Ball
  * pocket where the game has one (Gen 2–4; Gen 1 and 5 keep balls with the items). Used by the ROM test matrix
  * (scripts/rom-matrix) to catch a wild Pokémon early in a game; the app's cheats menu only offers Rare Candies.
+ * `allowEmpty` accepts a Gen 4 bag with nothing in it yet when the save data came from the pointer (not a scan).
  */
-export function addItem(entry, mem, state, item, count = 1, { pocket = null } = {}) {
+export function addItem(entry, mem, state, item, count = 1, { pocket = null, allowEmpty = false } = {}) {
   const L = layoutOf(entry);
   if (!L || !item) return { error: 'unsupported' };
   if (L.kind === 'gb') {
@@ -243,7 +244,7 @@ export function addItem(entry, mem, state, item, count = 1, { pocket = null } = 
     const B = pocket === 'balls' && entry.gen === 2 ? { ...L, addr: L.keyItems + 27, keyItems: null } : L;
     return gbAdd(B, entry.gen, mem, item, count);
   }
-  const bag = L.kind === 'gba' ? gbaBag(L, mem.read, pocket === 'balls' ? 'balls' : 'items') : dsBag(L, entry, mem.read, state, pocket || 'medicine');
+  const bag = L.kind === 'gba' ? gbaBag(L, mem.read, pocket === 'balls' ? 'balls' : 'items') : dsBag(L, entry, mem.read, state, pocket || 'medicine', allowEmpty && !!state?.saveBase);
   if (!bag) return { error: 'notFound' };
   const key = L.kind === 'gba' ? bag.q(0) : 0; // q(0) = the key's low half (0 in Ruby/Sapphire)
   return slotAdd(bag, mem, item, count, L.kind === 'ds' ? 999 : 99, (v) => (v ^ key) & 0xffff);

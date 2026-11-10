@@ -1070,7 +1070,11 @@
      "0x2100",
      "0x2101"
     ],
-    "source": "NDS-Ironmon-Tracker (community, unverified)"
+    "notInBattleValues": [
+     "0x2800"
+    ],
+    "source": "NDS-Ironmon-Tracker (community)",
+    "verified": "runtime-checked on Platinum (CPUE) 2026-11-10 by the ROM matrix: 0x2100 in wild and trainer battles on Route 201, 0x2800 on the overworld"
    },
    "liveBattleParty": {
     "monsOffsetFromSaveDataPtr": "0x4B8AC",
@@ -1200,7 +1204,11 @@
      "0x2100",
      "0x2101"
     ],
-    "source": "NDS-Ironmon-Tracker (community, unverified)"
+    "notInBattleValues": [
+     "0x2000"
+    ],
+    "source": "NDS-Ironmon-Tracker (community)",
+    "verified": "runtime-checked on Pearl (APAE) 2026-11-10 by the ROM matrix: 0x2101 in wild battles on Route 201 and at Lake Verity, 0x2000 on the overworld"
    },
    "liveBattleParty": {
     "monsOffsetFromSaveDataPtr": "0x4C7D8",
