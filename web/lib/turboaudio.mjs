@@ -22,8 +22,12 @@
 // Since then two better sources came first where they exist: the song number the game keeps in RAM ({ type: 'song' },
 // shared/live/location.mjs) files every loop under its song and switches with it, and for DS games the song is
 // synthesized from the ROM's own sound archive (sdat.mjs, sdat-synth.mjs) – no recording needed. DeSmuME's
-// fast-forward sound is not sped up but skips (audio_fastforward_speedup off); when nothing better is there it plays
-// as it is, at its normal pitch. Silence or the wrong song is never the fallback while the game has sound.
+// fast-forward sound is not sped up but skips (audio_fastforward_speedup off) – since 2.2 for every core. That skipping
+// sound is the song at its normal pitch, but it races ahead in pieces: to the ear it is sped-up music, exactly what
+// "Music continues" is there to avoid (a Windows player heard it after every scene change in 2.2.1-beta.1 and took it for
+// the turbo music being broken, as "Music continues", "Sped-up original" and "Plain" then all sounded the same). So in
+// "music" the game's own fast-forward sound is never heard: a song with nothing recorded yet keeps the music that played
+// before it (the previous song's loop – "music continues"), and only with nothing recorded at all is fast-forward quiet.
 //
 // Plain DSP without Web Audio types: it runs in the AudioWorklet (turboaudio-worklet.mjs), in the
 // ScriptProcessor fallback of player.html and in test/turboaudio.test.mjs. The search is sliced into
@@ -385,6 +389,11 @@ export class TurboMixer {
     // ahead of every recorded loop. Without it (other systems, unreadable archive) everything above applies.
     this.synth = null;
     this.syn = { v: 0, t: 0, s: 0 };
+    // What the mixer before this one handed over when the core rebuilt its sound (player.html: a new AudioContext after a
+    // lost graphics context – Windows restarts its GPU process now and then): its song library, and the music that played
+    // last, so fast-forward after the rebuild still has music instead of starting from nothing.
+    this.held = null; // { key, l, r, start, end, lag, xfade, curve, bed, score, fine } (Int16, like a library entry)
+    this.quanta = 0; // render blocks processed (diagnostics: is the audio thread running this mixer at all?)
   }
 
   emit(e) {
@@ -401,6 +410,7 @@ export class TurboMixer {
     const sec = (x) => (Number.isFinite(x) ? +(x / this.sr).toFixed(2) : null);
     return {
       turbo: this.turbo,
+      live: +this.live.t.toFixed(2), // where the game's own sound is headed (0 = muted by the mixer)
       mode: this.mode,
       paused: this.paused,
       ratio: this.ratio,
@@ -420,6 +430,8 @@ export class TurboMixer {
       grace: sec(Math.max(0, this.tGrace)),
       silent: sec(this.silent),
       sr: this.sr,
+      held: !!this.held,
+      quanta: this.quanta,
     };
   }
 
@@ -440,7 +452,8 @@ export class TurboMixer {
       this.mode = m.mode;
       if (this.turbo && m.mode === 'music' && !this.carry) {
         this.wantSearch();
-        this.tRec = true;
+        if (this.noStream) this.carry = this.fromLib() || this.fallback(); // (nothing to slow down: what was recorded)
+        this.tRec = !this.carry;
       }
       this.retarget();
     } else if (m.type === 'paused') {
@@ -462,15 +475,21 @@ export class TurboMixer {
       if (!this.synth) this.synth = new SdatSynth(this.sr, { gain: SYNTH_GAIN });
       this.synth.add(m.key, m.pack);
       this.retarget();
+    } else if (m.type === 'export') {
+      this.emit({ type: 'export', ...this.exportMemory() });
+    } else if (m.type === 'import') {
+      this.importMemory(m);
+    } else if (m.type === 'probe') {
+      this.emit({ type: 'probe', id: m.id ?? null, playing: this.playing().src, ...this.state() });
     } else if (m.type === 'cut') {
       // the game jumped (state loaded, reset): the recording doesn't lead into what comes next, and the song key is
       // unknown until the page reads it again (the place may be another one now)
       this.open = false;
-      this.carry = null;
+      this.carry = this.turbo && this.noStream && this.mode === 'music' ? this.playable() : null; // (music goes on, see fallback)
       this.key = null;
       this.synth?.song(null);
       this.song++;
-      if (this.turbo) this.tRec = true;
+      if (this.turbo) this.tRec = !this.carry;
       this.retarget();
     }
   }
@@ -492,14 +511,15 @@ export class TurboMixer {
     this.song++;
     this.open = false; // a new stretch: the next search must not mix two songs
     this.pending = false;
+    const prev = this.turbo && this.mode === 'music' && this.noStream ? this.playable() : null;
     this.carry = null;
     if (this.turbo && this.mode === 'music') {
-      // the new song's loop from the library, else (Gambatte) its sped-up sound slowed down, else (DeSmuME) the
-      // game's own skipping sound – that is the new song too
-      this.carry = this.fromLib();
+      // the new song's loop from the library, else (sped-up sound) its sound slowed down, else (the classic skipping
+      // fast-forward sound, every core since 2.2) the music that played before goes on – never the skipping sound
+      this.carry = this.fromLib() || prev;
       this.tRec = !this.carry && !this.noStream;
       this.tSil = 0;
-      this.emit({ type: 'turbo', on: true, loop: this.carry ? this.describe(this.carry) : null, changed: true, key, lib: !!this.carry });
+      this.emit({ type: 'turbo', on: true, loop: this.carry ? this.describe(this.carry) : null, changed: true, key, lib: !!this.carry?.lib && this.carry.key === key, kept: !!this.carry && this.carry === prev });
     }
     this.retarget();
   }
@@ -558,7 +578,93 @@ export class TurboMixer {
     if (!e) return null;
     this.lib.delete(this.key);
     this.lib.set(this.key, e); // recently heard
-    return { lib: e, key: this.key, song: this.song, start: e.start, end: e.end, lag: e.lag, xfade: e.xfade, curve: e.curve, bed: e.bed, score: e.score, fine: e.fine, pos: e.start };
+    return this.libVoice(e, this.key);
+  }
+
+  /** A voice that plays a library entry (or the handed-over `held` music) from its loop's beginning. */
+  libVoice(e, key) {
+    return { lib: e, key, song: this.song, start: e.start, end: e.end, lag: e.lag, xfade: e.xfade, curve: e.curve, bed: e.bed, score: e.score, fine: e.fine, pos: e.start };
+  }
+
+  /** The music playing (or chosen) right now, if it can go on: recorded, still in the ring, long enough to be music. */
+  playable() {
+    for (const v of [this.voice, this.carry]) if (v && !v.stream && this.valid(v) && v.lag >= this.k.minPlay) return v;
+    return null;
+  }
+
+  /**
+   * Nothing recorded for the song playing now, and the fast-forward sound can't be slowed down into it (the classic
+   * skipping sound): the music that played last goes on rather than the skipping sound – what's playing, else what the
+   * previous mixer handed over, else the most recently recorded song, else the latest bed. Null: nothing recorded at all.
+   */
+  fallback() {
+    const p = this.playable();
+    if (p) return p;
+    if (this.held) return this.libVoice(this.held, this.held.key ?? null);
+    const recent = [...this.lib].at(-1);
+    if (recent && recent[1].lag >= this.k.minPlay) return this.libVoice(recent[1], recent[0]);
+    return this.bed && this.valid(this.bed) && this.bed.lag >= this.k.minPlay ? this.bed : null;
+  }
+
+  /** Copies a ring voice out (at most libLen of it, like keep()), so it outlives the ring – and this mixer. */
+  copyOut(v) {
+    if (!v || v.stream) return null;
+    if (v.lib) return { key: v.key ?? null, ...v.lib };
+    if (!this.valid(v) || v.lag < this.k.minPlay) return null;
+    let { start, lag, xfade, curve } = v;
+    if (lag > this.k.libLen) {
+      lag = this.k.libLen;
+      start = v.end - lag;
+      xfade = Math.round(Math.min(BED_XFADE * this.sr, lag * 0.25));
+      curve = 'power';
+    }
+    const from = start - xfade;
+    if (from < this.ring.oldest) return null;
+    const len = xfade + lag;
+    const L = new Int16Array(len);
+    const R = new Int16Array(len);
+    const { cap, l: rl, r: rr } = this.ring;
+    for (let i = 0; i < len; i++) {
+      const k = (from + i) % cap;
+      L[i] = Math.max(-Q, Math.min(Q, Math.round(rl[k] * Q)));
+      R[i] = Math.max(-Q, Math.min(Q, Math.round(rr[k] * Q)));
+    }
+    return { key: v.key ?? null, l: L, r: R, start: xfade, end: len, lag, xfade, curve, bed: !!v.bed || lag !== v.lag, score: v.score ?? 0, fine: v.fine ?? 0 };
+  }
+
+  /** What the next mixer needs to carry on (player.html, when the core rebuilt its sound): the library and the last music. */
+  exportMemory() {
+    const lib = [...this.lib].map(([key, e]) => ({ key, ...e }));
+    const last = this.copyOut(this.playable()) || this.copyOut(this.found) || this.copyOut(this.bed) || this.held;
+    return { sr: this.sr, lib, last: last || null };
+  }
+
+  /** Takes over what the previous mixer recorded (same sample rate only – the samples are not resampled). */
+  importMemory(m) {
+    if (m.sr !== this.sr) return this.emit({ type: 'import', ok: false, why: 'rate', from: m.sr, sr: this.sr });
+    let total = [...this.lib.values()].reduce((s, e) => s + e.end, 0);
+    const imp = [];
+    // newest first, so the least recently heard are the ones left out when there is no room
+    for (const e of [...(m.lib || [])].reverse()) {
+      if (e?.key == null || !(e.l instanceof Int16Array) || this.lib.has(e.key)) continue; // (what this mixer recorded itself wins)
+      if (total + e.end > this.k.libTotal) continue;
+      total += e.end;
+      const { key, ...entry } = e;
+      imp.unshift([key, entry]);
+    }
+    // older than anything this mixer heard itself: in front of the least recently heard
+    this.lib = new Map([...imp, ...this.lib]);
+    if (m.last?.l instanceof Int16Array && m.last.lag >= this.k.minPlay) this.held = m.last;
+    this.emit({ type: 'import', ok: true, songs: this.lib.size, held: !!this.held });
+    if (this.turbo && this.mode === 'music' && !this.carry) {
+      this.carry = this.fromLib() || (this.noStream ? this.fallback() : null);
+      if (this.carry) {
+        this.tRec = false;
+        this.pending = false;
+        this.emit({ type: 'turbo', on: true, loop: this.describe(this.carry), imported: true });
+      }
+    }
+    this.retarget();
   }
 
   setTurbo(on) {
@@ -666,7 +772,8 @@ export class TurboMixer {
   }
 
   describe(l) {
-    return { seconds: +(l.lag / this.sr).toFixed(2), score: +l.score.toFixed(3), fine: +l.fine.toFixed(3), xfade: +(l.xfade / this.sr).toFixed(2) };
+    const r = (x, d) => (Number.isFinite(x) ? +x.toFixed(d) : null); // (a stream has no length, score or fine – never throw here)
+    return { seconds: r(l.lag / this.sr, 2), score: r(l.score, 3), fine: r(l.fine, 3), xfade: r(l.xfade / this.sr, 2) };
   }
 
   valid(l) {
@@ -697,7 +804,7 @@ export class TurboMixer {
       const lib = keyed && this.lib.get(this.key);
       let pick = cands.sort((a, b) => this.rank(b) - this.rank(a))[0] || null;
       if (lib && lib.lag >= this.k.minPlay && (!pick || this.rank(lib) > this.rank(pick) * 1.2)) pick = this.fromLib();
-      if (!pick && !keyed) pick = old || this.validBed();
+      if (!pick) pick = keyed ? this.fallback() : old || this.validBed() || this.fallback();
       if (pick && pick !== old && !pick.lib) pick.pos = this.continuation(pick);
       return (this.carry = pick);
     }
@@ -885,10 +992,9 @@ export class TurboMixer {
       return;
     }
     this.ramp(this.syn, 0);
-    // DeSmuME in "music" with no loop or bed recorded at 1× yet (fast-forward right after the start): its own
-    // fast-forward sound, as in "original" – the song at normal pitch, skipping ahead – rather than silence
-    const bare = this.skip && ff && this.mode === 'music' && !this.paused && !this.carry && !this.voice;
-    const quiet = ff && this.mode !== 'original' && !bare;
+    // "music" and "mute" never let the sped-up (or skipping) game sound through while fast-forwarding – "music" plays
+    // what was recorded at 1×, or nothing; only "original" is the game's own fast-forward sound
+    const quiet = ff && this.mode !== 'original';
     let loop = quiet && this.mode === 'music' && !this.paused;
     if (loop && this.turbo && this.carry && this.voice !== this.carry && this.loop.v === 0) this.voice = this.carry;
     if (this.voice && this.turbo && this.voice !== this.carry) loop = false; // another loop was chosen: fade this one out first
@@ -1183,6 +1289,7 @@ export class TurboMixer {
   }
 
   process(inL, inR, outL, outR, n = outL.length) {
+    this.quanta++;
     if (inL && !inR) inR = inL;
     if (inL) {
       let i = 0;
@@ -1254,9 +1361,9 @@ export class TurboMixer {
     if (v && !v.lib && (v.stream ? v.pos : v.start - v.xfade) < this.ring.oldest) {
       // overwritten meanwhile (long fast-forward) – drop it rather than play other samples
       this.voice = null;
-      if (this.carry === v) this.carry = null;
+      if (this.carry === v) this.carry = this.turbo && this.mode === 'music' && this.noStream ? this.fallback() : null;
       lp.v = lp.t = lp.s = 0;
-      this.retarget(); // (nothing left to play: DeSmuME's own sound then)
+      this.retarget(); // (nothing left to play: quiet then)
       return this.mixGame(inL, inR, outL, outR, n);
     }
     for (let i = 0; i < n; i++) {
