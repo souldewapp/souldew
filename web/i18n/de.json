@@ -1827,5 +1827,8 @@
   "upd.updatedTitle": "Aktualisiert",
   "upd.version": "Version {version}",
   "upd.whatsNew": "Was ist neu",
-  "upd.youHave": "Du hast {version}."
+  "upd.youHave": "Du hast {version}.",
+  "play.liveHack": "Für diesen Hack noch nicht unterstützt",
+  "play.liveHackRun": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon. Der Run funktioniert trotzdem: Trag Fänge von Hand ein.",
+  "play.liveHackSolo": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon."
 }

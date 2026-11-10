@@ -83,6 +83,12 @@ function indexMap(json) {
   return arr;
 }
 
+/**
+ * Species numbers above this stand for a Pokémon only the ROM knows (a ROM hack's own, "fakémon"): FAKEMON + its index
+ * in the game. The UI names them from the ROM (web/lib/data.mjs setRomSpecies).
+ */
+export const FAKEMON = 20000;
+
 export class LiveTables {
   constructor({ charsetGen1, charsetGen2, charsetGen3, gen1Index, gen3Index, gen4 }) {
     this.cs1 = charsetMap(charsetGen1);
@@ -90,7 +96,20 @@ export class LiveTables {
     this.cs3 = charsetMap(charsetGen3);
     this.idx1 = indexMap(gen1Index);
     this.idx3 = indexMap(gen3Index);
+    this.fake3 = null;
     this.gen4 = gen4;
+  }
+
+  /**
+   * These tables with a GBA ROM's own species table (shared/live/romspecies.mjs romSpecies()): a ROM hack that put
+   * other Pokémon into the slots reads as what the game shows. Without a changed table the tables stay as they are.
+   */
+  withSpecies(sp) {
+    if (!sp?.map) return this;
+    const t = Object.create(this);
+    t.idx3 = sp.map;
+    t.fake3 = sp.unknown && Object.keys(sp.unknown).length ? sp.unknown : null;
+    return t;
   }
 }
 
@@ -193,7 +212,7 @@ export function parsePk3(d, T) {
   const A = sub('A');
   const M = sub('M');
   const internal = u16le(G, 0);
-  const species = T.idx3?.[internal] || 0;
+  const species = T.idx3?.[internal] || (T.fake3?.[internal] ? FAKEMON + internal : 0);
   if (!species) return null;
   const origins = u16le(M, 2);
   const ivs = u32le(M, 4);

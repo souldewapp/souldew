@@ -11,7 +11,7 @@ export { html };
 export function Sprite({ id, shiny, size = 48, gen = 4, alt = '' }) {
   const [src, setSrc] = useState(null);
   useEffect(() => setSrc(spriteUrl(id, { gen, shiny })), [id, gen, shiny]);
-  if (!id) return html`<span class="sprite"><span style=${`display:inline-block;width:${size}px;height:${size}px`}></span></span>`;
+  if (!id || !spriteUrl(id, { gen, shiny })) return html`<span class="sprite"><span style=${`display:inline-block;width:${size}px;height:${size}px`}></span></span>`;
   return html`<span class="sprite"><img class="pixel" src=${src} width=${size} height=${size} alt=${alt} loading="lazy"
     onError=${() => { const fb = spriteUrl(id, { gen: 9, shiny }); if (src !== fb) setSrc(fb); }} /></span>`;
 }
