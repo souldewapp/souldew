@@ -10,6 +10,8 @@
 // data, found through the NitroSDK module params; Gen 5: community addresses, unverified).
 // Garbage in RAM (title screen, a game that is still booting, a hack with another layout) gives null, never throws.
 
+import { shiftEntry } from './romwram.mjs';
+
 const hex = (v) => (typeof v === 'string' ? parseInt(v, 16) : Number(v));
 const u16le = (b, o) => b[o] | (b[o + 1] << 8);
 const u32le = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
@@ -20,7 +22,9 @@ export function mapEntryFor(maps, entry) {
   const id = typeof entry === 'string' ? entry : entry?.id;
   if (!id || !maps?.games) return null;
   // ids like "heartgold_us~IPKD" are another language found by scanning: its addresses are unknown
-  return maps.games[id] || null;
+  const m = maps.games[id] || null;
+  // a Game Boy hack whose variables moved (shared/live/romwram.mjs: the entry carries the shift)
+  return m && entry?.wram ? shiftEntry(m, entry.wram) : m;
 }
 
 function readGen1(m, read, maps) {

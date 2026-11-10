@@ -16,7 +16,8 @@ import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
 import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer } from './session-info.mjs';
-import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady } from './location.mjs';
+import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow } from './location.mjs';
+import { shiftEntry } from '/shared/live/romwram.mjs';
 import { RulesTab } from './board.mjs';
 import { CartInsert } from './cartinsert.mjs';
 import { play as playCue } from '../lib/sound.mjs';
@@ -741,6 +742,7 @@ export function GameSession({ session, mode }) {
       }, 100); // a few bytes: read often, so the turbo music follows a new song within a moment
       // live loop
       let lastLocate = 0;
+      let wramEntry = null;
       const tick = () => {
         if (stopped) return;
         const e = emu();
@@ -755,18 +757,23 @@ export function GameSession({ session, mode }) {
           // A GBA ROM hack on an expanded engine (romspecies.mjs) keeps neither the species numbers nor the RAM layout
           // of the game it was built from: reading it with that game's addresses would show made-up Pokémon. Say so.
           const sp = entry.gen === 3 ? romSpeciesNow() : null;
-          if (entry.gen === 3 && !romDataReady()) {
-            // (a GBA game is read once its species table is known – a moment after the start)
+          if (entry.gen <= 3 && !romDataReady()) {
+            // (GB and GBA games are read once the ROM's own data is known – a moment after the start: a hack may keep
+            // its variables elsewhere or other Pokémon in the slots)
           } else if (sp?.engine === 'expanded') {
             setLiveState({ status: 'hack', entry: entry.name });
             setHere(null);
             setCheatGame(false); // (the bag isn't where the base game keeps it either)
           } else if (e.ramInfo().base >= 0) {
-            setHere((p) => nextHere(p, readHere(entry, e.read, state)));
+            // a Game Boy hack built from the disassembly may have moved its RAM variables (Crystal Legacy: 11 bytes)
+            const wram = entry.gen <= 2 ? romWramNow() : null;
+            if (wram && wramEntry?.from !== entry) wramEntry = { from: entry, entry: { ...shiftEntry(entry, wram), wram } };
+            const ent = wram ? wramEntry.entry : entry;
+            setHere((p) => nextHere(p, readHere(ent, e.read, state)));
             const TT = sp ? T.withSpecies(sp) : T; // a hack's own Pokémon in the slots (Light Platinum)
-            const res = readLiveParty(entry, e.read, TT, state);
+            const res = readLiveParty(ent, e.read, TT, state);
             if (res?.party) {
-              const fight = readLiveBattle(entry, e.read, TT, state, res.party);
+              const fight = readLiveBattle(ent, e.read, TT, state, res.party);
               const party = withBattleHp(res.party, fight);
               setMine(party);
               setBattle(fight);

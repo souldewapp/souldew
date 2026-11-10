@@ -23,12 +23,12 @@ const load = () => {
 // The running ROM's own data (server/lib/romloc.mjs, computed by the server from the file): its map → location step
 // and place names (shared/live/romloc.mjs), and for GBA games its species table (shared/live/romspecies.mjs).
 // `pending` while it loads; `data` null = the ROM has no location data (the tables still serve).
-const ROMLOC = { src: null, data: null, species: null, pending: false };
+const ROMLOC = { src: null, data: null, species: null, wram: null, pending: false };
 
 /** Starts loading the location data of the ROM at `src` (the /api/… URL the emulator loads); resolves when done. */
 export function loadRomLocations(src) {
   if (!src || ROMLOC.src === src) return ROMLOC.p || Promise.resolve();
-  Object.assign(ROMLOC, { src, data: null, species: null, pending: true });
+  Object.assign(ROMLOC, { src, data: null, species: null, wram: null, pending: true });
   setRomPlaces(null); // (another game's names don't apply any more)
   setRomSpecies(null);
   const p = fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`)
@@ -36,7 +36,7 @@ export function loadRomLocations(src) {
     .catch(() => null)
     .then((j) => {
       if (ROMLOC.src !== src) return;
-      Object.assign(ROMLOC, { data: j?.data || null, species: j?.species || null, pending: false });
+      Object.assign(ROMLOC, { data: j?.data || null, species: j?.species || null, wram: j?.wram || null, pending: false });
       setRomPlaces(ROMLOC.data); // catches made now are named like the sign names their place
       setRomSpecies(ROMLOC.species); // a ROM hack's own Pokémon get the game's names
     });
@@ -46,6 +46,8 @@ export function loadRomLocations(src) {
 
 /** The running ROM's species table (romSpecies(): { engine, map, unknown } – GBA only), null while unknown. */
 export const romSpeciesNow = () => ROMLOC.species;
+/** A Game Boy hack's moved RAM variables (romwram.mjs gbWramShift), null: the retail addresses. */
+export const romWramNow = () => ROMLOC.wram;
 /** Has the running ROM's own data arrived (or failed)? */
 export const romDataReady = () => !ROMLOC.pending;
 

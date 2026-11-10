@@ -1,7 +1,7 @@
 // What the play view needs from the ROM itself, computed here from the file instead of in the page (a DS ROM is
 // 64–512 MB, and the page already holds one copy for the emulator): the "where am I" sign's place names and map →
-// location step (shared/live/romloc.mjs) and, for GBA games, which Pokémon the species numbers stand for
-// (shared/live/romspecies.mjs). Both are small and cached per file (path, size, time) in CACHE_DIR/romloc.
+// location step (shared/live/romloc.mjs), for GBA games which Pokémon the species numbers stand for
+// (shared/live/romspecies.mjs) and for Game Boy hacks where their RAM variables moved (shared/live/romwram.mjs). Both are small and cached per file (path, size, time) in CACHE_DIR/romloc.
 // `vanilla` says whether the file is an unmodified retail ROM (its CRC32 is in the catalog): a randomized game, a
 // ROM hack or anything else changed shows the ROM's own place names (shared/live/location.mjs placeName).
 import { readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -10,9 +10,12 @@ import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
 import { romLocations } from '../../shared/live/romloc.mjs';
 import { romSpecies } from '../../shared/live/romspecies.mjs';
+import { gbWramShift } from '../../shared/live/romwram.mjs';
+import { findEntry } from '../../shared/live/parse.mjs';
+import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 3; // bump when romLocations() / romSpecies() change what they find
+const VERSION = 4; // bump when romLocations() / romSpecies() change what they find
 const memo = new Map();
 let tables = null;
 
@@ -23,7 +26,7 @@ function opts(sharedDir) {
     for (const g of j('catalog.json').games || []) for (const c of g.crc32 || []) retail.add(String(c).toUpperCase());
     const gen3Index = [];
     for (const [k, v] of Object.entries(j('gen3_index_to_dex.json').map || {})) gen3Index[Number(k)] = v;
-    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: j('pokeapi.json').names?.en || [] };
+    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: j('pokeapi.json').names?.en || [], addresses: j('addresses.json'), maps: j('maps.json') };
   }
   return tables;
 }
@@ -34,7 +37,7 @@ export function romCrc(bytes) {
   return (v >>> 0).toString(16).toUpperCase().padStart(8, '0');
 }
 
-/** Both results for a ROM's bytes: { data (locations or null), species (or null), vanilla }. Never throws. */
+/** All results for a ROM's bytes: { data (locations or null), species (or null), wram (or null), vanilla }. */
 export function romData(u8, sharedDir) {
   const o = opts(sharedDir);
   let vanilla = false;
@@ -45,16 +48,25 @@ export function romData(u8, sharedDir) {
   }
   const data = romLocations(u8, o);
   if (data) data.vanilla = vanilla;
-  return { data, species: romSpecies(u8, o), vanilla };
+  return { data, species: romSpecies(u8, o), wram: vanilla ? null : gbShift(u8, o), vanilla };
+}
+
+/** Game Boy hacks: where the code says the party, the battle and the map variables are (shared/live/romwram.mjs). */
+function gbShift(u8, o) {
+  const h = identifyRom(u8.subarray(0, 0x200));
+  if (!h || (h.system !== 'gb' && h.system !== 'gbc')) return null;
+  const entry = findEntry(o.addresses, { platform: h.system, code: h.code, title: h.title });
+  return entry ? gbWramShift(u8, entry, o.maps.games?.[entry.id]) : null;
 }
 
 /**
- * The ROM's data by file path or (an unpacked archive entry) by its bytes plus a key: { data, species, vanilla } –
- * `data` the location data (null when the ROM has none: another engine, an unsupported layout), `species` the GBA
- * species table (null for other systems). Never throws.
+ * The ROM's data by file path or (an unpacked archive entry) by its bytes plus a key: { data, species, wram, vanilla }
+ * – `data` the location data (null when the ROM has none: another engine, an unsupported layout), `species` the GBA
+ * species table (null for other systems), `wram` a Game Boy hack's moved variables (null: the retail addresses).
+ * Never throws.
  */
 export function romDataFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
-  const none = { data: null, species: null, vanilla: null };
+  const none = { data: null, species: null, wram: null, vanilla: null };
   let id;
   try {
     if (file) {
@@ -71,7 +83,7 @@ export function romDataFor({ file = null, bytes = null, key = null }, { sharedDi
     try {
       const v = JSON.parse(readFileSync(cached, 'utf8'));
       if (v.version === VERSION) {
-        const r = { data: v.data, species: v.species, vanilla: v.vanilla };
+        const r = { data: v.data, species: v.species, wram: v.wram ?? null, vanilla: v.vanilla };
         memo.set(id, r);
         return r;
       }

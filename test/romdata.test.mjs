@@ -241,3 +241,46 @@ test('real ROMs: romLocations never throws and finds data for every Gen 3–5 re
     if (!frlg) assert.ok(romLocations(bytes, { gen3Charset: cs3, gen4Chars: json('gen4.json').chars }), `${f}: location data`);
   }
 });
+
+test('Game Boy hacks: moved RAM variables are found from the code\'s references, the retail game stays as it is', async () => {
+  const { gbWramShift, shiftEntry, wramRefs } = await import('../shared/live/romwram.mjs');
+  const addresses = json('addresses.json');
+  const maps = json('maps.json');
+  const entry = addresses.games.find((g) => g.id === 'crystal_us');
+  const mapEntry = maps.games.crystal_us;
+  /** A ROM whose code names each address `n` times (ld a,[nn]). */
+  const rom = (refs) => {
+    const b = new Uint8Array(0x8000);
+    let o = 0x150;
+    for (const [addr, n] of refs) for (let i = 0; i < n; i++, o += 3) b.set([0xfa, addr & 0xff, addr >> 8], o);
+    return b;
+  };
+  const retail = rom([[0xdcd7, 190], [0xd22d, 70], [0xdcb5, 46], [0xc62c, 12], [0xd213, 18]]);
+  assert.equal(wramRefs(retail)[0xdcd7 - 0xc000], 190);
+  assert.equal(gbWramShift(retail, entry, mapEntry), null, 'the retail addresses');
+  // Crystal Legacy: WRAMX 11 bytes on, WRAM0 (the battle mon) where it was; a busy neighbour must not hold an address back
+  const legacy = rom([[0xdce2, 191], [0xd238, 73], [0xdcc0, 49], [0xc62c, 12], [0xd213, 39], [0xd21e, 18]]);
+  const s = gbWramShift(legacy, entry, mapEntry);
+  assert.equal(s.delta, 11);
+  assert.equal(s.moved['0xDCD7'], '0xDCE2');
+  assert.equal(s.moved['0xD213'], '0xD21E', 'the enemy level follows its bank');
+  assert.equal(s.moved['0xC62C'], undefined, 'WRAM0 stays: no evidence it moved');
+  const e = shiftEntry(entry, s);
+  assert.deepEqual([e.partyCountAddr, e.nicknamesAddr, e.inBattle.addr, e.battleEnemy.levelAddr, e.liveBattleHp.speciesAddr], ['0xDCE2', '0xDE4C', '0xD238', '0xD21E', '0xC62C']);
+  assert.equal(shiftEntry(mapEntry, s).mapGroupAddr, '0xDCC0');
+  assert.equal(entry.partyCountAddr, '0xDCD7', 'the table itself is untouched');
+  // one busy address near an anchor isn't a shift: every anchor has to agree
+  assert.equal(gbWramShift(rom([[0xdcd7, 5], [0xd22d, 5], [0xdcb5, 5], [0xd270, 300]]), entry, mapEntry), null);
+  assert.equal(gbWramShift(retail, addresses.games.find((g) => g.id === 'emerald_us')), null, 'GB games only');
+});
+
+test('a Game Boy hack\'s location follows its moved map variables', async () => {
+  const { readLocation } = await import('../shared/live/location.mjs');
+  const maps = json('maps.json');
+  const entry = { id: 'crystal_us', gen: 2, wram: { delta: 11, moved: { '0xDCB5': '0xDCC0', '0xDCB6': '0xDCC1' } } };
+  const mem = { 0xdcc0: 24, 0xdcc1: 3, 0xdcb5: 1, 0xdcb6: 1 };
+  const read = (a, n) => Uint8Array.from({ length: n }, (_, i) => mem[a + i] ?? 0);
+  const r = readLocation(maps, entry, read);
+  assert.equal(r.map, '24.3', 'Route 29 from the moved variables');
+  assert.equal(readLocation(maps, { id: 'crystal_us', gen: 2 }, read).map, '1.1', 'the retail entry reads the old place');
+});
