@@ -284,3 +284,18 @@ test('a Game Boy hack\'s location follows its moved map variables', async () => 
   assert.equal(r.map, '24.3', 'Route 29 from the moved variables');
   assert.equal(readLocation(maps, { id: 'crystal_us', gen: 2 }, read).map, '1.1', 'the retail entry reads the old place');
 });
+
+test('Rare Candies in a Game Boy hack with moved RAM go into its bag, not where the retail game keeps one', async () => {
+  const { addRareCandies } = await import('../shared/live/cheats.mjs');
+  const mem = new Map();
+  const put = (a, bytes) => bytes.forEach((b, i) => mem.set(a + i, b));
+  const bus = { read: (a, n) => Uint8Array.from({ length: n }, (_, i) => mem.get(a + i) ?? 0), write: (a, bytes) => (put(a, [...bytes]), true) };
+  // Crystal Legacy: the bag at 0xD892 + 11 with one Potion (0x12 ×5), the key items after it
+  put(0xd89d, [1, 0x12, 5, 0xff]);
+  put(0xd8c7, [0, 0xff]);
+  const entry = { id: 'crystal_us', gen: 2, wram: { delta: 11, moved: { '0xDCD7': '0xDCE2' } } };
+  const r = addRareCandies(entry, bus, {}, 99);
+  assert.equal(r.error, undefined, JSON.stringify(r));
+  assert.deepEqual([...bus.read(0xd89d, 6)], [2, 0x12, 5, 0x20, 99, 0xff]);
+  assert.equal(addRareCandies({ id: 'crystal_us', gen: 2 }, bus, {}, 99).error, 'notFound', 'the retail address holds no bag here');
+});

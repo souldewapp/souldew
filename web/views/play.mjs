@@ -769,6 +769,7 @@ export function GameSession({ session, mode }) {
             const wram = entry.gen <= 2 ? romWramNow() : null;
             if (wram && wramEntry?.from !== entry) wramEntry = { from: entry, entry: { ...shiftEntry(entry, wram), wram } };
             const ent = wram ? wramEntry.entry : entry;
+            if (liveRef.current?.entry !== ent) liveRef.current = { ...liveRef.current, entry: ent }; // (the cheats use it)
             setHere((p) => nextHere(p, readHere(ent, e.read, state)));
             const TT = sp ? T.withSpecies(sp) : T; // a hack's own Pokémon in the slots (Light Platinum)
             const res = readLiveParty(ent, e.read, TT, state);
