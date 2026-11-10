@@ -179,9 +179,10 @@ if (flag('randomize')) {
   if (!java.ok) notes.push('randomize: no Java found (npm run jre, JAVA_HOME or --tools)');
   else {
     const picked = new Map();
-    for (const b of bases) if (b.generation && !picked.has(b.generation) && (!only || b.name.toLowerCase().includes(only))) picked.set(b.generation, b);
+    for (const b of bases) if (b.generation && !picked.has(b.generation)) picked.set(b.generation, b);
     for (const [gen, b] of picked) {
       const dest = join(work, 'randomized', `${basename(b.name, extname(b.name))} (randomized)${extname(b.name)}`);
+      if (only && !basename(dest).toLowerCase().includes(only)) continue;
       mkdirSync(dirname(dest), { recursive: true });
       const props = join(work, 'randomized', `gen${gen}.properties`);
       writeFileSync(props, toProperties(buildValues(PRESETS[0].values, gen)));
