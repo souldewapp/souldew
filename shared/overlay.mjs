@@ -9,7 +9,7 @@ import { PROGRESSION } from './routes.mjs';
 import { slotsOf, runMode } from './slots.mjs';
 
 export const OVERLAY_FEED = 30; // newest log entries in a snapshot (alerts only need the latest ones)
-export const WIDGETS = ['team', 'card', 'counters', 'where', 'alerts', 'stats'];
+export const WIDGETS = ['team', 'card', 'counters', 'where', 'alerts', 'stats', 'popup'];
 /** The Pokémon a test alert may show beyond the run's own (Pikachu, Eevee → Umbreon, the killer Miltank). */
 export const TEST_SPECIES = [25, 133, 197, 241];
 const GEN = { gb: 1, gbc: 2, gba: 3, nds: 4 };

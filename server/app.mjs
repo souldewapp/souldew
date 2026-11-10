@@ -26,6 +26,10 @@ import { hostAllowed, apiRequestError } from './lib/guard.mjs';
 import { overlaySnapshot, TEST_SPECIES } from '../shared/overlay.mjs';
 import { startPokelinkBridge, pokelinkPlayers, POKELINK_PORT } from './lib/pokelink.mjs';
 import { romLocationsFor } from './lib/romloc.mjs';
+import { createStreamHub, streamSettings } from './lib/streamapi.mjs';
+import { COFFEE_CORNERS } from '../shared/coffee.mjs';
+import { LINKS } from '../shared/links.mjs';
+import { randomBytes } from 'node:crypto';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -443,10 +447,23 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
           return null;
         }
       };
-      overlayNames = { names: read('pokeapi.json')?.names || {}, tables: { gen4: GEN4, loc2: read('locations_gen2_crystal.json'), loc3: read('locations_gen3.json') } };
+      const api = read('pokeapi.json');
+      overlayNames = { names: api?.names || {}, items: api?.items || {}, tables: { gen4: GEN4, loc2: read('locations_gen2_crystal.json'), loc3: read('locations_gen3.json') } };
     }
     const list = overlayNames.names[lang] || overlayNames.names.en || [];
-    return { lang, tables: overlayNames.tables, speciesName: (id) => list[id] || overlayNames.names.en?.[id] || `#${id}` };
+    const items = overlayNames.items;
+    return {
+      lang, tables: overlayNames.tables, speciesName: (id) => list[id] || overlayNames.names.en?.[id] || `#${id}`,
+      // the game's item ID → its name (Gen 3–5 tables; Gen 1/2 items have no table)
+      itemName: (id, gen) => {
+        const key = items[`gen${gen}`]?.[id];
+        return key ? items.names?.[lang]?.[key] || items.names?.en?.[key] || null : null;
+      },
+      gameName: (id) => {
+        const g = (catalog().games || []).find((x) => x.id === id);
+        return g ? (lang === 'de' && g.titleDe) || g.title || null : null;
+      },
+    };
   };
   // Pokélink themes (server/lib/pokelink.mjs): a socket.io bridge on its own port, switched on in the Stream page.
   // It follows the run chosen there, else the run played last (its doc changed last).
@@ -467,9 +484,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     }
     return pokelinkLookup;
   };
-  const pokelinkRun = () => {
-    const want = loadConfig().pokelink?.run;
-    if (want && readManifest(want)) return want;
+  /** The run played last: its doc changed last. */
+  const latestRun = () => {
     let best = null;
     for (const m of listRuns()) {
       let t = 0;
@@ -479,6 +495,11 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       if (!best || t > best.t) best = { id: m.id, t };
     }
     return best?.id || null;
+  };
+  const pokelinkRun = () => {
+    const want = loadConfig().pokelink?.run;
+    if (want && readManifest(want)) return want;
+    return latestRun();
   };
   const pokelinkList = () => {
     const id = (pokelink.run = pokelinkRun());
@@ -510,8 +531,25 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   const overlayData = (runId, lang) => {
     const manifest = readManifest(runId);
     if (!manifest) throw httpError(404, 'Run nicht gefunden', 'runNotFound');
-    return overlaySnapshot(manifest, readDoc(runId) || {}, overlayLookups(lang));
+    const L = overlayLookups(lang);
+    const snap = overlaySnapshot(manifest, readDoc(runId) || {}, L);
+    // the coffee pop-up while it is on screen (server/lib/streamapi.mjs decides) – with its Pokémon's name
+    const popup = streamHub?.popupFor(runId);
+    if (popup) {
+      snap.popup = popup;
+      snap.species[popup.species] ??= L.speciesName(popup.species);
+    }
+    return snap;
   };
+  // overlays that ask every few seconds instead of holding a stream (OBS with many sources): `${run}|${w}` → time
+  const overlayPolls = new Map();
+  const overlayListening = (runId) => {
+    if (overlayClients.get(runId)?.size) return true;
+    const now = Date.now();
+    for (const [k, t] of overlayPolls) if (k.startsWith(`${runId}|`) && now - t < 15000) return true;
+    return false;
+  };
+  let streamHub = null;
   const overlayTimers = new Map();
   const pushOverlay = (runId) => {
     if (pokelink.bridge && !overlayTimers.has(`pl:${runId}`)) {
@@ -535,6 +573,18 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       }
     }, 150));
   };
+  // The open stream API (/api/v1, docs/STREAM_API.md) and the coffee pop-up on legendary encounters
+  streamHub = createStreamHub({
+    readManifest, readDoc, listRuns, activeRun: latestRun, lookups: overlayLookups, loadConfig, saveConfig, docs: LINKS.streamApiDocs,
+    overlayListening,
+    serveSprite: (res, src, headers) => serveCached(res, join(CACHE_DIR, 'sprites', src.set, basename(src.path)),
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${src.path}`, headers),
+    popupLayer: (runId) => {
+      for (const c of overlayClients.get(runId)?.values() || []) if (c.w === 'popup' && !c.preview) return true;
+      return Date.now() - (overlayPolls.get(`${runId}|popup`) || 0) < 15000;
+    },
+    onPopup: (runId) => pushOverlay(runId),
+  });
   setInterval(() => {
     for (const res of sseClients) res.write(': ping\n\n');
     for (const set of overlayClients.values()) for (const res of set.keys()) res.write(': ping\n\n');
@@ -822,7 +872,39 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/doc$/, (req, m) => readDoc(m[1]));
   // what a stream overlay shows of the run (no keys, paths or spoilers) – the event stream below pushes it live
-  route('GET', /^\/api\/runs\/([a-f0-9]{8})\/overlay$/, (req, m, url) => overlayData(m[1], overlayLang(url.searchParams.get('lang'))));
+  route('GET', /^\/api\/runs\/([a-f0-9]{8})\/overlay$/, (req, m, url) => {
+    if (url.searchParams.get('preview') !== '1') {
+      overlayPolls.set(`${m[1]}|${String(url.searchParams.get('w') || 'team').slice(0, 12)}`, Date.now());
+      streamHub.prime(m[1]);
+    }
+    return overlayData(m[1], overlayLang(url.searchParams.get('lang')));
+  });
+  // Stream page: the open API's address and token, the coffee pop-up's switch and corner
+  const streamState = (port) => {
+    const s = streamSettings(loadConfig());
+    return { ...s, base: `http://127.0.0.1:${port}/api/v1`, docs: LINKS.streamApiDocs, clients: streamHub.clients() };
+  };
+  route('GET', /^\/api\/stream$/, () => streamState(server.address()?.port));
+  route('POST', /^\/api\/stream$/, async (req) => {
+    const body = await readBody(req);
+    const cur = loadConfig().stream || {};
+    const next = { ...cur };
+    if (typeof body.coffee === 'boolean') next.coffee = body.coffee;
+    if (COFFEE_CORNERS.includes(body.corner)) next.corner = body.corner;
+    if (body.token === 'new') next.token = randomBytes(18).toString('base64url');
+    else if (body.token === '') next.token = '';
+    saveConfig({ stream: next });
+    return streamState(server.address()?.port);
+  });
+  // "Preview pop-up": a sample coffee pop-up in every overlay of the run (OBS too) and to the API's clients
+  route('POST', /^\/api\/runs\/([a-f0-9]{8})\/coffee\/preview$/, (req, m) => {
+    if (!readManifest(m[1])) throw httpError(404, 'Run nicht gefunden', 'runNotFound');
+    const popup = streamHub.previewCoffee(m[1]);
+    const lang = overlayLang(loadConfig().lang);
+    let n = 0;
+    for (const c of overlayClients.get(m[1])?.values() || []) if (!c.preview && (c.w === 'popup' || (c.alerts && !popup.layer))) n++;
+    return { ok: true, popup, name: overlayLookups(lang).speciesName(popup.species), overlays: n };
+  });
   // "Send a test alert" in the app's Stream page: every open overlay of the run shows a sample (in OBS too)
   route('POST', /^\/api\/runs\/([a-f0-9]{8})\/overlay\/test$/, async (req, m) => {
     if (!readManifest(m[1])) throw httpError(404, 'Run nicht gefunden', 'runNotFound');
@@ -866,8 +948,10 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const p = join(runDir(m[1]), 'doc.json');
     // Merge instead of overwrite (sync read + write, so no other request runs in between): an upload that
     // overtook a newer one, or a second tab, can't roll entries back.
+    streamHub.prime(m[1]); // the state before this upload – the stream API's events are the difference
     writeFileAtomic(p, JSON.stringify(mergeDocEntries(readDoc(m[1]), body)));
     rmSync(p + '.tmp', { force: true }); // left behind by older versions
+    streamHub.docChanged(m[1]);
     pushOverlay(m[1]);
     return { ok: true };
   });
@@ -1047,7 +1131,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     return map[set] || null;
   };
 
-  async function serveCached(res, file, url) {
+  async function serveCached(res, file, url, headers = {}) {
     if (!existsSync(file)) {
       try {
         const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -1055,10 +1139,10 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         mkdirSync(dirname(file), { recursive: true });
         writeFileAtomic(file, Buffer.from(await r.arrayBuffer()));
       } catch {
-        return send(res, 404, 'not available');
+        return send(res, 404, 'not available', headers);
       }
     }
-    serveFile(res, file, { 'Cache-Control': 'public, max-age=31536000, immutable' });
+    serveFile(res, file, { 'Cache-Control': 'public, max-age=31536000, immutable', ...headers });
   }
 
   async function prefetchSprites() {
@@ -1097,6 +1181,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       return send(res, 400, { error: 'Ungültige URL' });
     }
     try {
+      // the open stream API has its own rules (localhost pages or the token, CORS, read-only): server/lib/streamapi.mjs
+      if ((path === '/api/v1' || path.startsWith('/api/v1/')) && await streamHub.handle(req, res, path, url)) return;
       if (path.startsWith('/api/')) {
         // Origin / Sec-Fetch-Site / x-soullink checks (server/lib/guard.mjs) – before any API route, SSE included.
         const denied = apiRequestError(req, server.address()?.port);
@@ -1112,6 +1198,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         const w = String(url.searchParams.get('w') || 'team').slice(0, 12);
         overlayClients.get(overlayEvents[1]).set(res, { lang, w, preview: url.searchParams.get('preview') === '1', alerts: w === 'alerts' || url.searchParams.get('alerts') === '1' });
         res.on('close', () => overlayClients.get(overlayEvents[1])?.delete(res));
+        streamHub.prime(overlayEvents[1]);
         return;
       }
       if (path === '/api/events') {
@@ -1214,6 +1301,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
 
   server.on('close', () => {
+    streamHub.close();
     pokelink.bridge?.close();
     pokelink.bridge = null;
   });
