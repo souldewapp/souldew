@@ -51,6 +51,20 @@
 - A game without location data no longer says "Location appears once you're in the game" forever; it says the
   location isn't available for this game yet.
 
+**ROM hacks and randomized games: names straight from the game** – checked game by game (see
+[docs/TESTED_GAMES.md](docs/TESTED_GAMES.md)).
+
+- A randomized game or a ROM hack now always shows the game's own place names – also when the game's language
+  isn't the app's. New catches are named the same way, so catches in Black/White and Black 2/White 2 get their place
+  name instead of a number, and a hack's catches get the hack's names.
+- GBA ROM hacks that put other Pokémon into the game (Light Platinum: 141 of them, e.g. Venipede where Weedle was, or
+  Turtwig) now show the Pokémon the game shows – before, souldew showed the original game's Pokémon of that number, or
+  nothing. A Pokémon only the hack has gets the hack's name.
+- Hacks on an expanded engine (Unbound, Radical Red, Run & Bun and other pokeemerald-expansion hacks) now say that
+  live tracking doesn't support them yet, instead of possibly showing wrong Pokémon. Catches can still be entered by
+  hand.
+- Blaze Black 2 Redux (and Gen 5 hacks like it) now gets the place sign.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.
