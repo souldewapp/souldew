@@ -280,5 +280,21 @@ export function locationLabel(gen, id, tables = {}, lang = 'en') {
   return '';
 }
 
+/**
+ * The name the sign shows for a readLocation result. `rom` = the ROM's location data (romLocations() + `vanilla` from
+ * the server), `table` = the app's own name for the place (locationLabel, in the app's language), `lang` = the app's
+ * language. A modified ROM (randomized, a ROM hack – its CRC isn't a retail one) always shows the game's own name: a
+ * hack's maps may reuse a vanilla place id for somewhere else. An unmodified one shows the game's name when it speaks
+ * the app's language (the name the game itself shows), else the app's translation; a place the tables don't know
+ * keeps the game's name either way.
+ */
+export function placeName(r, { rom = null, table = '', lang = 'en' } = {}) {
+  if (!r) return '';
+  const own = r.romName || '';
+  if (own && rom?.vanilla === false) return own;
+  if (own && rom?.lang && rom.lang === lang) return own;
+  return table || own;
+}
+
 /** Same place? (two readLocation results) */
 export const sameLocation = (a, b) => (!a && !b) || (!!a && !!b && a.gen === b.gen && a.id === b.id);

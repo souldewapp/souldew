@@ -5,6 +5,7 @@ import { PROGRESSION, VANILLA_CAPS, areaForMetLocation, levelCapFor, gymCapsFami
 import { gen4data, speciesName, pokeapi } from './data.mjs';
 import { t, currentLang } from './i18n.mjs';
 import { ALL_SLOTS, slotsOf, runMode, isNuzlocke, othersOf } from '/shared/slots.mjs';
+import { placeName } from '/shared/live/location.mjs';
 
 export { ALL_SLOTS, slotsOf, runMode, isNuzlocke, othersOf };
 // Runs from before 1–4 players were always a pair – the default where no slots/manifest are passed.
@@ -41,18 +42,26 @@ export async function loadLocationTables() {
   ]);
 }
 
+// The running game's own place names (shared/live/romloc.mjs – web/views/location.mjs hands them over when the ROM's
+// location data has loaded): a catch is named like the place sign names that place (placeName) – the game's own name
+// in a randomized game or a ROM hack, and in Gen 5, which has no table of its own.
+let ROM_PLACES = null;
+export function setRomPlaces(rom) {
+  ROM_PLACES = rom && Array.isArray(rom.names) && rom.gen ? rom : null;
+}
+
 /** Localized name of a met location for a generation. */
 export function locationName(gen, id) {
   if (id === null || id === undefined) return '';
   const lang = currentLang() === 'de' ? 'de' : 'en';
+  let table = '';
   if (gen === 4) {
     const g = gen4data();
-    if (id >= 2000) return g?.locationsSpecial?.[String(id)] || `#${id}`;
-    return g?.locations?.[id] || `#${id}`;
-  }
-  if (gen === 3) return LOC3?.map?.[id]?.[lang] || LOC3?.map?.[id]?.en || `#${id}`;
-  if (gen === 2) return LOC2?.map?.[id]?.[lang] || LOC2?.map?.[id]?.en || `#${id}`;
-  return `#${id}`;
+    table = id >= 2000 ? g?.locationsSpecial?.[String(id)] : g?.locations?.[id];
+  } else if (gen === 3) table = LOC3?.map?.[id]?.[lang] || LOC3?.map?.[id]?.en;
+  else if (gen === 2) table = LOC2?.map?.[id]?.[lang] || LOC2?.map?.[id]?.en;
+  const own = ROM_PLACES?.gen === gen ? ROM_PLACES.names[id] || '' : '';
+  return placeName({ romName: own }, { rom: ROM_PLACES, table: table || '', lang: currentLang() }) || `#${id}`;
 }
 
 /** Which route list a run uses. */

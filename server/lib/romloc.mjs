@@ -1,28 +1,60 @@
-// The ROM's own location data for the play view's "where am I" sign (shared/live/romloc.mjs), computed here from the
-// file instead of in the page: a DS ROM is 64–512 MB, and the page already holds one copy for the emulator. The
-// result is small (names + map → location ids) and cached per file (path, size, time) in CACHE_DIR/romloc.
+// What the play view needs from the ROM itself, computed here from the file instead of in the page (a DS ROM is
+// 64–512 MB, and the page already holds one copy for the emulator): the "where am I" sign's place names and map →
+// location step (shared/live/romloc.mjs) and, for GBA games, which Pokémon the species numbers stand for
+// (shared/live/romspecies.mjs). Both are small and cached per file (path, size, time) in CACHE_DIR/romloc.
+// `vanilla` says whether the file is an unmodified retail ROM (its CRC32 is in the catalog): a randomized game, a
+// ROM hack or anything else changed shows the ROM's own place names (shared/live/location.mjs placeName).
 import { readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import zlib from 'node:zlib';
 import { romLocations } from '../../shared/live/romloc.mjs';
+import { romSpecies } from '../../shared/live/romspecies.mjs';
+import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 1; // bump when romLocations() changes what it finds
+const VERSION = 3; // bump when romLocations() / romSpecies() change what they find
 const memo = new Map();
-let charsets = null;
+let tables = null;
 
 function opts(sharedDir) {
-  if (!charsets) {
+  if (!tables) {
     const j = (f) => JSON.parse(readFileSync(join(sharedDir, 'data', f), 'utf8'));
-    charsets = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars };
+    const retail = new Set();
+    for (const g of j('catalog.json').games || []) for (const c of g.crc32 || []) retail.add(String(c).toUpperCase());
+    const gen3Index = [];
+    for (const [k, v] of Object.entries(j('gen3_index_to_dex.json').map || {})) gen3Index[Number(k)] = v;
+    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: j('pokeapi.json').names?.en || [] };
   }
-  return charsets;
+  return tables;
+}
+
+/** CRC32 of a ROM as hex (zlib's native one where Node has it – a DS ROM is up to 512 MB). */
+export function romCrc(bytes) {
+  const v = typeof zlib.crc32 === 'function' ? zlib.crc32(bytes) : crc32(bytes);
+  return (v >>> 0).toString(16).toUpperCase().padStart(8, '0');
+}
+
+/** Both results for a ROM's bytes: { data (locations or null), species (or null), vanilla }. Never throws. */
+export function romData(u8, sharedDir) {
+  const o = opts(sharedDir);
+  let vanilla = false;
+  try {
+    vanilla = o.retail.has(romCrc(u8));
+  } catch {
+    // no checksum: treated as modified
+  }
+  const data = romLocations(u8, o);
+  if (data) data.vanilla = vanilla;
+  return { data, species: romSpecies(u8, o), vanilla };
 }
 
 /**
- * Location data for a ROM, by file path or (an unpacked archive entry) by its bytes plus a key. Never throws:
- * null when the ROM has none (another engine, an unsupported layout).
+ * The ROM's data by file path or (an unpacked archive entry) by its bytes plus a key: { data, species, vanilla } –
+ * `data` the location data (null when the ROM has none: another engine, an unsupported layout), `species` the GBA
+ * species table (null for other systems). Never throws.
  */
-export function romLocationsFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
+export function romDataFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
+  const none = { data: null, species: null, vanilla: null };
   let id;
   try {
     if (file) {
@@ -30,7 +62,7 @@ export function romLocationsFor({ file = null, bytes = null, key = null }, { sha
       id = `${file}|${st.size}|${st.mtimeMs}`;
     } else id = `bytes|${key}|${bytes?.length}`;
   } catch {
-    return null;
+    return none;
   }
   if (memo.has(id)) return memo.get(id);
   const hash = createHash('sha1').update(`${VERSION}|${id}`).digest('hex');
@@ -38,27 +70,33 @@ export function romLocationsFor({ file = null, bytes = null, key = null }, { sha
   if (cached && existsSync(cached)) {
     try {
       const v = JSON.parse(readFileSync(cached, 'utf8'));
-      memo.set(id, v.data);
-      return v.data;
+      if (v.version === VERSION) {
+        const r = { data: v.data, species: v.species, vanilla: v.vanilla };
+        memo.set(id, r);
+        return r;
+      }
     } catch {
       // unreadable cache: compute again
     }
   }
-  let data = null;
+  let r = none;
   try {
     const rom = bytes || readFileSync(file);
-    data = romLocations(new Uint8Array(rom.buffer, rom.byteOffset, rom.byteLength), opts(sharedDir));
+    r = romData(new Uint8Array(rom.buffer, rom.byteOffset, rom.byteLength), sharedDir);
   } catch {
-    data = null;
+    r = none;
   }
-  memo.set(id, data);
+  memo.set(id, r);
   if (cached) {
     try {
       mkdirSync(join(cacheDir, 'romloc'), { recursive: true });
-      writeFileSync(cached, JSON.stringify({ version: VERSION, data }));
+      writeFileSync(cached, JSON.stringify({ version: VERSION, ...r }));
     } catch {
       // a read-only cache folder only costs the next start a second parse
     }
   }
-  return data;
+  return r;
 }
+
+/** Location data alone (romDataFor().data). */
+export const romLocationsFor = (src, env) => romDataFor(src, env).data;
