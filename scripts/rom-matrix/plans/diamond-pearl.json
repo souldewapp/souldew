@@ -1,0 +1,323 @@
+{
+"id": "diamond-pearl",
+"entries": [
+"pearl_us",
+"diamond_us"
+],
+"note": "Diamond/Pearl (US): same as Platinum up to Twinleaf Town; Diamond untested (no ROM).",
+"pos": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()",
+"steps": [
+{
+"do": "wait",
+"frames": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "tap",
+"x": 120,
+"y": 81,
+"hold": 20
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "press",
+"keys": "DOWN"
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "press",
+"keys": "DOWN"
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "tap",
+"x": 128,
+"y": 96,
+"hold": 20
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 6500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "go",
+"x": 8,
+"y": 4,
+"order": "yx"
+},
+{
+"do": "walk",
+"dir": "RIGHT",
+"steps": 1
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "go",
+"y": 5,
+"order": "y",
+"required": false,
+"patience": 4
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "go",
+"x": 6,
+"y": 10,
+"order": "yxy",
+"map": 414,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1200
+},
+{
+"do": "walk",
+"dir": "DOWN",
+"steps": 2
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 800
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"x": 111,
+"y": 878,
+"order": "xy"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"x": 105,
+"y": 877,
+"order": "xy"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"y": 870,
+"order": "y",
+"map": 411,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "log",
+"name": "p",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"y": 878,
+"x": 111,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"y": 850,
+"order": "y"
+},
+{
+"do": "log",
+"name": "p",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "t1"
+},
+{
+"do": "check",
+"name": "r1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2000
+},
+{
+"do": "log",
+"name": "p",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "t2"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"y": 830,
+"order": "y"
+},
+{
+"do": "log",
+"name": "p",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "t3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1000
+},
+{
+"do": "log",
+"name": "p",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "t4"
+},
+{
+"do": "check",
+"name": "r2"
+},
+{
+"do": "log",
+"name": "core",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const base=u(u(33557360)+0x20);const o=parseInt(ctx.entry.partyMonsOffset||'0xA8',16);return {base:base.toString(16), core:[...read(base+o-8,8)], ok:ctx.state.saveBase?.toString(16)}})()"
+}
+],
+"expect": {
+"r1": {
+"place": "Twinleaf Town"
+},
+"r2": {
+"place": "Twinleaf Town"
+}
+}
+}
