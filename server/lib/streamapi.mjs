@@ -24,6 +24,18 @@ export function streamSettings(config) {
   };
 }
 
+// The API's errors – for other people's layouts, not shown in souldew's UI: { error, code } with this status.
+export const API_ERRORS = {
+  tokenRequired: [401, 'This stream API needs its token (?token=… or Authorization: Bearer …)'],
+  foreignOrigin: [403, 'Only pages from this computer may read the stream API – or set a token in souldew'],
+  readOnly: [405, 'The stream API is read-only'],
+  noSprite: [404, 'No such sprite'],
+  noSpecies: [404, 'Unknown species'],
+  noPlayer: [404, 'No such player in this run'],
+  notFound: [404, 'Unknown endpoint – see /api/v1'],
+};
+const apiError = (code) => ({ status: API_ERRORS[code][0], error: API_ERRORS[code][1], code });
+
 const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d{1,5})?$/i;
 
 /** An Origin that belongs to this computer: none (OBS, curl), `null` (a file opened in a browser), localhost, OBS's local files. */
@@ -52,8 +64,8 @@ const sameToken = (a, b) => {
 export function v1AccessError(req, url, { token = '', open = false } = {}) {
   if (open) return null;
   const origin = req.headers?.origin;
-  if (token) return sameToken(requestToken(req, url), token) ? null : { status: 401, error: 'This stream API needs its token (?token=… or Authorization: Bearer …)', code: 'tokenRequired' };
-  if (!localOrigin(origin)) return { status: 403, error: 'Only pages from this computer may read the stream API – or set a token in souldew', code: 'foreignOrigin' };
+  if (token) return sameToken(requestToken(req, url), token) ? null : apiError('tokenRequired');
+  if (!localOrigin(origin)) return apiError('foreignOrigin');
   return null;
 }
 
@@ -228,6 +240,10 @@ export function createStreamHub(deps) {
     res.end(req.method === 'HEAD' ? undefined : JSON.stringify(body));
     return true;
   };
+  const fail = (req, res, code, extra = {}) => {
+    const e = apiError(code);
+    return json(req, res, e.status, { error: e.error, code }, extra);
+  };
 
   /** Answer a request below /api/v1 (true when it was one). */
   async function handle(req, res, path, url) {
@@ -240,7 +256,7 @@ export function createStreamHub(deps) {
       return true;
     }
     if (req.method !== 'GET' && req.method !== 'HEAD') {
-      return json(req, res, 405, { error: 'The stream API is read-only', code: 'readOnly' }, { Allow: 'GET, HEAD, OPTIONS' });
+      return fail(req, res, 'readOnly', { Allow: 'GET, HEAD, OPTIONS' });
     }
     const sprite = sub.match(/^\/sprites\/([a-z0-9]+)\/([a-z-]+)\/(\d{1,4})\.(png|gif)$/);
     const open = !!sprite || sub === '/coffee/qr.svg' || sub === '/legendaries';
@@ -254,7 +270,7 @@ export function createStreamHub(deps) {
     try {
       if (sprite) {
         const src = spriteSource(sprite[1], sprite[2], Number(sprite[3]));
-        if (!src || src.ext !== sprite[4]) return json(req, res, 404, { error: 'No such sprite', code: 'noSprite' });
+        if (!src || src.ext !== sprite[4]) return fail(req, res, 'noSprite');
         await deps.serveSprite(res, src, corsHeaders(req));
         return true;
       }
@@ -288,7 +304,7 @@ export function createStreamHub(deps) {
       const sp = sub.match(/^\/species\/(\d{1,4})$/);
       if (sp) {
         const id = Number(sp[1]);
-        if (id < 1 || id > 1025) return json(req, res, 404, { error: 'Unknown species', code: 'noSpecies' });
+        if (id < 1 || id > 1025) return fail(req, res, 'noSpecies');
         const gen = Number(url.searchParams.get('gen')) || 5;
         return json(req, res, 200, { id, name: deps.lookups(lang).speciesName(id), legendary: legendaryKind(id), sprites: spriteUrls(id, { gen, base, shiny: url.searchParams.get('shiny') === '1' }) });
       }
@@ -302,13 +318,13 @@ export function createStreamHub(deps) {
         const st = stateOf(manifest, lang, base);
         if (!run[2]) return json(req, res, 200, st);
         if (run[3]) {
-          if (run[2] !== 'players') return json(req, res, 404, { error: 'Unknown endpoint', code: 'notFound' });
+          if (run[2] !== 'players') return fail(req, res, 'notFound');
           const p = st.players.find((x) => x.slot === run[3]);
-          return p ? json(req, res, 200, p) : json(req, res, 404, { error: 'No such player in this run', code: 'noPlayer' });
+          return p ? json(req, res, 200, p) : fail(req, res, 'noPlayer');
         }
         return json(req, res, 200, st[run[2]]);
       }
-      return json(req, res, 404, { error: 'Unknown endpoint – see /api/v1', code: 'notFound' });
+      return fail(req, res, 'notFound');
     } catch (e) {
       if (res.headersSent) {
         res.destroy();
