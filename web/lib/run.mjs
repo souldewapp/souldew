@@ -134,6 +134,23 @@ export function areaForCatch(doc, manifest, gen, metLocation, { create = true } 
 }
 
 /**
+ * The run area of a place the player is at (the place sign: { gen, id, name }) – the same as a catch there would get:
+ * the curated route, else an area that already has this place (by id, else by name), else `m<gen>-<id>`. With
+ * `create` a missing area is added under the sign's name. null when the place isn't of this generation.
+ */
+export function areaForPlace(doc, manifest, gen, here, { create = false } = {}) {
+  if (!doc || !manifest || !here || here.gen !== gen || !Number.isInteger(here.id)) return null;
+  if (profileOf(manifest).curated) return areaForMetLocation(here.id);
+  const name = String(here.name || '').toLowerCase();
+  const list = progression(doc, manifest).filter((x) => x.kind === 'area' && !x.special);
+  const hit = list.find((x) => (x.met || []).includes(here.id) && x.key.startsWith(`m${gen}-`)) || (name && list.find((x) => String(x.name || '').toLowerCase() === name));
+  if (hit) return hit.key;
+  const key = `m${gen}-${here.id}`;
+  if (create && !doc.get(`area:${key}`)) doc.set(`area:${key}`, { name: here.name || locationName(gen, here.id), met: [here.id], auto: true, order: Date.now() });
+  return key;
+}
+
+/**
  * Every place of the game a missed encounter can be filed under – for games without a curated route list, where
  * an area only exists once someone caught there. The location tables cover a whole generation, so they are cut
  * to the region of this game (FireRed/LeafGreen = Kanto sections, Diamond/Pearl/Platinum = Sinnoh). Gen 1 has
@@ -641,6 +658,8 @@ export function dupeOf(doc, manifest, rd, species, slot, exceptArea) {
  */
 const lastBattle = new WeakMap();
 export const BATTLE_GRACE = 5000;
+/** How long after a wild battle a Pokémon joining the team counts as caught in it (catch, nickname, Pokédex screens). */
+export const WILD_CATCH_WINDOW = 60000;
 
 /** doc → Map(`${slot}:${key}` → when a tracked mon was first missing from a live snapshot). */
 const missingSince = new WeakMap();
@@ -800,6 +819,11 @@ export function applySnapshot(doc, manifest, gen, slot, snap, { auto = true, rd 
     const hatched = gen >= 3 && m.metLevel === 0;
     const special = gen >= 4 && m.metLocation >= 2000;
     if (!guess && !hatched && !special && m.metLocation !== null && m.metLocation !== undefined) guess = areaForCatch(doc, manifest, gen, m.metLocation);
+    // Gen 1 and Gold/Silver keep no catch location: a Pokémon that joins within a minute of a wild battle was caught
+    // where the player is – the place the sign shows (snap.here, read live like the battle)
+    if (!guess && gen <= 2 && m.metLocation == null && snap.source === 'live' && snap.here && recent?.battle?.kind === 'wild' && Date.now() - recent.at < WILD_CATCH_WINDOW) {
+      guess = areaForPlace(doc, manifest, gen, snap.here, { create: true });
+    }
     const occupied = guess ? has(guess) : null;
     // Shiny clause off → a shiny is an ordinary encounter.
     const shinyHold = !!m.shiny && r.shinyClause;

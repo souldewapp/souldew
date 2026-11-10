@@ -22,7 +22,22 @@ function helper() {
     const species = romloc?.species || null;
     // what the play view does (web/views/play.mjs): a GBA ROM's own species table; an expanded engine isn't read
     const T = entry?.gen === 3 && species ? T0.withSpecies(species) : T0;
-    ctx = { parse, location, T, T0, entry, maps, tables: { maps, loc2, loc3, gen4 }, rom: romloc?.data || null, species, hack: entry?.gen === 3 && species?.engine === 'expanded', names: api.names.en, state: {}, rawState: {}, header };
+    // the app's own run logic (web/lib/run.mjs): every team read goes into a solo Nuzlocke document like the play view's
+    // snapshots do – a new catch is filed under its area, named like the place sign names it
+    let run = null;
+    try {
+      const [R, D, data] = await Promise.all([import('/lib/run.mjs'), import('/lib/doc.mjs'), import('/lib/data.mjs')]);
+      await Promise.all([data.loadData().catch(() => {}), R.loadLocationTables()]);
+      R.setRomPlaces(romloc?.data || null);
+      data.setRomSpecies?.(romloc?.species || null);
+      const doc = new D.RunDoc('matrix');
+      doc._persistSoon = () => {};
+      const gen = header.platform === 'nds' ? (/^IR[ABDE]/.test(header.code) ? 5 : 4) : { gb: 1, gbc: header.code ? 2 : 1, gba: 3 }[header.platform];
+      run = { R, doc, gen: found?.gen || gen, manifest: { id: 'matrix', mode: 'nuzlocke', name: 'Matrix', players: { p1: { name: 'Matrix' } }, game: { code: header.code, system: header.platform, title: header.title } } };
+    } catch (err) {
+      run = { error: String(err?.message || err) };
+    }
+    ctx = { run, parse, location, T, T0, entry, maps, tables: { maps, loc2, loc3, gen4 }, rom: romloc?.data || null, species, hack: entry?.gen === 3 && species?.engine === 'expanded', names: api.names.en, state: {}, rawState: {}, header };
     return {
       entry: entry?.id || null,
       vanilla: romloc?.vanilla ?? null,
@@ -73,6 +88,27 @@ function helper() {
       badges: res.badges ?? null,
       battle: fight ? { kind: fight.kind, enemy: fight.enemy ? { species: fight.enemy.species, name: name(fight.enemy.species), level: fight.enemy.level, hp: fight.enemy.hp, maxHp: fight.enemy.maxHp } : null } : null,
     };
+  }
+
+  /** Feeds the team read into the run document (applySnapshot, as the play view does) → the encounters filed so far. */
+  function runNote(tm) {
+    const run = ctx.run;
+    if (!run || run.error) return run?.error ? { error: run.error } : null;
+    const { R, doc, gen, manifest } = run;
+    try {
+      const res = ctx.parse.withBattleHp ? ctx.parse.readLiveParty(ctx.entry, e.read, ctx.T, ctx.state) : null;
+      if (res?.party?.length && !ctx.hack) {
+        const fight = ctx.parse.readLiveBattle(ctx.entry, e.read, ctx.T, ctx.state, res.party);
+        const p = place();
+        const here = p?.shown ? { gen: p.gen, id: p.id, name: p.shown } : null; // (as the play view passes it)
+        const out = R.applySnapshot(doc, manifest, gen, 'p1', { source: 'live', party: ctx.parse.withBattleHp(res.party, fight), boxes: res.boxes || null, game: ctx.entry.id, here }, { battle: fight });
+        for (const i of out.inbox || []) run.inbox = [...(run.inbox || []).filter((x) => x.key !== i.mon.key), { key: i.mon.key, species: i.mon.species, reason: i.reason, where: i.where }];
+      }
+      const encs = Object.entries(doc.scan('enc:')).map(([k, v]) => ({ area: k.replace(/:p1$/, ''), name: R.areaName(doc, manifest, k.replace(/:p1$/, '')), species: v.species, metLocation: v.metLocation ?? null, outcome: v.outcome }));
+      return { encounters: encs, inbox: run.inbox || [] };
+    } catch (err) {
+      return { error: String(err?.message || err) };
+    }
   }
 
   async function frames(n) {
@@ -234,7 +270,21 @@ function helper() {
         if (p) shots.push(p);
       } else if (s.do === 'check') {
         await ensureRam();
-        log.push({ do: 'check', name: s.name, frame: e.frames(), place: place(), team: team() });
+        const tm = team();
+        log.push({ do: 'check', name: s.name, frame: e.frames(), place: place(), team: tm, run: runNote(tm) });
+        continue;
+      } else if (s.do === 'give') {
+        // items into the bag (shared/live/cheats.mjs addItem) – Poké Balls for a catch early in the game
+        await ensureRam();
+        const { addItem, POKE_BALL } = await import('/shared/live/cheats.mjs');
+        team(); // (the DS readers find the bag through the party reader's state)
+        const item = s.item === 'ball' || !s.item ? POKE_BALL[ctx.entry.gen] : s.item;
+        const r = addItem(ctx.entry, { read: e.read, write: e.write }, ctx.state, item, s.count || 5, { pocket: s.pocket ?? (s.item === 'ball' || !s.item ? 'balls' : null) });
+        log.push({ do: 'give', item, result: r, required: s.required !== false, ok: !r.error });
+        if (r.error && s.required !== false) {
+          shots.push(await shot(`fail-${log.length}`));
+          break;
+        }
         continue;
       } else if (s.do === 'log') {
         log.push({ do: 'log', name: s.name, value: new Function('read', 'place', 'team', 'ctx', `return (${s.expr});`)(e.read, place, team, ctx) });

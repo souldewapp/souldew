@@ -6,8 +6,7 @@ import { useApp } from '../lib/ui.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
 import { speciesName, gen4data, setRomSpecies } from '../lib/data.mjs';
 import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation, placeName } from '/shared/live/location.mjs';
-import { areaForMetLocation } from '/shared/routes.mjs';
-import { profileOf, progression, pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces } from '../lib/run.mjs';
+import { pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces, areaForPlace } from '../lib/run.mjs';
 
 let MAPS = null; // shared/data/maps.json once loaded
 let LOC = null; // { loc2, loc3 } for the names
@@ -96,12 +95,7 @@ export const nextHere = (prev, next) => (sameLocation(prev, next) && prev?.name 
 
 /** The run area this place counts as (same logic as a catch there), or null when it isn't one. */
 export function areaOfHere(doc, manifest, gen, here) {
-  if (!doc || !manifest || !here || here.gen !== gen) return null;
-  if (profileOf(manifest).curated) return areaForMetLocation(here.id);
-  const name = here.name.toLowerCase();
-  const list = progression(doc, manifest).filter((x) => x.kind === 'area' && !x.special);
-  const hit = list.find((x) => (x.met || []).includes(here.id) && x.key.startsWith(`m${gen}-`)) || list.find((x) => String(x.name || '').toLowerCase() === name);
-  return hit?.key || `m${gen}-${here.id}`;
+  return areaForPlace(doc, manifest, gen, here);
 }
 
 function chipFor(st, enc) {

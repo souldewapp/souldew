@@ -28,6 +28,8 @@ const RED = {
     { do: 'go', x: 7, order: 'x', leave: true, map: 38, note: 'stairs' },
     { do: 'walk', dir: 'RIGHT', steps: 2 },
     { do: 'wait', frames: 120 },
+    { do: 'go', y: 6, x: 7, order: 'yx', required: false, patience: 6 },
+    { do: 'go', x: 3, y: 6, order: 'xy', required: false, patience: 6 },
     { do: 'go', y: 6, x: 3, order: 'yx' },
     { do: 'go', y: 9, leave: true, map: 37, note: 'out of the house' },
     { do: 'wait', frames: 200 },

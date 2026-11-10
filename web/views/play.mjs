@@ -770,7 +770,8 @@ export function GameSession({ session, mode }) {
             if (wram && wramEntry?.from !== entry) wramEntry = { from: entry, entry: { ...shiftEntry(entry, wram), wram } };
             const ent = wram ? wramEntry.entry : entry;
             if (liveRef.current?.entry !== ent) liveRef.current = { ...liveRef.current, entry: ent }; // (the cheats use it)
-            setHere((p) => nextHere(p, readHere(ent, e.read, state)));
+            const hereNow = readHere(ent, e.read, state);
+            setHere((p) => nextHere(p, hereNow));
             const TT = sp ? T.withSpecies(sp) : T; // a hack's own Pokémon in the slots (Light Platinum)
             const res = readLiveParty(ent, e.read, TT, state);
             if (res?.party) {
@@ -783,7 +784,7 @@ export function GameSession({ session, mode }) {
               liveRead.current = { boxes: Array.isArray(res.boxes), party: res.party.length };
               setLiveState({ status: 'live', entry: entry.name });
               // the battle goes along: a Pokémon that falls in it gets the opponent as its cause of death
-              if (isRun) snapRef.current?.({ source: 'live', party, boxes: res.boxes || null, game: entry.id, ...(res.badges !== undefined ? { badges: res.badges } : {}) }, { battle: fight });
+              if (isRun) snapRef.current?.({ source: 'live', party, boxes: res.boxes || null, game: entry.id, here: hereNow, ...(res.badges !== undefined ? { badges: res.badges } : {}) }, { battle: fight });
             }
           }
         }

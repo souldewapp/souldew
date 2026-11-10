@@ -341,3 +341,32 @@ test('Gen 5 battle without a flag: over once the battle\'s HP is copied back int
   assert.equal(poll(2), null, 'over right away');
   assert.equal(poll(6), null, 'and the leftover copies don\'t bring it back');
 });
+
+test('Gen 1 and Gold/Silver: a Pokémon that joins right after a wild battle is filed under the place the sign shows', async () => {
+  registerHooks({ resolve: (spec, ctx, next) => (spec.startsWith('/shared/') ? next(new URL(spec.slice(1), ROOT).href, ctx) : next(spec, ctx)) });
+  const R = await import('../web/lib/run.mjs');
+  const { RunDoc } = await import('../web/lib/doc.mjs');
+  const doc = new RunDoc('t');
+  doc.by = 'a';
+  doc._persistSoon = () => {};
+  const manifest = { id: 't', mode: 'nuzlocke', players: { p1: { name: 'A' } }, game: { system: 'gb', code: '' } };
+  const charmander = { key: 'g1-1', species: 4, nickname: 'A', level: 6, hp: 20, maxHp: 20, metLocation: null };
+  const rattata = { key: 'g1-2', species: 19, nickname: 'RATTATA', level: 3, hp: 15, maxHp: 15, metLocation: null };
+  const route1 = { gen: 1, id: 11, name: 'Route 1' };
+  R.applySnapshot(doc, manifest, 1, 'p1', { source: 'live', party: [charmander], here: { gen: 1, id: 0, name: 'Pallet Town' } });
+  assert.equal(doc.get('enc:starter:p1').species, 4);
+  // the wild battle on Route 1, then the catch joins the team
+  R.applySnapshot(doc, manifest, 1, 'p1', { source: 'live', party: [charmander], here: route1 }, { battle: { kind: 'wild', enemy: { species: 19, level: 3 } } });
+  const res = R.applySnapshot(doc, manifest, 1, 'p1', { source: 'live', party: [charmander, rattata], here: route1 });
+  assert.deepEqual(res.newCatches, ['m1-11']);
+  assert.equal(R.areaName(doc, manifest, 'm1-11'), 'Route 1');
+  // a Pokémon that turns up without a wild battle (a gift, a trade) still goes to the inbox
+  const eevee = { key: 'g1-3', species: 133, nickname: 'EEVEE', level: 25, hp: 60, maxHp: 60, metLocation: null };
+  const doc2 = new RunDoc('t2');
+  doc2.by = 'a';
+  doc2._persistSoon = () => {};
+  R.applySnapshot(doc2, manifest, 1, 'p1', { source: 'live', party: [charmander], here: route1 });
+  const r2 = R.applySnapshot(doc2, manifest, 1, 'p1', { source: 'live', party: [charmander, eevee], here: route1 });
+  assert.equal(r2.newCatches.length, 0);
+  assert.equal(r2.inbox[0].mon.species, 133);
+});
