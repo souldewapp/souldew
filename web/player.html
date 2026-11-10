@@ -591,9 +591,11 @@
   // restart) re-creates the OpenAL context, and without the gate its first moments played at full volume, muted
   // game or not. Before the first attach EmulatorJS still sets the volume itself (source gains), so the gate is open.
   const gates = new Set();
+  const leak = { at: 0, count: 0, changed: 0 }; // changed: when the page last moved a gain (its 15 ms fade and the mixer's 80 ms one are no leak)
   const ownNodes = new WeakSet();
   const gateLevel = () => levels().gate;
   const refreshGates = () => {
+    leak.changed = performance.now();
     // set outright: only sound the mixer doesn't handle yet passes here (automation on a context that isn't running
     // yet was seen to never apply)
     for (const g of gates) {
@@ -652,12 +654,15 @@
       // diagnostics only
     }
   }
-  const leak = { at: 0, count: 0 };
   /** Called every 250 ms: the level per path; while fast-forwarding, sound where the mode says silence is a leak. */
   function readMeters() {
-    const ff = ffNow() && !audio.paused;
+    const ff = ffNow() && !audio.paused && performance.now() - leak.changed > 500;
+    for (let i = meters.length - 1; i >= 0; i--) if (meters[i].node.context.state === 'closed') meters.splice(i, 1);
     for (const m of meters) {
-      if (m.node.context.state !== 'running') continue;
+      if (m.node.context.state !== 'running') {
+        m.last = null;
+        continue;
+      }
       m.an.getFloatTimeDomainData(m.buf);
       let e = 0;
       for (let i = 0; i < m.buf.length; i++) e += m.buf[i] * m.buf[i];
