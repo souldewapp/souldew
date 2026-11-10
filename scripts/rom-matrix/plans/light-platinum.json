@@ -1,0 +1,593 @@
+{
+"id": "light-platinum",
+"hacks": [
+"light-platinum"
+],
+"note": "Light Platinum (Ruby base, own region Zhery): starter Charmander at Central City lab",
+"pos": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))",
+"steps": [
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"START"
+],
+[
+"A"
+]
+],
+"max": 1200
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"A"
+],
+[
+"START"
+]
+],
+"max": 14000,
+"until": {
+"expr": "(((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6)))[0]===257"
+}
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "shot",
+"name": "x1"
+},
+{
+"do": "log",
+"name": "p1",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "go",
+"x": 7,
+"y": 3,
+"order": "yx",
+"map": 257,
+"leave": true,
+"required": false
+},
+{
+"do": "shot",
+"name": "x2"
+},
+{
+"do": "log",
+"name": "p2",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1200
+},
+{
+"do": "shot",
+"name": "x3"
+},
+{
+"do": "log",
+"name": "p3",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"A"
+]
+],
+"max": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "shot",
+"name": "x4"
+},
+{
+"do": "log",
+"name": "p4",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "go",
+"x": 7,
+"y": 2,
+"order": "xy",
+"map": 257,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "shot",
+"name": "x5"
+},
+{
+"do": "log",
+"name": "p5",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "go",
+"x": 9,
+"order": "x",
+"map": 257,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "shot",
+"name": "x6"
+},
+{
+"do": "log",
+"name": "p6",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "x7"
+},
+{
+"do": "log",
+"name": "p7",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "check",
+"name": "home1f"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 12
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "go",
+"x": 4,
+"y": 8,
+"order": "yx",
+"map": 256,
+"leave": true,
+"required": false
+},
+{
+"do": "shot",
+"name": "x8"
+},
+{
+"do": "log",
+"name": "p8",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "go",
+"x": 9,
+"order": "x",
+"map": 257,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 200
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 12
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "go",
+"x": 4,
+"y": 8,
+"order": "yx",
+"map": 256,
+"leave": true,
+"required": false
+},
+{
+"do": "log",
+"name": "p8b",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "go",
+"y": 10,
+"order": "y",
+"map": 256,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "shot",
+"name": "x9"
+},
+{
+"do": "log",
+"name": "p9",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "x10"
+},
+{
+"do": "log",
+"name": "p10",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "check",
+"name": "town"
+},
+{
+"do": "go",
+"x": 23,
+"y": 10,
+"order": "yx",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 30
+},
+{
+"do": "shot",
+"name": "x11"
+},
+{
+"do": "log",
+"name": "p11",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "go",
+"y": 6,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "shot",
+"name": "x12"
+},
+{
+"do": "log",
+"name": "p12",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "x13"
+},
+{
+"do": "log",
+"name": "p13",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "x14"
+},
+{
+"do": "log",
+"name": "p14",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "check",
+"name": "lab"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 12000,
+"until": "party"
+},
+{
+"do": "shot",
+"name": "x15"
+},
+{
+"do": "log",
+"name": "p15",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000,
+"until": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "battle"
+},
+{
+"do": "shot",
+"name": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 8000,
+"until": "nobattle"
+},
+{
+"do": "check",
+"name": "afterbattle"
+},
+{
+"do": "shot",
+"name": "x16"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "x17"
+},
+{
+"do": "log",
+"name": "p17",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "check",
+"name": "x17"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "press",
+"keys": "START"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "shot",
+"name": "menu"
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "shot",
+"name": "party"
+},
+{
+"do": "check",
+"name": "party"
+},
+{
+"do": "log",
+"name": "pEnd",
+"expr": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+}
+],
+"expect": {
+"home1f": {
+"place": "Yellow Town"
+},
+"town": {
+"place": "Yellow Town"
+},
+"lab": {
+"place": [
+"Central City",
+"Yellow Town"
+]
+},
+"starter": {
+"party": {
+"species": [
+1,
+4,
+7
+],
+"level": 5
+}
+},
+"battle": {
+"battle": {
+"kind": "wild",
+"level": 2
+}
+},
+"afterbattle": {
+"party": {
+"level": [
+5,
+6
+]
+}
+}
+}
+}

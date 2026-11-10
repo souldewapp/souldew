@@ -274,7 +274,7 @@ function judge(r, plan, x) {
   for (const c of checks) {
     const exp = (plan.expect || {})[c.name] || {};
     const team = c.team?.hack ? null : c.team;
-    if (c.team?.hack) verdict.party = verdict.party ?? 'hack';
+    if (c.team?.hack) for (const k of ['party', 'place', 'battle']) verdict[k] = verdict[k] ?? 'hack'; // shown as "not supported"
     if (exp.party) {
       const mon = team?.party?.[0];
       const want = exp.party;
