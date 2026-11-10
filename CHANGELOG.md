@@ -9,8 +9,18 @@
 - Turbo music no longer sounds fast after a scene change (GBA and Game Boy): with the new timing the
   emulator's sped-up sound came out chopped or at a jumping pitch, and slowing it back down didn't help. While
   fast-forwarding every game now plays its sound at normal pitch, skipping ahead, as DS games already did: "Music
-  continues" plays the music recorded at 1× over it, a song not heard at 1× yet plays from the game itself at its
-  normal pitch, and "Sped-up original" is that skipping sound.
+  continues" plays the music recorded at 1× over it, and "Sped-up original" is that skipping sound.
+- "Music continues" now never plays the game's own fast-forward sound – that skipping sound is what sounded like
+  sped-up music after a scene change on Windows, and why "Music continues", "Sped-up original" and "Plain" then all
+  sounded the same. A song that wasn't heard at normal speed yet keeps the music that played before it; only with
+  nothing recorded at all is fast-forward quiet until the music has played for a few seconds at 1×.
+- When the emulator rebuilds its sound (on Windows when the graphics driver or Chromium's GPU process restarts), the
+  turbo music keeps every song recorded so far instead of starting from nothing.
+- The chosen turbo audio mode always wins: "Mute" silences every path to the speakers while fast-forwarding, and a
+  turbo mixer that fails on the audio thread is replaced by a fresh one instead of letting the sped-up sound through.
+- "Save diagnostics" now shows how the sound is wired: every audio context the emulator made (and when), what feeds
+  the speakers, the levels heard per path, graphics-context losses and GPU process restarts with their times, and a
+  "leak" entry whenever sound was heard while fast-forwarding where the mode says silence.
 - Sound cards set to 96 or 192 kHz: the emulator's sound now runs at 48 kHz (44.1 kHz for 88.2/176.4 kHz) and the
   browser converts it once – the same as on most PCs, with half the work for the turbo mixer or less.
 
