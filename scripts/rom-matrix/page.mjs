@@ -82,7 +82,9 @@ function helper() {
     if (!res) return null;
     if (!res.party) return res;
     const name = (s) => ctx.names[s] || `#${s}`;
-    const fight = parse.readLiveBattle(entry, e.read, T, raw ? ctx.rawState : state, res.party);
+    // (the play view reads every 0.7 s and the DS battle search runs in 1 MB steps: a check gives it a few steps)
+    let fight = null;
+    for (let i = 0; i < (entry.gen >= 4 ? 6 : 1) && !fight?.enemy; i++) fight = parse.readLiveBattle(entry, e.read, T, raw ? ctx.rawState : state, res.party);
     return {
       // the HP the play view shows: in battle the battle copy's (withBattleHp), the party struct lags there
       party: parse.withBattleHp(res.party, fight).map((m) => ({ species: m.species, name: name(m.species), nickname: m.nickname, level: m.level, hp: m.hp, maxHp: m.maxHp, status: m.status, metLocation: m.metLocation ?? null, metLevel: m.metLevel ?? null, isEgg: !!m.isEgg, key: m.key })),

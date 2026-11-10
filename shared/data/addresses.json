@@ -1263,7 +1263,11 @@
      "0x2100",
      "0x2101"
     ],
-    "source": "NDS-Ironmon-Tracker (community, unverified)"
+    "notInBattleValues": [
+     "0x2800"
+    ],
+    "source": "NDS-Ironmon-Tracker (community)",
+    "verified": "runtime-checked on Black (IRBO) 2026-11-10 by the ROM matrix: 0x2100 in both rival battles and a wild battle on Route 1, 0x2800 everywhere else (house, town, lab, after the catch)"
    },
    "liveBattleParty": {
     "monsAddr": "0x0226A794",
@@ -1374,7 +1378,11 @@
      "0x2100",
      "0x2101"
     ],
-    "source": "NDS-Ironmon-Tracker (community, unverified)"
+    "notInBattleValues": [
+     "0x2800"
+    ],
+    "source": "NDS-Ironmon-Tracker (community)",
+    "verified": "runtime-checked on Black 2 (IREO) 2026-11-10 by the ROM matrix: 0x2100 in Hugh's battle and a wild battle on Route 19, 0x2800 elsewhere – also during Bianca's catching demo, which isn't the player's battle"
    },
    "liveBattleParty": {
     "monsOffsetFromPtr": "0x53610",
