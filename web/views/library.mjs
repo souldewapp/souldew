@@ -1,5 +1,5 @@
 import { html, useState, useMemo, useEffect } from '/vendor/htm-preact.mjs';
-import { useApp, Modal, openExternal } from '../lib/ui.mjs';
+import { useApp, Modal } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
@@ -383,7 +383,7 @@ export function LibraryView() {
 
     ${hacks.length > 0 && html`<div class="stack" style="margin-top:34px">
       <h2>${t('lib.popularHacks', 'Popular ROM hacks')}</h2>
-      <p class="small muted">${t('lib.hacksHint', 'Fan-made versions. Get the patch from the official page, add it here, and souldew applies it to your own ROM.')}</p>
+      <p class="small muted">${t('lib.hacksHint2', 'Fan-made versions. If you have a patch file for one, add it here and souldew applies it to your own ROM.')}</p>
       <div class="shelf">
         ${hacks.map((h) => {
           const base = cat.games.find((g) => g.id === h.baseGameId);
@@ -539,10 +539,9 @@ function HackDetail({ id, onClose, openGame }) {
           <dt>${t('lib.patch', 'Patch')}</dt><dd>${patch ? html`<span class="mono small">${patch.name}</span>` : html`<span class="muted">${t('lib.noPatch', 'Not added yet')}</span>`}</dd>
           <dt>${t('lib.baseRom', 'Your base ROM')}</dt><dd>${baseRom ? html`<span class="mono small">${baseRom.name}</span>` : html`<span class="muted">${t('lib.notOwned', 'Not in your library')}</span>`}</dd>
         </dl>
-        <div class="row">
-          ${h.url && html`<button class="btn" onClick=${() => openExternal(h.url)}><${Icon} name="external" size=${16} />${t('lib.officialPage', 'Official page')}</button>`}
-          ${!patch && html`<button class="btn ghost" onClick=${() => addGamesFlow({ reloadLibrary, toast })}><${Icon} name="plus" size=${16} />${t('lib.addPatch', 'Add patch file')}</button>`}
-        </div>
+        ${!patch && html`<div class="row">
+          <button class="btn ghost" onClick=${() => addGamesFlow({ reloadLibrary, toast })}><${Icon} name="plus" size=${16} />${t('lib.addPatch', 'Add patch file')}</button>
+        </div>`}
         ${patch && baseRom && html`<div class="row">
           <${PlayButtons} romId=${baseRom.id} patchId=${patch.id} system=${h.system} close=${onClose} />
         </div>

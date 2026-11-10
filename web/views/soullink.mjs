@@ -14,7 +14,7 @@ import { NUZLOCKE_RULES, joinNames } from '../lib/run.mjs';
 import { suggestSlot } from '../lib/invitecode.mjs';
 import { Board, InviteBody } from './board.mjs';
 import { JoinCode } from './invitecode.mjs';
-import { NuzlockeRules } from './nuzrules.mjs';
+import { NuzlockeRules, TypeHelpRule } from './nuzrules.mjs';
 import { FirstSteps } from './firststeps.mjs';
 
 /**
@@ -443,6 +443,8 @@ function NewRun({ gameId, hackId, from, mode: sectionMode }) {
   const slots = ALL_SLOTS.slice(0, solo ? 1 : count);
   // a restarted Nuzlocke keeps its rules; a SoulLink's rules don't fit a Nuzlocke (and the other way round)
   const [nzRules, setNzRules] = useState(() => (from && runMode(from) === 'nuzlocke' && from.rules ? { ...NUZLOCKE_RULES, ...from.rules } : { ...NUZLOCKE_RULES }));
+  // the host's call for everyone: the battle helper's type matchups (a restart keeps the old run's choice)
+  const [typeHelp, setTypeHelp] = useState(() => from?.rules?.typeHelp !== false);
   const [seedMode, setSeedMode] = useState(from?.randomizer?.sharedSeed ? 'shared' : 'separate');
   const [seeds, setSeeds] = useState(() => Object.fromEntries(ALL_SLOTS.map((s) => [s, randomSeed()])));
   const [names, setNames] = useState(() => (from ? namesFrom(from, status?.config?.playerName || '') : { p1: status?.config?.playerName || '', p2: '', p3: '', p4: '' }));
@@ -486,8 +488,7 @@ function NewRun({ gameId, hackId, from, mode: sectionMode }) {
   const patch = patchesFor(rom).find((p) => p.id === patchId);
   const hack = patch?.hackId ? hackById(patch.hackId) : null;
   const canRandomize = inspect && !inspect.info?.unsupported;
-  const showRules = solo;
-  const step = { who: 1, game: 2, randomizer: 3, rules: 4, build: showRules ? 5 : 4 };
+  const step = { who: 1, game: 2, randomizer: 3, rules: 4, build: 5 };
   const seedSlots = solo || seedMode === 'shared' ? ['p1'] : slots;
 
   async function build() {
@@ -503,7 +504,7 @@ function NewRun({ gameId, hackId, from, mode: sectionMode }) {
         players, buildFor: solo || buildFor === 'all' ? slots : ['p1'],
         gameId: game?.variantOf || game?.id || null, gameTitle: hack?.name || (game ? gameTitle(game) : rom.title), hackId: hack?.id || null,
         name: numberedName(defaultRunName(players, mode), status?.runs),
-        rules: solo ? nzRules : from && runMode(from) === 'soullink' ? from.rules || null : null,
+        rules: { ...(solo ? nzRules : from && runMode(from) === 'soullink' ? from.rules || {} : {}), typeHelp },
       });
       setLog(res.log);
       await reloadStatus();
@@ -626,11 +627,14 @@ function NewRun({ gameId, hackId, from, mode: sectionMode }) {
       </div>`}
     </section>
 
-    ${showRules && html`<section class="panel stack">
+    <section class="panel stack">
       <h2>${t('new.stepRules', '{n} · Rules', { n: step.rules })}</h2>
-      <p class="small muted">${t('new.rulesHint', 'You can change them later on the board (Rules tab).')}</p>
-      <${NuzlockeRules} variant="wizard" value=${nzRules} onChange=${(patch) => setNzRules((v) => ({ ...v, ...patch }))} />
-    </section>`}
+      ${solo ? html`<p class="small muted">${t('new.rulesHint', 'You can change them later on the board (Rules tab).')}</p>
+        <${NuzlockeRules} variant="wizard" value=${nzRules} onChange=${(patch) => setNzRules((v) => ({ ...v, ...patch }))} />`
+        : html`<p class="small muted">${count > 2 ? t('new.rulesHintGroup', 'Type rule, dupes clause, level caps and the rest are set together on the board (Rules tab). This one is yours as the host – it applies to everyone, and only you can change it later.')
+          : t('new.rulesHintLink', 'Type rule, dupes clause, level caps and the rest are set together on the board (Rules tab). This one is yours as the host – it applies to both of you, and only you can change it later.')}</p>`}
+      <div class=${solo ? 'rule-sep' : ''}><${TypeHelpRule} value=${typeHelp} solo=${solo} onChange=${setTypeHelp} /></div>
+    </section>
 
     <section class="panel stack">
       <h2>${t('new.stepBuild', '{n} · Build', { n: step.build })}</h2>

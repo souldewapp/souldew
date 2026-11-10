@@ -320,6 +320,7 @@ label.check input:disabled + span { color: var(--ink-2); }
 .rs-step { width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: var(--shell-4); color: var(--ink); cursor: pointer; line-height: 1; font-size: 13px; }
 .rs-step:disabled { opacity: .4; cursor: default; }
 .bt-notes { display: flex; flex-wrap: wrap; gap: 5px; }
+.bt-nohelp { margin: 0; }
 
 /* Sidebar, 3–4 players: a row per area – link state and name over one small cell per player */
 .pairs.group { gap: 6px; }

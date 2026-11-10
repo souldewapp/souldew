@@ -27,6 +27,9 @@ import { UpdateBanner } from './views/update.mjs';
 import { DeathAlert } from './views/session-info.mjs';
 import { RestartOffer, RunOverNotice } from './views/restart.mjs';
 import { FirstStepsPill } from './views/firststeps.mjs';
+import { useCoffeeFx, CoffeeFx } from './views/coffee.mjs';
+import { LicenseNag } from './views/nag.mjs';
+import { countLaunch, shouldNag } from './lib/nag.mjs';
 import { mySlotIn } from './lib/restart.mjs';
 import { IS_MAC, IS_WIN, shortcut } from './lib/platform.mjs';
 
@@ -107,11 +110,11 @@ function navLight(e) {
 }
 
 /** "Buy me a coffee" – always at the bottom left: in the rail, or as a small button while the rail is folded. */
-function CoffeeLink({ float = false }) {
+function CoffeeLink({ float = false, fx = null, onOpen }) {
   const label = t('rail.coffee', 'Buy me a coffee');
   const hint = t('rail.coffeeHint', 'Support souldew on Buy Me a Coffee');
-  return html`<a class=${`coffee no-drag ${float ? 'coffee-float' : ''}`} href=${LINKS.coffee} target="_blank" rel="noopener" title=${hint} aria-label=${float ? hint : undefined}
-    onClick=${(e) => { e.preventDefault(); openExternal(LINKS.coffee); }}><${Icon} name="coffee" size=${float ? 18 : 16} />${!float && html`<span>${label}</span>`}</a>`;
+  return html`<a class=${`coffee no-drag ${float ? 'coffee-float' : ''} ${fx ? `cfx-live cfx-on-${fx.id}` : ''}`} href=${LINKS.coffee} target="_blank" rel="noopener" title=${hint} aria-label=${float ? hint : undefined}
+    onClick=${(e) => { e.preventDefault(); onOpen?.(); openExternal(LINKS.coffee); }}><${Icon} name="coffee" size=${float ? 18 : 16} />${!float && html`<span>${label}</span>`}<${CoffeeFx} fx=${fx} /></a>`;
 }
 
 /** The open run at the foot of the rail: who of the others is live – or, in a solo Nuzlocke, whether you play.
@@ -191,6 +194,35 @@ function App() {
   const inboxKey = useRef('');
   const [route, navigate] = useRoute();
   const streamer = useStreamer();
+  // the coffee button's little Pokémon moments – never while a game runs (full or in the corner), in the game's
+  // fullscreen, during boot or onboarding (fxBusy is set further down, once those are known)
+  const fxBusy = useRef(true);
+  const coffee = useCoffeeFx(() => fxBusy.current);
+  // The joke "please buy a license" window (lib/nag.mjs): every launch is counted once (a reload of the same window
+  // isn't a launch); from the 5th on it may show up – never on top of onboarding, a game or another dialog.
+  const [nag, setNag] = useState(null); // { launches } while it is open
+  const nagChecked = useRef(false);
+  useEffect(() => {
+    if (!ready || boot || !status || nagChecked.current) return;
+    nagChecked.current = true;
+    try {
+      if (sessionStorage.getItem('sl-nag-counted')) return;
+      sessionStorage.setItem('sl-nag-counted', '1');
+    } catch {
+      // storage blocked: count it anyway
+    }
+    const next = countLaunch(status.config?.nag);
+    const free = () => !!status.config?.onboarded && !sessionRef.current && !document.querySelector('dialog[open]');
+    const show = free() && shouldNag({ ...next, off: status.config?.nagOff });
+    api.post('/api/config', { nag: show ? { ...next, lastShown: Date.now() } : next }).catch(() => {});
+    if (show) setTimeout(() => free() && setNag({ launches: next.launches }), 1500);
+  }, [ready, boot, status]);
+  useEffect(() => {
+    // for trying it out: dispatchEvent(new Event('souldew:nag'))
+    const open = () => setNag({ launches: Math.max(5, (status?.config?.nag?.launches) || 5) });
+    addEventListener('souldew:nag', open);
+    return () => removeEventListener('souldew:nag', open);
+  }, [status]);
 
   const toast = useCallback((x) => {
     const id = Math.random().toString(36).slice(2);
@@ -582,6 +614,7 @@ function App() {
   }, [fs, railHidden, setHidden]);
   const playing = !!session;
   useEffect(() => { window.sls?.setPlaying?.(playing); }, [playing]);
+  fxBusy.current = playing || fs || boot || showOnboarding;
   const native = !!window.sls?.native;
   // The game fills the Play page when that page shows it, otherwise it keeps running in the corner.
   const sp = session?.target.params || {};
@@ -613,7 +646,7 @@ function App() {
     <div class=${`frame ${native ? 'app-native' : ''} ${folded ? 'rail-folded' : ''} ${folded && peek ? 'rail-peek' : ''}`}>
       ${native && html`<div class="titlebar-drag"></div>`}
       ${folded && html`<div class="rail-edge" aria-hidden="true" onPointerEnter=${peekIn} onPointerLeave=${peekOut}></div>`}
-      ${folded && !fs && !peek && html`<${CoffeeLink} float />`}
+      ${folded && !fs && !peek && html`<${CoffeeLink} float fx=${coffee.fx} onOpen=${coffee.clicked} />`}
       ${railHidden && !fs && !peek && html`<button class="rail-open no-drag" onClick=${() => setHidden(false)} title=${`${t('rail.show', 'Show the sidebar')} (${shortcut('Mod+B')})`} aria-label=${t('rail.show', 'Show the sidebar')}><${Icon} name="sidebar" size=${18} /></button>`}
       <aside class=${`rail ${native ? '' : 'web'} ${native ? 'drag' : ''}`} onPointerEnter=${folded ? peekIn : undefined} onPointerLeave=${folded ? peekOut : undefined}
         onfocusin=${folded ? peekIn : undefined} onfocusout=${folded ? (e) => { if (!e.currentTarget.contains(e.relatedTarget)) peekOut(); } : undefined}>
@@ -633,7 +666,7 @@ function App() {
           <${FirstStepsPill} />
           ${native && html`<${UpdateBanner} />`}
           ${manifest && names && html`<${RailRun} manifest=${manifest} names=${names} me=${me} onlineSlots=${onlineSlots} linkStatus=${linkStatus} session=${session} navigate=${navigate} />`}
-          <${CoffeeLink} />
+          <${CoffeeLink} fx=${!folded || peek ? coffee.fx : null} onOpen=${coffee.clicked} />
         </div>
       </aside>
       <main class="main">
@@ -660,6 +693,7 @@ function App() {
         <button class="btn primary" onClick=${() => { setPendingClose(null); if (session) navigate('play', session.target.params); }}>${t('unsaved.back', 'Back to the game')}</button>`}>
       <p class="muted">${unsavedTexts(unsavedProgress()).text}</p>
     <//>
+    <${LicenseNag} open=${!!nag} launches=${nag?.launches} onClose=${() => setNag(null)} />
     <${Toasts} toasts=${toasts} dismiss=${(id) => setToasts((ts) => ts.filter((x) => x.id !== id))} />
     <${DeathAlert} alert=${runOver ? null : deathAlert} onClose=${() => setDeathAlert(null)} />
     <${RunOverNotice} status=${restartOffer ? null : runOver} onClose=${() => setRunOver(null)} />

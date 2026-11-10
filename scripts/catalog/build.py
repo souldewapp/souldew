@@ -47,8 +47,7 @@ for h in H:
     assert h["baseGameId"] in ids, h["id"]
     out={k:h.get(k) for k in ["id","name","author","baseGameId","baseCrc32","system","patchFormat","latestVersion","descriptionEn","descriptionDe","features","difficulty","nuzlockeFriendly"]}
     out["uprCompatible"]=h["uprCompatible"]; out["uprNote"]=h["uprNote"]
-    out["url"]=h["url"]
-    if h.get("links"): out["links"]=h["links"]
+    # No url/links on purpose: the app never links to ROM hacks or their download pages.
     out["color"]=h["color"]
     if h.get("notes"): out["notes"]=h["notes"]
     if h.get("uncertainFields"): out["uncertain"]=True; out["uncertainFields"]=h["uncertainFields"]

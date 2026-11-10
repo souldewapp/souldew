@@ -51,6 +51,21 @@
 - A game without location data no longer says "Location appears once you're in the game" forever; it says the
   location isn't available for this game yet.
 
+**Smaller changes**
+
+- The library no longer links to ROM hacks or their download pages. The known hacks are still listed – with
+  description, difficulty and base game – so souldew recognises them and applies a patch file you add yourself.
+- New run rule "Show type matchup help" (on by default): the host decides when creating a SoulLink or Nuzlocke whether
+  the battle helper in the play view shows how your moves land, what hits you and the weakness charts. Off hides it
+  for every player. Only the host can change it later (board › Rules), and every change shows up in the log. Runs
+  from before keep the help.
+- The "Buy me a coffee" button gets a visitor now and then (every few minutes, never while a game is running):
+  Pikachu peeks out of the cup, Snorlax naps on it, a Poké Ball wobbles and pops, or Jigglypuff hops by – a few
+  seconds of pixel art, no sound, and none at all with "reduce motion" or once you've clicked the button.
+- From the fifth start on, souldew may now and then (rarely, at most every few days) thank you in a window that looks
+  suspiciously like an old shareware "please buy a license" nag – in full old-Windows glory, on every system. souldew is
+  and stays free: the window only jokes, offers the coffee link and closes with Esc. Settings › About turns it off.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.

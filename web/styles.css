@@ -207,6 +207,9 @@ label.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; 
 label.check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; padding: 5px 0; }
 label.check input { margin-top: 3px; accent-color: var(--tri); width: 16px; height: 16px; flex: none; }
 label.check .hint { display: block; font-size: 12.5px; color: var(--ink-3); }
+label.check.locked { cursor: default; }
+label.check .hint.host-only { margin-top: 3px; color: var(--warn-ink); }
+.rule-sep { border-top: 1px solid #ffffff0d; padding-top: 8px; }
 /* One row of options. When the space runs out (a narrow sheet, long German labels) the options get narrower and
    their text wraps inside the button – the control keeps its shape instead of breaking into a second pill row. */
 .seg { align-self: flex-start; display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, auto); max-width: 100%;
@@ -375,6 +378,7 @@ button.hack-card:hover { background: var(--shell-4); }
 .feed-item.catch .k { background: var(--tri); }
 .feed-item.chat .k { background: var(--crs); }
 .feed-item.cheat .k { background: var(--warn); }
+.feed-item.rule .k { background: var(--crs); }
 .feed-item time { color: var(--ink-3); font-size: 12px; white-space: nowrap; }
 .who-p1 { color: var(--p1); font-weight: 500; }
 .who-p2 { color: var(--p2); font-weight: 500; }
@@ -1268,3 +1272,146 @@ html.platform-linux .app-native .main-inner { padding-top: 30px; }
 html.platform-linux .app-native .session.full { padding-top: 16px; }
 html.platform-linux .app-native .rail-open { top: 12px; left: 12px; width: 34px; height: 34px; }
 html.platform-linux .app-native .rules-drawer-wrap { padding-top: 14px; }
+
+/* "Buy me a coffee" moments (views/coffee.mjs): a stage just above the cup – its bottom edge is the cup's rim, so a
+   Pokémon rising from below peeks out of the cup. Real gen 3 sprites at 1×, pixel-crisp; never takes clicks. */
+.coffee:not(.coffee-float) { position: relative; } /* the folded-rail button stays position: fixed */
+.coffee.cfx-live { color: var(--ink, #fff); }
+.coffee-float.cfx-live { opacity: 1; }
+.coffee.cfx-live > svg { animation: cfx-cup .45s ease var(--bump, 0s) both; transform-origin: 50% 100%; }
+.coffee.cfx-on-peek { --bump: 1.72s; }
+.coffee.cfx-on-nap { --bump: .38s; }
+.coffee.cfx-on-ball { --bump: .5s; }
+.coffee.cfx-on-hop > svg { animation: none; }
+.cfx { --cx: 42px; --cup-top: 7px; position: absolute; left: -24px; bottom: calc(100% - var(--cup-top)); width: 220px; height: 124px; overflow: hidden;
+  pointer-events: none; z-index: 2; }
+.coffee-float .cfx { --cx: 41px; --cup-top: 10px; }
+.cfx img { display: block; image-rendering: pixelated; image-rendering: crisp-edges; -webkit-user-drag: none; filter: drop-shadow(0 2px 0 #0000008c); }
+.cfx svg { display: block; }
+.cfx-mon { position: absolute; left: calc(var(--cx) - 32px); bottom: calc(-1px * var(--pad, 8)); width: 64px; height: 64px; transform-origin: 50% 100%; }
+.cfx-spark { position: absolute; left: calc(var(--cx) - 4px); bottom: 24px; opacity: 0; filter: drop-shadow(1px 1px 0 #000000b0); }
+@keyframes cfx-cup { 0%, 100% { transform: none; } 40% { transform: translateY(1.5px) scale(1.14, .84); } 70% { transform: translateY(-1px); } }
+@keyframes cfx-spark { 0% { opacity: 0; transform: translate(calc(var(--dx) * .5), calc(var(--dy) * .5)) scale(.6); } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); } }
+
+/* Pikachu peeks out of the cup, looks around, hops onto it and sparks */
+.cfx-peek .cfx-mon { --pad: 9; animation: cfx-peek 3.2s ease-in-out both; }
+.cfx-peek .cfx-sprite { animation: cfx-look 3.2s steps(1, end) both; }
+.cfx-peek .cfx-spark { animation: cfx-spark .6s steps(6, end) calc(1.85s + var(--i) * .07s) both; }
+@keyframes cfx-peek {
+  0% { transform: translateY(54px); }
+  13% { transform: translateY(30px); }
+  33% { transform: translateY(30px); }
+  44% { transform: translateY(-30px); animation-timing-function: ease-in; }
+  54% { transform: translateY(0); }
+  57% { transform: translateY(0) scale(1.07, .9); }
+  61%, 84% { transform: translateY(0); }
+  90% { transform: translateY(-8px); animation-timing-function: ease-in; }
+  100% { transform: translateY(54px); }
+}
+@keyframes cfx-look { 0% { transform: none; } 19% { transform: scaleX(-1); } 27% { transform: none; } }
+
+/* Snorlax plops onto the cup and naps – Z z z */
+.cfx-nap .cfx-mon { --pad: 5; animation: cfx-plop 3.6s ease both; }
+.cfx-nap .cfx-sprite { animation: cfx-breathe 1.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.cfx-z { position: absolute; left: calc(var(--cx) + 14px); bottom: 34px; opacity: 0; transform-origin: 0 100%; filter: drop-shadow(1px 1px 0 #000a);
+  animation: cfx-z 1.5s ease-out calc(.6s + var(--i) * .7s) both; }
+@keyframes cfx-plop {
+  0% { opacity: 0; transform: translateY(-30px); animation-timing-function: ease-in; }
+  10% { opacity: 1; transform: translateY(0); }
+  13% { transform: scale(1.05, .92); }
+  17% { transform: none; }
+  86% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(2px); }
+}
+@keyframes cfx-breathe { 0%, 100% { transform: none; } 50% { transform: scale(1.025, 1.06); } }
+@keyframes cfx-z { 0% { opacity: 0; transform: translate(0, 0) scale(.6); } 20% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(20px, -40px) scale(1.5); } }
+
+/* a Poké Ball drops onto the cup, wobbles three times and pops – Togepi! */
+.cfx-pokeball { position: absolute; left: calc(var(--cx) - 12px); bottom: 0; transform-origin: 50% 100%; animation: cfx-ballfx 3s both; }
+.cfx-flash { position: absolute; left: calc(var(--cx) - 14px); bottom: -2px; width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(#fff 0 35%, #fff0 70%);
+  opacity: 0; animation: cfx-flash 3s ease-out both; }
+.cfx-ball .cfx-mon { --pad: 20; animation: cfx-pop 3s both; }
+.cfx-ball .cfx-spark { animation: cfx-spark .55s steps(6, end) calc(2.18s + var(--i) * .04s) both; }
+@keyframes cfx-ballfx {
+  0% { transform: translateY(-112px); animation-timing-function: cubic-bezier(.55, 0, 1, .6); }
+  17% { transform: translateY(0); animation-timing-function: ease-out; }
+  23% { transform: translateY(-12px); animation-timing-function: ease-in; }
+  29% { transform: translateY(0); }
+  33% { transform: rotate(-24deg); } 38% { transform: rotate(18deg); } 42% { transform: none; }
+  47% { transform: rotate(-24deg); } 52% { transform: rotate(18deg); } 56% { transform: none; }
+  61% { transform: rotate(-14deg); } 65% { transform: rotate(10deg); } 68% { transform: none; }
+  71% { transform: none; opacity: 1; }
+  74% { transform: scale(1.3); opacity: 0; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+@keyframes cfx-flash { 0%, 71% { opacity: 0; transform: scale(.3); } 75% { opacity: 1; transform: scale(1.5); } 86%, 100% { opacity: 0; transform: scale(2.6); } }
+@keyframes cfx-pop {
+  0%, 72% { opacity: 0; transform: scale(.2); }
+  78% { opacity: 1; transform: scale(1.12, .9); }
+  82% { transform: scale(.95, 1.06); }
+  86% { transform: none; }
+  93% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(4px); }
+}
+
+/* Jigglypuff hops along the button, singing */
+.cfx-walk { position: absolute; left: calc(var(--cx) - 32px); bottom: 0; width: 64px; height: 64px; animation: cfx-walk 2.8s linear both; }
+.cfx-walk .cfx-mon { --pad: 16; left: 0; animation: cfx-hop .7s ease-in-out 4; }
+.cfx-note { position: absolute; left: calc(var(--cx) + var(--nx)); bottom: 46px; opacity: 0; animation: cfx-note 1s ease-out calc(.45s + var(--i) * .7s) both; }
+@keyframes cfx-walk { 0% { transform: translateX(-58px); opacity: 0; } 8%, 90% { opacity: 1; } 100% { transform: translateX(124px); opacity: 0; } }
+@keyframes cfx-hop {
+  0%, 100% { transform: scale(1.06, .93); }
+  14% { transform: none; animation-timing-function: ease-out; }
+  50% { transform: translateY(-14px); animation-timing-function: ease-in; }
+  86% { transform: none; }
+}
+@keyframes cfx-note { 0% { opacity: 0; transform: translateY(6px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -20px) rotate(12deg); } }
+
+@media (prefers-reduced-motion: reduce) { .cfx { display: none; } .coffee.cfx-live > svg { animation: none; } }
+@media (max-width: 860px) { .rail .cfx { display: none; } }
+
+/* The joke license window (views/nag.mjs): on purpose an old-Windows shareware nag on every platform – classic
+   grey bevels, a navy title bar, blue header, green ticks and the big glossy button. */
+dialog.nag { padding: 0; border: 0; background: none; max-width: calc(100vw - 32px); overflow: visible; color: #000; }
+dialog.nag::backdrop { background: #0000006b; }
+dialog.nag[open] { animation: nag-in .16s steps(3, end); }
+@keyframes nag-in { from { transform: scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { dialog.nag[open] { animation: none; } }
+.nag-win { width: 540px; max-width: 100%; background: #d4d0c8; font: 12px/1.35 Tahoma, Verdana, 'Segoe UI', sans-serif; text-align: left;
+  border: 1px solid; border-color: #dfdfdf #404040 #404040 #dfdfdf; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080, 6px 8px 0 #00000040; padding: 3px; }
+.nag-titlebar { display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 3px 0 4px; background: linear-gradient(90deg, #0a246a, #3a6ea5 60%, #a6caf0);
+  color: #fff; font-weight: 700; font-size: 12px; user-select: none; }
+.nag-titleicon { flex: none; }
+.nag-titletext { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 1px 1px 0 #0a246a; }
+.nag-x { flex: none; display: grid; place-items: center; width: 18px; height: 16px; padding: 0; background: #d4d0c8; cursor: pointer;
+  border: 1px solid; border-color: #fff #404040 #404040 #fff; box-shadow: inset -1px -1px 0 #808080; }
+.nag-x:active { border-color: #404040 #fff #fff #404040; box-shadow: inset 1px 1px 0 #808080; }
+.nag-x:focus-visible, .nag-btn:focus-visible, .nag-buy:focus-visible { outline: 1px dotted #000; outline-offset: -4px; }
+.nag-body { display: flex; gap: 18px; margin-top: 3px; padding: 18px 20px 14px 16px; background: #fff; border: 1px solid; border-color: #808080 #fff #fff #808080; }
+.nag-icon { flex: none; padding-top: 4px; }
+.nag-icon svg { display: block; filter: drop-shadow(2px 3px 0 #0000002e); }
+.nag-main { flex: 1; min-width: 0; }
+.nag-h { margin: 0 0 6px; font: 700 21px/1.15 Tahoma, Verdana, 'Segoe UI', sans-serif; color: #0b45b5; letter-spacing: 0; }
+.nag-free { margin: 0 0 8px; font-size: 13px; }
+.nag-free i { color: #555; }
+.nag-trial { margin: 0 0 10px; color: #333; }
+.nag-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 4px; }
+.nag-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; }
+.nag-check { flex: none; margin-top: 2px; }
+.nag-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0 0 12px; }
+.nag-was { color: #8a8a8a; font-size: 15px; text-decoration: line-through; text-decoration-color: #d0021b; text-decoration-thickness: 2px; }
+.nag-pay { font-size: 13px; }
+.nag-pay b { color: #111; }
+.nag-buy { display: block; padding: 9px 30px 10px; font: 700 16px/1 Tahoma, Verdana, 'Segoe UI', sans-serif; color: #fff; cursor: pointer;
+  text-shadow: 0 1px 1px #0b4d05; border: 1px solid #1d6b0f; border-radius: 5px;
+  background: linear-gradient(#b4ec8f, #5cc235 48%, #34a01c 52%, #49b82a); box-shadow: inset 0 1px 0 #ffffffb3, 0 2px 3px #0000004d; }
+.nag-buy:hover { background: linear-gradient(#c6f5a5, #6fd146 48%, #3db122 52%, #57c834); }
+.nag-buy:active { background: linear-gradient(#49b82a, #34a01c 50%, #5cc235); box-shadow: inset 0 2px 3px #0000004d; }
+.nag-offer { margin: 8px 0 0; color: #c0190f; font-weight: 700; font-size: 12px; }
+.nag-offer sup { font-size: 9px; }
+.nag-foot { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding: 8px 6px 5px; }
+.nag-fine { flex: 1 1 160px; min-width: 0; font-size: 10.5px; color: #444; }
+.nag-btn { min-width: 76px; padding: 4px 12px; font: 12px Tahoma, Verdana, 'Segoe UI', sans-serif; color: #000; background: #d4d0c8; cursor: pointer;
+  border: 1px solid; border-color: #fff #404040 #404040 #fff; box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #dfdfdf; }
+.nag-btn:active { border-color: #404040 #fff #fff #404040; box-shadow: inset 1px 1px 0 #808080; }
+@media (max-width: 560px) { .nag-body { flex-direction: column; gap: 10px; } .nag-icon svg { width: 40px; height: auto; } }

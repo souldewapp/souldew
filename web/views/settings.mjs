@@ -347,6 +347,8 @@ export function SettingsView() {
         <button class="btn small" onClick=${() => openExternal(LINKS.issues)}><${Icon} name="external" size=${14} />${t('set.reportBug', 'Report a bug')}</button>
         <button class="btn small" onClick=${() => openExternal(LINKS.coffee)}><${Icon} name="coffee" size=${14} />${t('rail.coffee', 'Buy me a coffee')}</button>
       </div>
+      <label class="check small"><input type="checkbox" checked=${cfg.nagOff !== true} onChange=${(e) => save({ nagOff: !e.target.checked })} /><span>${t('set.nag', 'Show the joke license window now and then')}
+        <span class="hint">${t('set.nagHint', 'A parody of old shareware nag screens. souldew stays free either way.')}</span></span></label>
       <p class="tiny faint">${t('set.legal', 'Pokémon and all related names are trademarks of Nintendo, Game Freak and The Pokémon Company. souldew is a fan project and does not include or download games.')}</p>
     </section>
   </div>`;
