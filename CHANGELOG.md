@@ -2,7 +2,7 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
-## 2.2.1
+## 2.3.0
 
 **Turbo music fixed** – the known issue from 2.2.0.
 
