@@ -19,6 +19,7 @@
 //   --only <text> only ROMs whose file name contains the text (case-insensitive)
 //   --out <dir>   where results, patched/randomized ROMs and screenshots go (default: <tmp>/souldew-rom-matrix);
 //                 patched and randomized ROMs are deleted at the end unless --keep
+//   --attempts n  tries per game when a plan loses its way (default 3)
 //   --show        show the emulator windows (they stay muted)
 // Results: <out>/matrix.json, <out>/matrix.md (the table for docs/TESTED_GAMES.md) and <out>/shots/*.png.
 // Never commit ROMs, patched ROMs or the screenshots.
@@ -249,16 +250,28 @@ async function runLive(list) {
       targets: [{ key, file: r.file, system: r.system, core: plan.core || '', plan: { ...plan, header: r.header } }],
     };
     writeFileSync(join(out, 'job.json'), JSON.stringify(job));
-    log(`  ${r.name} …`);
-    await new Promise((done) => {
-      const p = spawn(electron, [join(root, 'scripts', 'rom-matrix', 'live.mjs'), join(out, 'job.json')], { stdio: ['ignore', 'pipe', 'pipe'] });
-      p.stdout.on('data', () => {});
-      p.stderr.on('data', () => {});
-      p.on('exit', done);
-    });
-    const x = existsSync(resultFile) ? JSON.parse(readFileSync(resultFile, 'utf8'))[0] : null;
-    if (x) all.push(x);
-    r.liveResult = x ? judge(r, plan, x) : { error: 'no result (the emulator process ended early)' };
+    // Inputs land a frame or two apart from run to run (the page polls the frame counter), so a plan can lose its
+    // way – a step onto the stairs twice, a person walking in. Such a run is tried again (--attempts, default 3);
+    // a reading that is wrong is a failure no matter how often it is tried.
+    const attempts = Math.max(1, Number(opt('attempts', 3)));
+    for (let a = 1; a <= attempts; a++) {
+      log(`  ${r.name}${a > 1 ? ` (attempt ${a})` : ''} …`);
+      rmSync(resultFile, { force: true });
+      await new Promise((done) => {
+        const p = spawn(electron, [join(root, 'scripts', 'rom-matrix', 'live.mjs'), join(out, 'job.json')], { stdio: ['ignore', 'pipe', 'pipe'] });
+        p.stdout.on('data', () => {});
+        p.stderr.on('data', () => {});
+        p.on('exit', done);
+      });
+      const x = existsSync(resultFile) ? JSON.parse(readFileSync(resultFile, 'utf8'))[0] : null;
+      const v = x ? judge(r, plan, x) : { error: 'no result (the emulator process ended early)', notes: [] };
+      v.attempts = a;
+      r.liveResult = v;
+      if (x) all.push(x);
+      const lost = v.error || v.notes.some((n) => n.startsWith('plan stopped'));
+      const wrong = [v.party, v.place, v.battle].includes(false) && !lost;
+      if (!lost || wrong) break;
+    }
     log(`    party ${mark(r.liveResult.party)} place ${mark(r.liveResult.place)} battle ${mark(r.liveResult.battle)}${r.liveResult.error ? ` – ${r.liveResult.error}` : ''}`);
   }
   writeFileSync(join(out, 'live.json'), JSON.stringify(all, null, 1));
