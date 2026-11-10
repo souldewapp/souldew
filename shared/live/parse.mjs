@@ -833,14 +833,69 @@ function battleDS(entry, read, T, state, party) {
   const index = live || real ? (hit >= 0 ? hit : Math.max(0, party.findIndex(standing))) : null;
   const cur = index !== null ? byPid.get(party[index].pid) || party[index] : null;
   note(state, `heap ${foe.species}/${foe.level}`, flag);
+  // Gen 5: the HP the battle shows (the copies keep the starting HP) – the opponent's, and the player's Pokémon that is
+  // out (the one of the team that has a battle struct)
+  let active = cur ? { index, hp: cur.hp, maxHp: cur.maxHp, status: cur.status } : null;
+  let foeHp = null;
+  if (entry.gen === 5) {
+    const hps = gen5LiveHps(read, state, [foe, ...party]);
+    foeHp = hps.get(g5key(foe)) ?? null;
+    const i = active ? active.index : party.findIndex((m) => hps.has(g5key(m)));
+    if (i >= 0 && hps.has(g5key(party[i]))) active = { index: i, hp: hps.get(g5key(party[i])), maxHp: party[i].maxHp, status: active?.status ?? party[i].status };
+  }
   state.battle = {
     kind: enemy.mons.length > 1 || foe.key.split('-')[1] !== tid ? 'trainer' : 'wild',
-    enemy: { species: foe.species, level: foe.level, hp: foe.hp, maxHp: foe.maxHp, shiny: foe.shiny, moves: foe.moves },
-    active: cur ? { index, hp: cur.hp, maxHp: cur.maxHp, status: cur.status } : null,
+    enemy: { species: foe.species, level: foe.level, hp: foeHp ?? foe.hp, maxHp: foe.maxHp, shiny: foe.shiny, moves: foe.moves },
+    active,
     // the battle's own party copy: HP and status conditions as they are now (the save party gets them at the end)
     party: live && live.map((m) => ({ pid: m.pid, hp: m.hp, maxHp: m.maxHp, status: m.status })),
   };
+  // (Gen 5: the battle struct's HP of the Pokémon that is out wins over the party copy's starting HP)
+  if (entry.gen === 5 && active && state.battle.party) {
+    const pid = party[active.index]?.pid;
+    state.battle.party = state.battle.party.map((m) => (m.pid === pid ? { ...m, hp: active.hp } : m));
+  }
   return state.battle;
+}
+
+/**
+ * Gen 5: the battle's own Pokémon structs. The heap's party copies keep the HP the battle started with, so the live HP
+ * comes from these: { u16 species, u16 max HP, u16 HP, … u8 level at +12 } for each Pokémon that is out (found live in
+ * Black: the rival's Snivy 19 → 14 → 4 HP at 0x0226D8D4 and a second copy 0x448 on; Tepig's 0x224 before it). Found by
+ * species, max HP and level, remembered while they still match – rescanned at most every 2 s. → Map(key → HP).
+ */
+const G5MON = { maxHp: 2, hp: 4, level: 12 };
+const g5key = (m) => `${m.species}:${m.maxHp}:${m.level}`;
+function gen5LiveHps(read, state, mons) {
+  const cache = state.g5mons || (state.g5mons = new Map());
+  const fits = (a, m) => {
+    const b = read(a, 14);
+    return !!b && u16le(b, 0) === m.species && u16le(b, G5MON.maxHp) === m.maxHp && u16le(b, G5MON.hp) <= m.maxHp && b[G5MON.level] === m.level;
+  };
+  const want = mons.filter(Boolean);
+  const missing = want.filter((m) => !(cache.get(g5key(m)) && fits(cache.get(g5key(m)), m)));
+  const now = Date.now();
+  if (missing.length && (!state.g5scan || now - state.g5scan > 2000)) {
+    state.g5scan = now;
+    for (const m of missing) cache.delete(g5key(m));
+    const bySpecies = new Map(missing.map((m) => [m.species, m]));
+    const ram = read(0x02200000, 0x200000); // the battle's heap (the Snivy above: 0x0226D8D4)
+    if (ram) {
+      for (let o = 0; o + 14 <= ram.length; o += 2) {
+        const m = bySpecies.get(ram[o] | (ram[o + 1] << 8));
+        if (!m || u16le(ram, o + G5MON.maxHp) !== m.maxHp || ram[o + G5MON.level] !== m.level || u16le(ram, o + G5MON.hp) > m.maxHp) continue;
+        if (!cache.get(g5key(m))) cache.set(g5key(m), 0x02200000 + o);
+      }
+    }
+    while (cache.size > 32) cache.delete(cache.keys().next().value);
+  }
+  const out = new Map();
+  for (const m of want) {
+    const a = cache.get(g5key(m));
+    const b = a && fits(a, m) ? read(a + G5MON.hp, 2) : null;
+    if (b) out.set(g5key(m), u16le(b, 0));
+  }
+  return out;
 }
 
 /** The battle from the battle structs; `live` is the battle's party copy (HP of the mons that aren't out). */
