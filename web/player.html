@@ -673,8 +673,9 @@
       m.last = rms;
       if (!ff || rms < 0.003) continue;
       // mute: nothing at all; music: nothing from the core outside the mixer, and a mixer playing the game's own sound
-      const mixerGame = m.kind === 'vol' && audio.mode === 'music' && audio.info.play?.src === 'game';
-      const bad = audio.mode === 'mute' || (audio.mode === 'music' && (m.kind === 'gate' || mixerGame));
+      const mixerGame = m.node === audio.vol && audio.mode === 'music' && audio.info.play?.src === 'game' && audio.info.play.mixer === audio.chain?.id;
+      // (a retired chain's volume still sounding is a leak too – it should have been unplugged)
+      const bad = audio.mode === 'mute' || (audio.mode === 'music' && (m.kind === 'gate' || mixerGame || (m.kind === 'vol' && m.node !== audio.vol)));
       const now = performance.now();
       if (bad && now - leak.at > 5000) {
         leak.at = now;
@@ -842,9 +843,18 @@
       let node;
       let post;
       let kind = 'worklet';
+      // what the mixer must know before its first block (the same is sent again once it is wired up – the state may
+      // have changed while the module loaded)
+      const initial = () => [
+        { type: 'skip', on: FF_SKIP },
+        { type: 'mode', mode: mixerMode() },
+        { type: 'paused', paused: mixerPaused() },
+        ...(audio.key ? [{ type: 'song', key: audio.key }] : []),
+        { type: 'speed', ratio: Math.min(audio.speed, MAX_SOUND_RATIO) },
+      ];
       try {
         await ac.audioWorklet.addModule('/lib/turboaudio-worklet.mjs');
-        node = new AudioWorkletNode(ac, 'turbo-audio', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit', channelInterpretation: 'speakers' });
+        node = new AudioWorkletNode(ac, 'turbo-audio', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit', channelInterpretation: 'speakers', processorOptions: { init: initial() } });
         node.port.onmessage = (e) => deliver(e.data);
         node.onprocessorerror = () => mixerDown(chain, 'processorerror');
         post = (m) => node.port.postMessage(m);
@@ -853,6 +863,7 @@
         console.warn('turbo audio: no AudioWorklet, using a ScriptProcessor', err);
         const { TurboMixer } = await import('/lib/turboaudio.mjs');
         const mixer = new TurboMixer(ac.sampleRate, { onEvent: deliver });
+        for (const m of initial()) mixer.command(m);
         let broken = false;
         node = ac.createScriptProcessor(2048, 2, 2);
         node.onaudioprocess = (e) => {
@@ -894,13 +905,9 @@
       Object.assign(audio, { al, vol, node, post, kind, chain, attachedOnce: true, plain: null });
       vol.gain.value = volLevel();
       onAudioEvent({ type: 'attach', mixer: id, kind, sampleRate: ac.sampleRate, ctx: ctxInfo.get(ac)?.id ?? null, renew, ms: Math.round(performance.now() - t0), ...chains.counts() });
+      for (const m of initial()) post(m);
       routeAudio();
       refreshGates(); // (from now on a context the mixer hasn't taken over yet holds its sound back)
-      post({ type: 'mode', mode: mixerMode() });
-      post({ type: 'paused', paused: mixerPaused() });
-      post({ type: 'speed', ratio: Math.min(audio.speed, MAX_SOUND_RATIO) });
-      post({ type: 'skip', on: FF_SKIP });
-      if (audio.key) post({ type: 'song', key: audio.key });
       if (memory) {
         post({ type: 'import', sr: memory.sr, lib: memory.lib, last: memory.last });
         onAudioEvent({ type: 'handover', from: prev.id, to: id, songs: memory.lib?.length ?? 0, last: !!memory.last, sr: memory.sr });

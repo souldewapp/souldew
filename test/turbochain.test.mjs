@@ -175,3 +175,26 @@ test('turbo levels: the page decides what is heard while fast-forwarding, whatev
   assert.equal(L({ volume: 3 }).vol, 1);
   assert.equal(L({ volume: NaN }).vol, 1);
 });
+
+test('a mixer made while fast-forwarding gets the page’s state before its first block – not one block of sped-up sound', async () => {
+  // a stand-in for the AudioWorklet global scope
+  globalThis.sampleRate = SR;
+  globalThis.AudioWorkletProcessor = class {
+    constructor() {
+      this.port = { postMessage() {}, onmessage: null };
+    }
+  };
+  let Proc = null;
+  globalThis.registerProcessor = (name, C) => (Proc = C);
+  await import('../web/lib/turboaudio-worklet.mjs');
+  const init = [{ type: 'skip', on: true }, { type: 'mode', mode: 'music' }, { type: 'paused', paused: false }, { type: 'speed', ratio: 4 }];
+  const p = new Proc({ processorOptions: { init } });
+  assert.equal(p.mixer.turbo, true);
+  const game = new Float32Array(B).fill(0.3);
+  const out = [new Float32Array(B), new Float32Array(B)];
+  p.process([[game, game]], [out]);
+  assert.equal(rms(out[0]), 0, 'the first block is already quiet (nothing recorded yet, "music")');
+  const plain = new Proc({});
+  plain.process([[game, game]], [out]);
+  assert.ok(rms(out[0]) > 0.2, 'without a state: 1×, the game’s sound');
+});

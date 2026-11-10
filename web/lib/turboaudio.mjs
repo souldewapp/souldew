@@ -976,6 +976,12 @@ export class TurboMixer {
 
   ramp(r, target) {
     if (r.t === target && (r.v === target || r.s !== 0)) return;
+    if (!this.quanta) {
+      // nothing played yet (a mixer made while fast-forwarding): start where the mode says, no fade from 1×
+      r.v = r.t = target;
+      r.s = 0;
+      return;
+    }
     r.t = target;
     r.s = (target - r.v) / this.k.fade;
     if (r.s === 0) r.v = target;
