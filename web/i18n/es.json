@@ -1839,5 +1839,22 @@
   "feed.typeHelpOn": "activó la ayuda de tipos para todos",
   "feed.typeHelpOff": "desactivó la ayuda de tipos para todos",
   "feed.typeHelpOnSolo": "Ayuda de tipos activada en esta partida",
-  "feed.typeHelpOffSolo": "Ayuda de tipos desactivada en esta partida"
+  "feed.typeHelpOffSolo": "Ayuda de tipos desactivada en esta partida",
+  "nag.titlebar": "Por favor, compra una licencia de souldew (es broma)",
+  "nag.thanks": "¡Gracias por usar souldew!",
+  "nag.free": "souldew ES un software gratuito.",
+  "nag.seriously": "(En serio.)",
+  "nag.trial": "Has abierto souldew {n} vez. Tu periodo de prueba termina: nunca. No se bloquea nada: esta ventana es todo el modelo de negocio.|Has abierto souldew {n} veces. Tu periodo de prueba termina: nunca. No se bloquea nada: esta ventana es todo el modelo de negocio.",
+  "nag.c1": "Muertes de Pokémon ilimitadas",
+  "nag.c2": "Listo para tu intento de Nuzlocke número 47",
+  "nag.c3": "Échale la culpa a tu compañero, con cifrado AES-256",
+  "nag.c4": "Actualizaciones gratis de por vida (la tuya o la de tu equipo, lo que acabe antes)",
+  "nag.was": "34,22 €",
+  "nag.pay": "Tú pagas:",
+  "nag.payWhat": "lo que cueste un café",
+  "nag.offer": "¡Aprovecha ya, es una oferta única!",
+  "nag.fine": "* No lo es. Volverá, como tu rival.",
+  "nag.remind": "Recuérdamelo después de mi próximo wipe",
+  "set.nag": "Mostrar de vez en cuando la ventana de licencia en broma",
+  "set.nagHint": "Una parodia de las viejas ventanas de shareware. souldew sigue siendo gratis igualmente."
 }

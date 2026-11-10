@@ -28,6 +28,8 @@ import { DeathAlert } from './views/session-info.mjs';
 import { RestartOffer, RunOverNotice } from './views/restart.mjs';
 import { FirstStepsPill } from './views/firststeps.mjs';
 import { useCoffeeFx, CoffeeFx } from './views/coffee.mjs';
+import { LicenseNag } from './views/nag.mjs';
+import { countLaunch, shouldNag } from './lib/nag.mjs';
 import { mySlotIn } from './lib/restart.mjs';
 import { IS_MAC, IS_WIN, shortcut } from './lib/platform.mjs';
 
@@ -196,6 +198,31 @@ function App() {
   // fullscreen, during boot or onboarding (fxBusy is set further down, once those are known)
   const fxBusy = useRef(true);
   const coffee = useCoffeeFx(() => fxBusy.current);
+  // The joke "please buy a license" window (lib/nag.mjs): every launch is counted once (a reload of the same window
+  // isn't a launch); from the 5th on it may show up – never on top of onboarding, a game or another dialog.
+  const [nag, setNag] = useState(null); // { launches } while it is open
+  const nagChecked = useRef(false);
+  useEffect(() => {
+    if (!ready || boot || !status || nagChecked.current) return;
+    nagChecked.current = true;
+    try {
+      if (sessionStorage.getItem('sl-nag-counted')) return;
+      sessionStorage.setItem('sl-nag-counted', '1');
+    } catch {
+      // storage blocked: count it anyway
+    }
+    const next = countLaunch(status.config?.nag);
+    const free = () => !!status.config?.onboarded && !sessionRef.current && !document.querySelector('dialog[open]');
+    const show = free() && shouldNag({ ...next, off: status.config?.nagOff });
+    api.post('/api/config', { nag: show ? { ...next, lastShown: Date.now() } : next }).catch(() => {});
+    if (show) setTimeout(() => free() && setNag({ launches: next.launches }), 1500);
+  }, [ready, boot, status]);
+  useEffect(() => {
+    // for trying it out: dispatchEvent(new Event('souldew:nag'))
+    const open = () => setNag({ launches: Math.max(5, (status?.config?.nag?.launches) || 5) });
+    addEventListener('souldew:nag', open);
+    return () => removeEventListener('souldew:nag', open);
+  }, [status]);
 
   const toast = useCallback((x) => {
     const id = Math.random().toString(36).slice(2);
@@ -666,6 +693,7 @@ function App() {
         <button class="btn primary" onClick=${() => { setPendingClose(null); if (session) navigate('play', session.target.params); }}>${t('unsaved.back', 'Back to the game')}</button>`}>
       <p class="muted">${unsavedTexts(unsavedProgress()).text}</p>
     <//>
+    <${LicenseNag} open=${!!nag} launches=${nag?.launches} onClose=${() => setNag(null)} />
     <${Toasts} toasts=${toasts} dismiss=${(id) => setToasts((ts) => ts.filter((x) => x.id !== id))} />
     <${DeathAlert} alert=${runOver ? null : deathAlert} onClose=${() => setDeathAlert(null)} />
     <${RunOverNotice} status=${restartOffer ? null : runOver} onClose=${() => setRunOver(null)} />

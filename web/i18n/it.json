@@ -1839,5 +1839,22 @@
   "feed.typeHelpOn": "ha attivato l’aiuto sui tipi per tutti",
   "feed.typeHelpOff": "ha disattivato l’aiuto sui tipi per tutti",
   "feed.typeHelpOnSolo": "Aiuto sui tipi attivato per questa run",
-  "feed.typeHelpOffSolo": "Aiuto sui tipi disattivato per questa run"
+  "feed.typeHelpOffSolo": "Aiuto sui tipi disattivato per questa run",
+  "nag.titlebar": "Acquista una licenza di souldew (scherzo)",
+  "nag.thanks": "Grazie per usare souldew!",
+  "nag.free": "souldew È un software gratuito.",
+  "nag.seriously": "(Sul serio.)",
+  "nag.trial": "Hai aperto souldew {n} volta. Il tuo periodo di prova scade: mai. Non si blocca niente: questa finestra è l’intero modello di business.|Hai aperto souldew {n} volte. Il tuo periodo di prova scade: mai. Non si blocca niente: questa finestra è l’intero modello di business.",
+  "nag.c1": "Morti di Pokémon illimitate",
+  "nag.c2": "Pronto per il tuo 47° tentativo di Nuzlocke",
+  "nag.c3": "Dai la colpa al tuo compagno, con crittografia AES-256",
+  "nag.c4": "Aggiornamenti gratis a vita (la tua o quella della tua squadra, quale finisce prima)",
+  "nag.was": "34,22 €",
+  "nag.pay": "Tu paghi:",
+  "nag.payWhat": "quanto costa un caffè",
+  "nag.offer": "Approfittane subito, è un’offerta unica!",
+  "nag.fine": "* Non è vero. Tornerà, come il tuo rivale.",
+  "nag.remind": "Ricordamelo dopo il mio prossimo wipe",
+  "set.nag": "Mostra ogni tanto la finta finestra di licenza",
+  "set.nagHint": "Una parodia delle vecchie finestre degli shareware. souldew resta gratis comunque."
 }

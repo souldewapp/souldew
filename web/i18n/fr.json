@@ -1839,5 +1839,22 @@
   "feed.typeHelpOn": "a activé l’aide aux types pour tout le monde",
   "feed.typeHelpOff": "a désactivé l’aide aux types pour tout le monde",
   "feed.typeHelpOnSolo": "Aide aux types activée pour ce run",
-  "feed.typeHelpOffSolo": "Aide aux types désactivée pour ce run"
+  "feed.typeHelpOffSolo": "Aide aux types désactivée pour ce run",
+  "nag.titlebar": "Veuillez acheter une licence souldew (on rigole)",
+  "nag.thanks": "Merci d’utiliser souldew !",
+  "nag.free": "souldew EST un logiciel gratuit.",
+  "nag.seriously": "(Sans rire.)",
+  "nag.trial": "Tu as ouvert souldew {n} fois. Ta période d’essai se termine : jamais. Rien n’est bloqué – cette fenêtre, c’est tout le modèle économique.|Tu as ouvert souldew {n} fois. Ta période d’essai se termine : jamais. Rien n’est bloqué – cette fenêtre, c’est tout le modèle économique.",
+  "nag.c1": "Morts de Pokémon illimitées",
+  "nag.c2": "Prêt pour ta 47e tentative de Nuzlocke",
+  "nag.c3": "Rejeter la faute sur ton partenaire, chiffré en AES-256",
+  "nag.c4": "Mises à jour gratuites à vie (la tienne ou celle de ton équipe, selon ce qui finit en premier)",
+  "nag.was": "34,22 €",
+  "nag.pay": "Tu paies :",
+  "nag.payWhat": "le prix d’un café",
+  "nag.offer": "Fonce, cette offre est unique !",
+  "nag.fine": "* C’est faux. Elle reviendra – comme ton rival.",
+  "nag.remind": "Me le rappeler après mon prochain wipe",
+  "set.nag": "Afficher de temps en temps la fausse fenêtre de licence",
+  "set.nagHint": "Une parodie des vieilles fenêtres de shareware. souldew reste gratuit quoi qu’il arrive."
 }

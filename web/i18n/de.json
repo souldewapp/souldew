@@ -1839,5 +1839,22 @@
   "feed.typeHelpOn": "hat die Typ-Effektivität für alle eingeschaltet",
   "feed.typeHelpOff": "hat die Typ-Effektivität für alle ausgeschaltet",
   "feed.typeHelpOnSolo": "Typ-Effektivität für diesen Run eingeschaltet",
-  "feed.typeHelpOffSolo": "Typ-Effektivität für diesen Run ausgeschaltet"
+  "feed.typeHelpOffSolo": "Typ-Effektivität für diesen Run ausgeschaltet",
+  "nag.titlebar": "Bitte kauf eine souldew-Lizenz (kleiner Scherz)",
+  "nag.thanks": "Danke, dass du souldew benutzt!",
+  "nag.free": "souldew IST eine kostenlose Software.",
+  "nag.seriously": "(Echt jetzt.)",
+  "nag.trial": "Du hast souldew {n}-mal geöffnet. Deine Testphase endet: nie. Nichts wird gesperrt – dieses Fenster ist das komplette Geschäftsmodell.|Du hast souldew {n}-mal geöffnet. Deine Testphase endet: nie. Nichts wird gesperrt – dieses Fenster ist das komplette Geschäftsmodell.",
+  "nag.c1": "Unbegrenzt viele Pokémon-Tode",
+  "nag.c2": "Bereit für deinen 47. Nuzlocke-Versuch",
+  "nag.c3": "Die Schuld auf deinen Partner schieben – AES-256-verschlüsselt",
+  "nag.c4": "Kostenlose Updates auf Lebenszeit (deine oder die deines Teams – je nachdem, was zuerst endet)",
+  "nag.was": "34,22 €",
+  "nag.pay": "Du zahlst:",
+  "nag.payWhat": "so viel, wie ein Kaffee kostet",
+  "nag.offer": "Jetzt zugreifen, dieses Angebot gibt es nur einmal!",
+  "nag.fine": "* Stimmt nicht. Es kommt wieder – wie dein Rivale.",
+  "nag.remind": "Erinnere mich nach meinem nächsten Wipe",
+  "set.nag": "Ab und zu das Spaß-Lizenzfenster zeigen",
+  "set.nagHint": "Eine Parodie auf alte Shareware-Nervfenster. souldew bleibt so oder so kostenlos."
 }

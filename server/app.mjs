@@ -581,6 +581,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         pads: config.pads || null,
         gpuBackend: validBackend(config.gpuBackend, process.platform),
         gpuFallback: fallbackNotice(config.gpuFallback),
+        nag: config.nag || null,
+        nagOff: config.nagOff === true,
       },
     };
   });
@@ -590,8 +592,20 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const allowed = {};
     // No path-like keys here: emulatorPaths decides which program /launch runs, libraryFolders which folders are
     // scanned (set via /api/library/folders). Neither may be writable by a plain config POST.
-    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax', 'fullTurbo', 'gpuBackend', 'gpuFallback']) {
+    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax', 'fullTurbo', 'gpuBackend', 'gpuFallback', 'nag', 'nagOff']) {
       if (k in body) allowed[k] = body[k];
+    }
+    // the joke license window (web/lib/nag.mjs): launch count + when it last showed, and its off switch
+    if ('nagOff' in allowed) allowed.nagOff = allowed.nagOff === true;
+    if ('nag' in allowed) {
+      const n = allowed.nag;
+      if (!n || typeof n !== 'object' || Array.isArray(n)) delete allowed.nag;
+      else {
+        allowed.nag = {
+          launches: Number.isInteger(n.launches) && n.launches >= 0 ? Math.min(n.launches, 1e6) : 0,
+          lastShown: Number.isFinite(n.lastShown) && n.lastShown > 0 ? n.lastShown : null,
+        };
+      }
     }
     // shape checks for the newer keys – the page validates too, but the config file shouldn't hold junk
     if ('theme' in allowed && !['classic', 'contrast', 'deutan', 'tritan'].includes(allowed.theme)) delete allowed.theme;

@@ -62,6 +62,9 @@
 - The "Buy me a coffee" button gets a visitor now and then (every few minutes, never while a game is running):
   Pikachu peeks out of the cup, Snorlax naps on it, a Poké Ball wobbles and pops, or Jigglypuff hops by – a few
   seconds of pixel art, no sound, and none at all with "reduce motion" or once you've clicked the button.
+- From the fifth start on, souldew may now and then (rarely, at most every few days) thank you in a window that looks
+  suspiciously like an old shareware "please buy a license" nag – in full old-Windows glory, on every system. souldew is
+  and stays free: the window only jokes, offers the coffee link and closes with Esc. Settings › About turns it off.
 
 ## 2.2.0
 
