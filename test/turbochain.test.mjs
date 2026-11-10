@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TurboMixer } from '../web/lib/turboaudio.mjs';
-import { MixerChains } from '../web/lib/turbochain.mjs';
+import { MixerChains, turboLevels } from '../web/lib/turbochain.mjs';
 
 // A stand-in for the Web Audio graph of player.html: gains, the mixer node, contexts that run until they are closed.
 // Each block, every running context pulls its destination; a closed context makes no sound and runs no mixer.
@@ -136,4 +136,42 @@ test('a chain whose context the core still uses hands its sound back to the spea
   assert.equal(A.audioCtx.state, 'running');
   assert.ok(A.gain.outs.has(A.audioCtx.destination), 'straight to the speakers (player.html gates that connection)');
   assert.deepEqual(chains.counts(), { live: 1, made: 2, closedContexts: 0 });
+});
+
+test('a mixer that broke down is replaced by a fresh one in the same context: no second path, the context stays open', () => {
+  const chains = new MixerChains();
+  const A = newAl();
+  const a = attach(chains, A, () => true);
+  const b = attach(chains, A, () => true); // (player.html: mixerDown → renew)
+  assert.equal(A.audioCtx.state, 'running', 'the context the core plays through stays');
+  assert.equal(chains.counts().closedContexts, 0);
+  assert.ok(!A.gain.outs.has(A.audioCtx.destination), 'OpenAL’s gain is not put back on the speakers next to the new mixer');
+  assert.deepEqual([...A.gain.outs], [b.node], 'only the new mixer gets the core’s sound');
+  assert.equal(a.node.outs.size, 0, 'the old mixer is unplugged');
+  play(new Map([[A, tune]]), 0.5);
+  b.post({ type: 'mode', mode: 'mute' });
+  b.post({ type: 'speed', ratio: 3 });
+  const muted = play(new Map([[A, (t) => tune(3 * t)]]), 1);
+  assert.equal(rms(muted.subarray(Math.round(0.15 * SR))), 0, 'mute reaches the one that plays');
+});
+
+test('turbo levels: the page decides what is heard while fast-forwarding, whatever the mixer does', () => {
+  const L = (o) => turboLevels({ volume: 0.5, attachedOnce: true, ...o });
+  // 1×: the volume on both paths (before the first attach EmulatorJS applies it itself: the gate stays open)
+  for (const mode of ['music', 'mute', 'original', 'plain']) assert.deepEqual(L({ mode }), { gate: 0.5, vol: 0.5 }, mode);
+  assert.deepEqual(L({ attachedOnce: false }), { gate: 1, vol: 0.5 });
+  // mute: nothing anywhere – attached or not, broken or not
+  for (const attachedOnce of [false, true]) for (const broken of [false, true]) {
+    assert.deepEqual(L({ ff: true, mode: 'mute', attachedOnce, broken }), { gate: 0, vol: 0 });
+  }
+  // music: only a working mixer; the core's own sound outside it never
+  assert.deepEqual(L({ ff: true, mode: 'music' }), { gate: 0, vol: 0.5 });
+  assert.deepEqual(L({ ff: true, mode: 'music', broken: 'error' }), { gate: 0, vol: 0 });
+  assert.deepEqual(L({ ff: true, mode: 'music', attachedOnce: false }), { gate: 0, vol: 0.5 });
+  // original / plain: the core's own fast-forward sound, on every path
+  for (const mode of ['original', 'plain']) assert.deepEqual(L({ ff: true, mode, broken: true }), { gate: 0.5, vol: 0.5 }, mode);
+  assert.deepEqual(L({ ff: true, mode: 'original', attachedOnce: false }), { gate: 1, vol: 0.5 });
+  // volumes out of range
+  assert.equal(L({ volume: 3 }).vol, 1);
+  assert.equal(L({ volume: NaN }).vol, 1);
 });

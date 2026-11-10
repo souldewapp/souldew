@@ -1096,7 +1096,7 @@ export function GameSession({ session, mode }) {
                 </select>
               </label>
               <button class="btn small ghost diag-btn" title=${t('play.diagHint', 'Saves what souldew recorded about the music and live tracking this session – attach the file to a bug report. No ROM, save or invite data.')}
-                onClick=${() => saveDiagnostics({ turboAudio, speed: speed === MAX ? 'max' : speed, reach, steps: steps.map((x) => (x === MAX ? 'max' : x)), volume, perf: emu()?.perf?.() ?? null })}><${Icon} name="save" size=${14} />${t('play.diag', 'Save diagnostics')}</button>
+                onClick=${() => saveDiagnostics({ turboAudio, speed: speed === MAX ? 'max' : speed, reach, steps: steps.map((x) => (x === MAX ? 'max' : x)), volume, perf: emu()?.perf?.() ?? null, audioGraph: emu()?.audioGraph?.() ?? null })}><${Icon} name="save" size=${14} />${t('play.diag', 'Save diagnostics')}</button>
             </div>`}
           </span>
           ${btn(fs ? 'shrink' : 'full', (fs ? t('play.exitFullscreen', 'Leave fullscreen') : t('keys.fullscreen', 'Fullscreen game')) + ' (F)', actions.fullscreen)}
