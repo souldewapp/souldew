@@ -24,6 +24,7 @@ const ACH_ICON = {
   randoStart: 'dice', rando10: 'dice', randoWin: 'dice', randoLegend: 'crown', randoDex: 'dice', randoHack: 'dice', bothWorlds: 'globe',
   cemetery: 'grave', lavender: 'grave', bloodbath: 'grave', doubleTrouble: 'grave', starterDown: 'grave', tooSoon: 'grave', glowUp: 'grave',
   speedrun: 'clock', nightOwl: 'clock', tenthTime: 'reset', candyCrush: 'candy', nameGame: 'user', butterfingers: 'ball', zubat: 'ball',
+  miltank: 'grave', garchomp: 'grave', kaboom: 'bolt', teleport: 'eye', roamer: 'eye', shinyDown: 'star', gyarados: 'star', feebas: 'ball', helix: 'crown', birdJesus: 'crown', tooMuchWater: 'globe',
   bidoof: 'crown', skillIssue: 'close', rival: 'user', magikarp: 'grave', rattata: 'grave', nuzlose: 'reset', starterTrio: 'ball', eevee: 'star',
 };
 const CAT_ICON = { journey: 'map', collection: 'ball', skill: 'bolt', soullink: 'link', randomizer: 'dice', fun: 'heart' };

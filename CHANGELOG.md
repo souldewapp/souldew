@@ -103,9 +103,11 @@
   this computer – first catch with run, date, route and nickname, shinies, how many died, and your whole history with
   each one. Filter by generation, type and caught/seen/missing, or search. Species from Gen 6 on aren't in any game
   souldew plays yet: they're listed, greyed out, and say so.
-- **91 achievements** in six categories – from "Gotcha!" and "Eight for Eight" over "Untouchable" (win without a
-  death), "Soul Twins" and "Chaos Tamer" to "It's a Magikarp Moment", "Nuzlocke? More Like Nuzlose" and a few secret
-  ones. Five rarities, unlock dates, progress bars, and a toast when one unlocks while you play (no sound).
+- **102 achievements** in six categories – from "Gotcha!" and "Eight for Eight" over "Untouchable" (win without a
+  death), "Soul Twins" and "Chaos Tamer" to the classics: "Rollout Trauma" (Whitney's Miltank), "Abra Used
+  Teleport", "Too Much Water", "Bird Jesus", "It's a Magikarp Moment" and a few secret ones. All of them fit the usual
+  Nuzlocke rules (dupes clause, type rule), and "complete" Pokédex goals leave out event-only mythicals like Mew. Five
+  rarities, unlock dates, progress bars, and a toast when one unlocks while you play (no sound).
 - **Medals** in a medal case – one per category, one per regional Pokédex and the Champion's Medal, from bronze to
   master. Original pixel-art designs.
 - Everything is worked out from the runs souldew already records (catches, deaths and their cause, badges, the end

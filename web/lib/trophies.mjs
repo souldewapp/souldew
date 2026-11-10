@@ -75,7 +75,6 @@ export function useTrophies() {
   return s;
 }
 
-const BIDOOF = new Set([399, 400]);
 
 /**
  * Watch the open run for live moments of this computer's player. `types(species)`: the run's types (randomized
@@ -107,7 +106,6 @@ export function watchRun(doc, manifest, me, types) {
     const mons = (l.party || []).filter((m) => !m.egg && m.species);
     if (l.source === 'live') {
       for (const m of mons) if (m.hp === 1 && m.maxHp > 1) moment({ type: 'hp1', species: m.species });
-      if (mons.length >= 6 && mons.every((m) => BIDOOF.has(m.species))) moment({ type: 'bidoof' });
       if (mons.length >= 6 && types) {
         const shared = mons.map((m) => types(m.species) || []).reduce((a, b) => a.filter((x) => b.includes(x)));
         if (shared.length) moment({ type: 'monotype', ptype: shared[0] });

@@ -29,22 +29,22 @@ const ACH = () => ({
   dex100: [t('ach.dex100', 'Centurion'), t('ach.dex100.d', 'Catch {n} different species.')],
   dex250: [t('ach.dex250', 'Professor’s Pride'), t('ach.dex250.d', 'Catch {n} different species.')],
   dex500: [t('ach.dex500', 'Walking Encyclopedia'), t('ach.dex500.d', 'Catch {n} different species.')],
-  dexKanto: [t('ach.dexKanto', 'Kanto Complete'), t('ach.dexKanto.d', 'Catch every species from #1 to #151.')],
-  dexJohto: [t('ach.dexJohto', 'Johto Complete'), t('ach.dexJohto.d', 'Catch every species from #152 to #251.')],
-  dexHoenn: [t('ach.dexHoenn', 'Hoenn Complete'), t('ach.dexHoenn.d', 'Catch every species from #252 to #386.')],
-  dexSinnoh: [t('ach.dexSinnoh', 'Sinnoh Complete'), t('ach.dexSinnoh.d', 'Catch every species from #387 to #493.')],
-  dexUnova: [t('ach.dexUnova', 'Unova Complete'), t('ach.dexUnova.d', 'Catch every species from #494 to #649.')],
-  dexNational: [t('ach.dexNational', 'Gotta Catch ’Em All'), t('ach.dexNational.d', 'Catch all {n} species the games souldew plays can hold.')],
+  dexKanto: [t('ach.dexKanto', 'Kanto Complete'), t('ach.dexKanto.d', 'Catch every species from #1 to #151 – event-only Pokémon excluded.')],
+  dexJohto: [t('ach.dexJohto', 'Johto Complete'), t('ach.dexJohto.d', 'Catch every species from #152 to #251 – event-only Pokémon excluded.')],
+  dexHoenn: [t('ach.dexHoenn', 'Hoenn Complete'), t('ach.dexHoenn.d', 'Catch every species from #252 to #386 – event-only Pokémon excluded.')],
+  dexSinnoh: [t('ach.dexSinnoh', 'Sinnoh Complete'), t('ach.dexSinnoh.d', 'Catch every species from #387 to #493 – event-only Pokémon excluded.')],
+  dexUnova: [t('ach.dexUnova', 'Unova Complete'), t('ach.dexUnova.d', 'Catch every species from #494 to #649 – event-only Pokémon excluded.')],
+  dexNational: [t('ach.dexNational', 'Gotta Catch ’Em All'), t('ach.dexNational.d', 'Catch all {n} species you can catch in the games souldew plays – event-only Pokémon excluded.')],
   seen100: [t('ach.seen100', 'Eyes Everywhere'), t('ach.seen100.d', 'See {n} different species.')],
   firstShiny: [t('ach.firstShiny', 'Something Sparkly'), t('ach.firstShiny.d', 'Catch a shiny Pokémon.')],
   shiny5: [t('ach.shiny5', 'Shiny Hunter'), t('ach.shiny5.d', 'Catch {n} shiny Pokémon.')],
   legendary: [t('ach.legendary', 'Legend Has It'), t('ach.legendary.d', 'Catch a legendary or mythical Pokémon.')],
   legendary5: [t('ach.legendary5', 'Myth Buster'), t('ach.legendary5.d', 'Catch {n} different legendary or mythical Pokémon.')],
-  starterTrio: [t('ach.starterTrio', 'Starter Pack'), t('ach.starterTrio.d', 'Own all three starters of one generation.')],
-  eevee: [t('ach.eevee', 'Eevee Enthusiast'), t('ach.eevee.d', 'Own {n} different Eevee evolutions.')],
+  starterTrio: [t('ach.starterTrio', 'Starter Pack'), t('ach.starterTrio.d', 'Own all three starters of one generation across your runs.')],
+  eevee: [t('ach.eevee', 'Eevee Enthusiast'), t('ach.eevee.d', 'Own {n} different Eevee evolutions across your runs.')],
   fossil: [t('ach.fossil', 'Jurassic Pokémon'), t('ach.fossil.d', 'Own a fossil Pokémon.')],
   allTypes: [t('ach.allTypes', 'Type Collector'), t('ach.allTypes.d', 'Own Pokémon of all {n} classic types.')],
-  zubat: [t('ach.zubat', 'Not Another Zubat'), t('ach.zubat.d', 'Catch Zubat {n} times.')],
+  zubat: [t('ach.zubat', 'Not Another Zubat'), t('ach.zubat.d', 'Catch a Zubat in {n} different runs.')],
   // skill
   cleanBadge: [t('ach.cleanBadge', 'Flawless Victory'), t('ach.cleanBadge.d', 'Earn a badge without a single death since the one before.')],
   cleanFour: [t('ach.cleanFour', 'Clean Sheet'), t('ach.cleanFour.d', 'Earn the first four badges of a run without a death.')],
@@ -55,7 +55,7 @@ const ACH = () => ({
   oneHp: [t('ach.oneHp', 'Hanging by a Thread'), t('ach.oneHp.d', 'Have a Pokémon of yours survive at exactly 1 HP.')],
   veteran: [t('ach.veteran', 'Old Reliable'), t('ach.veteran.d', 'Have a Pokémon gain 40 levels after you caught it.')],
   starterSurvives: [t('ach.starterSurvives', 'Day One'), t('ach.starterSurvives.d', 'Win a run with your starter still alive.')],
-  monotype: [t('ach.monotype', 'One-Type Wonder'), t('ach.monotype.d', 'Field a full team of six that shares one type.')],
+  monotype: [t('ach.monotype', 'One-Type Wonder'), t('ach.monotype.d', 'Field a full team of six that shares one type – counts in runs without the type rule.')],
   byTheBook: [t('ach.byTheBook', 'By the Book'), t('ach.byTheBook.d', 'Win a Nuzlocke with level caps on – and never break one.')],
   fullTeamWin: [t('ach.fullTeamWin', 'Squad Goals'), t('ach.fullTeamWin.d', 'Win a run with a full team of six.')],
   phoenix: [t('ach.phoenix', 'Phoenix'), t('ach.phoenix.d', 'Win a run despite losing ten or more Pokémon in it.')],
@@ -91,7 +91,7 @@ const ACH = () => ({
   nuzlose: [t('ach.nuzlose', 'Nuzlocke? More Like Nuzlose'), t('ach.nuzlose.d', 'Fail {n} Nuzlockes.')],
   skillIssue: [t('ach.skillIssue', 'Skill Issue'), t('ach.skillIssue.d', 'Have a run end to a trainer’s Pokémon below level 10.')],
   bloodbath: [t('ach.bloodbath', 'Bloodbath'), t('ach.bloodbath.d', 'Lose six Pokémon before the same boss.')],
-  bidoof: [t('ach.bidoof', 'Bidoof Supremacy'), t('ach.bidoof.d', 'Field a full team of six Bidoof (Bibarel counts).')],
+  bidoof: [t('ach.bidoof', 'Bidoof Supremacy'), t('ach.bidoof.d', 'Win a run with Bidoof or Bibarel in your final team.')],
   speedrun: [t('ach.speedrun', 'Speedrun (Any%)'), t('ach.speedrun.d', 'Fail a run within 30 minutes of starting it.')],
   cemetery: [t('ach.cemetery', 'Pokémon Tower'), t('ach.cemetery.d', 'Lose {n} Pokémon in total.')],
   lavender: [t('ach.lavender', 'Lavender Town Resident'), t('ach.lavender.d', 'Lose {n} Pokémon in total.')],
@@ -100,6 +100,17 @@ const ACH = () => ({
   glowUp: [t('ach.glowUp', 'Glow Up, Fall Down'), t('ach.glowUp.d', 'Lose a Pokémon within ten minutes of it evolving.')],
   nameGame: [t('ach.nameGame', 'The Name Game'), t('ach.nameGame.d', 'Give {n} Pokémon a nickname.')],
   candyCrush: [t('ach.candyCrush', 'Candy Crush'), t('ach.candyCrush.d', 'Use {n} Rare Candies with cheats on.')],
+  miltank: [t('ach.miltank', 'Rollout Trauma'), t('ach.miltank.d', 'Lose a Pokémon to a trainer’s Miltank.')],
+  garchomp: [t('ach.garchomp', 'Champion’s Shadow'), t('ach.garchomp.d', 'Lose a Pokémon to a trainer’s Garchomp.')],
+  kaboom: [t('ach.kaboom', 'Kaboom'), t('ach.kaboom.d', 'Lose a Pokémon to a wild Geodude, Graveler, Voltorb or Electrode.')],
+  teleport: [t('ach.teleport', 'Abra Used Teleport'), t('ach.teleport.d', 'Let a wild Abra get away.')],
+  roamer: [t('ach.roamer', 'It Fled!'), t('ach.roamer.d', 'Let a roaming legendary get away.')],
+  shinyDown: [t('ach.shinyDown', 'Sparkle, Then Darkness'), t('ach.shinyDown.d', 'Lose a shiny Pokémon.')],
+  gyarados: [t('ach.gyarados', 'Worth the Splash'), t('ach.gyarados.d', 'Evolve a Magikarp into Gyarados.')],
+  feebas: [t('ach.feebas', 'Six Tiles of Patience'), t('ach.feebas.d', 'Catch a Feebas.')],
+  helix: [t('ach.helix', 'Praise Helix'), t('ach.helix.d', 'Own an Omanyte or Omastar.')],
+  birdJesus: [t('ach.birdJesus', 'Bird Jesus'), t('ach.birdJesus.d', 'Win a run with Pidgeot in your final team.')],
+  tooMuchWater: [t('ach.tooMuchWater', 'Too Much Water'), t('ach.tooMuchWater.d', 'Catch {n} Water-type Pokémon in one Hoenn run.')],
   nightOwl: [t('ach.nightOwl', 'Night Owl'), t('ach.nightOwl.d', 'Catch a Pokémon between 3 and 5 a.m.')],
 });
 
@@ -137,7 +148,7 @@ export function medalName(m) {
 
 /** What a medal is for, in one line. */
 export function medalHow(m) {
-  if (m.kind === 'dex') return t('medal.dexHow', 'Catch the species of Gen {gen} (#{from}–#{to}).', { gen: m.gen, from: m.from, to: m.to });
+  if (m.kind === 'dex') return t('medal.dexHow', 'Catch the species of Gen {gen} (#{from}–#{to}) – event-only Pokémon excluded.', { gen: m.gen, from: m.from, to: m.to });
   if (m.kind === 'champion') return t('medal.championHow', 'Unlock achievements of every kind.');
   return t('medal.catHow', 'Unlock {cat} achievements. Master needs the secret ones too.', { cat: catLabel(m.cat) });
 }

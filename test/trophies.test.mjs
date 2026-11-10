@@ -226,7 +226,8 @@ test('rules: collection counts across runs, regional dexes, types, legendaries, 
   const kanto = many('cccc0001', 1, 151);
   const s = evalOf([kanto], [], { typesOf: () => ['normal'] });
   assert.equal(s.dexKanto.ok, true);
-  assert.equal(s.dexKanto.at, T0 + 151 * 1000, 'reached with the 151st species');
+  assert.equal(s.dexKanto.at, T0 + 150 * 1000, 'reached with Mewtwo – Mew is event-only and not needed');
+  assert.equal(T.ACHIEVEMENTS.find((a) => a.id === 'dexKanto').target, 150);
   assert.equal(s.dex100.ok, true);
   assert.equal(s.dex100.at, T0 + 100 * 1000);
   assert.equal(s.dex250.n, 151);
@@ -240,10 +241,15 @@ test('rules: collection counts across runs, regional dexes, types, legendaries, 
   assert.equal(evalOf([many('cccc0002', 152, 251)]).dexJohto.ok, true);
   assert.equal(evalOf([kanto, many('cccc0003', 152, 400)]).dex250.ok, true);
   // later generations are not in the National Dex goal that souldew can reach
-  assert.equal(T.ACHIEVEMENTS.find((a) => a.id === 'dexNational').target, T.SUPPORTED_MAX);
+  assert.equal(T.ACHIEVEMENTS.find((a) => a.id === 'dexNational').target, T.SUPPORTED_MAX - T.EVENT_ONLY.size);
+  const noMew = many('cccc0004', 1, 150);
+  assert.equal(evalOf([noMew]).dexKanto.ok, true, 'Kanto complete without Mew');
+  const dexMedal = T.medals([], T.dexTotals(T.buildDex([noMew]))).find((m) => m.id === 'dex-1');
+  assert.equal(dexMedal.total, 150);
+  assert.equal(dexMedal.tier, 4, 'the master tier without Mew');
 });
 
-test('rules: live moments – 1 HP, underleveled badges, monotype, Bidoof team', () => {
+test('rules: live moments – 1 HP, underleveled badges, monotype; Bidoof in the winning team', () => {
   const run = T.digestRun(solo('dddd0001'), docOf({ 'enc:starter:p1': caught(399, T0) }), 'p1');
   const s = evalOf([run], [
     { type: 'hp1', at: T0 + 1, species: 399 },
@@ -257,15 +263,22 @@ test('rules: live moments – 1 HP, underleveled badges, monotype, Bidoof team',
   assert.equal(s.underdog3.n, 1);
   assert.equal(s.monotype.ok, true);
   assert.equal(s.bidoof.ok, false);
-  const bidoofs = T.digestRun(solo('dddd0002'), docOf({ 'live:p1': { badges: 0, party: Array.from({ length: 6 }, (_, i) => ({ species: i % 2 ? 399 : 400, level: 10 })) } }), 'p1');
-  assert.equal(evalOf([bidoofs]).bidoof.ok, true, 'from the last live party');
-  assert.equal(evalOf([run], [{ type: 'bidoof', at: T0 }]).bidoof.ok, true, 'from a live moment');
+  // a type rule forbids a monotype team: the moment doesn't count there (a SoulLink has it on by default)
+  const linkRun = T.digestRun({ id: 'dddd0003', mode: 'soullink', createdAt: new Date(T0).toISOString() }, docOf({}), 'p1');
+  assert.equal(evalOf([linkRun], [{ type: 'monotype', ptype: 'water', at: T0, runId: 'dddd0003' }]).monotype.ok, false);
+  const freeLink = T.digestRun({ id: 'dddd0004', mode: 'soullink', createdAt: new Date(T0).toISOString() }, docOf({ rules: { typeClause: 'off' } }), 'p1');
+  assert.equal(evalOf([freeLink], [{ type: 'monotype', ptype: 'water', at: T0, runId: 'dddd0004' }]).monotype.ok, true);
+  const party = [{ species: 400, level: 50 }, { species: 6, level: 52 }];
+  const bidoofWin = T.digestRun(solo('dddd0002'), docOf({ 'live:p1': { badges: 8, party }, 'run:status': { state: 'won', at: T0 + 9 } }), 'p1');
+  assert.equal(evalOf([bidoofWin]).bidoof.ok, true, 'a Bibarel in the winning team');
+  const bidoofLoss = T.digestRun(solo('dddd0005'), docOf({ 'live:p1': { badges: 3, party }, 'run:status': { state: 'failed', at: T0 + 9 } }), 'p1');
+  assert.equal(evalOf([bidoofLoss]).bidoof.ok, false, 'only a won run counts');
 });
 
 test('rules: every achievement has a unique id, a known category and rarity, and survives an empty history', () => {
   const ids = T.ACHIEVEMENTS.map((a) => a.id);
   assert.equal(new Set(ids).size, ids.length);
-  assert.ok(ids.length >= 60 && ids.length <= 100, `${ids.length} achievements`);
+  assert.ok(ids.length >= 60 && ids.length <= 120, `${ids.length} achievements`);
   for (const a of T.ACHIEVEMENTS) {
     assert.ok(T.CATEGORIES.includes(a.cat), a.id);
     assert.ok(T.RARITIES.includes(a.rarity), a.id);
@@ -352,4 +365,35 @@ test('syncTrophies: back-fills quietly on the first start, then unlocks live; ke
   writeFileSync(TROPHY_PATH, '{oops');
   assert.doesNotThrow(() => syncTrophies({}));
   assert.ok(existsSync(TROPHY_PATH));
+});
+
+test('rules: the classic memes – Miltank, Garchomp, Selfdestruct, Abra, roamers, Gyarados, Feebas, Helix, Bird Jesus, too much water', () => {
+  const run = T.digestRun(solo('eeee0001', { game: { id: 'pokemon-emerald', system: 'gba' } }), docOf({
+    'enc:a1:p1': caught(16, T0 + 1),
+    'pair:a1': dead(T0 + 50, { killer: { species: 241, level: 19, kind: 'trainer' } }),
+    'enc:a2:p1': caught(25, T0 + 2, { shiny: true }),
+    'pair:a2': dead(T0 + 60, { killer: { species: 74, level: 8, kind: 'wild' } }),
+    'enc:a3:p1': { outcome: 'missed', species: 63, at: T0 + 3 },
+    'enc:a4:p1': { outcome: 'missed', species: 244, at: T0 + 4 },
+    'enc:a5:p1': caught(129, T0 + 5),
+    'feed:e1': feedEvolve('p1', 'a5', 129, 130, T0 + 70),
+    'enc:a6:p1': caught(349, T0 + 6),
+    'enc:a7:p1': caught(138, T0 + 7),
+    ...Object.fromEntries([7, 54, 60, 72, 118, 120].map((id, i) => [`enc:w${i}:p1`, caught(id, T0 + 10 + i)])),
+    'live:p1': { badges: 8, party: [{ species: 18, level: 60 }] },
+    'run:status': { state: 'won', at: T0 + 99 },
+  }), 'p1');
+  const water = new Set([7, 54, 60, 72, 118, 120, 129, 130, 349, 138]);
+  const s = evalOf([run], [], { typesOf: (id) => (water.has(id) ? ['water'] : ['normal']) });
+  for (const id of ['miltank', 'kaboom', 'teleport', 'roamer', 'shinyDown', 'gyarados', 'feebas', 'helix', 'birdJesus', 'tooMuchWater']) assert.equal(s[id].ok, true, id);
+  assert.equal(s.garchomp.ok, false);
+  // a wild Miltank or a trainer's Geodude is not the meme
+  const other = T.digestRun(solo('eeee0002'), docOf({
+    'enc:b1:p1': caught(16, T0 + 1), 'pair:b1': dead(T0 + 5, { killer: { species: 241, level: 19, kind: 'wild' } }),
+    'enc:b2:p1': caught(17, T0 + 2), 'pair:b2': dead(T0 + 6, { killer: { species: 74, level: 12, kind: 'trainer' } }),
+  }), 'p1');
+  const o = evalOf([other]);
+  assert.equal(o.miltank.ok, false);
+  assert.equal(o.kaboom.ok, false);
+  assert.equal(evalOf([run]).tooMuchWater.n, 0, 'no type data – no progress');
 });

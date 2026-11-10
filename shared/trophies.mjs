@@ -30,12 +30,23 @@ const LEGENDARY = new Set([144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251
   804, 805, 806, 807, 808, 809, 888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898, 905, 1001, 1002, 1003, 1004, 1007, 1008, 1009,
   1010, 1014, 1015, 1016, 1017, 1024, 1025]);
 export const isLegendary = (id) => LEGENDARY.has(id);
+/**
+ * Mythicals the Gen 1–5 games only hand out at events (Mew, Celebi, Jirachi, Deoxys, Phione, Manaphy, Darkrai,
+ * Shaymin, Arceus, Victini, Keldeo, Meloetta, Genesect): a Nuzlocke can't catch them, so the "complete" goals and the
+ * dex medals leave them out. Caught anyway (a randomizer drops them on routes), they still fill the Pokédex.
+ */
+export const EVENT_ONLY = new Set([151, 251, 385, 386, 489, 490, 491, 492, 493, 494, 647, 648, 649]);
+/** How many species of from…to a run can really catch. */
+export const catchableIn = (from, to) => to - from + 1 - [...EVENT_ONLY].filter((id) => id >= from && id <= to).length;
 /** The three starters of each generation (first stage). */
 export const STARTERS = [[1, 4, 7], [152, 155, 158], [252, 255, 258], [387, 390, 393], [495, 498, 501]];
 const STARTER_LINES = new Set(STARTERS.flat().flatMap((id) => [id, id + 1, id + 2]));
 const EEVEELUTIONS = [134, 135, 136, 196, 197, 470, 471];
 const FOSSILS = new Set([138, 139, 140, 141, 142, 345, 346, 347, 348, 408, 409, 410, 411, 564, 565, 566, 567]);
 const BIDOOF = new Set([399, 400]);
+const EXPLODERS = new Set([74, 75, 100, 101]); // Geodude, Graveler, Voltorb, Electrode – Selfdestruct / Explosion
+const ROAMERS = new Set([243, 244, 245, 380, 381, 481, 488, 641, 642]); // they flee on turn one
+const HOENN = /ruby|sapphire|emerald/i;
 const CLASSIC_TYPES = ['normal', 'fire', 'water', 'grass', 'electric', 'ice', 'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel'];
 
 /** How close in time two deaths must be to count as one turn (a double battle, Explosion, Earthquake …). */
@@ -147,7 +158,9 @@ export function digestRun(manifest, entries, slot, opts = {}) {
     randomized: manifest?.randomizer ? manifest.randomizer.enabled !== false : false, hack: !!(manifest?.patch || game.hackId),
     createdAt: time(manifest?.createdAt), attempt: Number(manifest?.attempt) || Number(/#(\d+)\s*$/.exec(manifest?.name || '')?.[1]) || 1,
     status: st?.state ? { state: st.state, reason: str(st.reason, 20) || null, at: num(st.at), by: str(st.by, 4) || null } : null,
-    rules: { hardcore: rules.levelCaps === 'strict' && rules.noBattleItems === true && rules.setMode === true, levelCaps: !!rules.levelCaps, deathless: !!rules.deathless },
+    rules: { hardcore: rules.levelCaps === 'strict' && rules.noBattleItems === true && rules.setMode === true, levelCaps: !!rules.levelCaps, deathless: !!rules.deathless,
+      // SoulLink's default type clause is 'global', a solo Nuzlocke's 'off' (shared/rules.mjs)
+      typeClause: str(rules.typeClause, 10) || (mode === 'soullink' ? 'global' : 'off') },
     capBreaks: Object.keys(doc).filter((k) => k.startsWith(`capbreak:${me}:`)).length,
     badges, badgeAt, bosses, catches, missed, partners, deaths, evolutions, cheats, lives,
   };
@@ -203,7 +216,8 @@ export function buildDex(digests, seen = {}) {
 export function dexTotals(dex) {
   const caught = Object.entries(dex).filter(([, e]) => e.caught > 0).map(([id]) => Number(id));
   const seen = Object.entries(dex).filter(([, e]) => e.seenAt !== null || e.caught > 0).length;
-  const perGen = GENERATIONS.map((g) => ({ gen: g.gen, region: g.region, total: g.to - g.from + 1, caught: caught.filter((id) => id >= g.from && id <= g.to).length, supported: g.to <= SUPPORTED_MAX }));
+  const perGen = GENERATIONS.map((g) => ({ gen: g.gen, region: g.region, total: g.to - g.from + 1, caught: caught.filter((id) => id >= g.from && id <= g.to).length, supported: g.to <= SUPPORTED_MAX,
+    goal: catchableIn(g.from, g.to), caughtGoal: caught.filter((id) => id >= g.from && id <= g.to && !EVENT_ONLY.has(id)).length }));
   return { caught: caught.length, seen, shiny: Object.values(dex).reduce((a, e) => a + (e.shiny > 0 ? 1 : 0), 0), obtainable: SUPPORTED_MAX, perGen };
 }
 
@@ -238,13 +252,14 @@ export function context(digests, moments = [], { dex = buildDex(digests), typesO
     momentsOf: (type) => moments.filter((m) => m?.type === type) };
 }
 
-const dexCount = (ctx, from, to) => {
-  const ids = Object.keys(ctx.caughtAt).map(Number).filter((id) => id >= from && id <= to);
+// `catchable`: leave the event-only mythicals out (the "complete" goals); plain species counts take every catch
+const dexCount = (ctx, from, to, catchable = false) => {
+  const ids = Object.keys(ctx.caughtAt).map(Number).filter((id) => id >= from && id <= to && !(catchable && EVENT_ONLY.has(id)));
   return { n: ids.length, times: ids.map((id) => ctx.caughtAt[id]) };
 };
 const dexGoal = (from, to) => (ctx) => {
-  const { n, times } = dexCount(ctx, from, to);
-  return count(n, times, to - from + 1);
+  const { n, times } = dexCount(ctx, from, to, true);
+  return count(n, times, catchableIn(from, to));
 };
 const speciesGoal = (target, max = SUPPORTED_MAX) => (ctx) => {
   const { n, times } = dexCount(ctx, 1, max);
@@ -306,12 +321,12 @@ export const ACHIEVEMENTS = [
   { id: 'dex100', cat: 'collection', rarity: 'rare', target: 100, check: speciesGoal(100) },
   { id: 'dex250', cat: 'collection', rarity: 'epic', target: 250, check: speciesGoal(250) },
   { id: 'dex500', cat: 'collection', rarity: 'legendary', target: 500, check: speciesGoal(500) },
-  { id: 'dexKanto', cat: 'collection', rarity: 'epic', target: 151, check: dexGoal(1, 151) },
-  { id: 'dexJohto', cat: 'collection', rarity: 'epic', target: 100, check: dexGoal(152, 251) },
-  { id: 'dexHoenn', cat: 'collection', rarity: 'epic', target: 135, check: dexGoal(252, 386) },
-  { id: 'dexSinnoh', cat: 'collection', rarity: 'epic', target: 107, check: dexGoal(387, 493) },
-  { id: 'dexUnova', cat: 'collection', rarity: 'epic', target: 156, check: dexGoal(494, 649) },
-  { id: 'dexNational', cat: 'collection', rarity: 'legendary', target: SUPPORTED_MAX, check: speciesGoal(SUPPORTED_MAX) },
+  { id: 'dexKanto', cat: 'collection', rarity: 'epic', target: catchableIn(1, 151), check: dexGoal(1, 151) },
+  { id: 'dexJohto', cat: 'collection', rarity: 'epic', target: catchableIn(152, 251), check: dexGoal(152, 251) },
+  { id: 'dexHoenn', cat: 'collection', rarity: 'epic', target: catchableIn(252, 386), check: dexGoal(252, 386) },
+  { id: 'dexSinnoh', cat: 'collection', rarity: 'epic', target: catchableIn(387, 493), check: dexGoal(387, 493) },
+  { id: 'dexUnova', cat: 'collection', rarity: 'epic', target: catchableIn(494, 649), check: dexGoal(494, 649) },
+  { id: 'dexNational', cat: 'collection', rarity: 'legendary', target: catchableIn(1, SUPPORTED_MAX), check: dexGoal(1, SUPPORTED_MAX) },
   { id: 'seen100', cat: 'collection', rarity: 'uncommon', target: 100, check: (c) => {
     const s = Object.values(c.dex).filter((e) => e.seenAt !== null || e.caught > 0);
     return count(s.length, s.map((e) => e.seenAt || e.first?.at || null), 100);
@@ -332,7 +347,12 @@ export const ACHIEVEMENTS = [
     for (const [id, at] of Object.entries(c.caughtAt)) for (const ty of c.typesOf(Number(id)) || []) if (CLASSIC_TYPES.includes(ty) && (!(ty in first) || (at && at < first[ty]))) first[ty] = at;
     return count(Object.keys(first).length, Object.values(first), CLASSIC_TYPES.length);
   } },
-  { id: 'zubat', cat: 'collection', rarity: 'uncommon', target: 5, check: (c) => { const z = c.catches.filter((x) => x.first === 41); return count(z.length, z.map((x) => x.at), 5); } },
+  // one Zubat per run at most under the dupes clause – so it counts runs, not catches
+  { id: 'zubat', cat: 'collection', rarity: 'uncommon', target: 5, check: (c) => {
+    const runs = {};
+    for (const x of c.catches) if (x.first === 41 && (!(x.run.id in runs) || (x.at && x.at < runs[x.run.id]))) runs[x.run.id] = x.at ?? null;
+    return count(Object.keys(runs).length, Object.values(runs), 5);
+  } },
 
   // ---- skill ---------------------------------------------------------------
   { id: 'cleanBadge', cat: 'skill', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap(cleanBadges), () => true)) },
@@ -347,7 +367,11 @@ export const ACHIEVEMENTS = [
   { id: 'oneHp', cat: 'skill', rarity: 'rare', check: (c) => { const h = c.momentsOf('hp1'); return count(h.length, h.map((m) => m.at), 1); } },
   { id: 'veteran', cat: 'skill', rarity: 'rare', check: (c) => flag(firstBy(c.catches, (x) => x.metLevel !== null && ((x.dead ? x.deathLevel ?? x.level : x.level) || 0) - x.metLevel >= 40) && { at: null }) },
   { id: 'starterSurvives', cat: 'skill', rarity: 'rare', check: (c) => flag(firstBy(c.digests.filter((d) => won(d) && d.catches.some((x) => x.area === 'starter' && !x.dead)).map((d) => d.status), () => true)) },
-  { id: 'monotype', cat: 'skill', rarity: 'epic', check: (c) => { const m = c.momentsOf('monotype'); return count(m.length, m.map((x) => x.at), 1); } },
+  { id: 'monotype', cat: 'skill', rarity: 'epic', check: (c) => {
+    // a type clause forbids two of a type in the team – a monotype team there would break the rules
+    const m = c.momentsOf('monotype').filter((x) => (c.digests.find((d) => d.id === x.runId)?.rules.typeClause ?? 'off') === 'off');
+    return count(m.length, m.map((x) => x.at), 1);
+  } },
   { id: 'byTheBook', cat: 'skill', rarity: 'epic', check: (c) => flag(firstBy(c.digests.filter((d) => won(d) && d.mode === 'nuzlocke' && d.rules.levelCaps && d.capBreaks === 0).map((d) => d.status), () => true)) },
   { id: 'fullTeamWin', cat: 'skill', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.filter((d) => won(d) && (d.lives[d.me]?.party || []).length >= 6).map((d) => d.status), () => true)) },
   { id: 'phoenix', cat: 'skill', rarity: 'epic', check: (c) => flag(firstBy(c.digests.filter((d) => won(d) && d.deaths.length >= 10).map((d) => d.status), () => true)) },
@@ -406,10 +430,8 @@ export const ACHIEVEMENTS = [
     for (const x of myDeaths(d)) (seg[x.segment ?? '?'] ||= []).push(x.diedAt);
     return Object.entries(seg).filter(([k, v]) => k !== '?' && v.length >= 6).map(([, v]) => ({ at: nth(v, 6) }));
   }), () => true)) },
-  { id: 'bidoof', cat: 'fun', rarity: 'legendary', check: (c) => {
-    const live = c.digests.filter((d) => (d.lives[d.me]?.party || []).length >= 6 && d.lives[d.me].party.every((m) => BIDOOF.has(m.species))).map(() => ({ at: null }));
-    return flag(firstBy([...c.momentsOf('bidoof'), ...live], () => true));
-  } },
+  // one Bidoof in the winning team – six of them would clash with the dupes clause
+  { id: 'bidoof', cat: 'fun', rarity: 'rare', check: (c) => flag(firstBy(c.digests.filter((d) => won(d) && (d.lives[d.me]?.party || []).some((m) => BIDOOF.has(m.species))).map((d) => d.status), () => true)) },
   { id: 'speedrun', cat: 'fun', rarity: 'rare', hidden: true, check: (c) => flag(firstBy(c.digests.filter((d) => failed(d) && d.createdAt && d.status.at && d.status.at - d.createdAt < 30 * 60000).map((d) => d.status), () => true)) },
   { id: 'cemetery', cat: 'fun', rarity: 'uncommon', target: 50, check: (c) => { const x = c.catches.filter((m) => m.dead); return count(x.length, x.map((m) => m.diedAt), 50); } },
   { id: 'lavender', cat: 'fun', rarity: 'epic', target: 100, check: (c) => { const x = c.catches.filter((m) => m.dead); return count(x.length, x.map((m) => m.diedAt), 100); } },
@@ -422,9 +444,30 @@ export const ACHIEVEMENTS = [
     return count(n.length, n.map((x) => x.at), 25);
   } },
   { id: 'candyCrush', cat: 'fun', rarity: 'uncommon', target: 50, check: (c) => ({ n: c.digests.reduce((a, d) => a + d.cheats, 0), at: null }) },
+  // ---- classic Pokémon memes (all from data the run doc records) ----
+  { id: 'miltank', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(killedBy(c, (k) => k.kind === 'trainer' && k.species === 241), () => true)) },
+  { id: 'garchomp', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(killedBy(c, (k) => k.kind === 'trainer' && k.species === 445), () => true)) },
+  { id: 'kaboom', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(killedBy(c, (k) => k.kind === 'wild' && EXPLODERS.has(k.species)), () => true)) },
+  { id: 'teleport', cat: 'fun', rarity: 'common', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.missed.filter((x) => x.species === 63)), () => true)) },
+  { id: 'roamer', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.missed.filter((x) => ROAMERS.has(x.species))), () => true)) },
+  { id: 'shinyDown', cat: 'fun', rarity: 'rare', hidden: true, check: (c) => flag(firstBy(c.catches.filter((x) => x.dead && x.shiny).map((x) => ({ at: x.diedAt })), () => true)) },
+  { id: 'gyarados', cat: 'collection', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.evolutions.filter((e) => e.from === 129 && e.to === 130)), () => true)) },
+  { id: 'feebas', cat: 'collection', rarity: 'rare', check: (c) => flag(firstBy(c.catches.filter((x) => x.first === 349), () => true)) },
+  { id: 'helix', cat: 'collection', rarity: 'uncommon', hidden: true, check: (c) => { const h = [138, 139].filter((id) => id in c.caughtAt); return count(h.length, h.map((id) => c.caughtAt[id]), 1); } },
+  { id: 'birdJesus', cat: 'fun', rarity: 'rare', check: (c) => flag(firstBy(c.digests.filter((d) => won(d) && (d.lives[d.me]?.party || []).some((m) => m.species === 18)).map((d) => d.status), () => true)) },
+  { id: 'tooMuchWater', cat: 'fun', rarity: 'rare', target: 6, check: (c) => {
+    if (!c.typesOf) return { n: 0 };
+    const runs = c.digests.filter((d) => HOENN.test(d.gameId || '')).map((d) => d.catches.filter((x) => (c.typesOf(x.species) || []).includes('water')));
+    const best = runs.reduce((a, r) => (r.length > a.length ? r : a), []);
+    return count(best.length, best.map((x) => x.at), 6);
+  } },
   { id: 'nightOwl', cat: 'fun', rarity: 'uncommon', hidden: true, check: (c) => flag(firstBy(c.catches, (x) => x.at && [3, 4].includes(new Date(x.at).getHours()))) },
 ];
 
+/** My Pokémon whose killer matches → [{ at }]. */
+function killedBy(c, test) {
+  return c.catches.filter((x) => x.dead && x.killer && test(x.killer)).map((x) => ({ at: x.diedAt }));
+}
 function twins(c) {
   return c.digests.filter((d) => d.mode === 'soullink')
     .flatMap((d) => d.catches.filter((x) => x.area && d.partners.some((p) => p.area === x.area && p.species && (p.species === x.first || p.species === x.species))).map((x) => x.at ?? 0));
@@ -485,8 +528,10 @@ export function medals(states, totals) {
     out.push({ id: `cat-${cat}`, kind: 'category', cat, tier, value, total: list.length, steps });
   }
   for (const g of totals.perGen.filter((x) => x.supported)) {
-    const steps = [0.1, 0.35, 0.7, 0.9, 1].map((f) => Math.ceil(g.total * f));
-    out.push({ id: `dex-${g.gen}`, kind: 'dex', gen: g.gen, region: g.region, tier: tierOf(g.caught, steps), value: g.caught, total: g.total, steps });
+    const goal = g.goal ?? g.total;
+    const value = g.caughtGoal ?? g.caught;
+    const steps = [0.1, 0.35, 0.7, 0.9, 1].map((f) => Math.ceil(goal * f));
+    out.push({ id: `dex-${g.gen}`, kind: 'dex', gen: g.gen, region: g.region, tier: tierOf(value, steps), value, total: goal, steps });
   }
   const got = states.filter((s) => s.ok).length;
   const steps = [0.2, 0.4, 0.6, 0.8, 1].map((f) => Math.ceil(states.length * f));
@@ -501,7 +546,7 @@ export const POINTS = { common: 10, uncommon: 25, rare: 50, epic: 100, legendary
 // The stored state (server/lib/trophies.mjs keeps it in the data folder)
 
 export const SCHEMA = 1;
-const MOMENT_TYPES = new Set(['hp1', 'badge', 'monotype', 'bidoof']);
+const MOMENT_TYPES = new Set(['hp1', 'badge', 'monotype']);
 export const MAX_MOMENTS = 400;
 
 /** One live moment from the page, cleaned – or null. */

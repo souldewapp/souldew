@@ -80,7 +80,7 @@ test('watchRun: live moments of my player – 1 HP, a badge won underleveled, Bi
   const body = sent.at(-1).body;
   assert.equal(sent.at(-1).url, '/api/trophies/sync');
   const types = body.moments.map((m) => m.type).sort();
-  assert.deepEqual(types, ['badge', 'bidoof', 'hp1', 'monotype']);
+  assert.deepEqual(types, ['badge', 'hp1', 'monotype']);
   const badge = body.moments.find((m) => m.type === 'badge');
   assert.deepEqual([badge.n, badge.top, badge.cap, badge.runId], [1, 7, 9, 'abcd1234']);
   assert.deepEqual(body.seen, [163]);
