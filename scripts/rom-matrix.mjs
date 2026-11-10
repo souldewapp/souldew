@@ -13,7 +13,7 @@
 //   <rom-dir>     ROMs (.gb .gbc .gba .nds, also inside .zip) and patches (.ips .bps .ups .xdelta/.vcdiff), any
 //                 subfolders. A patch is paired with its base ROM by the checksum in the patch (BPS/UPS/xdelta) or,
 //                 for IPS, by the catalog's hack name in the file name. .rar/.7z archives: unpack them first.
-//   --live        also play every game that has a plan (GB ~20 s, GBA ~1 min, DS 2–6 min per game)
+//   --live        also play every game that has a plan (GB ~20–60 s, GBA ~2 min, DS 10–25 min per game)
 //   --randomize   also randomize one game per generation (Classic preset, fixed seed) and check the result
 //                 (needs Java: tools/jre from `npm run jre`, JAVA_HOME or --tools <folder with jre/, upr/, upr-bridge/>)
 //   --only <text> only ROMs whose file name contains the text (case-insensitive)
@@ -247,7 +247,7 @@ async function runLive(list) {
     const resultFile = join(out, `live-${key}.json`);
     rmSync(resultFile, { force: true });
     const job = {
-      dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), timeoutMs: 15 * 60000,
+      dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), timeoutMs: 60 * 60000,
       targets: [{ key, file: r.file, system: r.system, core: plan.core || '', plan: { ...plan, header: r.header } }],
     };
     writeFileSync(join(out, 'job.json'), JSON.stringify(job));

@@ -5,7 +5,7 @@
 "white_us"
 ],
 "core": "desmume",
-"note": "Black/White (US/EU): intro \u2192 gift box in the bedroom (Tepig) \u2192 the two rival battles in the room \u2192 downstairs \u2192 Nuvema Town. White untested (no ROM).",
+"note": "Black/White (US/EU): gift box (Tepig) \u2192 both rival battles in the room \u2192 Nuvema Town \u2192 Juniper's lab \u2192 Route 1 \u2192 a real wild catch (Pok\u00e9 Balls given into the bag). White untested (no ROM).",
 "pos": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]",
 "steps": [
 {
@@ -488,6 +488,686 @@
 {
 "do": "check",
 "name": "e1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 60
+},
+{
+"do": "go",
+"order": "xy",
+"required": false,
+"patience": 3,
+"x": 778,
+"y": 741
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 4,
+"gap": 10
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 744
+},
+{
+"do": "go",
+"order": "xy",
+"required": false,
+"patience": 4,
+"x": 774,
+"y": 759
+},
+{
+"do": "go",
+"order": "yx",
+"required": false,
+"patience": 3,
+"x": 776,
+"y": 759
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 2,
+"y": 745,
+"map": 389,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "log",
+"name": "pos:bianca",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 20,
+"map": 392,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 4,
+"x": 774,
+"y": 758,
+"map": 389,
+"leave": true
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"x": 774,
+"y": 744,
+"map": 389,
+"leave": true
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 4,
+"x": 777,
+"y": 744,
+"map": 389,
+"leave": true
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"x": 777,
+"y": 741,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 100
+},
+{
+"do": "go",
+"order": "xy",
+"required": false,
+"patience": 2,
+"x": 778,
+"y": 742
+},
+{
+"do": "go",
+"order": "yx",
+"required": false,
+"patience": 2,
+"x": 778,
+"y": 741
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 4,
+"gap": 10
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 4800
+},
+{
+"do": "shot",
+"name": "lab"
+},
+{
+"do": "check",
+"name": "lab"
+},
+{
+"do": "log",
+"name": "pos:lab",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 20,
+"map": 396,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"order": "yx",
+"required": false,
+"patience": 3,
+"x": 780,
+"y": 742,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 3,
+"x": 784,
+"y": 742,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 3,
+"x": 786,
+"y": 742,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"x": 786,
+"y": 736,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"x": 786,
+"y": 725,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2800
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "shot",
+"name": "route1"
+},
+{
+"do": "check",
+"name": "route1"
+},
+{
+"do": "log",
+"name": "pos:route1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000
+},
+{
+"do": "give",
+"item": "ball",
+"count": 10
+},
+{
+"do": "walk",
+"dir": "UP",
+"steps": 3,
+"hold": 16,
+"gap": 2
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"UP"
+],
+[
+"DOWN"
+],
+[
+"DOWN"
+]
+],
+"max": 8000,
+"hold": 16,
+"every": 4,
+"until": {
+"expr": "team()?.battle?.kind==='wild'"
+},
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "shot",
+"name": "wild"
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "log",
+"name": "pos:wild",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 4,
+"gap": 60
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 4,
+"gap": 60
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 900
+},
+{
+"do": "shot",
+"name": "wild2"
+},
+{
+"do": "check",
+"name": "wild2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"DOWN"
+],
+[
+"LEFT"
+],
+[
+"A"
+],
+[
+"RIGHT"
+],
+[
+"A"
+],
+[
+"A"
+],
+[
+"A"
+]
+],
+"max": 15000,
+"every": 60,
+"until": "party>=2"
+},
+{
+"do": "shot",
+"name": "caught0"
+},
+{
+"do": "check",
+"name": "caught0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "caught"
+},
+{
+"do": "check",
+"name": "caught"
+},
+{
+"do": "log",
+"name": "pos:caught",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
 }
 ],
 "expect": {
@@ -513,20 +1193,19 @@
 ]
 }
 },
+"free": {
+"battle": null
+},
 "o1": {
 "place": "Nuvema Town"
 },
-"o2": {
-"party": {
-"level": [
-5,
-6,
-7
-]
-}
+"route1": {
+"place": "Route 1"
 },
-"free": {
-"battle": null
+"caught": {
+"catch": {
+"area": "Route 1"
+}
 }
 }
 }

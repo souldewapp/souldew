@@ -274,7 +274,14 @@ function helper() {
         await ensureRam();
         ctx.state.lastScan3 = 0; // (the app reads every 0.7 s and searches every 3 s; a check reads now)
         const tm = team();
-        log.push({ do: 'check', name: s.name, frame: e.frames(), place: place(), team: tm, run: runNote(tm) });
+        // plan.probe: an expression recorded at every check (an address being checked, e.g. a battle flag)
+        let probe;
+        try {
+          probe = plan.probe ? new Function('read', 'place', 'team', 'ctx', `return (${plan.probe});`)(e.read, place, team, ctx) : undefined;
+        } catch (err) {
+          probe = String(err?.message || err);
+        }
+        log.push({ do: 'check', name: s.name, frame: e.frames(), place: place(), team: tm, run: runNote(tm), ...(probe !== undefined ? { probe } : {}) });
         continue;
       } else if (s.do === 'give') {
         // items into the bag (shared/live/cheats.mjs addItem) – Poké Balls for a catch early in the game
