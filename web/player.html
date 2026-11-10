@@ -924,17 +924,26 @@
   }
   // A mixer that stopped processing (its context runs, its block counter doesn't move) is as good as broken. Asked every
   // few seconds; the answer is kept for "Save diagnostics" (audio.info.probe).
-  const health = { at: 0, quanta: -1, stuck: 0 };
+  // Only a mixer that falls behind its own context counts: the context's clock moved on (it renders) while the mixer's
+  // block counter didn't, in a fresh answer. A whole audio system that stands still (a machine under full load – seen in a
+  // Windows VM with the context's clock frozen too) is no fault of the mixer, and a late answer is no frozen counter.
+  const health = { at: 0, quanta: -1, ctxTime: -1, probeT: -1, stuck: 0 };
   function checkMixer() {
     const now = performance.now();
     if (!audio.chain || audio.chain.broken || now - health.at < 3000) return;
     const p = audio.info.probe;
-    const running = audio.al?.audioCtx?.state === 'running';
-    if (health.at && running && p && p.mixer === audio.chain.id) {
+    const ac = audio.al?.audioCtx;
+    const fresh = p && p.mixer === audio.chain.id && p.t !== health.probeT;
+    const rendered = ac?.state === 'running' && health.ctxTime >= 0 && ac.currentTime - health.ctxTime > 1;
+    if (health.at && fresh && rendered && health.quanta >= 0) {
       health.stuck = p.quanta === health.quanta ? health.stuck + 1 : 0;
       if (health.stuck >= 2) mixerDown(audio.chain, 'stalled');
-    } else health.stuck = 0;
-    health.quanta = p?.mixer === audio.chain.id ? p.quanta : -1;
+    } else if (fresh) health.stuck = 0;
+    if (fresh) {
+      health.quanta = p.quanta;
+      health.probeT = p.t;
+    } else if (p?.mixer !== audio.chain.id) health.quanta = -1;
+    health.ctxTime = ac ? ac.currentTime : -1;
     health.at = now;
     tellAudio({ type: 'probe' });
   }
