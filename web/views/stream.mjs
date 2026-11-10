@@ -2,13 +2,14 @@
 // (web/overlay.html): pick the options, watch the live preview, then drag the tile into OBS (the source gets the
 // right size from layer-width/-height) or copy its URL. "Test alert" reaches every open overlay, OBS included.
 import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
-import { useApp, copy, Led } from '../lib/ui.mjs';
+import { useApp, copy, Led, openExternal } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
 import { players as getPlayers, slotsOf, runMode } from '../lib/run.mjs';
 import { overlayUrl } from '/shared/overlay.mjs';
 import { useStreamer, setStreamer } from '../lib/streamer.mjs';
+import { LINKS } from '../lib/links.mjs';
 
 const ls = {
   get(k, d) {
@@ -38,11 +39,12 @@ const SIZES = {
   where: (n, v) => (v ? [400, 30 + n * 140] : [40 + n * 340, 180]),
   alerts: () => [960, 440],
   stats: (n, v) => (v ? [340, 340] : [880 + n * 130, 90]),
+  popup: () => [1920, 1080], // a full-screen layer: the pop-up sits in one of its corners
 };
 
 // Every overlay holds one open connection, and a browser (OBS's too, shared by all its sources) keeps at most six
 // per server address – so half of the widgets use 127.0.0.1 instead of localhost (the same app, twice the room).
-const ALT_HOST = ['card', 'where', 'stats'];
+const ALT_HOST = ['card', 'where', 'stats', 'popup'];
 const obsOrigin = (id) => (ALT_HOST.includes(id) && location.hostname === 'localhost' ? `${location.protocol}//127.0.0.1:${location.port}` : location.origin);
 
 const widgets = () => [
@@ -52,7 +54,34 @@ const widgets = () => [
   { id: 'where', icon: 'map', title: t('stream.wWhere', 'You are here'), text: t('stream.wWhereText', 'The route or town each player is in right now, and the battle they are fighting.'), layout: true, players: 'many' },
   { id: 'alerts', icon: 'bell', title: t('stream.wAlerts', 'Alerts'), text: t('stream.wAlertsText', 'Deaths, catches, badges, evolutions and every 10th level pop up for a few seconds – with sound if you like.'), alerts: true },
   { id: 'stats', icon: 'clock', title: t('stream.wStats', 'Stats bar'), text: t('stream.wStatsText', 'Run name, play time, badges and the counts in one slim line – for the bottom of the screen.'), layout: true, players: 'many' },
+  { id: 'popup', icon: 'coffee', title: t('stream.wPopup', 'Coffee pop-up'), text: t('stream.wPopupText', 'Meet a legendary while tracking runs, and now and then a cheeky toast about that very Pokémon pops up in a corner – with the “Buy me a coffee” link and a QR code.'), popup: true },
 ];
+
+/** The stream settings the server keeps (GET/POST /api/stream): API address and token, the coffee pop-up. */
+function useStreamSettings() {
+  const [st, setSt] = useState(null);
+  useEffect(() => {
+    let stop = false;
+    const tick = () => api.get('/api/stream').then((r) => !stop && setSt(r)).catch(() => {});
+    tick();
+    const id = setInterval(tick, 5000);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, []);
+  const save = async (patch) => {
+    setSt((cur) => (cur ? { ...cur, ...(patch.token === undefined ? patch : {}) } : cur));
+    try {
+      setSt(await api.post('/api/stream', patch));
+    } catch {
+      // the next poll shows the real state
+    }
+  };
+  return [st, save];
+}
+
+const CORNERS = () => [['tl', t('stream.cTl', 'Top left'), '◤'], ['tr', t('stream.cTr', 'Top right'), '◥'], ['bl', t('stream.cBl', 'Bottom left'), '◣'], ['br', t('stream.cBr', 'Bottom right'), '◢']];
 
 const TOGGLES = () => ({
   nick: t('stream.optNick', 'Nicknames'),
@@ -69,7 +98,7 @@ function Seg({ value, options, onChange, label }) {
  * How tall each widget's preview stage is – fixed per widget, whatever its layout, players or data: the card
  * never jumps when an option changes, and the overlay is scaled to fit inside it (both ways), centred.
  */
-const STAGE = { team: 300, card: 240, counters: 170, where: 170, alerts: 240, stats: 170 };
+const STAGE = { team: 300, card: 240, counters: 170, where: 170, alerts: 240, stats: 170, popup: 240 };
 
 /** The overlay itself in a scaled-down frame – the same page OBS shows, live. */
 function Preview({ src, size, bg, frameRef, stage }) {
@@ -92,7 +121,7 @@ function Preview({ src, size, bg, frameRef, stage }) {
   </div>`;
 }
 
-function WidgetCard({ w, run, slots, names, global, live, onTest }) {
+function WidgetCard({ w, run, slots, names, global, live, onTest, stream, saveStream, onCoffee }) {
   const key = `sl-stream-${w.id}`;
   const [o, setO] = useState(() => ls.get(key, {}));
   const set = (patch) => {
@@ -116,7 +145,8 @@ function WidgetCard({ w, run, slots, names, global, live, onTest }) {
   };
   const scaled = [size[0] * global.scale, size[1] * global.scale];
   const url = overlayUrl(obsOrigin(w.id), run.id, opts, scaled, `souldew · ${w.title}`);
-  const preview = overlayUrl(location.origin, run.id, { ...opts, preview: 1, scale: null });
+  const corner = stream?.corner || 'bl';
+  const preview = overlayUrl(location.origin, run.id, { ...opts, preview: 1, scale: null, corner: w.popup ? corner : null });
   const toggles = TOGGLES();
   const onDrag = (e) => {
     // OBS takes a dropped link as a new browser source; layer-width/-height in the URL give it its size
@@ -154,6 +184,16 @@ function WidgetCard({ w, run, slots, names, global, live, onTest }) {
           options=${[['top', t('stream.top', 'Top')], ['bottom', t('stream.bottom', 'Bottom')]]} />
         <label class="check ov-tg"><input type="checkbox" checked=${!!o.sound} onChange=${(e) => set({ sound: e.target.checked })} /><span>${t('stream.sound', 'Sound')}</span></label>`}
     </div>
+    ${w.popup && html`<div class="ov-opts">
+        <label class="check ov-tg"><input type="checkbox" checked=${stream ? stream.coffee : true} disabled=${!stream} onChange=${(e) => saveStream({ coffee: e.target.checked })} />
+          <span>${t('stream.popupOn', 'Pop up on legendary encounters')}</span></label>
+        <${Seg} label=${t('stream.corner', 'Corner')} value=${corner} onChange=${(x) => saveStream({ corner: x })}
+          options=${CORNERS().map(([v, l, g]) => [v, html`<span class="cf-corner" aria-hidden="true">${g}</span><span class="sr-only">${l}</span>`])} />
+      </div>
+      <div class="ov-tests">
+        <button type="button" class="btn small" onClick=${() => onCoffee(frame.current)}><${Icon} name="coffee" size=${14} />${t('stream.popupPreview', 'Preview pop-up')}</button>
+        <span class="tiny faint grow">${t('stream.popupRules', 'A 1-in-4 chance per legendary, at most once every 20 minutes and once per species per run. Without this layer in OBS, the Alerts overlay shows it.')}</span>
+      </div>`}
     ${w.alerts && html`<div class="ov-tests"><span class="small muted">${t('stream.test', 'Test alert:')}</span>
       ${[['death', t('stream.tDeath', 'Death')], ['catch', t('stream.tCatch', 'Catch')], ['badge', t('stream.tBadge', 'Badge')], ['level', t('stream.tLevel', 'Level')], ['evolve', t('stream.tEvolve', 'Evolution')], ['run', t('stream.tRun', 'Run over')]]
         .map(([type, l]) => html`<button type="button" class="btn small ghost" onClick=${() => onTest(type, frame.current)}>${l}</button>`)}</div>`}
@@ -163,7 +203,8 @@ function WidgetCard({ w, run, slots, names, global, live, onTest }) {
       <span class="code sm-ok ellipsis grow" title=${url}>${url}</span>
       <button type="button" class="btn small" onClick=${() => copy(url)}>${t('common.copy', 'Copy')}</button>
     </div>
-    <p class="tiny faint">${t('stream.size', 'Browser source size: {w} × {h}', { w: Math.round(scaled[0]), h: Math.round(scaled[1]) })}</p>
+    <p class="tiny faint">${w.popup ? t('stream.sizeFull', 'Browser source size: {w} × {h} – lay it over your whole scene, it stays transparent.', { w: Math.round(scaled[0]), h: Math.round(scaled[1]) })
+      : t('stream.size', 'Browser source size: {w} × {h}', { w: Math.round(scaled[0]), h: Math.round(scaled[1]) })}</p>
   </section>`;
 }
 
@@ -232,6 +273,46 @@ function PokelinkCard({ run, slots, names }) {
   </section>`;
 }
 
+/**
+ * The open stream API (server/lib/streamapi.mjs, docs/STREAM_API.md): souldew's data and sprites for streamers who
+ * build their own layout – the address, a copy button, the docs and the optional token.
+ */
+function ApiCard({ run, stream, saveStream }) {
+  const base = stream?.base || `http://127.0.0.1:${location.port}/api/v1`;
+  const tok = stream?.token ? `?token=${stream.token}` : '';
+  const rows = [
+    [t('stream.apiState', 'Everything about the run'), `${base}/runs/current${tok}`],
+    [t('stream.apiEvents', 'Live events (SSE)'), `${base}/runs/current/events${tok}`],
+    [t('stream.apiSprite', 'A sprite'), `${base}/sprites/gen4/front/150.png`],
+  ];
+  return html`<section class="panel stack api-card">
+    <div class="ov-head">
+      <span class="ov-ic"><${Icon} name="signal" size=${18} /></span>
+      <div class="stack-s grow" style="gap:2px;min-width:0"><h3>${t('stream.api', 'Open API – build your own layout')}</h3>
+        <p class="small muted">${t('stream.apiText', 'Want your own design instead of souldew’s? Your browser sources can read the run as JSON – teams, links, graveyard, encounters, locations – get every catch, death and level-up live, and load the same sprites the app shows.')}</p></div>
+      ${stream?.clients > 0 && html`<span class="chip ok ov-live"><${Led} on color="green" />${t('stream.apiClients', 'one layout connected|{count} layouts connected', { count: stream.clients })}</span>`}
+    </div>
+    <div class="ov-url api-base">
+      <span class="api-k">${t('stream.apiBase', 'Address')}</span>
+      <span class="code sm-ok ellipsis grow" title=${base}>${base}</span>
+      <button type="button" class="btn small" onClick=${() => copy(base)}>${t('common.copy', 'Copy')}</button>
+      <button type="button" class="btn small ghost" onClick=${() => openExternal(stream?.docs || LINKS.streamApiDocs)}><${Icon} name="external" size=${14} />${t('stream.apiDocs', 'Docs & examples')}</button>
+    </div>
+    <div class="api-rows">${rows.map(([label, u]) => html`<div class="ov-url"><span class="api-k small muted">${label}</span>
+      <span class=${`code ellipsis grow ${tok ? '' : 'sm-ok'}`} title=${u}>${u.replace(base, '…')}</span>
+      <button type="button" class="btn small ghost" onClick=${() => copy(u)}>${t('common.copy', 'Copy')}</button></div>`)}</div>
+    <div class="row wrap api-token" style="gap:8px 14px">
+      <label class="check ov-tg"><input type="checkbox" checked=${!!stream?.token} disabled=${!stream} onChange=${(e) => saveStream({ token: e.target.checked ? 'new' : '' })} />
+        <span>${t('stream.apiToken', 'Require a token')}</span></label>
+      ${stream?.token ? html`<span class="code ellipsis api-tok" title=${t('stream.apiTokenHint', 'Hidden in streamer mode')}>${stream.token}</span>
+        <button type="button" class="btn small" onClick=${() => copy(stream.token)}>${t('common.copy', 'Copy')}</button>
+        <button type="button" class="btn small ghost" onClick=${() => saveStream({ token: 'new' })}>${t('stream.apiNewToken', 'New token')}</button>`
+        : html`<span class="small muted">${t('stream.apiOpen', 'Without a token, pages from this computer may read (OBS, files, localhost) – other websites can’t.')}</span>`}
+    </div>
+    <p class="tiny faint">${t('stream.apiSafe', 'Read-only and on this computer only (127.0.0.1): no ROMs, saves, file names, invite codes or spoilers. Run: {name}', { name: run.name })}</p>
+  </section>`;
+}
+
 export function StreamView() {
   const { status, manifest, doc, toast, navigate } = useApp();
   const streamer = useStreamer();
@@ -245,6 +326,7 @@ export function StreamView() {
     ls.set('sl-stream-global', next);
   };
   const [live, setLive] = useState({});
+  const [stream, saveStream] = useStreamSettings();
   useEffect(() => {
     if (!run?.id) return undefined;
     let stop = false;
@@ -266,6 +348,19 @@ export function StreamView() {
         text: r.overlays ? t('stream.testObs', 'It shows in the preview and in one overlay outside the app.|It shows in the preview and in {count} overlays outside the app.', { count: r.overlays }) : t('stream.testNoObs', 'It shows in the preview. No alert overlay is open in OBS yet – add the Alerts widget there.') });
     } catch {
       // the preview has it anyway
+    }
+  };
+
+  const onCoffee = async (frame) => {
+    try {
+      const r = await api.post(`/api/runs/${run.id}/coffee/preview`, {});
+      // the preview frame gets it at once; open overlays get it with their next snapshot
+      frame?.contentWindow?.postMessage({ souldewCoffee: { ...r.popup, name: r.name, layer: true } }, location.origin);
+      toast({ kind: 'ok', title: t('stream.popupSent', 'Pop-up preview sent'),
+        text: r.overlays ? t('stream.popupObs', 'It shows here and in one overlay outside the app.|It shows here and in {count} overlays outside the app.', { count: r.overlays })
+          : t('stream.popupNoObs', 'It shows in the preview. Add the Coffee pop-up layer (or the Alerts widget) to OBS to see it on stream.') });
+    } catch {
+      toast({ kind: 'warn', title: t('stream.popupFail', 'The preview didn’t start') });
     }
   };
 
@@ -327,8 +422,10 @@ export function StreamView() {
       </div>
     </section>
     <div class="ov-grid">
-      ${shown.map((w) => html`<${WidgetCard} key=${`${run.id}-${w.id}`} w=${w} run=${run} slots=${slots} names=${names} global=${global} live=${live[w.id] || 0} onTest=${onTest} />`)}
+      ${shown.map((w) => html`<${WidgetCard} key=${`${run.id}-${w.id}`} w=${w} run=${run} slots=${slots} names=${names} global=${global} live=${live[w.id] || 0} onTest=${onTest}
+        stream=${stream} saveStream=${saveStream} onCoffee=${onCoffee} />`)}
     </div>
     <${PokelinkCard} run=${run} slots=${slots} names=${names} />
+    <${ApiCard} run=${run} stream=${stream} saveStream=${saveStream} />
   </div>`;
 }
