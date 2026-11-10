@@ -30,6 +30,7 @@ import { createStreamHub, streamSettings } from './lib/streamapi.mjs';
 import { COFFEE_CORNERS } from '../shared/coffee.mjs';
 import { LINKS } from '../shared/links.mjs';
 import { randomBytes } from 'node:crypto';
+import { syncTrophies } from './lib/trophies.mjs';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -1073,6 +1074,14 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     }
     const script = m[1] === 'mgba' ? live.luaScriptPath() : null;
     return launchRom(m[1], romPath, { customPath: loadConfig().emulatorPaths?.[m[1]], script });
+  });
+
+  // ---- trophies: Pokédex, achievements, medals across every run (server/lib/trophies.mjs) ----
+  route('GET', /^\/api\/trophies$/, () => syncTrophies());
+  // the page hands in which slot it plays per run, species seen in live battles and live moments (1 HP, badges …)
+  route('POST', /^\/api\/trophies\/sync$/, async (req) => {
+    const body = await readBody(req);
+    return syncTrophies({ slots: body?.slots, seen: body?.seen, moments: body?.moments });
   });
 
   route('GET', /^\/api\/live$/, () => live.status());
