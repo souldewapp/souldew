@@ -224,6 +224,8 @@ for (const r of targets) {
 
 // ---------------------------------------------------------------- live
 
+const mark = (v) => (v === true ? '✅' : v === false ? '❌' : v === 'hack' ? '⚠️ not supported (shown as such)' : '–');
+
 async function runLive(list) {
   const jobs = list.map((r) => {
     const plan = planFor(r);
@@ -234,25 +236,32 @@ async function runLive(list) {
   const dataDir = join(out, 'data');
   mkdirSync(dataDir, { recursive: true });
   writeFileSync(join(dataDir, 'config.json'), JSON.stringify({ onboarded: true, lang: 'en', playerName: 'Matrix', libraryFolders: [...sources.map((p) => (statSync(p).isDirectory() ? p : dirname(p))), work] }));
-  const resultFile = join(out, 'live.json');
-  const job = {
-    dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), timeoutMs: 15 * 60000,
-    targets: jobs.map(({ r, plan }, i) => ({ key: `${String(i).padStart(2, '0')}-${norm(r.name).slice(0, 24)}`, file: r.file, system: r.system, core: plan.core || '', plan: { ...plan, header: r.header } })),
-  };
-  writeFileSync(join(out, 'job.json'), JSON.stringify(job));
   const electron = (await import('electron')).default;
   log(`live: ${jobs.length} game(s) in souldew's emulator …`);
-  await new Promise((done) => {
-    const p = spawn(electron, [join(root, 'scripts', 'rom-matrix', 'live.mjs'), join(out, 'job.json')], { stdio: ['ignore', 'pipe', 'pipe'] });
-    p.stdout.on('data', (b) => String(b).split('\n').filter((l) => l.startsWith('{')).forEach((l) => log('  ', l)));
-    p.stderr.on('data', () => {});
-    p.on('exit', done);
-  });
-  const res = existsSync(resultFile) ? JSON.parse(readFileSync(resultFile, 'utf8')) : [];
-  jobs.forEach(({ r, plan }, i) => {
-    const x = res.find((y) => y.key === job.targets[i].key);
-    r.liveResult = x ? judge(r, plan, x) : { error: 'no result (emulator crashed?)' };
-  });
+  const all = [];
+  // one Electron per game: a second emulator page in the same Electron process sometimes takes the process down
+  for (const [i, { r, plan }] of jobs.entries()) {
+    const key = `${String(i).padStart(2, '0')}-${norm(r.name).slice(0, 24)}`;
+    const resultFile = join(out, `live-${key}.json`);
+    rmSync(resultFile, { force: true });
+    const job = {
+      dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), timeoutMs: 15 * 60000,
+      targets: [{ key, file: r.file, system: r.system, core: plan.core || '', plan: { ...plan, header: r.header } }],
+    };
+    writeFileSync(join(out, 'job.json'), JSON.stringify(job));
+    log(`  ${r.name} …`);
+    await new Promise((done) => {
+      const p = spawn(electron, [join(root, 'scripts', 'rom-matrix', 'live.mjs'), join(out, 'job.json')], { stdio: ['ignore', 'pipe', 'pipe'] });
+      p.stdout.on('data', () => {});
+      p.stderr.on('data', () => {});
+      p.on('exit', done);
+    });
+    const x = existsSync(resultFile) ? JSON.parse(readFileSync(resultFile, 'utf8'))[0] : null;
+    if (x) all.push(x);
+    r.liveResult = x ? judge(r, plan, x) : { error: 'no result (the emulator process ended early)' };
+    log(`    party ${mark(r.liveResult.party)} place ${mark(r.liveResult.place)} battle ${mark(r.liveResult.battle)}${r.liveResult.error ? ` – ${r.liveResult.error}` : ''}`);
+  }
+  writeFileSync(join(out, 'live.json'), JSON.stringify(all, null, 1));
 }
 
 /** Checks the plan's expectations against what the live readers saw. */
@@ -293,7 +302,6 @@ if (flag('live')) await runLive(targets.filter((r) => r.system));
 
 // ---------------------------------------------------------------- report
 
-const mark = (v) => (v === true ? '✅' : v === false ? '❌' : v === 'hack' ? '⚠️ not supported (shown as such)' : '–');
 const rows = targets.map((r) => {
   const L = r.liveResult || {};
   return {

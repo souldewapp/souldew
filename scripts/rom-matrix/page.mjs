@@ -11,11 +11,14 @@ function helper() {
 
   async function setup(romSrc, header) {
     const j = (f) => fetch(`/shared/data/${f}`).then((r) => r.json());
-    const [parse, location, romloc] = await Promise.all([import('/shared/live/parse.mjs'), import('/shared/live/location.mjs'), fetch(`/api/rom/locations?src=${encodeURIComponent(romSrc)}`).then((r) => r.json())]);
+    const [parse, location, romwram, romloc] = await Promise.all([import('/shared/live/parse.mjs'), import('/shared/live/location.mjs'), import('/shared/live/romwram.mjs'), fetch(`/api/rom/locations?src=${encodeURIComponent(romSrc)}`).then((r) => r.json())]);
     const [charsetGen1, charsetGen2, charsetGen3, gen1Index, gen3Index, gen4, addresses, maps, loc2, loc3, api] = await Promise.all(
       ['charset_gen1.json', 'charset_gen2.json', 'charset_gen3.json', 'gen1_index_to_dex.json', 'gen3_index_to_dex.json', 'gen4.json', 'addresses.json', 'maps.json', 'locations_gen2_crystal.json', 'locations_gen3.json', 'pokeapi.json'].map(j));
     const T0 = new parse.LiveTables({ charsetGen1, charsetGen2, charsetGen3, gen1Index, gen3Index, gen4 });
-    const entry = parse.findEntry(addresses, header);
+    const found = parse.findEntry(addresses, header);
+    // a Game Boy hack with moved RAM variables: the shifted addresses, as the play view uses them
+    const wram = found?.gen <= 2 ? romloc?.wram || null : null;
+    const entry = wram ? { ...romwram.shiftEntry(found, wram), wram } : found;
     const species = romloc?.species || null;
     // what the play view does (web/views/play.mjs): a GBA ROM's own species table; an expanded engine isn't read
     const T = entry?.gen === 3 && species ? T0.withSpecies(species) : T0;
@@ -25,6 +28,7 @@ function helper() {
       vanilla: romloc?.vanilla ?? null,
       romloc: ctx.rom ? { gen: ctx.rom.gen, family: ctx.rom.family, lang: ctx.rom.lang, names: ctx.rom.names.length } : null,
       species: species ? { engine: species.engine, count: species.count, changed: species.changed } : null,
+      wram: wram ? wram.delta : null,
     };
   }
 
@@ -63,7 +67,8 @@ function helper() {
     const name = (s) => ctx.names[s] || `#${s}`;
     const fight = parse.readLiveBattle(entry, e.read, T, raw ? ctx.rawState : state, res.party);
     return {
-      party: res.party.map((m) => ({ species: m.species, name: name(m.species), nickname: m.nickname, level: m.level, hp: m.hp, maxHp: m.maxHp, status: m.status, metLocation: m.metLocation ?? null, metLevel: m.metLevel ?? null, isEgg: !!m.isEgg, key: m.key })),
+      // the HP the play view shows: in battle the battle copy's (withBattleHp), the party struct lags there
+      party: parse.withBattleHp(res.party, fight).map((m) => ({ species: m.species, name: name(m.species), nickname: m.nickname, level: m.level, hp: m.hp, maxHp: m.maxHp, status: m.status, metLocation: m.metLocation ?? null, metLevel: m.metLevel ?? null, isEgg: !!m.isEgg, key: m.key })),
       boxes: Array.isArray(res.boxes) ? res.boxes.length : null,
       badges: res.badges ?? null,
       battle: fight ? { kind: fight.kind, enemy: fight.enemy ? { species: fight.enemy.species, name: name(fight.enemy.species), level: fight.enemy.level, hp: fight.enemy.hp, maxHp: fight.enemy.maxHp } : null } : null,

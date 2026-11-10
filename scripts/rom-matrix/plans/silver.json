@@ -1,0 +1,1392 @@
+{
+"id": "silver",
+"entries": [
+"silver_us",
+"gold_us"
+],
+"note": "Gold/Silver (US/EU): bedroom \u2192 Elm's lab \u2192 Totodile \u2192 Route 29 wild battle",
+"pos": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]",
+"steps": [
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"START"
+]
+],
+"max": 9000,
+"until": {
+"expr": "read(0xDA00,1)[0]*256+read(0xDA01,1)[0]==6151"
+}
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "log",
+"name": "bed",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "check",
+"name": "bedroom"
+},
+{
+"do": "shot",
+"name": "bedroom"
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20,
+"leave": true,
+"map": 6151
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20,
+"leave": true,
+"map": 6151
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20,
+"leave": true,
+"map": 6151
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20,
+"leave": true,
+"map": 6151
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"leave": true,
+"map": 6151,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": -1,
+"order": "y",
+"leave": true,
+"map": 6151,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"leave": true,
+"map": 6151,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": -1,
+"order": "y",
+"leave": true,
+"map": 6151,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"leave": true,
+"map": 6151,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": -1,
+"order": "y",
+"leave": true,
+"map": 6151,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"leave": true,
+"map": 6151,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": -1,
+"order": "y",
+"leave": true,
+"map": 6151,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "go",
+"x": 8,
+"order": "x",
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 4,
+"order": "y",
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "log",
+"name": "mom2",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "shot",
+"name": "mom2"
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 8,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 7,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 8,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 7,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 8,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 7,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"leave": true,
+"map": 6150,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 9,
+"order": "y",
+"leave": true,
+"map": 6150,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"leave": true,
+"map": 6150,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 9,
+"order": "y",
+"leave": true,
+"map": 6150,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"leave": true,
+"map": 6150,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 9,
+"order": "y",
+"leave": true,
+"map": 6150,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"leave": true,
+"map": 6150,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 9,
+"order": "y",
+"leave": true,
+"map": 6150,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "log",
+"name": "nbt",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "check",
+"name": "nbt"
+},
+{
+"do": "shot",
+"name": "nbt"
+},
+{
+"do": "go",
+"x": 6,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 4,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 6,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 4,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 6,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 4,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 6,
+"order": "x",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 6,
+"order": "x",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 6,
+"order": "x",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 6,
+"order": "x",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 1,
+"order": "y",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "log",
+"name": "lab",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "check",
+"name": "lab"
+},
+{
+"do": "shot",
+"name": "lab"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "shot",
+"name": "lab2"
+},
+{
+"do": "log",
+"name": "lab2",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "lab3"
+},
+{
+"do": "log",
+"name": "lab3",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "go",
+"y": 4,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 4,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 4,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 7,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 4,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 3
+},
+{
+"do": "log",
+"name": "ball",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "shot",
+"name": "ball"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000,
+"until": "party"
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "shot",
+"name": "starter"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 800
+},
+{
+"do": "shot",
+"name": "naming"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 2500
+},
+{
+"do": "check",
+"name": "named"
+},
+{
+"do": "shot",
+"name": "named"
+},
+{
+"do": "log",
+"name": "after",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "go",
+"y": 10,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 10,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 10,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "log",
+"name": "exit",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "shot",
+"name": "exit"
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 4,
+"order": "x",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"leave": true,
+"map": 6149,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "log",
+"name": "nbt3",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "shot",
+"name": "nbt3"
+},
+{
+"do": "go",
+"y": 8,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 8,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 1,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 8,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 1,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 8,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "log",
+"name": "west",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "shot",
+"name": "west"
+},
+{
+"do": "go",
+"y": 8,
+"order": "y",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": -3,
+"order": "x",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 8,
+"order": "y",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": -3,
+"order": "x",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 8,
+"order": "y",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": -3,
+"order": "x",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 8,
+"order": "y",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 6,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": -3,
+"order": "x",
+"leave": true,
+"map": 6148,
+"required": false,
+"patience": 4,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "log",
+"name": "r29",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "check",
+"name": "r29"
+},
+{
+"do": "shot",
+"name": "r29"
+},
+{
+"do": "go",
+"x": 50,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "log",
+"name": "r29b",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "shot",
+"name": "r29b"
+},
+{
+"do": "go",
+"x": 47,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 11,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"x": 47,
+"order": "x",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "go",
+"y": 11,
+"order": "y",
+"required": false,
+"patience": 8,
+"hold": 2,
+"gap": 20
+},
+{
+"do": "log",
+"name": "grass",
+"expr": "[read(0xDA00,1)[0]*256+read(0xDA01,1)[0], read(0xDA03,1)[0], read(0xDA02,1)[0]]"
+},
+{
+"do": "shot",
+"name": "grass"
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+],
+[
+"RIGHT"
+]
+],
+"hold": 2,
+"every": 20,
+"max": 6000,
+"until": "battle"
+},
+{
+"do": "check",
+"name": "battle0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1000
+},
+{
+"do": "check",
+"name": "battle"
+},
+{
+"do": "shot",
+"name": "battle"
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 2,
+"gap": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 2,
+"gap": 420
+},
+{
+"do": "check",
+"name": "hit"
+},
+{
+"do": "shot",
+"name": "hit"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 8000,
+"until": "nobattle"
+},
+{
+"do": "check",
+"name": "after"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1200
+},
+{
+"do": "check",
+"name": "after2"
+},
+{
+"do": "shot",
+"name": "after"
+}
+],
+"expect": {
+"bedroom": {
+"place": "New Bark Town"
+},
+"nbt": {
+"place": "New Bark Town"
+},
+"lab": {
+"place": "New Bark Town"
+},
+"starter": {
+"party": {
+"species": [
+152,
+155,
+158
+],
+"level": 5
+}
+},
+"r29": {
+"place": "Route 29"
+},
+"battle": {
+"battle": {
+"kind": "wild",
+"level": [
+2,
+3,
+4
+]
+}
+},
+"after": {
+"party": {
+"level": [
+5,
+6
+]
+}
+}
+}
+}

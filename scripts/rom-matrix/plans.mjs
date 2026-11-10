@@ -9,6 +9,10 @@
 // · until {until, max} · tap {x, y} (DS bottom screen) · check {name} · shot {name} · log {name, expr}.
 // Conditions: 'party', 'party>=N', 'battle', 'nobattle', 'overworld' or { expr } (read, place, team, ctx).
 
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const gen1Pos = '[read(0xD35E,1)[0], read(0xD362,1)[0], read(0xD361,1)[0]]';
 
 const RED = {
@@ -56,6 +60,14 @@ const RED = {
 /** Plans by memory-table entry (addresses.json id), and by catalog hack id where a hack needs its own. */
 export const PLANS = { red_us: RED, blue_us: RED };
 export const HACK_PLANS = {};
+
+// the longer plans live as JSON next to this file (plans/*.json: { id, entries?, hacks?, core?, pos, steps, expect })
+const dir = join(dirname(fileURLToPath(import.meta.url)), 'plans');
+for (const f of existsSync(dir) ? readdirSync(dir).filter((x) => x.endsWith('.json')).sort() : []) {
+  const plan = JSON.parse(readFileSync(join(dir, f), 'utf8'));
+  for (const id of plan.entries || []) PLANS[id] = plan;
+  for (const id of plan.hacks || []) HACK_PLANS[id] = plan;
+}
 
 /** The plan for a matrix ROM (scripts/rom-matrix.mjs row): its hack's own, else its game's. */
 export function planFor(r) {
