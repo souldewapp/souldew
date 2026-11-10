@@ -1885,8 +1885,6 @@
   "nag.remind": "Ricordamelo dopo il mio prossimo wipe",
   "set.nag": "Mostra ogni tanto la finta finestra di licenza",
   "set.nagHint": "Una parodia delle vecchie finestre degli shareware. souldew resta gratis comunque.",
-  "lib.hacksHint": "Versioni create dai fan. Scarica la patch dalla pagina ufficiale, aggiungila qui e souldew la applica alla tua ROM.",
-  "lib.officialPage": "Pagina ufficiale",
   "ach.allGens": "Viaggiatore nel tempo",
   "ach.allGens.d": "Gioca una run in ogni generazione supportata da souldew (Gen 1–5).",
   "ach.allTypes": "Collezionista di tipi",
