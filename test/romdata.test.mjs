@@ -299,3 +299,41 @@ test('Rare Candies in a Game Boy hack with moved RAM go into its bag, not where 
   assert.deepEqual([...bus.read(0xd89d, 6)], [2, 0x12, 5, 0x20, 99, 0xff]);
   assert.equal(addRareCandies({ id: 'crystal_us', gen: 2 }, bus, {}, 99).error, 'notFound', 'the retail address holds no bag here');
 });
+
+test('Gen 5 battle without a flag: over once the battle\'s HP is copied back into the party, not 90 s later', async () => {
+  const { readLiveParty, readLiveBattle, findEntry, LiveTables } = await import('../shared/live/parse.mjs');
+  const { encryptPK4 } = await import('../shared/gen4save.mjs');
+  const T5 = new LiveTables({ gen4: json('gen4.json') });
+  const BLACK = findEntry(json('addresses.json'), { platform: 'nds', code: 'IRBO' });
+  const m = new Uint8Array(0x400000);
+  const w = (addr, bytes) => m.set(bytes, addr - 0x02000000);
+  const read = (addr, len) => (addr >= 0x02000000 && addr + len <= 0x02400000 ? m.slice(addr - 0x02000000, addr - 0x02000000 + len) : null);
+  const pk5 = ({ pid, species, tid = 4242, level = 5, hp = 21, maxHp = 21 }) => {
+    const d = new Uint8Array(220);
+    const dv = new DataView(d.buffer);
+    dv.setUint32(0, pid, true);
+    dv.setUint16(0x08, species, true);
+    dv.setUint16(0x0c, tid, true);
+    dv.setUint16(0x80, 4, true);
+    d[0x8c] = level;
+    dv.setUint16(0x8e, hp, true);
+    dv.setUint16(0x90, maxHp, true);
+    return encryptPK4(d);
+  };
+  const core = (mons) => [6, 0, 0, 0, mons.length, 0, 0, 0, ...mons.flatMap((x) => [...pk5(x)])];
+  const party = 0x022349b4 - 8;
+  const me = { pid: 0x4e912661, species: 498 };
+  w(party, core([me]));
+  w(0x02300000, core([{ pid: 0x0bad0001, species: 495, tid: 7 }])); // Bianca's Snivy
+  w(0x02310000, core([{ ...me, hp: 11 }])); // the battle's copy of the player's party: Tepig got hit
+  const state = {};
+  const poll = (n = 1) => {
+    let f = null;
+    for (let i = 0; i < n; i++) f = readLiveBattle(BLACK, read, T5, state, readLiveParty(BLACK, read, T5, state)?.party);
+    return f;
+  };
+  assert.equal(poll(6)?.enemy?.species, 495, 'in battle');
+  w(party, core([{ ...me, hp: 11 }])); // the fight is over: the game writes the battle's HP back
+  assert.equal(poll(2), null, 'over right away');
+  assert.equal(poll(6), null, 'and the leftover copies don\'t bring it back');
+});

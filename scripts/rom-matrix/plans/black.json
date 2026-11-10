@@ -1,0 +1,532 @@
+{
+"id": "black",
+"entries": [
+"black_us",
+"white_us"
+],
+"core": "desmume",
+"note": "Black/White (US/EU): intro \u2192 gift box in the bedroom (Tepig) \u2192 the two rival battles in the room \u2192 downstairs \u2192 Nuvema Town. White untested (no ROM).",
+"pos": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]",
+"steps": [
+{
+"do": "wait",
+"frames": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"A"
+],
+[
+"START"
+]
+],
+"max": 7000
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "walk",
+"dir": "DOWN",
+"steps": 1,
+"hold": 18,
+"gap": 6
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 6000,
+"until": "party"
+},
+{
+"do": "shot",
+"name": "starter"
+},
+{
+"do": "log",
+"name": "pos:starter",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 8000,
+"until": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "battle1"
+},
+{
+"do": "log",
+"name": "pos:battle1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "battle1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb0"
+},
+{
+"do": "log",
+"name": "pos:pb0",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "pb0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb1"
+},
+{
+"do": "log",
+"name": "pos:pb1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "pb1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb2"
+},
+{
+"do": "log",
+"name": "pos:pb2",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "pb2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb3"
+},
+{
+"do": "log",
+"name": "pos:pb3",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "pb3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb4"
+},
+{
+"do": "log",
+"name": "pos:pb4",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "pb4"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb5"
+},
+{
+"do": "log",
+"name": "pos:pb5",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "pb5"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb6"
+},
+{
+"do": "log",
+"name": "pos:pb6",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "pb6"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb7"
+},
+{
+"do": "log",
+"name": "pos:pb7",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "pb7"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "free"
+},
+{
+"do": "log",
+"name": "pos:free",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "free"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 6,
+"x": 8
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 6,
+"y": 3
+},
+{
+"do": "shot",
+"name": "g1"
+},
+{
+"do": "log",
+"name": "pos:g1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "g1"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 6,
+"x": 11,
+"map": 391,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "shot",
+"name": "d1"
+},
+{
+"do": "log",
+"name": "pos:d1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "d1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "d2"
+},
+{
+"do": "log",
+"name": "pos:d2",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "d2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "shot",
+"name": "d3"
+},
+{
+"do": "log",
+"name": "pos:d3",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "d3"
+},
+{
+"do": "go",
+"order": "xy",
+"required": false,
+"patience": 6,
+"x": 7,
+"y": 13,
+"map": 390,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "shot",
+"name": "o1"
+},
+{
+"do": "log",
+"name": "pos:o1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "o1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "shot",
+"name": "o2"
+},
+{
+"do": "log",
+"name": "pos:o2",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "o2"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 6,
+"y": 756
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 4,
+"x": 779
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 741
+},
+{
+"do": "shot",
+"name": "e1"
+},
+{
+"do": "log",
+"name": "pos:e1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]"
+},
+{
+"do": "check",
+"name": "e1"
+}
+],
+"expect": {
+"starter": {
+"party": {
+"species": [
+495,
+498,
+501
+],
+"level": 5
+},
+"place": "Nuvema Town"
+},
+"battle1": {
+"battle": {
+"kind": "trainer",
+"level": 5,
+"species": [
+495,
+498,
+501
+]
+}
+},
+"o1": {
+"place": "Nuvema Town"
+},
+"o2": {
+"party": {
+"level": [
+5,
+6,
+7
+]
+}
+},
+"free": {
+"battle": null
+}
+}
+}

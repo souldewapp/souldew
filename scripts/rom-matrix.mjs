@@ -288,6 +288,12 @@ function judge(r, plan, x) {
       verdict.place = verdict.place === false ? false : ok;
       verdict.notes.push(`${c.name}: place "${shown}"`);
     }
+    if (exp.battle === null) {
+      // the battle is over: the panel must not keep showing the opponent
+      const ok = !team?.battle;
+      if (!ok) verdict.battle = false;
+      verdict.notes.push(`${c.name}: ${team?.battle ? `still a battle (${team.battle.enemy?.name || '?'})` : 'no battle'}`);
+    }
     if (exp.battle) {
       const b = team?.battle;
       const ok = !!b?.enemy && b.kind === (exp.battle.kind ?? b.kind) && [].concat(exp.battle.level ?? b.enemy.level).includes(b.enemy.level) && (randomized || !exp.battle.species || [].concat(exp.battle.species).includes(b.enemy.species));
