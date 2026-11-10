@@ -121,15 +121,23 @@
 - GBA ROM hacks that put other Pokémon into the game (Light Platinum: 141 of them, e.g. Venipede where Weedle was, or
   Turtwig) now show the Pokémon the game shows – before, souldew showed the original game's Pokémon of that number, or
   nothing. A Pokémon only the hack has gets the hack's name.
-- Hacks on an expanded engine (Unbound, Radical Red, Run & Bun and other pokeemerald-expansion hacks) now say that
-  live tracking doesn't support them yet, instead of possibly showing wrong Pokémon. Catches can still be entered by
-  hand.
+- **Run & Bun** is tracked live: team, battle and the place sign, although it runs on an expanded engine with its own
+  Pokémon numbers and memory layout (souldew finds both from the game itself). Other hacks on an expanded engine
+  (Unbound, Radical Red …) are tried the same way and say that live tracking doesn't support them when their team
+  can't be found – never wrong Pokémon. Catches can still be entered by hand.
+- Hacks that add the **Fairy type** or retype Pokémon (Renegade Platinum, Blaze Black 2 Redux) now show the hack's own
+  types on the board, in the battle panel and for the type rule – with Fairy's matchups in the battle helper.
 - Blaze Black 2 Redux (and Gen 5 hacks like it) now gets the place sign.
 - Game Boy hacks that moved the game's memory (Crystal Legacy keeps it 11 bytes further on) are read again: team,
   battle, place sign and the Rare Candy cheat find their data from the hack's own code. Before, Crystal Legacy showed
   no team and a place stuck on New Bark Town.
-- Black/White and Black 2/White 2: the battle panel no longer keeps showing the opponent for up to two minutes after a
-  fight.
+- Black/White and Black 2/White 2: the battle panel shows the opponent's HP as it goes down (it stayed full) and your
+  Pokémon's HP during the fight, and no longer keeps showing the opponent for up to two minutes after a fight.
+- Platinum, Pearl, Black and Black 2: battles show up on the panel when they start and leave it when they end (a wild
+  battle in Platinum showed up late and stayed after running away), and a catching demo is no longer taken for your
+  own battle.
+- Red/Blue/Yellow and Gold/Silver don't store where a Pokémon was caught: a catch right after a wild battle is now
+  filed under the place the sign shows (before, every catch went to the inbox). Gifts and trades still go to the inbox.
 
 ## 2.2.0
 

@@ -33,6 +33,15 @@ export function setRomSpecies(sp) {
   ROM_SPECIES = sp?.unknown && Object.keys(sp.unknown).length ? sp.unknown : null;
 }
 
+// The running ROM's own Pokémon types where they differ from PokeAPI's (a ROM hack: Fairy in Renegade Platinum / Blaze
+// Black 2 Redux, retyped Pokémon, a Gen 3 hack's own ones – shared/live/romspecies.mjs romTypes). `fairy`: the hack
+// has the type.
+let ROM_TYPES = null;
+export function setRomTypes(t) {
+  ROM_TYPES = t?.types ? t : null;
+}
+export const romTypesNow = () => ROM_TYPES;
+
 export function speciesName(id, lang = nameLang()) {
   if (!id) return '';
   if (id > FAKEMON && ROM_SPECIES?.[id - FAKEMON]) return ROM_SPECIES[id - FAKEMON];
@@ -98,6 +107,14 @@ export class RunData {
       this.romData[slot] = d;
       this.byId[slot] = d ? new Map(d.pokemon.filter((p) => p.forme === 0).map((p) => [p.id, p])) : null;
     }
+    // a ROM hack without the randomizer: its own types come from the ROM (server/lib/romloc.mjs)
+    this.romTypes = null;
+    const out = manifest?.patch && Object.entries(manifest.outputs || {}).find(([s]) => !this.byId[s]);
+    if (out) {
+      const src = `/api/runs/${manifest.id}/file?inline=1&name=${encodeURIComponent(out[1].rom)}`;
+      const j = await fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      this.romTypes = j?.types || null;
+    }
     return this;
   }
 
@@ -109,7 +126,15 @@ export class RunData {
   types(id, slot) {
     const p = this.byId[slot]?.get(id) || Object.keys(this.byId).sort().map((s) => this.byId[s]?.get(id)).find(Boolean);
     if (p) return p.types.filter(Boolean).map((t) => t.toLowerCase());
+    // a ROM hack's own types (loaded with the run, or from the game running right now)
+    const own = (this.romTypes || ROM_TYPES)?.types?.[id];
+    if (own) return own;
     return baseTypes(id, this.gen);
+  }
+
+  /** Does the game have the Fairy type (a hack that added it)? */
+  get fairy() {
+    return !!(this.romTypes || ROM_TYPES)?.fairy;
   }
 
   familyRoot(id, slot) {

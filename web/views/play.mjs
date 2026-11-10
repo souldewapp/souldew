@@ -743,6 +743,7 @@ export function GameSession({ session, mode }) {
       // live loop
       let lastLocate = 0;
       let wramEntry = null;
+      let expandedMisses = 0; // reads without a team in an expanded engine (after ~30 s: "not supported")
       const tick = () => {
         if (stopped) return;
         const e = emu();
@@ -760,7 +761,8 @@ export function GameSession({ session, mode }) {
           if (entry.gen <= 3 && !romDataReady()) {
             // (GB and GBA games are read once the ROM's own data is known – a moment after the start: a hack may keep
             // its variables elsewhere or other Pokémon in the slots)
-          } else if (sp?.engine === 'expanded') {
+          } else if (sp?.engine === 'expanded' && (expandedMisses > 40 || !romSpeciesNow()?.map)) {
+            // an expanded engine whose team couldn't be found (or whose species table can't be read): say so
             setLiveState({ status: 'hack', entry: entry.name });
             setHere(null);
             setCheatGame(false); // (the bag isn't where the base game keeps it either)
@@ -768,12 +770,18 @@ export function GameSession({ session, mode }) {
             // a Game Boy hack built from the disassembly may have moved its RAM variables (Crystal Legacy: 11 bytes)
             const wram = entry.gen <= 2 ? romWramNow() : null;
             if (wram && wramEntry?.from !== entry) wramEntry = { from: entry, entry: { ...shiftEntry(entry, wram), wram } };
-            const ent = wram ? wramEntry.entry : entry;
+            // an expanded GBA engine (Run & Bun): the team is searched for, the place read through SaveBlock1
+            const expanded = sp?.engine === 'expanded';
+            if (expanded) setCheatGame(false);
+            const ent = wram ? wramEntry.entry : expanded ? { ...entry, scan3: true } : entry;
             if (liveRef.current?.entry !== ent) liveRef.current = { ...liveRef.current, entry: ent }; // (the cheats use it)
-            setHere((p) => nextHere(p, readHere(ent, e.read, state)));
+            const hereNow = readHere(ent, e.read, state);
+            setHere((p) => nextHere(p, hereNow));
             const TT = sp ? T.withSpecies(sp) : T; // a hack's own Pokémon in the slots (Light Platinum)
             const res = readLiveParty(ent, e.read, TT, state);
+            if (expanded && !res?.party?.length) expandedMisses++;
             if (res?.party) {
+              expandedMisses = 0;
               const fight = readLiveBattle(ent, e.read, TT, state, res.party);
               const party = withBattleHp(res.party, fight);
               setMine(party);
@@ -783,7 +791,7 @@ export function GameSession({ session, mode }) {
               liveRead.current = { boxes: Array.isArray(res.boxes), party: res.party.length };
               setLiveState({ status: 'live', entry: entry.name });
               // the battle goes along: a Pokémon that falls in it gets the opponent as its cause of death
-              if (isRun) snapRef.current?.({ source: 'live', party, boxes: res.boxes || null, game: entry.id, ...(res.badges !== undefined ? { badges: res.badges } : {}) }, { battle: fight });
+              if (isRun) snapRef.current?.({ source: 'live', party, boxes: res.boxes || null, game: entry.id, here: hereNow, ...(res.badges !== undefined ? { badges: res.badges } : {}) }, { battle: fight });
             }
           }
         }

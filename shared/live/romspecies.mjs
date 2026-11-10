@@ -5,8 +5,11 @@
 // internal index, which only the vanilla table (shared/data/gen3_index_to_dex.json) knew so far.
 //
 // Expanded engines (Complete FireRed Upgrade – Unbound, Radical Red –, pokeemerald-expansion and builds like Run & Bun)
-// carry 900–1500 species in a table of their own order. They are reported as `engine: 'expanded'`: their RAM layout
-// isn't the vanilla one either, so the live reader doesn't guess there (shared/live/parse.mjs, web/views/play.mjs).
+// carry 900–1500 species in a table of their own order. They are reported as `engine: 'expanded'` (mapped by name):
+// their RAM layout isn't the vanilla one either, so the live reader finds the party by searching for it and the map
+// through SaveBlock1 (shared/live/parse.mjs, location.mjs, web/views/play.mjs) – or says the hack isn't supported.
+
+import { listNdsFiles, ndsFile, parseNarc } from '../nds.mjs';
 
 /** Gen 3 text → string (null when a byte isn't a character of the table). */
 function decode(rom, o, n, table) {
@@ -107,11 +110,117 @@ export function romSpecies(rom, opts = {}) {
     // the retail games have 412 entries (411 species + "??????????"); an engine with hundreds more is an expanded one
     const engine = t.names.length > 450 || t.stride !== 11 ? 'expanded' : 'vanilla';
     const source = { names: t.offset, stride: t.stride };
-    if (engine === 'expanded') return { gen: 3, engine, count: t.names.length - 1, changed: null, source };
-    const m = gen3SpeciesMap(t.names, opts.gen3Index || [], opts.dexNames || []);
+    // an expanded engine numbers its species its own way (Run & Bun: National Dex order, forms after them) – mapped by
+    // name alone; a form ("Zigzagoon" from Galar) is its species
+    const m = gen3SpeciesMap(t.names, engine === 'expanded' ? [] : opts.gen3Index || [], opts.dexNames || []);
     const out = { gen: 3, engine, count: t.names.length - 1, changed: m.changed, source };
     if (m.changed) Object.assign(out, { map: m.map, unknown: m.unknown });
     return out;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------- types from the ROM
+
+// type ids of the games' own tables (pokeemerald include/constants/pokemon.h, pokeplatinum, pokeblack):
+// Gen 3/4 have '???' (9) in the middle – Fairy hacks of Gen 4 (Renegade Platinum) reuse it; Gen 5 has none and Fairy
+// hacks (Blaze Black 2 Redux) add it as 17.
+const TYPES34 = ['normal', 'fighting', 'flying', 'poison', 'ground', 'rock', 'bug', 'ghost', 'steel', '???', 'fire', 'water', 'grass', 'electric', 'psychic', 'ice', 'dragon', 'dark'];
+const TYPES5 = ['normal', 'fighting', 'flying', 'poison', 'ground', 'rock', 'bug', 'ghost', 'steel', 'fire', 'water', 'grass', 'electric', 'psychic', 'ice', 'dragon', 'dark', 'fairy'];
+
+/** Gen 3 base stats table (28 bytes per species, types at +6/+7): found by Bulbasaur's entry, which hacks keep. */
+function gen3BaseTypes(rom, count) {
+  const sig = [45, 49, 49, 45, 65, 65, 12, 3];
+  for (let o = 28; o + 28 * (count + 1) <= rom.length; o += 4) {
+    if (rom[o] !== 45 || !sig.every((v, i) => rom[o + i] === v)) continue;
+    const start = o - 28;
+    if (rom.subarray(start, start + 28).some((b) => b)) continue; // entry 0 ("??????????") is all zeroes
+    const out = [];
+    let ok = 0;
+    for (let i = 1; i <= count; i++) {
+      const a = rom[start + i * 28 + 6];
+      const b = rom[start + i * 28 + 7];
+      out[i] = a < 18 && b < 18 ? [a, b] : null;
+      if (out[i]) ok++;
+    }
+    if (ok >= count * 0.95) return out;
+  }
+  return null;
+}
+
+/** DS personal data (one file per species, types at +6/+7) → { [species]: [id, id] }. */
+function dsBaseTypes(rom, path, count) {
+  const narc = ndsFileSafe(rom, path);
+  if (!narc) return null;
+  const files = parseNarcSafe(narc);
+  if (!files || files.length < count) return null;
+  const out = [];
+  for (let i = 1; i <= count; i++) out[i] = files[i]?.length > 8 ? [files[i][6], files[i][7]] : null;
+  return out;
+}
+
+const ndsFileSafe = (rom, path) => {
+  try {
+    return ndsFile(rom, path, listNdsFiles(rom));
+  } catch {
+    return null;
+  }
+};
+const parseNarcSafe = (b) => {
+  try {
+    return parseNarc(b);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * The types a ROM gives its Pokémon where they differ from the retail games' (`baseTypes(id, gen)` = the app's own
+ * data): hacks that add Fairy (Renegade Platinum: in the '???' slot, Blaze Black 2 Redux: as type 17) or retype
+ * Pokémon, and the types of a Gen 3 hack's own Pokémon. → { gen, fairy, types: { [species]: ['grass', 'fairy'] } } or
+ * null (no table found, a system without one). `species` is the National Dex number the live reader reports (Gen 3:
+ * through `speciesMap` = romSpecies().map, its fakémon as FAKEMON + index). Never throws.
+ */
+export function romTypes(rom, { baseTypes, speciesMap = null, vanillaIndex = [], fakemon = 20000 } = {}) {
+  try {
+    if (!rom || rom.length < 0x200 || typeof baseTypes !== 'function') return null;
+    let gen;
+    let raw;
+    let names;
+    if (rom[0xb2] === 0x96 && rom[3] === 0xea) {
+      gen = 3;
+      names = TYPES34;
+      const t = gen3BaseTypes(rom, 411);
+      if (!t) return null;
+      // internal index → National Dex (the ROM's own map for a hack with other Pokémon, else the retail one)
+      raw = [];
+      for (let i = 1; i < t.length; i++) {
+        const id = speciesMap ? speciesMap.map?.[i] || (speciesMap.unknown?.[i] ? fakemon + i : 0) : vanillaIndex[i] || 0;
+        if (id && t[i] && !raw[id]) raw[id] = t[i];
+      }
+    } else {
+      const code = String.fromCharCode(...rom.subarray(0x0c, 0x10)).slice(0, 3);
+      const gen5 = /^IR[ABDE]$/.test(code);
+      gen = gen5 ? 5 : 4;
+      names = gen5 ? TYPES5 : TYPES34;
+      const files = listNdsFiles(rom);
+      const path = gen5 ? 'a/0/1/6' : /^IP[KG]$/.test(code) ? 'a/0/0/2' : files.find((f) => /^poketool\/personal(_\w+)?\/(pl_)?personal\.narc$/.test(f.path))?.path;
+      raw = path ? dsBaseTypes(rom, path, gen5 ? 649 : 493) : null;
+      if (!raw) return null;
+    }
+    // Fairy: a Gen 4 '???' that a Pokémon really has (no retail Pokémon of #1–493 is '???'), Gen 5 type 17
+    const fairyId = gen === 5 ? 17 : 9;
+    const fairy = raw.some((t) => t && (t[0] === fairyId || t[1] === fairyId));
+    const nameOf = (id) => (id === fairyId && fairy ? 'fairy' : names[id] || null);
+    const types = {};
+    raw.forEach((t, id) => {
+      if (!t) return;
+      const mine = [...new Set(t.map(nameOf))].filter((x) => x && x !== '???');
+      const base = id >= fakemon ? [] : baseTypes(id, gen) || [];
+      if (mine.length && mine.join('/') !== base.join('/')) types[id] = mine;
+    });
+    return { gen, fairy, types };
   } catch {
     return null;
   }

@@ -8,14 +8,14 @@ import { readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from 'no
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
-import { romLocations } from '../../shared/live/romloc.mjs';
-import { romSpecies } from '../../shared/live/romspecies.mjs';
+import { romLocations, gen3MapTable } from '../../shared/live/romloc.mjs';
+import { romSpecies, romTypes } from '../../shared/live/romspecies.mjs';
 import { gbWramShift } from '../../shared/live/romwram.mjs';
 import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 4; // bump when romLocations() / romSpecies() change what they find
+const VERSION = 6; // bump when romLocations() / romSpecies() change what they find
 const memo = new Map();
 let tables = null;
 
@@ -26,7 +26,14 @@ function opts(sharedDir) {
     for (const g of j('catalog.json').games || []) for (const c of g.crc32 || []) retail.add(String(c).toUpperCase());
     const gen3Index = [];
     for (const [k, v] of Object.entries(j('gen3_index_to_dex.json').map || {})) gen3Index[Number(k)] = v;
-    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: j('pokeapi.json').names?.en || [], addresses: j('addresses.json'), maps: j('maps.json') };
+    const api = j('pokeapi.json');
+    // the app's own types of a Pokémon in a generation (web/lib/data.mjs baseTypes)
+    const baseTypes = (id, gen) => {
+      const past = api.typesGen?.[id];
+      const k = past ? Object.keys(past).map(Number).sort((a, b) => a - b).find((x) => x >= gen) : undefined;
+      return k !== undefined ? past[k] : api.types?.[id] || [];
+    };
+    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: api.names?.en || [], addresses: j('addresses.json'), maps: j('maps.json'), baseTypes };
   }
   return tables;
 }
@@ -48,7 +55,12 @@ export function romData(u8, sharedDir) {
   }
   const data = romLocations(u8, o);
   if (data) data.vanilla = vanilla;
-  return { data, species: romSpecies(u8, o), wram: vanilla ? null : gbShift(u8, o), vanilla };
+  const species = romSpecies(u8, o);
+  // an expanded GBA engine moved gMapHeader: the place comes from SaveBlock1's map and the ROM's map table instead
+  if (data && species?.engine === 'expanded') data.maps3 = gen3MapTable(u8);
+  // a modified ROM's own types where they differ from the app's (Fairy hacks, retyped or new Pokémon)
+  const types = vanilla || species?.engine === 'expanded' ? null : romTypes(u8, { baseTypes: o.baseTypes, speciesMap: species?.map ? species : null, vanillaIndex: o.gen3Index });
+  return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, vanilla };
 }
 
 /** Game Boy hacks: where the code says the party, the battle and the map variables are (shared/live/romwram.mjs). */
@@ -62,11 +74,12 @@ function gbShift(u8, o) {
 /**
  * The ROM's data by file path or (an unpacked archive entry) by its bytes plus a key: { data, species, wram, vanilla }
  * – `data` the location data (null when the ROM has none: another engine, an unsupported layout), `species` the GBA
- * species table (null for other systems), `wram` a Game Boy hack's moved variables (null: the retail addresses).
+ * species table (null for other systems), `wram` a Game Boy hack's moved variables (null: the retail addresses),
+ * `types` a modified ROM's own Pokémon types where they differ from the app's (shared/live/romspecies.mjs romTypes).
  * Never throws.
  */
 export function romDataFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
-  const none = { data: null, species: null, wram: null, vanilla: null };
+  const none = { data: null, species: null, wram: null, types: null, vanilla: null };
   let id;
   try {
     if (file) {
@@ -83,7 +96,7 @@ export function romDataFor({ file = null, bytes = null, key = null }, { sharedDi
     try {
       const v = JSON.parse(readFileSync(cached, 'utf8'));
       if (v.version === VERSION) {
-        const r = { data: v.data, species: v.species, wram: v.wram ?? null, vanilla: v.vanilla };
+        const r = { data: v.data, species: v.species, wram: v.wram ?? null, types: v.types ?? null, vanilla: v.vanilla };
         memo.set(id, r);
         return r;
       }

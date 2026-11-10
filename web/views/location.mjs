@@ -4,10 +4,9 @@
 import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
 import { useApp } from '../lib/ui.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
-import { speciesName, gen4data, setRomSpecies } from '../lib/data.mjs';
+import { speciesName, gen4data, setRomSpecies, setRomTypes } from '../lib/data.mjs';
 import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation, placeName } from '/shared/live/location.mjs';
-import { areaForMetLocation } from '/shared/routes.mjs';
-import { profileOf, progression, pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces } from '../lib/run.mjs';
+import { pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces, areaForPlace } from '../lib/run.mjs';
 
 let MAPS = null; // shared/data/maps.json once loaded
 let LOC = null; // { loc2, loc3 } for the names
@@ -31,6 +30,7 @@ export function loadRomLocations(src) {
   Object.assign(ROMLOC, { src, data: null, species: null, wram: null, pending: true });
   setRomPlaces(null); // (another game's names don't apply any more)
   setRomSpecies(null);
+  setRomTypes(null);
   const p = fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`)
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null)
@@ -39,6 +39,7 @@ export function loadRomLocations(src) {
       Object.assign(ROMLOC, { data: j?.data || null, species: j?.species || null, wram: j?.wram || null, pending: false });
       setRomPlaces(ROMLOC.data); // catches made now are named like the sign names their place
       setRomSpecies(ROMLOC.species); // a ROM hack's own Pokémon get the game's names
+      setRomTypes(j?.types || null); // … and the game's types (Fairy hacks)
     });
   ROMLOC.p = p;
   return p;
@@ -96,12 +97,7 @@ export const nextHere = (prev, next) => (sameLocation(prev, next) && prev?.name 
 
 /** The run area this place counts as (same logic as a catch there), or null when it isn't one. */
 export function areaOfHere(doc, manifest, gen, here) {
-  if (!doc || !manifest || !here || here.gen !== gen) return null;
-  if (profileOf(manifest).curated) return areaForMetLocation(here.id);
-  const name = here.name.toLowerCase();
-  const list = progression(doc, manifest).filter((x) => x.kind === 'area' && !x.special);
-  const hit = list.find((x) => (x.met || []).includes(here.id) && x.key.startsWith(`m${gen}-`)) || list.find((x) => String(x.name || '').toLowerCase() === name);
-  return hit?.key || `m${gen}-${here.id}`;
+  return areaForPlace(doc, manifest, gen, here);
 }
 
 function chipFor(st, enc) {

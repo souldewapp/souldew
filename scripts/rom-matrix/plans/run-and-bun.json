@@ -3,7 +3,7 @@
 "hacks": [
 "run-and-bun"
 ],
-"note": "Run & Bun 1.07 (expanded engine): the app shows \"not supported\" \u2013 the plan reaches the starter (Chimchar) and the first battle by fixed waits; its save-block pointer is at 0x03005D9C",
+"note": "Run & Bun 1.07 (expanded engine: species by name, team searched for in RAM, place through SaveBlock1): starter (Chimchar) and the first wild battle by fixed waits; its save-block pointer is at 0x03005D9C",
 "pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4))))",
 "steps": [
 {
@@ -984,5 +984,27 @@
 "max": 300
 }
 ],
-"expect": {}
+"expect": {
+"littleroot": {
+"place": "Littleroot Town"
+},
+"route101": {
+"place": "Route 101"
+},
+"battle": {
+"party": {
+"level": 5
+},
+"battle": {
+"kind": "wild",
+"level": 2,
+"species": [
+263
+]
+}
+},
+"afterbattle": {
+"place": "Littleroot Town"
+}
+}
 }

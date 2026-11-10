@@ -13,7 +13,7 @@
 //   <rom-dir>     ROMs (.gb .gbc .gba .nds, also inside .zip) and patches (.ips .bps .ups .xdelta/.vcdiff), any
 //                 subfolders. A patch is paired with its base ROM by the checksum in the patch (BPS/UPS/xdelta) or,
 //                 for IPS, by the catalog's hack name in the file name. .rar/.7z archives: unpack them first.
-//   --live        also play every game that has a plan (GB ~20 s, GBA ~1 min, DS 2–6 min per game)
+//   --live        also play every game that has a plan (GB ~20–60 s, GBA ~2 min, DS 10–25 min per game)
 //   --randomize   also randomize one game per generation (Classic preset, fixed seed) and check the result
 //                 (needs Java: tools/jre from `npm run jre`, JAVA_HOME or --tools <folder with jre/, upr/, upr-bridge/>)
 //   --only <text> only ROMs whose file name contains the text (case-insensitive)
@@ -247,7 +247,7 @@ async function runLive(list) {
     const resultFile = join(out, `live-${key}.json`);
     rmSync(resultFile, { force: true });
     const job = {
-      dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), timeoutMs: 15 * 60000,
+      dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), timeoutMs: 60 * 60000,
       targets: [{ key, file: r.file, system: r.system, core: plan.core || '', plan: { ...plan, header: r.header } }],
     };
     writeFileSync(join(out, 'job.json'), JSON.stringify(job));
@@ -270,10 +270,10 @@ async function runLive(list) {
       r.liveResult = v;
       if (x) all.push(x);
       const lost = v.error || v.notes.some((n) => n.startsWith('plan stopped'));
-      const wrong = [v.party, v.place, v.battle].includes(false) && !lost;
+      const wrong = [v.party, v.place, v.battle, v.catch].includes(false) && !lost;
       if (!lost || wrong) break;
     }
-    log(`    party ${mark(r.liveResult.party)} place ${mark(r.liveResult.place)} battle ${mark(r.liveResult.battle)}${r.liveResult.error ? ` – ${r.liveResult.error}` : ''}`);
+    log(`    party ${mark(r.liveResult.party)} place ${mark(r.liveResult.place)} battle ${mark(r.liveResult.battle)} catch ${mark(r.liveResult.catch)}${r.liveResult.error ? ` – ${r.liveResult.error}` : ''}`);
   }
   writeFileSync(join(out, 'live.json'), JSON.stringify(all, null, 1));
 }
@@ -282,7 +282,7 @@ async function runLive(list) {
 function judge(r, plan, x) {
   const checks = (x.log || []).filter((l) => l.do === 'check');
   const failed = (x.log || []).find((l) => l.ok === false && l.required !== false);
-  const verdict = { party: null, place: null, battle: null, notes: [], error: x.error || null, frames: x.frames, ms: x.ms, shots: x.shots };
+  const verdict = { party: null, place: null, battle: null, catch: null, notes: [], error: x.error || null, frames: x.frames, ms: x.ms, shots: x.shots };
   if (failed) verdict.notes.push(`plan stopped: ${failed.do} ${JSON.stringify(failed.until || failed.to || '')}`);
   const randomized = r.kind === 'randomized';
   for (const c of checks) {
@@ -301,6 +301,14 @@ function judge(r, plan, x) {
       const ok = r.kind === 'patched' && exp.placeHack !== undefined ? shown === exp.placeHack : [].concat(exp.place).includes(shown);
       verdict.place = verdict.place === false ? false : ok;
       verdict.notes.push(`${c.name}: place "${shown}"`);
+    }
+    if (exp.catch) {
+      // a real catch: a second Pokémon in the team, filed by the app's run logic under the area the plan names
+      const encs = (c.run?.encounters || []).filter((x) => x.area !== 'starter');
+      const mon = team?.party?.[1];
+      const hit = encs.find((x) => x.name === exp.catch.area && (!mon || x.species === mon.species));
+      verdict.catch = verdict.catch === false ? false : !!hit;
+      verdict.notes.push(`${c.name}: ${mon ? `caught ${mon.name} Lv${mon.level}` : 'no catch'} → ${hit ? `area "${hit.name}"` : `areas ${JSON.stringify(encs.map((x) => x.name))}, inbox ${(c.run?.inbox || []).length}`}`);
     }
     if (exp.battle === null) {
       // the battle is over: the panel must not keep showing the opponent
@@ -331,9 +339,9 @@ const rows = targets.map((r) => {
 });
 writeFileSync(join(out, 'matrix.json'), JSON.stringify({ at: new Date().toISOString(), sources, notes, patches: patches.map(({ name, format, hack, result }) => ({ name, format, hack, result })), rows }, null, 1));
 const md = [
-  '| ROM | Kind | Memory table | Places (from file) | Species table | Party (live) | Location (live) | Battle (live) | Notes |',
-  '|---|---|---|---|---|---|---|---|---|',
-  ...rows.map((x) => `| ${x.rom} | ${x.kind}${x.vanilla ? ' (retail CRC)' : ''} | ${x.entry || '–'} | ${x.static?.places || '–'}${x.places ? ` (${x.places.count})` : ''} | ${x.species ? `${x.species.engine}${x.species.changed ? `, ${x.species.changed} changed` : ''}` : '–'} | ${mark(x.live.party)} | ${mark(x.live.place)} | ${mark(x.live.battle)} | ${[x.live.skipped, x.live.error, ...(x.live.notes || [])].filter(Boolean).join('; ')} |`),
+  '| ROM | Kind | Memory table | Places (from file) | Species table | Party (live) | Location (live) | Battle (live) | Catch (live) | Notes |',
+  '|---|---|---|---|---|---|---|---|---|---|',
+  ...rows.map((x) => `| ${x.rom} | ${x.kind}${x.vanilla ? ' (retail CRC)' : ''} | ${x.entry || '–'} | ${x.static?.places || '–'}${x.places ? ` (${x.places.count})` : ''} | ${x.species ? `${x.species.engine}${x.species.changed ? `, ${x.species.changed} changed` : ''}` : '–'} | ${mark(x.live.party)} | ${mark(x.live.place)} | ${mark(x.live.battle)} | ${mark(x.live.catch)} | ${[x.live.skipped, x.live.error, ...(x.live.notes || [])].filter(Boolean).join('; ')} |`),
 ].join('\n');
 writeFileSync(join(out, 'matrix.md'), `${md}\n`);
 log(`\npatches:`);

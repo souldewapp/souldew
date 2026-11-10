@@ -89,12 +89,14 @@ test('Gen 3 species table: a hack\'s other Pokémon are mapped by name, a fakém
   assert.equal(parsePk3(pk3({ internal: 252 }), T), null, 'without the ROM\'s table the slot is no Pokémon at all');
 });
 
-test('Gen 3 species table: an expanded engine (hundreds more species) is recognised, not mapped', () => {
+test('Gen 3 species table: an expanded engine (hundreds more species) is recognised and mapped by name', () => {
   const names = retailNames(411);
   for (let i = 0; i < 600; i++) names.push(`Mon${String.fromCharCode(65 + (i % 26))}x`);
   const r = romSpecies(gbaWithNames(names, { size: 0x20000 }), { gen3Charset: cs3, gen3Index: vanilla3, dexNames });
   assert.equal(r.engine, 'expanded');
-  assert.equal(r.map, undefined);
+  assert.equal(r.map[1], 1, 'Bulbasaur by its name');
+  assert.equal(r.map[277], 252, 'by name, not by the retail numbering');
+  assert.equal(r.unknown[412], 'MonAx');
   assert.equal(romSpecies(new Uint8Array(0x10000), { gen3Charset: cs3 }), null, 'no table, no guess');
   assert.equal(romSpecies(Uint8Array.from({ length: 0x400 }, () => 0x55), {}), null, 'not a GBA ROM');
 });
@@ -219,6 +221,7 @@ test('real ROMs: retail dumps are vanilla with the retail species; hacks are tol
     const gba = bytes[0xb2] === 0x96;
     if (gba) assert.ok(r.species, `${f}: a species table`);
     if (r.vanilla) {
+      assert.equal(r.types, null, `${f}: a retail game's types are the app's own`);
       if (gba) assert.deepEqual([r.species.engine, r.species.changed], ['vanilla', 0], `${f}: a retail game has the retail species`);
       if (r.data?.gen === 3 && r.data.family === 'rse' && r.data.lang === 'en') assert.equal(r.data.names[0], 'Littleroot Town', f);
       continue;
@@ -333,6 +336,15 @@ test('Gen 5 battle without a flag: over once the battle\'s HP is copied back int
     return f;
   };
   assert.equal(poll(6)?.enemy?.species, 495, 'in battle');
+  // the battle's own structs { species, max HP, HP, …, level at +12 } hold the HP the screen shows
+  const bmon = (species, maxHp, hp, level) => { const b = new Uint8Array(16); b.set([species & 0xff, species >> 8, maxHp & 0xff, maxHp >> 8, hp & 0xff, hp >> 8]); b[12] = level; return b; };
+  w(0x0226d6b0, bmon(498, 21, 9, 5));
+  w(0x0226d8d4, bmon(495, 21, 8, 5)); // (Snivy's maxHp in the copy: 21)
+  state.g5scan = 0;
+  const f = poll(1);
+  assert.deepEqual([f.enemy.hp, f.active.hp], [8, 9], 'live HP from the battle structs, not the copies\' starting HP');
+  w(0x0226d6b0, new Uint8Array(16));
+  w(0x0226d8d4, new Uint8Array(16));
   w(0x02310000, core([me])); // a Potion heals Tepig to full: the copy agrees with the save party, the fight goes on
   assert.equal(poll(2)?.enemy?.species, 495, 'still in battle');
   w(0x02310000, core([{ ...me, hp: 11 }])); // hit again
@@ -340,4 +352,130 @@ test('Gen 5 battle without a flag: over once the battle\'s HP is copied back int
   w(party, core([{ ...me, hp: 11 }])); // the fight is over: the game writes the battle's HP back
   assert.equal(poll(2), null, 'over right away');
   assert.equal(poll(6), null, 'and the leftover copies don\'t bring it back');
+});
+
+test('Gen 1 and Gold/Silver: a Pokémon that joins right after a wild battle is filed under the place the sign shows', async () => {
+  registerHooks({ resolve: (spec, ctx, next) => (spec.startsWith('/shared/') ? next(new URL(spec.slice(1), ROOT).href, ctx) : next(spec, ctx)) });
+  const R = await import('../web/lib/run.mjs');
+  const { RunDoc } = await import('../web/lib/doc.mjs');
+  const doc = new RunDoc('t');
+  doc.by = 'a';
+  doc._persistSoon = () => {};
+  const manifest = { id: 't', mode: 'nuzlocke', players: { p1: { name: 'A' } }, game: { system: 'gb', code: '' } };
+  const charmander = { key: 'g1-1', species: 4, nickname: 'A', level: 6, hp: 20, maxHp: 20, metLocation: null };
+  const rattata = { key: 'g1-2', species: 19, nickname: 'RATTATA', level: 3, hp: 15, maxHp: 15, metLocation: null };
+  const route1 = { gen: 1, id: 11, name: 'Route 1' };
+  R.applySnapshot(doc, manifest, 1, 'p1', { source: 'live', party: [charmander], here: { gen: 1, id: 0, name: 'Pallet Town' } });
+  assert.equal(doc.get('enc:starter:p1').species, 4);
+  // the wild battle on Route 1, then the catch joins the team
+  R.applySnapshot(doc, manifest, 1, 'p1', { source: 'live', party: [charmander], here: route1 }, { battle: { kind: 'wild', enemy: { species: 19, level: 3 } } });
+  const res = R.applySnapshot(doc, manifest, 1, 'p1', { source: 'live', party: [charmander, rattata], here: route1 });
+  assert.deepEqual(res.newCatches, ['m1-11']);
+  assert.equal(R.areaName(doc, manifest, 'm1-11'), 'Route 1');
+  // a Pokémon that turns up without a wild battle (a gift, a trade) still goes to the inbox
+  const eevee = { key: 'g1-3', species: 133, nickname: 'EEVEE', level: 25, hp: 60, maxHp: 60, metLocation: null };
+  const doc2 = new RunDoc('t2');
+  doc2.by = 'a';
+  doc2._persistSoon = () => {};
+  R.applySnapshot(doc2, manifest, 1, 'p1', { source: 'live', party: [charmander], here: route1 });
+  const r2 = R.applySnapshot(doc2, manifest, 1, 'p1', { source: 'live', party: [charmander, eevee], here: route1 });
+  assert.equal(r2.newCatches.length, 0);
+  assert.equal(r2.inbox[0].mon.species, 133);
+});
+
+test('types from the ROM: a Gen 3 hack\'s own types; Fairy matchups only matter where a hack has the type', async () => {
+  const { romTypes } = await import('../shared/live/romspecies.mjs');
+  const { effectiveness, defenseChart, typesOfGen } = await import('../shared/typechart.mjs');
+  // a GBA ROM with a base stats table: Bulbasaur's entry as the anchor, internal #13 retyped to Bug/Poison → Fire
+  const rom = new Uint8Array(0x8000);
+  rom[3] = 0xea;
+  rom[0xb2] = 0x96;
+  const T = 0x1000;
+  for (let i = 1; i <= 411; i++) rom.set([45, 49, 49, 45, 65, 65, 0, 0], T + i * 28);
+  rom.set([12, 3], T + 28 + 6); // Bulbasaur Grass/Poison
+  rom.set([10, 10], T + 13 * 28 + 6); // #13 (Weedle in the retail games) – Fire in this hack
+  const base = (id) => ({ 1: ['grass', 'poison'], 13: ['bug', 'poison'] }[id] || ['normal']);
+  const r = romTypes(rom, { baseTypes: base, vanillaIndex: Array.from({ length: 412 }, (_, i) => i) });
+  assert.deepEqual(r.types[13], ['fire']);
+  assert.equal(r.types[1], undefined, 'unchanged types aren\'t listed');
+  assert.equal(r.fairy, false);
+  // with the hack's own species map (Venipede in slot 13) the types belong to that Pokémon
+  const r2 = romTypes(rom, { baseTypes: base, speciesMap: { map: Object.assign(Array.from({ length: 412 }, (_, i) => i), { 13: 543 }) } });
+  assert.deepEqual(r2.types[543], ['fire']);
+  assert.equal(romTypes(new Uint8Array(0x8000).fill(1), { baseTypes: base }), null, 'no table, no guess');
+  // Fairy: Dragon can't touch it, it beats Dragon; the retail chart is unchanged for everything else
+  assert.equal(effectiveness('dragon', ['fairy']), 0);
+  assert.equal(effectiveness('fairy', ['dragon', 'dark']), 4);
+  assert.equal(effectiveness('steel', ['fairy', 'normal']), 2);
+  assert.equal(effectiveness('fire', ['grass']), 2);
+  assert.ok(!typesOfGen(4).includes('fairy'));
+  assert.ok(defenseChart(['dragon'], 4, { fairy: true })[2].includes('fairy'), 'a Fairy hack: Dragon is weak to it');
+  assert.ok(!defenseChart(['dragon'], 4)[2].includes('fairy'), 'a retail game: no Fairy');
+});
+
+test('expanded GBA engines (Run & Bun): the team is searched for in EWRAM, the place read through SaveBlock1', async () => {
+  const { readLiveParty, readLiveBattle, findEntry, LiveTables } = await import('../shared/live/parse.mjs');
+  const { readLocation } = await import('../shared/live/location.mjs');
+  const maps = json('maps.json');
+  const emerald = findEntry(json('addresses.json'), { platform: 'gba', code: 'BPEE' });
+  const entry = { ...emerald, scan3: true };
+  // Run & Bun numbers its species in National Dex order: the ROM's map (romSpecies, by name) – Chimchar is 390
+  const T = new LiveTables({ charsetGen3: cs3, gen3Index: idx3 }).withSpecies({ map: Object.assign([], { 390: 390, 987: 263 }) });
+  const mem = new Map();
+  const put = (a, bytes) => bytes.forEach((b, i) => mem.set(a + i, b));
+  const read = (a, n) => Uint8Array.from({ length: n }, (_, i) => mem.get(a + i) ?? 0);
+  put(0x02023a95, [1]);
+  put(0x02023a98, [...pk3({ internal: 390, level: 5, hp: 20, maxHp: 20 })]);
+  put(0x02023a98 + 600, [...pk3({ pid: 0x55667788, internal: 987, level: 2, hp: 9, maxHp: 14 })]);
+  const state = {};
+  const r = readLiveParty(entry, read, T, state);
+  assert.deepEqual(r.party.map((m) => [m.species, m.level, m.hp]), [[390, 5, 20]], 'found where the base game has nothing');
+  assert.equal(readLiveParty(emerald, read, T, {})?.party?.length || 0, 0, 'the base game\'s address holds no team');
+  put(0x030026f9, [0x02]); // gMain.inBattle (gMain didn't move)
+  const f = readLiveBattle(entry, read, T, state, r.party);
+  assert.deepEqual([f.kind, f.enemy.species, f.enemy.level, f.enemy.hp], ['wild', 263, 2, 9], 'a Galarian Zigzagoon is a Zigzagoon');
+  // the place: gSaveBlock1Ptr among the code's busiest IWRAM addresses → SaveBlock1 { x, y, mapGroup, mapNum }
+  const rom = { gen: 3, family: 'rse', lang: 'en', vanilla: false, names: Object.assign([], { 16: 'Route 101' }), mapLoc: null, maps3: { mapsec: { '0.16': 16, '0.9': 0 }, iwram: [0x03005e10, 0x03005d9c] } };
+  put(0x03005d9c, [0xbc, 0x4c, 0x02, 0x02]);
+  put(0x02024cbc, [10, 0, 15, 0, 0, 16]);
+  assert.deepEqual(readLocation(maps, emerald, read, { rom, state }), { gen: 3, id: 16, map: '0.16', romName: 'Route 101' });
+  assert.equal(state.sb1PtrAddr, 0x03005d9c);
+});
+
+test('Platinum and Pearl: the battle flag (checked live) ends a battle at once, also one that left no HP change', async () => {
+  const { readLiveParty, readLiveBattle, findEntry, LiveTables } = await import('../shared/live/parse.mjs');
+  const { encryptPK4 } = await import('../shared/gen4save.mjs');
+  const T4 = new LiveTables({ gen4: json('gen4.json') });
+  const PT = findEntry(json('addresses.json'), { platform: 'nds', code: 'CPUE' });
+  const m = new Uint8Array(0x400000);
+  const w = (addr, bytes) => m.set(bytes, addr - 0x02000000);
+  const read = (addr, len) => (addr >= 0x02000000 && addr + len <= 0x02400000 ? m.slice(addr - 0x02000000, addr - 0x02000000 + len) : null);
+  const pk4 = ({ pid, species, tid = 4242, level = 5, hp = 20, maxHp = 20 }) => {
+    const d = new Uint8Array(236);
+    const dv = new DataView(d.buffer);
+    dv.setUint32(0, pid, true);
+    dv.setUint16(0x08, species, true);
+    dv.setUint16(0x0c, tid, true);
+    dv.setUint16(0x46, 16, true);
+    d[0x8c] = level;
+    dv.setUint16(0x8e, hp, true);
+    dv.setUint16(0x90, maxHp, true);
+    return encryptPK4(d);
+  };
+  const core = (mons) => [6, 0, 0, 0, mons.length, 0, 0, 0, ...mons.flatMap((x) => [...pk4(x)])];
+  const BASE = 0x0227e14c; // the save data (seen live in Platinum)
+  w(0x02000ba8, [0x2c, 0x1d, 0x10, 0x02]); // module params → *(+0x20) = SaveData pointer at 0x02101D4C
+  w(0x02101d4c, [BASE & 0xff, (BASE >> 8) & 0xff, (BASE >> 16) & 0xff, BASE >>> 24]);
+  w(BASE + 0xb4 - 8, core([{ pid: 0x11111111, species: 387 }]));
+  w(0x02300000, core([{ pid: 0xaaaa0001, species: 399, tid: 7, level: 3, hp: 12, maxHp: 12 }])); // a wild Bidoof
+  const state = {};
+  const poll = (n = 1) => {
+    let f = null;
+    for (let i = 0; i < n; i++) f = readLiveBattle(PT, read, T4, state, readLiveParty(PT, read, T4, state)?.party);
+    return f;
+  };
+  w(0x0224a55a, [0x00, 0x21]);
+  assert.equal(poll(6)?.enemy?.species, 399, 'in battle (flag 0x2100)');
+  w(0x0224a55a, [0x00, 0x28]); // ran away: back on the overworld
+  assert.equal(poll(1), null, 'over at once, not 90 s later');
 });

@@ -234,7 +234,43 @@ function gen3StatsOk(d, isEgg) {
   return true;
 }
 
+/**
+ * An expanded GBA engine (entry.scan3): gPlayerParty isn't at the base game's address. Searched for in EWRAM – the
+ * party count byte 3 bytes before `count` valid 100-byte structs (checksums) – and remembered while it holds; Run & Bun
+ * keeps it at 0x02023A98 (count 0x02023A95), gEnemyParty 600 bytes on, as in the base game.
+ */
+function findGen3Party(read, T, state) {
+  const okAt = (ram, o) => {
+    const n = ram[o - 3];
+    if (n < 1 || n > 6) return false;
+    for (let i = 0; i < n; i++) {
+      const m = parsePk3(ram.subarray(o + i * 100, o + i * 100 + 100), T);
+      if (!m || m.bad || m.level < 1 || m.level > 100 || m.maxHp < 1 || m.hp > m.maxHp) return false;
+    }
+    return true;
+  };
+  if (state.party3) {
+    const b = read(state.party3 - 4, 4 + 600);
+    if (b && okAt(b, 4)) return state.party3;
+  }
+  if (state.lastScan3 && Date.now() - state.lastScan3 < 3000) return null;
+  state.lastScan3 = Date.now();
+  const ram = read(0x02000000, 0x40000);
+  if (!ram) return null;
+  for (let o = 4; o + 600 <= ram.length; o += 4) {
+    if (ram[o] === 0 && ram[o + 1] === 0 && ram[o + 2] === 0 && ram[o + 3] === 0) continue;
+    if (okAt(ram, o)) return (state.party3 = 0x02000000 + o);
+  }
+  state.party3 = null;
+  return null;
+}
+
 function readGen3(entry, read, T, state = {}) {
+  if (entry.scan3) {
+    const at = findGen3Party(read, T, state);
+    if (!at) return null;
+    entry = { ...entry, partyAddr: `0x${at.toString(16)}`, partyCountAddr: `0x${(at - 3).toString(16)}`, enemyPartyAddr: `0x${(at + 600).toString(16)}` };
+  }
   const c = read(hex(entry.partyCountAddr), 1);
   if (!c) return null;
   const count = c[0];
@@ -596,9 +632,22 @@ function activeGB(entry, read, T, state, party, stale) {
   return state.gbActive !== null && state.gbActive !== undefined ? { index: state.gbActive } : null;
 }
 
-function battleGen3(entry, read, T) {
+function battleGen3(entry, read, T, state = {}) {
   const flag = read(hex(entry.inBattle.addr), 1)?.[0];
   if (flag === undefined || !(flag & hex(entry.inBattle.mask || '0x02'))) return null;
+  if (entry.scan3) {
+    // an expanded engine: gMain (the flag) stays where it was, gBattleTypeFlags and gBattlerPartyIndexes moved – the
+    // opponent is the first one standing of gEnemyParty (600 bytes after the party found), several of them a trainer
+    if (!state.party3) return null;
+    const raw = read(state.party3 + 600, 600);
+    const mons = [];
+    for (let i = 0; raw && i < 6; i++) {
+      const m = parsePk3(raw.subarray(i * 100, i * 100 + 100), T);
+      if (m && !m.bad && m.level >= 1 && m.level <= 100 && m.maxHp > 0 && m.hp <= m.maxHp) mons.push(m);
+    }
+    const m = mons.find((x) => x.hp > 0) || mons[0];
+    return { kind: mons.length > 1 ? 'trainer' : 'wild', enemy: m ? { species: m.species, level: m.level, hp: m.hp, maxHp: m.maxHp, shiny: m.shiny, moves: m.moves } : null, active: null };
+  }
   const types = read(hex(entry.battleTypeFlagsAddr), 4);
   const trainer = !!types && !!(u32le(types, 0) & 0x08); // BATTLE_TYPE_TRAINER
   // gBattlerPartyIndexes: battler 1 is the opponent's first slot
@@ -632,7 +681,9 @@ function scanStep(read, size, gen, T, state) {
 }
 
 function battleFlag(entry, read) {
-  if (!entry.inBattle?.addr || !/^heartgold|^soulsilver/.test(entry.id)) return null;
+  // only flags checked in a running game (addresses.json `verified`: HeartGold, Platinum, Pearl) – the community
+  // addresses of the others haven't been, and a wrong flag would hide every battle
+  if (!entry.inBattle?.addr || !entry.inBattle.verified) return null;
   const f = read(hex(entry.inBattle.addr), 2);
   if (!f) return null;
   const v = u16le(f, 0);
@@ -833,14 +884,69 @@ function battleDS(entry, read, T, state, party) {
   const index = live || real ? (hit >= 0 ? hit : Math.max(0, party.findIndex(standing))) : null;
   const cur = index !== null ? byPid.get(party[index].pid) || party[index] : null;
   note(state, `heap ${foe.species}/${foe.level}`, flag);
+  // Gen 5: the HP the battle shows (the copies keep the starting HP) – the opponent's, and the player's Pokémon that is
+  // out (the one of the team that has a battle struct)
+  let active = cur ? { index, hp: cur.hp, maxHp: cur.maxHp, status: cur.status } : null;
+  let foeHp = null;
+  if (entry.gen === 5) {
+    const hps = gen5LiveHps(read, state, [foe, ...party]);
+    foeHp = hps.get(g5key(foe)) ?? null;
+    const i = active ? active.index : party.findIndex((m) => hps.has(g5key(m)));
+    if (i >= 0 && hps.has(g5key(party[i]))) active = { index: i, hp: hps.get(g5key(party[i])), maxHp: party[i].maxHp, status: active?.status ?? party[i].status };
+  }
   state.battle = {
     kind: enemy.mons.length > 1 || foe.key.split('-')[1] !== tid ? 'trainer' : 'wild',
-    enemy: { species: foe.species, level: foe.level, hp: foe.hp, maxHp: foe.maxHp, shiny: foe.shiny, moves: foe.moves },
-    active: cur ? { index, hp: cur.hp, maxHp: cur.maxHp, status: cur.status } : null,
+    enemy: { species: foe.species, level: foe.level, hp: foeHp ?? foe.hp, maxHp: foe.maxHp, shiny: foe.shiny, moves: foe.moves },
+    active,
     // the battle's own party copy: HP and status conditions as they are now (the save party gets them at the end)
     party: live && live.map((m) => ({ pid: m.pid, hp: m.hp, maxHp: m.maxHp, status: m.status })),
   };
+  // (Gen 5: the battle struct's HP of the Pokémon that is out wins over the party copy's starting HP)
+  if (entry.gen === 5 && active && state.battle.party) {
+    const pid = party[active.index]?.pid;
+    state.battle.party = state.battle.party.map((m) => (m.pid === pid ? { ...m, hp: active.hp } : m));
+  }
   return state.battle;
+}
+
+/**
+ * Gen 5: the battle's own Pokémon structs. The heap's party copies keep the HP the battle started with, so the live HP
+ * comes from these: { u16 species, u16 max HP, u16 HP, … u8 level at +12 } for each Pokémon that is out (found live in
+ * Black: the rival's Snivy 19 → 14 → 4 HP at 0x0226D8D4 and a second copy 0x448 on; Tepig's 0x224 before it). Found by
+ * species, max HP and level, remembered while they still match – rescanned at most every 2 s. → Map(key → HP).
+ */
+const G5MON = { maxHp: 2, hp: 4, level: 12 };
+const g5key = (m) => `${m.species}:${m.maxHp}:${m.level}`;
+function gen5LiveHps(read, state, mons) {
+  const cache = state.g5mons || (state.g5mons = new Map());
+  const fits = (a, m) => {
+    const b = read(a, 14);
+    return !!b && u16le(b, 0) === m.species && u16le(b, G5MON.maxHp) === m.maxHp && u16le(b, G5MON.hp) <= m.maxHp && b[G5MON.level] === m.level;
+  };
+  const want = mons.filter(Boolean);
+  const missing = want.filter((m) => !(cache.get(g5key(m)) && fits(cache.get(g5key(m)), m)));
+  const now = Date.now();
+  if (missing.length && (!state.g5scan || now - state.g5scan > 2000)) {
+    state.g5scan = now;
+    for (const m of missing) cache.delete(g5key(m));
+    const bySpecies = new Map(missing.map((m) => [m.species, m]));
+    const ram = read(0x02200000, 0x200000); // the battle's heap (the Snivy above: 0x0226D8D4)
+    if (ram) {
+      for (let o = 0; o + 14 <= ram.length; o += 2) {
+        const m = bySpecies.get(ram[o] | (ram[o + 1] << 8));
+        if (!m || u16le(ram, o + G5MON.maxHp) !== m.maxHp || ram[o + G5MON.level] !== m.level || u16le(ram, o + G5MON.hp) > m.maxHp) continue;
+        if (!cache.get(g5key(m))) cache.set(g5key(m), 0x02200000 + o);
+      }
+    }
+    while (cache.size > 32) cache.delete(cache.keys().next().value);
+  }
+  const out = new Map();
+  for (const m of want) {
+    const a = cache.get(g5key(m));
+    const b = a && fits(a, m) ? read(a + G5MON.hp, 2) : null;
+    if (b) out.set(g5key(m), u16le(b, 0));
+  }
+  return out;
 }
 
 /** The battle from the battle structs; `live` is the battle's party copy (HP of the mons that aren't out). */
@@ -876,7 +982,7 @@ export function readLiveBattle(entry, read, T, state = {}, party = null) {
   if (!entry) return null;
   try {
     if (entry.gen <= 2) return holdEnemy(state, entry.battleEnemy && entry.inBattle ? battleGB(entry, read, T, state, party) : null);
-    if (entry.gen === 3) return holdEnemy(state, entry.enemyPartyAddr && entry.inBattle ? battleGen3(entry, read, T) : null);
+    if (entry.gen === 3) return holdEnemy(state, entry.enemyPartyAddr && entry.inBattle ? battleGen3(entry, read, T, state) : null);
     return battleDS(entry, read, T, state, party);
   } catch {
     return null;

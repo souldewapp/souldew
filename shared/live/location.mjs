@@ -143,13 +143,49 @@ function readGen5(m, read, maps, entry, ctx = {}) {
   return null;
 }
 
-const READERS = { gen1: readGen1, gen2: readGen2, gen3: readGen3, gen4: readGen4, gen5: readGen5 };
+/**
+ * An expanded GBA engine (Run & Bun & co.): gMapHeader moved, so the place comes from SaveBlock1's map (group, number at
+ * +4/+5) and the ROM's own map → section table (romloc.mjs gen3MapTable `maps3`). gSaveBlock1Ptr is one of the IWRAM
+ * addresses the code loads most often (`maps3.iwram`): the one that leads to a map the table knows, with a position
+ * that fits, is remembered for the session.
+ */
+function readGen3x(m, read, maps, entry, ctx = {}) {
+  const t = ctx.rom?.maps3;
+  if (!t?.mapsec) return null;
+  const st = ctx.state || {};
+  const tryPtr = (a) => {
+    const p = read(a, 4);
+    const sb1 = ok(p, 4) ? u32le(p, 0) : 0;
+    if (sb1 < 0x02000000 || sb1 >= 0x02040000) return null;
+    const b = read(sb1, 6);
+    if (!ok(b, 6)) return null;
+    const x = (u16le(b, 0) << 16) >> 16;
+    const y = (u16le(b, 2) << 16) >> 16;
+    const sec = t.mapsec[`${b[4]}.${b[5]}`];
+    return Number.isInteger(sec) && x >= -8 && x < 512 && y >= -8 && y < 512 ? { id: sec, map: `${b[4]}.${b[5]}` } : null;
+  };
+  if (st.sb1PtrAddr) {
+    const r = tryPtr(st.sb1PtrAddr);
+    if (r) return r.id < 0xd5 ? r : null;
+  }
+  for (const a of t.iwram || []) {
+    const r = tryPtr(a);
+    if (r) {
+      st.sb1PtrAddr = a;
+      return r.id < 0xd5 ? r : null;
+    }
+  }
+  return null;
+}
+
+const READERS = { gen1: readGen1, gen2: readGen2, gen3: readGen3, gen3x: readGen3x, gen4: readGen4, gen5: readGen5 };
 
 /**
  * Which reader serves this game: the maps.json entry's, else one the ROM's location data makes possible (a game or
  * language maps.json doesn't list). null: no location for this game.
  */
 function readerFor(maps, entry, rom) {
+  if (rom?.gen === 3 && rom.maps3) return { m: null, kind: 'gen3x', gen: 3 };
   const m = mapEntryFor(maps, entry);
   if (m && READERS[m.kind]) return { m, kind: m.kind, gen: m.gen };
   if (rom?.gen === 4 && gen4Family(entry, rom)) return { m: null, kind: 'gen4', gen: 4 };
