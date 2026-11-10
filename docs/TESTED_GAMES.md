@@ -4,7 +4,7 @@ What souldew's live tracking was checked against, game by game: the team (specie
 place sign ("You are here"), the battle panel and new catches – for retail games, randomized games and ROM hacks.
 Back to the [README](../README.md).
 
-**How it was checked (November 2026).** Every ROM was booted in souldew's own emulator page (the same `player.html`,
+**How it was checked (November 2026, round 2 for 2.3.0).** Every ROM was booted in souldew's own emulator page (the same `player.html`,
 cores and live readers the app uses – hidden and muted) and played from power-on to the first Pokémon and a first
 battle by input plans; at each checkpoint the values souldew read were compared with what the game showed on screen
 (screenshots). Hacks were patched with souldew's own patcher, randomized games built with its bundled randomizer
@@ -29,15 +29,16 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 
 | Game | Party | Location | Battle | Catch | Randomizer | Notes |
 |---|:---:|:---:|:---:|:---:|:---:|---|
-| **Red** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | Charmander L5 "AAAAAAAAAA", rival's Squirtle L5 (trainer), level-up to 6 read after the fight. Places are the town-map names (Oak's lab = Pallet Town). Gen 1 stores no catch location: new catches go to the inbox (as designed). Randomized: built ✓, place ✓, the plan didn't reach the starter (the randomizer's fast text moves Mom into the path). |
-| **Silver** | ✅ | ✅ | ✅ | ⚠️ | – | Totodile L5, nickname read before and after naming; New Bark Town (bedroom, Elm's lab), Route 29; wild Rattata L4. Gold/Silver store no catch location (inbox). |
-| **Crystal** | ✅ | ✅ | ✅ | ✅ | ✅ | As Silver; the starter's met location (New Bark Town) and met level are read. Randomized: Poliwag as the starter, wild Rattata L2 – all read. |
-| **Ruby / Sapphire** | ✅ | ✅ | ✅ | ✅ | – | Torchic L5 (nickname, HP checked on the party screen), Littleroot Town, Route 101, wild Poochyena L2. The starter's met location is Route 101 – the same id the sign reads there, so a catch pairs with the sign's area. |
-| **Emerald** | ✅ | ✅ | ✅ | ✅ | ✅ | As Ruby, wild Zigzagoon L2. **Fixed:** the place names read from the ROM started at the wrong table entry ("Pallet Town" for Littleroot). Randomized: Weedle as the starter, all read. |
-| **Pearl** | ⚠️ | ✅ | – | – | ⚠️ | Twinleaf Town in the bedroom, downstairs and outside. The plan doesn't reach the starter yet; live, the party structure is exactly where the reader looks (capacity 6, count 0) – the decoding itself is the HeartGold one that was checked live earlier. Randomized: built ✓ (static checks), no live plan. |
-| **Platinum** | ⚠️ | ✅ | – | – | – | As Pearl. |
-| **Black** | ✅ | ✅ | ⚠️ | ✅ | ⚠️ | Tepig L5, its met location (Nuvema Town) = the sign's place; the zone reader (community address) gave the right zone in every check (bedroom, downstairs, outside). Rival battles: Snivy L5 / Oshawott L5 (trainer) right, **but the opponent's HP stays at full** (Gen 5 reads a copy of the opponent's party). **Fixed:** the opponent stayed on the panel ~2 min after the fight. Randomized: built ✓, the plan lost its way at the naming screen. |
-| **Black 2 / White 2** | – | ✅ | – | – | – | Aspertia City (house, outside) in both. The plan doesn't reach the starter at the Lookout yet. |
+| **Red** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Charmander L5 "AAAAAAAAAA", rival's Squirtle L5 (trainer), level-up to 6 read after the fight. Places are the town-map names (Oak's lab = Pallet Town). **Real catch:** a wild Rattata L3 on Route 1 → filed under "Route 1". **Fixed (2.3.0):** Gen 1 stores no catch location – catches went to the inbox; a catch right after a wild battle now goes under the place the sign shows. Randomized: built ✓, place ✓, the plan didn't reach the starter (the randomizer's fast text moves Mom into the path). |
+| **Silver** | ✅ | ✅ | ✅ | ✅ | – | Totodile L5, nickname read before and after naming; New Bark Town (bedroom, Elm's lab), Route 29; wild Rattata L4. **Real catch:** Pidgey L3 → "Route 29" through the place sign (Gold/Silver store no catch location), 6 of 6 runs. |
+| **Crystal** | ✅ | ✅ | ✅ | ✅ | ✅ | As Silver; met location and level are read. **Real catch:** Sentret L2 (also Pidgey, Rattata), met location Route 29 → "Route 29". Randomized: Poliwag as the starter, wild Rattata L2 – all read. |
+| **Ruby / Sapphire** | ✅ | ✅ | ✅ | ✅ | – | Torchic L5 (nickname, HP checked on the party screen), Littleroot Town, Route 101, wild Poochyena L2. The starter's met location is Route 101 – the same id the sign reads there. |
+| **Emerald** | ✅ | ✅ | ✅ | ✅ | ✅ | As Ruby, wild Zigzagoon L2. **Real catch:** Poochyena L2 (also Wurmple) on Route 101 → "Route 101". Randomized: Weedle as the starter, all read. |
+| **Pearl** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Turtwig L5 21/21 from the briefcase at Lake Verity (met location Lake Verity), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity, Sandgem Town (also inside the Mart); wild Starly L2 at the lake, Bidoof / Starly L3 on Route 201. **Real catch:** Bidoof L3 / Starly L3 → "Route 201", 2 of 2 runs. **Fixed (2.3.0):** the battle flag (checked live: 0x2101 / 0x2000) – battles stayed on the panel after running away. Randomized: built ✓, no live run. |
+| **Platinum** | ✅ | ✅ | ✅ | ✅ | – | Turtwig L5 21/21 on Route 201 (met location Route 201), Barry's Chimchar L5 (trainer), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity; wild Starly / Bidoof / Kricketot L3 on Route 201. **Fixed (2.3.0):** the battle flag (checked live: 0x2100 / 0x2800) – a wild battle showed up ~1100 frames late and stayed after running away. **Real catch:** Bidoof L3 (met location Route 201) → "Route 201" (balls thrown on the touch screen). |
+| **Black** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Tepig L5, met location Nuvema Town = the sign's place; zones: bedroom, downstairs, Nuvema Town, Route 1. Rival battles Snivy / Oshawott L5, wild Lillipup / Patrat on Route 1. **Real catch:** Lillipup → "Route 1", 2 of 2 runs. **Fixed (2.3.0):** the opponent's HP stayed at full (now 19 → 14 → 4 as on screen) and your Pokémon's HP during the fight; the battle flag (checked live: 0x2100 / 0x2800). Randomized: built ✓, the plan lost its way at the naming screen. |
+| **Black 2** | ✅ | ✅ | ✅ | ✅ | – | Tepig L5 from Bianca at the Lookout (met location Aspertia City), Aspertia City, Aspertia Gate, Route 19; Hugh's Oshawott L5 (HP going down as on screen), wild Purrloin / Patrat L2. **Real catch:** Purrloin L2 → "Route 19". **Fixed (2.3.0):** Bianca's catching demo (an NPC's battle) showed as the player's trainer battle and stayed after it ended – the battle flag (checked live: 0x2100 / 0x2800). |
+| **White 2** | ✅ | ✅ | ✅ | ✅ | – | As Black 2 (its position sits 0x40 further on); wild Patrat L2. **Real catch:** Patrat L2 → "Route 19". Its battle flag isn't checked yet (0x2100 in battle, but no fixed value outside): the catching demo still shows as a battle for a while. |
 
 ### ROM hacks
 
@@ -45,11 +46,11 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 |---|:---:|:---:|:---:|---|
 | **Crystal Legacy 1.3.1** (Crystal) | ✅ | ✅ | ✅ | **Fixed:** the hack keeps its RAM 11 bytes further on – before, souldew read no team, no battle and a place stuck on New Bark Town. Now found from the ROM's code (all 7 addresses confirmed in the running game); maps and landmarks are Crystal's (357 maps compared). |
 | **Emerald Kaizo** (Emerald) | ✅ | ✅ | ✅ | Torchic L5, Littleroot Town / Route 101, wild Zigzagoon L2; place names from the ROM. |
-| **Light Platinum 1.0** (Ruby) | ✅ | ✅ | ✅ | **Fixed:** 141 species slots hold other Pokémon (Gen 4/5) – souldew showed the Ruby Pokémon of that number (Venipede as Weedle) or nothing (Turtwig in an unused slot). Now read from the ROM's species table. Starter Charmander (also Squirtle/Bulbasaur checked), "Yellow Town", "Central City" (the hack's own region), wild Poochyena L2. |
-| **Renegade Platinum 1.3.0** (Platinum) | – | ⚠️ | – | Place names from the ROM (126, the hack's own); same engine and party layout as Platinum. Not played live. |
-| **Blaze Black 2 Redux 1.4.1** (Black 2) | – | ✅ | – | **Fixed:** no place sign (its place-name file is padded with empty entries). Now Aspertia City live; 153 names incl. the hack's new "Faraway Island". |
-| **Run & Bun 1.07** (Emerald) | ⚠️ | ⚠️ | ⚠️ | Expanded engine (1233 species in national order, RAM moved – its save block pointer is at 0x03005D9C): the play view says live tracking doesn't support this hack yet instead of a team. Live, the base game's addresses read an empty party (the real starter was Chimchar) – nothing wrong was shown, but nothing right either. |
-| **Unbound 2.1.1** (FireRed) | ❌ | ❌ | ❌ | **Not tested: no FireRed ROM was available** (the UPS patch needs FireRed 1.0, CRC32 DD88761C). Unbound is a CFRU hack like Radical Red: its species table should be recognised as an expanded engine and get the "not supported" state – unverified. |
+| **Light Platinum 1.0** (Ruby) | ✅ | ✅ | ✅ | **Fixed:** 141 species slots hold other Pokémon (Gen 4/5) – souldew showed the Ruby Pokémon of that number (Venipede as Weedle) or nothing. Now read from the ROM's species table; types from the ROM too (only Shaymin differs: its Sky Forme's Grass/Flying). Starter Charmander (also Squirtle/Bulbasaur checked), "Yellow Town", "Central City" (the hack's own region), wild Poochyena L2. No catch: the plan found no way out of Yellow Town. |
+| **Renegade Platinum 1.3.0** (Platinum) | – | ⚠️ | – | Place names from the ROM (126, the hack's own). **Types (2.3.0):** 49 Pokémon with the hack's types, Fairy in the old "???" slot (Clefairy Fairy, Meganium Grass/Fairy, Altaria Dragon/Fairy …) – the board, the battle panel and the type rule use them, with Fairy's matchups. Not played live: its intro differs and the Platinum plan stops in the bedroom. |
+| **Blaze Black 2 Redux 1.4.1** (Black 2) | ✅ | ✅ | ✅ | **Fixed:** no place sign (its place-name file is padded with empty entries). Now Aspertia City live; 153 names incl. the hack's new "Faraway Island". **Types (2.3.0):** 75 Pokémon with the hack's types (Fairy as type 17). Tepig L5 21/21 (the hack changed its stats), Aspertia City / Aspertia Gate / Route 19, Hugh's Oshawott L5 21 → 15, wild Venonat L5 / Patrat L4 with live HP. The hack's key bearer blocks the way to the Lookout until you talk to her. **Real catch:** Venonat / Patrat → "Route 19", 2 of 2 runs. |
+| **Run & Bun 1.07** (Emerald) | ✅ | ✅ | ⚠️ | **New (2.3.0):** read live although it runs on an expanded engine: species by name (1233 in National Dex order, forms after them), the team searched for in RAM (0x02023A98), the place through SaveBlock1 and the ROM's own map table. Chimchar L5, Littleroot Town / Route 101, the wild (Galarian) Zigzagoon L2 with its HP. Your own Pokémon's HP during a battle is the pre-battle one (its battle structs moved), and the battle kind is a guess (several opponents = trainer). Before 2.3.0 it said "not supported". |
+| **Unbound 2.1.1** (FireRed) | ❌ | ❌ | ❌ | **Not tested: no FireRed ROM was available** (the UPS patch needs FireRed 1.0, CRC32 DD88761C). As a CFRU hack it gets the same treatment as Run & Bun (species by name, the team searched for); if its team can't be found the play view says the hack isn't supported – unverified. |
 
 ### Not in the test set
 
@@ -74,14 +75,23 @@ table layout is read by a separate path that no ROM here could check.
 - **Gen 5 place names** of hacks that pad their text file (Blaze Black 2 Redux).
 - **Gen 5 battles** end when the game copies the battle's HP back, instead of ~90 s later.
 
+Round 2 (2.3.0) – every game played to a real wild catch where the plan gets there (Poké Balls are written into the
+bag by the test, the game itself throws and catches):
+
+- **Catch filing:** every real catch landed in the right area – by the game's met location (Crystal, Gen 3–5) or, for
+  Gen 1 and Gold/Silver, by the place the sign showed when the catch joined right after a wild battle (new).
+- **Battle flags** checked in the running games (Platinum, Pearl, Black, Black 2) and used: battles start and end on
+  time, an NPC's catching demo is no longer the player's battle.
+- **Gen 5 battle HP** from the battle's own structs: the opponent's and your Pokémon's HP go down as on screen.
+- **Types from hack ROMs** (Gen 3 base stats, Gen 4/5 personal data), Fairy matchups for hacks that add the type.
+- **Run & Bun** is read live (expanded engine).
+
 ## Known gaps
 
-- Gen 5: the opponent's HP on the battle panel stays at full (species, level and kind are right).
-- Gen 4/5 live plans stop before the starter (Platinum, Pearl: Twinleaf Town; Black 2/White 2: Aspertia City), so their
-  team and battle readers were checked live only on HeartGold (earlier) and Black. A wild catch with a Poké Ball was not
-  played in any game; catch filing was checked through the starter's met location against the sign's place id, and by
-  the run-logic tests.
-- Types of hacks that change them (Fairy type in Renegade Platinum / Blaze Black 2 Redux, Light Platinum's new
-  Pokémon) come from souldew's Pokémon data, not from the ROM.
+- White 2's battle flag isn't checked (a demo battle lingers for a while); Gen 5 catching demos may show as a battle
+  in White/White 2.
+- Run & Bun: your own Pokémon's HP during a battle (its battle structs moved), the battle kind is a guess.
+- Moves of hacks that retype them (Fairy moves in Renegade Platinum / Blaze Black 2 Redux) come from souldew's move
+  data; the Pokémon's types come from the ROM.
 - The input plans are timing-sensitive (inputs land a frame or two apart from run to run); the matrix script retries a
-  game whose plan loses its way (`--attempts`).
+  game whose plan loses its way (`--attempts`). DS plans take 10–25 minutes each.
