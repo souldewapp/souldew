@@ -5,8 +5,9 @@
 // internal index, which only the vanilla table (shared/data/gen3_index_to_dex.json) knew so far.
 //
 // Expanded engines (Complete FireRed Upgrade – Unbound, Radical Red –, pokeemerald-expansion and builds like Run & Bun)
-// carry 900–1500 species in a table of their own order. They are reported as `engine: 'expanded'`: their RAM layout
-// isn't the vanilla one either, so the live reader doesn't guess there (shared/live/parse.mjs, web/views/play.mjs).
+// carry 900–1500 species in a table of their own order. They are reported as `engine: 'expanded'` (mapped by name):
+// their RAM layout isn't the vanilla one either, so the live reader finds the party by searching for it and the map
+// through SaveBlock1 (shared/live/parse.mjs, location.mjs, web/views/play.mjs) – or says the hack isn't supported.
 
 import { listNdsFiles, ndsFile, parseNarc } from '../nds.mjs';
 
@@ -109,8 +110,9 @@ export function romSpecies(rom, opts = {}) {
     // the retail games have 412 entries (411 species + "??????????"); an engine with hundreds more is an expanded one
     const engine = t.names.length > 450 || t.stride !== 11 ? 'expanded' : 'vanilla';
     const source = { names: t.offset, stride: t.stride };
-    if (engine === 'expanded') return { gen: 3, engine, count: t.names.length - 1, changed: null, source };
-    const m = gen3SpeciesMap(t.names, opts.gen3Index || [], opts.dexNames || []);
+    // an expanded engine numbers its species its own way (Run & Bun: National Dex order, forms after them) – mapped by
+    // name alone; a form ("Zigzagoon" from Galar) is its species
+    const m = gen3SpeciesMap(t.names, engine === 'expanded' ? [] : opts.gen3Index || [], opts.dexNames || []);
     const out = { gen: 3, engine, count: t.names.length - 1, changed: m.changed, source };
     if (m.changed) Object.assign(out, { map: m.map, unknown: m.unknown });
     return out;

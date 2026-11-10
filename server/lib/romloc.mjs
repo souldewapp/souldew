@@ -8,14 +8,14 @@ import { readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from 'no
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
-import { romLocations } from '../../shared/live/romloc.mjs';
+import { romLocations, gen3MapTable } from '../../shared/live/romloc.mjs';
 import { romSpecies, romTypes } from '../../shared/live/romspecies.mjs';
 import { gbWramShift } from '../../shared/live/romwram.mjs';
 import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 5; // bump when romLocations() / romSpecies() change what they find
+const VERSION = 6; // bump when romLocations() / romSpecies() change what they find
 const memo = new Map();
 let tables = null;
 
@@ -56,6 +56,8 @@ export function romData(u8, sharedDir) {
   const data = romLocations(u8, o);
   if (data) data.vanilla = vanilla;
   const species = romSpecies(u8, o);
+  // an expanded GBA engine moved gMapHeader: the place comes from SaveBlock1's map and the ROM's map table instead
+  if (data && species?.engine === 'expanded') data.maps3 = gen3MapTable(u8);
   // a modified ROM's own types where they differ from the app's (Fairy hacks, retyped or new Pokémon)
   const types = vanilla || species?.engine === 'expanded' ? null : romTypes(u8, { baseTypes: o.baseTypes, speciesMap: species?.map ? species : null, vanillaIndex: o.gen3Index });
   return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, vanilla };

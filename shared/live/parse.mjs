@@ -234,7 +234,43 @@ function gen3StatsOk(d, isEgg) {
   return true;
 }
 
+/**
+ * An expanded GBA engine (entry.scan3): gPlayerParty isn't at the base game's address. Searched for in EWRAM – the
+ * party count byte 3 bytes before `count` valid 100-byte structs (checksums) – and remembered while it holds; Run & Bun
+ * keeps it at 0x02023A98 (count 0x02023A95), gEnemyParty 600 bytes on, as in the base game.
+ */
+function findGen3Party(read, T, state) {
+  const okAt = (ram, o) => {
+    const n = ram[o - 3];
+    if (n < 1 || n > 6) return false;
+    for (let i = 0; i < n; i++) {
+      const m = parsePk3(ram.subarray(o + i * 100, o + i * 100 + 100), T);
+      if (!m || m.bad || m.level < 1 || m.level > 100 || m.maxHp < 1 || m.hp > m.maxHp) return false;
+    }
+    return true;
+  };
+  if (state.party3) {
+    const b = read(state.party3 - 4, 4 + 600);
+    if (b && okAt(b, 4)) return state.party3;
+  }
+  if (state.lastScan3 && Date.now() - state.lastScan3 < 3000) return null;
+  state.lastScan3 = Date.now();
+  const ram = read(0x02000000, 0x40000);
+  if (!ram) return null;
+  for (let o = 4; o + 600 <= ram.length; o += 4) {
+    if (ram[o] === 0 && ram[o + 1] === 0 && ram[o + 2] === 0 && ram[o + 3] === 0) continue;
+    if (okAt(ram, o)) return (state.party3 = 0x02000000 + o);
+  }
+  state.party3 = null;
+  return null;
+}
+
 function readGen3(entry, read, T, state = {}) {
+  if (entry.scan3) {
+    const at = findGen3Party(read, T, state);
+    if (!at) return null;
+    entry = { ...entry, partyAddr: `0x${at.toString(16)}`, partyCountAddr: `0x${(at - 3).toString(16)}`, enemyPartyAddr: `0x${(at + 600).toString(16)}` };
+  }
   const c = read(hex(entry.partyCountAddr), 1);
   if (!c) return null;
   const count = c[0];
@@ -596,9 +632,22 @@ function activeGB(entry, read, T, state, party, stale) {
   return state.gbActive !== null && state.gbActive !== undefined ? { index: state.gbActive } : null;
 }
 
-function battleGen3(entry, read, T) {
+function battleGen3(entry, read, T, state = {}) {
   const flag = read(hex(entry.inBattle.addr), 1)?.[0];
   if (flag === undefined || !(flag & hex(entry.inBattle.mask || '0x02'))) return null;
+  if (entry.scan3) {
+    // an expanded engine: gMain (the flag) stays where it was, gBattleTypeFlags and gBattlerPartyIndexes moved – the
+    // opponent is the first one standing of gEnemyParty (600 bytes after the party found), several of them a trainer
+    if (!state.party3) return null;
+    const raw = read(state.party3 + 600, 600);
+    const mons = [];
+    for (let i = 0; raw && i < 6; i++) {
+      const m = parsePk3(raw.subarray(i * 100, i * 100 + 100), T);
+      if (m && !m.bad && m.level >= 1 && m.level <= 100 && m.maxHp > 0 && m.hp <= m.maxHp) mons.push(m);
+    }
+    const m = mons.find((x) => x.hp > 0) || mons[0];
+    return { kind: mons.length > 1 ? 'trainer' : 'wild', enemy: m ? { species: m.species, level: m.level, hp: m.hp, maxHp: m.maxHp, shiny: m.shiny, moves: m.moves } : null, active: null };
+  }
   const types = read(hex(entry.battleTypeFlagsAddr), 4);
   const trainer = !!types && !!(u32le(types, 0) & 0x08); // BATTLE_TYPE_TRAINER
   // gBattlerPartyIndexes: battler 1 is the opponent's first slot
@@ -931,7 +980,7 @@ export function readLiveBattle(entry, read, T, state = {}, party = null) {
   if (!entry) return null;
   try {
     if (entry.gen <= 2) return holdEnemy(state, entry.battleEnemy && entry.inBattle ? battleGB(entry, read, T, state, party) : null);
-    if (entry.gen === 3) return holdEnemy(state, entry.enemyPartyAddr && entry.inBattle ? battleGen3(entry, read, T) : null);
+    if (entry.gen === 3) return holdEnemy(state, entry.enemyPartyAddr && entry.inBattle ? battleGen3(entry, read, T, state) : null);
     return battleDS(entry, read, T, state, party);
   } catch {
     return null;

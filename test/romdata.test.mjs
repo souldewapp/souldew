@@ -89,12 +89,14 @@ test('Gen 3 species table: a hack\'s other Pokémon are mapped by name, a fakém
   assert.equal(parsePk3(pk3({ internal: 252 }), T), null, 'without the ROM\'s table the slot is no Pokémon at all');
 });
 
-test('Gen 3 species table: an expanded engine (hundreds more species) is recognised, not mapped', () => {
+test('Gen 3 species table: an expanded engine (hundreds more species) is recognised and mapped by name', () => {
   const names = retailNames(411);
   for (let i = 0; i < 600; i++) names.push(`Mon${String.fromCharCode(65 + (i % 26))}x`);
   const r = romSpecies(gbaWithNames(names, { size: 0x20000 }), { gen3Charset: cs3, gen3Index: vanilla3, dexNames });
   assert.equal(r.engine, 'expanded');
-  assert.equal(r.map, undefined);
+  assert.equal(r.map[1], 1, 'Bulbasaur by its name');
+  assert.equal(r.map[277], 252, 'by name, not by the retail numbering');
+  assert.equal(r.unknown[412], 'MonAx');
   assert.equal(romSpecies(new Uint8Array(0x10000), { gen3Charset: cs3 }), null, 'no table, no guess');
   assert.equal(romSpecies(Uint8Array.from({ length: 0x400 }, () => 0x55), {}), null, 'not a GBA ROM');
 });
@@ -409,4 +411,33 @@ test('types from the ROM: a Gen 3 hack\'s own types; Fairy matchups only matter 
   assert.ok(!typesOfGen(4).includes('fairy'));
   assert.ok(defenseChart(['dragon'], 4, { fairy: true })[2].includes('fairy'), 'a Fairy hack: Dragon is weak to it');
   assert.ok(!defenseChart(['dragon'], 4)[2].includes('fairy'), 'a retail game: no Fairy');
+});
+
+test('expanded GBA engines (Run & Bun): the team is searched for in EWRAM, the place read through SaveBlock1', async () => {
+  const { readLiveParty, readLiveBattle, findEntry, LiveTables } = await import('../shared/live/parse.mjs');
+  const { readLocation } = await import('../shared/live/location.mjs');
+  const maps = json('maps.json');
+  const emerald = findEntry(json('addresses.json'), { platform: 'gba', code: 'BPEE' });
+  const entry = { ...emerald, scan3: true };
+  // Run & Bun numbers its species in National Dex order: the ROM's map (romSpecies, by name) – Chimchar is 390
+  const T = new LiveTables({ charsetGen3: cs3, gen3Index: idx3 }).withSpecies({ map: Object.assign([], { 390: 390, 987: 263 }) });
+  const mem = new Map();
+  const put = (a, bytes) => bytes.forEach((b, i) => mem.set(a + i, b));
+  const read = (a, n) => Uint8Array.from({ length: n }, (_, i) => mem.get(a + i) ?? 0);
+  put(0x02023a95, [1]);
+  put(0x02023a98, [...pk3({ internal: 390, level: 5, hp: 20, maxHp: 20 })]);
+  put(0x02023a98 + 600, [...pk3({ pid: 0x55667788, internal: 987, level: 2, hp: 9, maxHp: 14 })]);
+  const state = {};
+  const r = readLiveParty(entry, read, T, state);
+  assert.deepEqual(r.party.map((m) => [m.species, m.level, m.hp]), [[390, 5, 20]], 'found where the base game has nothing');
+  assert.equal(readLiveParty(emerald, read, T, {})?.party?.length || 0, 0, 'the base game\'s address holds no team');
+  put(0x030026f9, [0x02]); // gMain.inBattle (gMain didn't move)
+  const f = readLiveBattle(entry, read, T, state, r.party);
+  assert.deepEqual([f.kind, f.enemy.species, f.enemy.level, f.enemy.hp], ['wild', 263, 2, 9], 'a Galarian Zigzagoon is a Zigzagoon');
+  // the place: gSaveBlock1Ptr among the code's busiest IWRAM addresses → SaveBlock1 { x, y, mapGroup, mapNum }
+  const rom = { gen: 3, family: 'rse', lang: 'en', vanilla: false, names: Object.assign([], { 16: 'Route 101' }), mapLoc: null, maps3: { mapsec: { '0.16': 16, '0.9': 0 }, iwram: [0x03005e10, 0x03005d9c] } };
+  put(0x03005d9c, [0xbc, 0x4c, 0x02, 0x02]);
+  put(0x02024cbc, [10, 0, 15, 0, 0, 16]);
+  assert.deepEqual(readLocation(maps, emerald, read, { rom, state }), { gen: 3, id: 16, map: '0.16', romName: 'Route 101' });
+  assert.equal(state.sb1PtrAddr, 0x03005d9c);
 });

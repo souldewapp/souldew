@@ -18,7 +18,9 @@ function helper() {
     const found = parse.findEntry(addresses, header);
     // a Game Boy hack with moved RAM variables: the shifted addresses, as the play view uses them
     const wram = found?.gen <= 2 ? romloc?.wram || null : null;
-    const entry = wram ? { ...romwram.shiftEntry(found, wram), wram } : found;
+    // an expanded GBA engine: the team searched for, the place through SaveBlock1 (as web/views/play.mjs does)
+    const expanded = found?.gen === 3 && romloc?.species?.engine === 'expanded';
+    const entry = wram ? { ...romwram.shiftEntry(found, wram), wram } : expanded ? { ...found, scan3: true } : found;
     const species = romloc?.species || null;
     // what the play view does (web/views/play.mjs): a GBA ROM's own species table; an expanded engine isn't read
     const T = entry?.gen === 3 && species ? T0.withSpecies(species) : T0;
@@ -37,7 +39,7 @@ function helper() {
     } catch (err) {
       run = { error: String(err?.message || err) };
     }
-    ctx = { run, parse, location, T, T0, entry, maps, tables: { maps, loc2, loc3, gen4 }, rom: romloc?.data || null, species, hack: entry?.gen === 3 && species?.engine === 'expanded', names: api.names.en, state: {}, rawState: {}, header };
+    ctx = { run, parse, location, T, T0, entry, maps, tables: { maps, loc2, loc3, gen4 }, rom: romloc?.data || null, species, hack: entry?.gen === 3 && species?.engine === 'expanded' && !species?.map, names: api.names.en, state: {}, rawState: {}, header };
     return {
       entry: entry?.id || null,
       vanilla: romloc?.vanilla ?? null,
@@ -270,6 +272,7 @@ function helper() {
         if (p) shots.push(p);
       } else if (s.do === 'check') {
         await ensureRam();
+        ctx.state.lastScan3 = 0; // (the app reads every 0.7 s and searches every 3 s; a check reads now)
         const tm = team();
         log.push({ do: 'check', name: s.name, frame: e.frames(), place: place(), team: tm, run: runNote(tm) });
         continue;

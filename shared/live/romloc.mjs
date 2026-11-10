@@ -117,6 +117,60 @@ export function gen3Names(rom, charset, code = String.fromCharCode(...rom.subarr
   return null;
 }
 
+/**
+ * Gen 3 map → region map section, from the ROM's map header table (gMapGroups: group pointers → arrays of MapHeader
+ * pointers; MapHeader +0x14 regionMapSectionId), and the IWRAM addresses the code loads most often (gSaveBlock1Ptr is
+ * among them). For engines whose RAM layout moved (pokeemerald-expansion builds like Run & Bun): the live reader then
+ * finds the player's map through SaveBlock1 instead of gMapHeader. → { mapsec: { 'group.num': section }, iwram: [addr…] }
+ * or null.
+ */
+export function gen3MapTable(rom) {
+  const len = rom.length;
+  const isPtr = (v) => v >= 0x08000000 && v < 0x08000000 + len && (v & 3) === 0;
+  const header = (v) => {
+    if (!isPtr(v)) return false;
+    const o = v - 0x08000000;
+    if (o + 0x1c > len) return false;
+    const c = u32(rom, o + 12);
+    const scripts = u32(rom, o + 8); // (map scripts are byte code: any alignment)
+    return isPtr(u32(rom, o)) && isPtr(u32(rom, o + 4)) && scripts >= 0x08000000 && scripts < 0x08000000 + len && (c === 0 || isPtr(c)) && rom[o + 22] < 0x30 && rom[o + 23] < 0x10;
+  };
+  const groupOk = (g) => isPtr(g) && header(u32(rom, g - 0x08000000)) && header(u32(rom, g - 0x08000000 + 4));
+  let table = -1;
+  for (let o = 0; o + 80 <= len; o += 4) {
+    if (!groupOk(u32(rom, o))) continue;
+    let n = 1;
+    while (n < 20 && groupOk(u32(rom, o + n * 4))) n++;
+    if (n >= 20) {
+      table = o;
+      break;
+    }
+  }
+  if (table < 0) return null;
+  const groups = [];
+  for (let i = 0; table + i * 4 < len && groupOk(u32(rom, table + i * 4)); i++) groups.push(u32(rom, table + i * 4));
+  const mapsec = {};
+  groups.forEach((g, gi) => {
+    // a group's array ends where the next one's begins (they are laid out one after the other)
+    const next = groups.filter((x) => x > g).sort((a, b) => a - b)[0];
+    for (let n = 0; n < 256; n++) {
+      const at = g - 0x08000000 + n * 4;
+      if (next && g + n * 4 >= next) break;
+      const h = u32(rom, at);
+      if (!header(h)) break;
+      mapsec[`${gi}.${n}`] = rom[h - 0x08000000 + 0x14];
+    }
+  });
+  // IWRAM addresses in the code's literal pools, most used first
+  const count = new Map();
+  for (let o = 0; o + 4 <= len; o += 4) {
+    const v = u32(rom, o);
+    if (v >= 0x03000000 && v < 0x03008000 && (v & 3) === 0) count.set(v, (count.get(v) || 0) + 1);
+  }
+  const iwram = [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16).map(([v]) => v);
+  return { mapsec, iwram, offset: table };
+}
+
 // ---------------------------------------------------------------- Gen 4 (DS)
 
 /** Decrypts a Gen 4 message file (pokeheartgold/pokeplatinum msgdata format) → strings; `chars` = gen4.json chars. */
