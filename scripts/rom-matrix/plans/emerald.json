@@ -6,7 +6,7 @@
 "hacks": [
 "emerald-kaizo"
 ],
-"note": "Emerald (US/EU), also Emerald Kaizo: truck \u2192 home \u2192 rival's house \u2192 Route 101, Birch's bag (Torchic) \u2192 the Zigzagoon battle",
+"note": "Emerald (US/EU), also Emerald Kaizo: truck \u2192 home \u2192 rival's house \u2192 Route 101, Birch's bag (Torchic) \u2192 the Zigzagoon battle Then a real wild catch with Pok\u00e9 Balls given into the bag (filed under Route 101).",
 "pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))",
 "steps": [
 {
@@ -994,6 +994,1453 @@
 ]
 ],
 "max": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "give",
+"item": "ball",
+"count": 20
+},
+{
+"do": "go",
+"x": 6,
+"y": 30,
+"order": "xy",
+"leave": true,
+"map": 260,
+"required": false,
+"patience": 6
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9 && (((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[2]===17"
+},
+"max": 900,
+"required": false
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "go",
+"x": 10,
+"y": 17,
+"order": "x",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "go",
+"x": 6,
+"y": 30,
+"order": "xy",
+"leave": true,
+"map": 260,
+"required": false,
+"patience": 6
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9 && (((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[2]===17"
+},
+"max": 900,
+"required": false
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "go",
+"x": 10,
+"y": 17,
+"order": "x",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "log",
+"name": "town",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "go",
+"x": 10,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"x": 11,
+"y": -2,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "check",
+"name": "r101"
+},
+{
+"do": "go",
+"y": 15,
+"order": "y",
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"x": 4,
+"y": 15,
+"order": "xy",
+"required": false,
+"patience": 6
+},
+{
+"do": "log",
+"name": "grass",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))"
+},
+{
+"do": "shot",
+"name": "x3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 4,
+"every": 16,
+"max": 10000,
+"until": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "wild2"
+},
+{
+"do": "shot",
+"name": "w0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "shot",
+"name": "throw"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 200,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]>=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+]
+],
+"every": 90,
+"max": 1200,
+"until": {
+"expr": "read(0x0203CE5D,1)[0]<=1 || (team()?.party?.length||0)>=2"
+},
+"required": false,
+"hold": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 2500,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "check",
+"name": "caught0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000,
+"until": "nobattle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "caught"
+},
+{
+"do": "shot",
+"name": "caught"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1200
+},
+{
+"do": "check",
+"name": "caught2"
 }
 ],
 "expect": {
@@ -1029,6 +2476,11 @@
 5,
 6
 ]
+}
+},
+"caught2": {
+"catch": {
+"area": "Route 101"
 }
 }
 }
