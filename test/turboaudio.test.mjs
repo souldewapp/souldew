@@ -586,7 +586,7 @@ const quietWin = (out, a, b, W = Math.round(0.05 * SR)) => {
   return m;
 };
 
-test('DS without speed-up sound, straight into fast-forward with nothing recorded: music mode plays the skipping sound like original – never silence', () => {
+test('DS without speed-up sound, straight into fast-forward with nothing recorded: original plays the skipping sound (de-clicked), music stays quiet', () => {
   const f = tune({ seed: 5, period: 120 });
   const m = new TurboMixer(SR, { seconds: 60 });
   m.command({ type: 'skip', on: true });
@@ -594,8 +594,11 @@ test('DS without speed-up sound, straight into fast-forward with nothing recorde
   m.command({ type: 'speed', ratio: 4 });
   const src = skipping(f, 2.7, SR); // the machine only reaches 2.7×
   const raw = Float32Array.from({ length: 4 * SR }, (_, i) => src(i));
-  // the skipping sound, its jumps smoothed (1 ms late: the de-click delay) – in "music" as in "original"
-  for (const [mode, from] of [['music', 0], ['original', 2 * SR]]) {
+  // "original": the skipping sound, its jumps smoothed (1 ms late: the de-click delay)
+  m.command({ type: 'mode', mode: 'music' });
+  const music = feed(m, src, 0, 2);
+  assert.equal(rms(music.subarray(Math.round(0.2 * SR))), 0, 'music: nothing recorded – quiet, never the skipping (sped-up sounding) music');
+  for (const [mode, from] of [['original', 2 * SR]]) {
     m.command({ type: 'mode', mode });
     const out = feed(m, (i) => src(from + i), 0, 2);
     assert.equal(quietWin(out, 0, out.length), 0, `${mode}: never silent`);
@@ -604,7 +607,7 @@ test('DS without speed-up sound, straight into fast-forward with nothing recorde
   }
 });
 
-test('DS: fast-forward right after the start plays the skipping sound, the next one the bed recorded at 1× in between', () => {
+test('DS: fast-forward right after the start is quiet (nothing recorded), the next one plays the bed recorded at 1× in between', () => {
   const A = tune({ seed: 3, period: 120 });
   const m = new TurboMixer(SR, { seconds: 60 });
   m.command({ type: 'skip', on: true });
@@ -612,7 +615,7 @@ test('DS: fast-forward right after the start plays the skipping sound, the next 
   m.command({ type: 'speed', ratio: 3 });
   const first = feed(m, skipping(A, 3, t), 0, 3);
   assert.equal(m.carry, null);
-  assert.ok(longestQuiet(first, 0, first.length) < 0.05, `quiet for ${longestQuiet(first, 0, first.length)} s`);
+  assert.equal(rms(first.subarray(Math.round(0.2 * SR))), 0, 'quiet – not the skipping sound');
   m.command({ type: 'speed', ratio: 1 });
   t += 9 * SR;
   t += feed(m, A, t, 9).length; // enough 1× music for a bed that is more than a stutter (≥ 3.5 s)
@@ -743,7 +746,7 @@ const whichSong = (out, a, b, songs) => {
   });
 };
 
-test('song key, DeSmuME: a route change during fast-forward plays the new route’s loop from the library, an unheard one the game’s own sound', () => {
+test('song key, DeSmuME: a route change during fast-forward plays the new route’s loop from the library, an unheard one keeps the music going', () => {
   const A = tune({ seed: 1 });
   const B = tune({ seed: 2 });
   const C = tune({ seed: 7 });
@@ -766,12 +769,14 @@ test('song key, DeSmuME: a route change during fast-forward plays the new route�
   [a, b] = whichSong(out, Math.round(0.4 * SR), out.length, [A, B]);
   assert.ok(a > 0.8 && b < 0.4, `route A plays (A ${a.toFixed(2)}, B ${b.toFixed(2)})`);
   assert.ok(longestQuiet(out, 0, out.length) < 0.25, `quiet for ${longestQuiet(out, 0, out.length)} s`);
-  // a route never played at 1×: its music is in the game's skipping sound – that plays, not A's or B's loop
+  // a route never played at 1×: route A's loop goes on (music continues) – never the game's skipping sound
   m.command({ type: 'song', key: 'mC' });
   const src = skipping(C, 3, 0);
   out = feed(m, src, 0, 2);
-  assert.ok(corr(out, src, -m.dc.D, Math.round(0.4 * SR), out.length) > 0.9, 'the game’s own sound');
-  assert.ok(longestQuiet(out, 0, out.length) < 0.25, `quiet for ${longestQuiet(out, 0, out.length)} s`);
+  assert.ok(Math.abs(corr(out, src, -m.dc.D, Math.round(0.4 * SR), out.length)) < 0.2, 'not the game’s own sound');
+  [a] = whichSong(out, Math.round(0.1 * SR), out.length, [A]);
+  assert.ok(a > 0.8, `route A’s loop goes on (${a.toFixed(2)})`);
+  assert.ok(longestQuiet(out, 0, out.length) < 0.05, `quiet for ${longestQuiet(out, 0, out.length)} s`);
   // the next fast-forward on route C after 1× there: C's own loop
   m.command({ type: 'speed', ratio: 1 });
   feed(m, C, 0, 14);
@@ -782,7 +787,7 @@ test('song key, DeSmuME: a route change during fast-forward plays the new route�
   assert.ok(c > 0.8, `route C’s loop (${c.toFixed(2)})`);
 });
 
-test('song key, DeSmuME: fast-forward on a route not yet recorded plays its own sound, not the previous route’s bed', () => {
+test('song key, DeSmuME: fast-forward on a route not yet recorded plays the previous route’s bed, never its skipping sound', () => {
   const A = tune({ seed: 3, period: 120 });
   const B = tune({ seed: 8, period: 120 });
   const m = new TurboMixer(SR, { seconds: 60 });
@@ -793,10 +798,10 @@ test('song key, DeSmuME: fast-forward on a route not yet recorded plays its own 
   m.command({ type: 'song', key: 'mB' });
   feed(m, B, 0, 1); // only 1 s on route B
   m.command({ type: 'speed', ratio: 3 });
-  assert.equal(m.carry, null, 'not route A’s bed');
+  assert.ok(m.carry?.lib && m.carry.key === 'mA', 'route A’s bed (music continues)');
   const src = skipping(B, 3, SR);
   const out = feed(m, src, 0, 2);
-  assert.ok(corr(out, src, -m.dc.D, Math.round(0.1 * SR), out.length) > 0.9, 'route B’s own (skipping) sound');
+  assert.ok(Math.abs(corr(out, src, -m.dc.D, Math.round(0.1 * SR), out.length)) < 0.2, 'not route B’s skipping sound');
   assert.ok(longestQuiet(out, 0, out.length) < 0.05);
 });
 
@@ -857,7 +862,9 @@ test('song key: the first key (start, title screen) does not adopt what played b
   m.command({ type: 'speed', ratio: 3 });
   const src = skipping(A, 3, 2 * SR);
   const out = feed(m, src, 0, 2);
-  assert.ok(corr(out, src, -m.dc.D, Math.round(0.3 * SR), out.length) > 0.9, 'route A’s own sound, not the title music');
+  // nothing of route A recorded yet: the music heard last (the title's) goes on – never the skipping sound
+  assert.ok(Math.abs(corr(out, src, -m.dc.D, Math.round(0.3 * SR), out.length)) < 0.2, 'not route A’s skipping sound');
+  assert.ok(longestQuiet(out, 0, out.length) < 0.1, 'music, not silence');
   m.command({ type: 'speed', ratio: 1 });
   feed(m, A, 0, 12);
   const [t, a] = libSong(m.lib.get('mA'), [title, A]);
@@ -922,7 +929,7 @@ test('song library: a short visit later does not replace a song’s long bed wit
   assert.ok(longestQuiet(out, 0, out.length) < 0.1);
 });
 
-test('DS: a bed of only a few seconds is a stutter – the game’s own sound plays instead', () => {
+test('DS: a bed of only a few seconds is a stutter – fast-forward stays quiet instead (never the skipping sound)', () => {
   const A = tune({ seed: 3, period: 120 });
   const m = new TurboMixer(SR, { seconds: 60 });
   m.command({ type: 'skip', on: true });
@@ -936,7 +943,7 @@ test('DS: a bed of only a few seconds is a stutter – the game’s own sound pl
   assert.equal(m.carry, null);
   const src = skipping(A, 3, 5 * SR);
   const out = feed(m, src, 0, 2);
-  assert.ok(corr(out, src, -m.dc.D, Math.round(0.2 * SR), out.length) > 0.9, 'the game’s own sound');
+  assert.equal(rms(out.subarray(Math.round(0.2 * SR))), 0, 'quiet');
 });
 
 // ---- the frame pacer (2.2): a GBA game at the sound card's own rate --------------------------------------------------
@@ -1153,7 +1160,7 @@ const skippingAt = (rate, music, ratio, from = 0) => {
 };
 
 for (const rate of [48000, 96000]) {
-  test(`skip mode at ${rate / 1000} kHz (GBA, song keys): the loop plays in every fast-forward, a new scene's song plays at normal pitch, never slowed down`, () => {
+  test(`skip mode at ${rate / 1000} kHz (GBA, song keys): the loop plays in every fast-forward, a new scene's unheard song keeps it going, never slowed down`, () => {
     const A = tuneAt(rate, { seed: 1 });
     const C = tuneAt(rate, { seed: 7 });
     const m = new TurboMixer(rate, { seconds: 60 });
@@ -1172,14 +1179,214 @@ for (const rate of [48000, 96000]) {
       t += back.out.length;
       assert.ok(back.srcs.slice(Math.round((0.3 * rate) / 128)).every((s) => s === 'game'), `round ${round}: the game’s sound again`);
     }
-    // a scene change while fast-forwarding, to a song never heard at 1× (the player's "m405"): the game's own sound,
-    // the song at its normal pitch – nothing slowed down
+    // a scene change while fast-forwarding, to a song never heard at 1× (the player's "m405"): the route's loop goes on
+    // (2.2.1-beta.1 played the game's skipping sound here – what the player heard as sped-up music)
     m.command({ type: 'speed', ratio: 4 });
     feedAt(m, rate, skippingAt(rate, A, 4, t), 1);
     m.command({ type: 'song', key: 'm405' });
     const src = skippingAt(rate, C, 4, 0);
     const scene = feedAt(m, rate, src, 2);
-    assert.ok(corr(scene.out, src, -m.dc.D, Math.round(0.4 * rate), scene.out.length) > 0.9, 'the game’s own sound');
+    assert.ok(Math.abs(corr(scene.out, src, -m.dc.D, Math.round(0.4 * rate), scene.out.length)) < 0.2, 'not the game’s own sound');
+    assert.ok(scene.srcs.every((s) => s === 'loop' || s === 'lib'), `the loop goes on (${[...new Set(scene.srcs)]})`);
     assert.ok(!scene.srcs.includes('stream'), 'never the slowed-down stream');
   });
+}
+
+// ---- 2.2.1-beta.2: "Music continues" never plays the game's own fast-forward sound; mixers hand over what they recorded --
+// A Windows player (2.2.1-beta.1, GBA) heard sped-up music in "Music continues" after scene changes – "Sped-up original"
+// and "Plain" then sounded the same, only "Mute" differed. The skipping fast-forward sound (every core since 2.2) was the
+// mixer's fallback whenever it had nothing recorded for the song: after a scene change to an unheard song, and after every
+// rebuild of the core's sound (a new AudioContext when Windows restarts its GPU process – the new mixer knew nothing).
+
+test('skip mode: a scene change during fast-forward to an unheard song keeps the previous loop – never the skipping sound', () => {
+  const rate = 48000;
+  const A = tuneAt(rate, { seed: 1 });
+  const C = tuneAt(rate, { seed: 7 });
+  const m = new TurboMixer(rate, { seconds: 60 });
+  m.command({ type: 'skip', on: true });
+  m.command({ type: 'song', key: 'p3.84' });
+  const t = feedAt(m, rate, A, 14).out.length;
+  m.command({ type: 'speed', ratio: 4 });
+  feedAt(m, rate, skippingAt(rate, A, 4, t), 1);
+  m.command({ type: 'song', key: 'm405' }); // a song never heard at 1×
+  const src = skippingAt(rate, C, 4, 0);
+  const scene = feedAt(m, rate, src, 3);
+  const from = Math.round(0.2 * rate);
+  assert.ok(scene.srcs.slice(from / 128).every((s) => s === 'loop' || s === 'lib'), `the previous loop (${[...new Set(scene.srcs)]})`);
+  assert.ok(Math.abs(corr(scene.out, src, -m.dc.D, from, scene.out.length)) < 0.2, 'not the game’s skipping sound');
+  assert.ok(longestQuiet(scene.out, 0, scene.out.length) * (SR / rate) < 0.1, 'music, not silence');
+  assert.equal(m.live.t, 0, 'the game’s sound stays muted');
+});
+
+test('skip mode, nothing recorded at all: "Music continues" is quiet while fast-forwarding, "Sped-up original" plays the game', () => {
+  const f = tune({ seed: 5, period: 120 });
+  const m = new TurboMixer(SR, { seconds: 60 });
+  m.command({ type: 'skip', on: true });
+  feed(m, f, 0, 1);
+  m.command({ type: 'speed', ratio: 4 });
+  const src = skipping(f, 4, SR);
+  const music = feed(m, src, 0, 2);
+  assert.equal(rms(music.subarray(Math.round(0.2 * SR))), 0, 'music mode: silence, not the sped-up music');
+  m.command({ type: 'mode', mode: 'original' });
+  const orig = feed(m, (i) => src(2 * SR + i), 0, 2);
+  assert.ok(corr(orig, (i) => src(2 * SR + i), -m.dc.D, Math.round(0.2 * SR), orig.length) > 0.9, 'original: the game’s own sound');
+});
+
+test('mute while fast-forwarding silences every state the mixer can be in (loop, bed, library, stream, nothing)', () => {
+  const A = tune({ seed: 1 });
+  for (const setup of ['loop', 'nothing', 'stream', 'skip-lib']) {
+    const m = new TurboMixer(SR, { seconds: 30 });
+    if (setup === 'skip-lib') m.command({ type: 'skip', on: true });
+    m.command({ type: 'song', key: 'mA' });
+    if (setup !== 'nothing' && setup !== 'stream') feed(m, A, 0, 14);
+    m.command({ type: 'speed', ratio: 3 });
+    feed(m, sped(A, 3, 14 * SR), 0, 1.5);
+    m.command({ type: 'mode', mode: 'mute' });
+    const out = feed(m, sped(A, 3, 16 * SR), 0, 1);
+    assert.equal(rms(out.subarray(Math.round(0.2 * SR))), 0, `${setup}: silent`);
+  }
+});
+
+test('a stream (no length, no score) never makes the status report throw', () => {
+  const m = new TurboMixer(SR, { seconds: 30 });
+  const d = m.describe({ stream: true, lag: Infinity, xfade: 0 });
+  assert.deepEqual(d, { seconds: null, score: null, fine: null, xfade: 0 });
+});
+
+/** A mixer that heard `songs` ({ key: tune }) at 1× for 14 s each, in that order. */
+function heard(rate, songs, { skip = true } = {}) {
+  const m = new TurboMixer(rate, { seconds: 60 });
+  if (skip) m.command({ type: 'skip', on: true });
+  for (const [key, f] of Object.entries(songs)) {
+    m.command({ type: 'song', key });
+    feedAt(m, rate, f, 14);
+  }
+  return m;
+}
+
+test('the core rebuilt its sound: the new mixer takes over the old one’s library and plays the song’s loop right away', () => {
+  const rate = 48000;
+  const A = tuneAt(rate, { seed: 1 });
+  const B = tuneAt(rate, { seed: 2 });
+  const old = heard(rate, { mA: A, mB: B });
+  assert.ok(old.lib.has('mA') && old.lib.has('mB'));
+  let memory = null;
+  old.onEvent = (e) => e.type === 'export' && (memory = e);
+  old.command({ type: 'export' });
+  assert.ok(memory && memory.lib.length === 2 && memory.sr === rate, 'exported');
+  // the new context's mixer: attached while fast-forwarding, told what player.html tells it, then the hand-over
+  const m = new TurboMixer(rate, { seconds: 60 });
+  const ev = [];
+  m.onEvent = (e) => ev.push(e);
+  m.command({ type: 'mode', mode: 'music' });
+  m.command({ type: 'speed', ratio: 4 });
+  m.command({ type: 'skip', on: true });
+  m.command({ type: 'song', key: 'mA' });
+  m.command({ ...structuredClone(memory), type: 'import' });
+  assert.ok(ev.some((e) => e.type === 'import' && e.ok && e.songs === 2));
+  const out = feedAt(m, rate, skippingAt(rate, A, 4, 0), 2);
+  assert.ok(out.srcs.slice(Math.round((0.2 * rate) / 128)).every((s) => s === 'lib'), `route A’s loop (${[...new Set(out.srcs)]})`);
+  // and a scene change to B while still fast-forwarding: B's loop from the handed-over library
+  m.command({ type: 'song', key: 'mB' });
+  const b = feedAt(m, rate, skippingAt(rate, B, 4, 0), 2);
+  assert.ok(m.voice?.lib && m.voice.key === 'mB', 'route B’s loop');
+  assert.ok(longestQuiet(b.out, 0, b.out.length) * (SR / rate) < 0.15);
+});
+
+test('hand-over without song keys: the music that played last goes on in the new mixer', () => {
+  const rate = 48000;
+  const A = tuneAt(rate, { seed: 3 });
+  const old = new TurboMixer(rate, { seconds: 60 });
+  old.command({ type: 'skip', on: true });
+  const t = feedAt(old, rate, A, 14).out.length;
+  old.command({ type: 'speed', ratio: 4 });
+  feedAt(old, rate, skippingAt(rate, A, 4, t), 1);
+  assert.equal(old.playing().src, 'loop');
+  let memory = null;
+  old.onEvent = (e) => e.type === 'export' && (memory = e);
+  old.command({ type: 'export' });
+  assert.ok(memory.last?.l instanceof Int16Array, 'the playing loop, copied out');
+  const m = new TurboMixer(rate, { seconds: 60 });
+  m.command({ type: 'speed', ratio: 4 });
+  m.command({ type: 'skip', on: true });
+  m.command({ ...memory, type: 'import' });
+  const out = feedAt(m, rate, skippingAt(rate, A, 4, t + 4 * rate), 2);
+  assert.ok(out.srcs.slice(Math.round((0.2 * rate) / 128)).every((s) => s === 'lib'), `the handed-over loop (${[...new Set(out.srcs)]})`);
+  assert.ok(whichSongAt(out.out, rate, A) > 0.8, 'it is the song that played');
+});
+
+test('hand-over between contexts at different rates is refused (the samples are not resampled)', () => {
+  const old = heard(16000, { mA: tune({ seed: 1 }) });
+  let memory = null;
+  old.onEvent = (e) => e.type === 'export' && (memory = e);
+  old.command({ type: 'export' });
+  const m = new TurboMixer(48000, { seconds: 10 });
+  const ev = [];
+  m.onEvent = (e) => ev.push(e);
+  m.command({ ...memory, type: 'import' });
+  assert.equal(m.lib.size, 0);
+  assert.ok(ev.some((e) => e.type === 'import' && e.ok === false && e.why === 'rate'));
+});
+
+test('hand-over: what the new mixer recorded itself wins, the library stays within its bounds', () => {
+  const A = tune({ seed: 1 });
+  const B = tune({ seed: 2 });
+  const old = heard(SR, { mA: A, mB: B });
+  let memory = null;
+  old.onEvent = (e) => e.type === 'export' && (memory = e);
+  old.command({ type: 'export' });
+  const m = heard(SR, { mB: tune({ seed: 9 }) });
+  const own = m.lib.get('mB');
+  m.k.libTotal = own.end + memory.lib.find((e) => e.key === 'mA').end; // room for exactly one more
+  m.command({ ...memory, type: 'import' });
+  assert.equal(m.lib.get('mB'), own, 'its own recording of B stays');
+  assert.ok(m.lib.has('mA'), 'A taken over');
+  assert.deepEqual([...m.lib.keys()], ['mA', 'mB'], 'taken over = least recently heard');
+});
+
+test('the mixer reports the blocks it processed (diagnostics: is the audio thread running it?)', () => {
+  const m = new TurboMixer(SR, { seconds: 10 });
+  feed(m, tune(), 0, 1);
+  let p = null;
+  m.onEvent = (e) => e.type === 'probe' && (p = e);
+  m.command({ type: 'probe' });
+  assert.equal(p.quanta, Math.ceil(SR / BLOCK));
+  assert.equal(p.playing, 'game');
+});
+
+/** Share of out's 25 ms note frames that follow the melody of f at `rate` (any alignment within one 6.4 s period). */
+function whichSongAt(out, rate, f) {
+  const F = Math.round(0.025 * rate);
+  const n = Math.floor((out.length - Math.round(0.3 * rate)) / F);
+  const ref = (get, n0, frames) => {
+    const seq = new Int8Array(frames);
+    for (let j = 0; j < frames; j++) {
+      let best = -1;
+      let bp = 1e-6;
+      for (let k = 0; k < 15; k++) {
+        const c = 2 * Math.cos((2 * Math.PI * 220 * 2 ** (k / 12)) / rate);
+        let s1 = 0;
+        let s2 = 0;
+        for (let i = 0; i < F; i++) {
+          const s0 = get(n0 + j * F + i) + c * s1 - s2;
+          s2 = s1;
+          s1 = s0;
+        }
+        const pw = s1 * s1 + s2 * s2 - c * s1 * s2;
+        if (pw > bp) [bp, best] = [pw, k];
+      }
+      seq[j] = best;
+    }
+    return seq;
+  };
+  const heardSeq = ref((i) => out[i] || 0, Math.round(0.3 * rate), n);
+  const period = Math.round((6.4 * rate) / F);
+  const want = ref(f, 0, period + n);
+  let best = 0;
+  for (let o = 0; o < period; o++) {
+    let hit = 0;
+    for (let j = 0; j < n; j++) if (heardSeq[j] >= 0 && heardSeq[j] === want[o + j]) hit++;
+    best = Math.max(best, hit / n);
+  }
+  return best;
 }

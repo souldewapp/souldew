@@ -264,7 +264,7 @@ test('SdatSynth: a song arriving late is caught up – it plays where the game i
   assert.equal(syn.old, null, 'the old song faded out');
 });
 
-test('turbo mixer: "music" plays the synthesized song in fast-forward, game sound at 1×, nothing in "mute", the game for an unknown song', () => {
+test('turbo mixer: "music" plays the synthesized song in fast-forward, game sound at 1×, nothing in "mute", quiet for an unknown song (never the game’s fast-forward sound)', () => {
   const sdat = findSdat(romWith(sdatFile([TWO_NOTES, bytes([0xfe], le16(1), [0xe1], le16(60), [0x81, 0], [57, 127, 0x7f], [0x94, 8, 0, 0])])));
   const B = 128;
   const m = new TurboMixer(SR, { seconds: 10 });
@@ -296,6 +296,6 @@ test('turbo mixer: "music" plays the synthesized song in fast-forward, game soun
   m.command({ type: 'mode', mode: 'music' });
   m.command({ type: 'song', key: 'm999' }); // no pack for it (yet)
   const other = run(0.4);
-  assert.ok(other.subarray(-B).every((x) => Math.abs(x - 0.02) < 0.005), 'unknown song: the game’s own sound');
-  assert.equal(m.playing().src, 'game');
+  assert.ok(other.subarray(-B).every((x) => Math.abs(x) < 1e-6), 'unknown song, nothing recorded: quiet, not the game’s skipping sound');
+  assert.equal(m.playing().src, 'quiet');
 });

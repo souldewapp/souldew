@@ -205,7 +205,7 @@ test('player.html: fast-forward sound at normal pitch for every core, the sound 
   // sped up and paced from the display, RetroArch's sound came out chopped or at a jumping pitch (2.2.0-beta.2)
   assert.match(html, /const FF_SKIP = true;/);
   assert.match(html, /audio_fastforward_speedup = "\$\{FF_SKIP \? 'false' : 'true'\}"/);
-  assert.match(html, /post\(\{ type: 'skip', on: FF_SKIP \}\)/);
+  assert.match(html, /\{ type: 'skip', on: FF_SKIP \}/); // (in every new mixer's initial state)
   // the core's AudioContexts get the capped rate, and RetroArch makes its sound at it
   assert.match(html, /outRate = soundRate\(deviceRate\)/);
   assert.match(html, /new NativeAudioContext\(\{ \.\.\.opts, sampleRate: ctxRate \}\)/);

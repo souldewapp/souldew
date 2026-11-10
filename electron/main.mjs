@@ -92,7 +92,12 @@ function gpuStartOk() {
 // A GPU process that keeps crashing with a chosen backend: the next start uses "Automatic" (and says so once). Only
 // while the setting still is the backend this session runs with – a newer choice of the user stays.
 let gpuCrashes = 0;
+// Every child process that went away, with the time (for "Save diagnostics": a GPU process restart takes the game's
+// graphics context and, with it, its sound – the emulator then re-inits its audio in a new AudioContext).
+const goneLog = [];
 app.on('child-process-gone', (e, details) => {
+  goneLog.push({ at: new Date().toISOString(), type: details?.type ?? null, reason: details?.reason ?? null, exitCode: details?.exitCode ?? null });
+  if (goneLog.length > 20) goneLog.shift();
   if (details?.type !== 'GPU' || details.reason === 'clean-exit') return;
   gpuCrashes++;
   console.warn(`GPU process gone (${details.reason}, ${gpuCrashes}×)`);
@@ -372,7 +377,7 @@ handle('gpu-info', async () => {
   try {
     featureStatus = app.getGPUFeatureStatus();
   } catch {}
-  return { backend: gpu.backend, switches: gpu.switches.map(([n, v]) => (v == null ? `--${n}` : `--${n}=${v}`)), featureStatus, info };
+  return { backend: gpu.backend, switches: gpu.switches.map(([n, v]) => (v == null ? `--${n}` : `--${n}=${v}`)), featureStatus, info, processesGone: goneLog.slice() };
 });
 // "Restart now" (e.g. after changing the graphics backend): quit as usual – the unsaved-progress question may still
 // keep the game open – and start again once quitting is final. Linux: the AppImage file, as the updater does.

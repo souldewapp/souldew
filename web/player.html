@@ -185,14 +185,36 @@
     window.AudioContext = function AudioContext(opts) {
       if (ctxRate && !opts?.sampleRate) {
         try {
-          return new NativeAudioContext({ ...opts, sampleRate: ctxRate });
+          return noteContext(new NativeAudioContext({ ...opts, sampleRate: ctxRate }));
         } catch {
           ctxRate = 0; // refused: the card's own rate (the browser then resamples each OpenAL buffer, as before 2.2)
         }
       }
-      return new NativeAudioContext(opts);
+      return noteContext(new NativeAudioContext(opts));
     };
     window.AudioContext.prototype = NativeAudioContext.prototype;
+  }
+  // Every AudioContext the core makes (Emscripten's OpenAL makes a new one whenever RetroArch re-inits its sound – a lost
+  // graphics context, a DS layout change – and never closes the old one), for "Save diagnostics": when it came, its
+  // state changes, when it was closed. The events go into the music log (onAudioEvent, below).
+  const contexts = [];
+  const ctxInfo = new WeakMap();
+  let ctxIds = 0;
+  function noteContext(ac) {
+    try {
+      const info = { id: ++ctxIds, ac, rate: ac.sampleRate, born: Math.round(performance.now()), feeds: [], closedAt: null };
+      ctxInfo.set(ac, info);
+      contexts.push(info);
+      if (contexts.length > 12) contexts.splice(0, contexts.length - 12);
+      ac.addEventListener?.('statechange', () => {
+        if (ac.state === 'closed' && info.closedAt == null) info.closedAt = Math.round(performance.now());
+        window.__audioEvent?.({ type: 'ctx', ctx: info.id, state: ac.state, rate: info.rate });
+      });
+      setTimeout(() => window.__audioEvent?.({ type: 'ctx', ctx: info.id, state: ac.state, rate: info.rate, created: true }), 0);
+    } catch {
+      // diagnostics only
+    }
+    return ac;
   }
   const AUDIO_LATENCY = 128;
   const raCfg = () => [
@@ -550,17 +572,30 @@
   // while fast-forwarding it mutes the sped-up sound and, in "music" mode, loops the recorded music at
   // normal speed. The volume moves to our gain then (EmulatorJS' per-source gains stay at 1), so the
   // recording doesn't depend on the volume slider. Until it is attached, volume works as before.
-  const audio = { volume: window.EJS_volume, mode: 'music', speed: 1, key: null, paused: false, al: null, vol: null, node: null, plain: null, post: null, kind: null, busy: false, failed: false, info: {}, log: [], seq: 0, subs: new Set() };
+  const audio = { volume: window.EJS_volume, mode: 'music', speed: 1, key: null, paused: false, al: null, vol: null, node: null, plain: null, post: null, kind: null, chain: null, busy: false, failed: false, renew: false, renewals: 0, info: {}, log: [], seq: 0, subs: new Set() };
   const tellAudio = (m) => audio.post?.(m);
+  // Who decides what is heard while fast-forwarding: this page, from its own state (speed, turbo audio mode, volume) –
+  // not the mixer and not RetroArch. The mixer makes the music; the page's gains make sure the chosen mode wins
+  // whatever happens to the audio objects underneath (a rebuilt AudioContext, a mixer that failed or stopped, a second
+  // context still playing): "Mute" mutes every path to the speakers, "Music continues" never lets the core's own
+  // fast-forward sound through outside the mixer, and a mixer that broke down plays nothing while fast-forwarding.
+  // (lib/turbochain.mjs turboLevels – loaded long before the core makes its first AudioContext; until then: 1× open, FF shut)
+  let turboLevels = null;
+  const ffNow = () => audio.speed > 1;
+  const levels = () => turboLevels?.({ ff: ffNow(), mode: audio.mode, volume: audio.volume, attachedOnce: !!audio.attachedOnce, broken: !!audio.chain?.broken }) ?? { gate: ffNow() ? 0 : 1, vol: ffNow() ? 0 : 1 };
+  /** The mixer path (mixer → volume gain → speakers) of the chain playing now. */
+  const volLevel = () => levels().vol;
   // The core's sound never reaches the speakers on its own: every connection straight to an AudioContext's output
   // goes through a gate. Until the mixer has taken a context's sound over (attachAudio), the gate holds what should
   // be heard – the volume at 1×, nothing while fast-forwarding. Changing the DS screen layout (or any core
   // restart) re-creates the OpenAL context, and without the gate its first moments played at full volume, muted
   // game or not. Before the first attach EmulatorJS still sets the volume itself (source gains), so the gate is open.
   const gates = new Set();
+  const leak = { at: 0, count: 0, changed: 0 }; // changed: when the page last moved a gain (its 15 ms fade and the mixer's 80 ms one are no leak)
   const ownNodes = new WeakSet();
-  const gateLevel = () => (!audio.attachedOnce || !Number.isFinite(audio.volume) ? 1 : audio.speed > 1 ? 0 : Math.max(0, Math.min(1, audio.volume)));
+  const gateLevel = () => levels().gate;
   const refreshGates = () => {
+    leak.changed = performance.now();
     // set outright: only sound the mixer doesn't handle yet passes here (automation on a context that isn't running
     // yet was seen to never apply)
     for (const g of gates) {
@@ -570,6 +605,14 @@
       }
       g.gain.cancelScheduledValues(0);
       g.gain.value = gateLevel();
+    }
+    if (audio.vol && audio.vol.context.state !== 'closed') {
+      const v = volLevel();
+      if (Math.abs(audio.vol.gain.value - v) > 1e-4 || v === 0) {
+        audio.vol.gain.cancelScheduledValues(0);
+        if (audio.vol.context.state === 'running') audio.vol.gain.setTargetAtTime(v, audio.vol.context.currentTime, 0.015);
+        else audio.vol.gain.value = v;
+      }
     }
   };
   {
@@ -585,10 +628,72 @@
         nativeConnect.call(g, dest);
         gateOf.set(dest, g);
         gates.add(g);
+        meter(g, 'gate'); // (what of the core's sound passes outside the mixer – diagnostics)
       }
       nativeConnect.call(this, g, ...rest);
+      const info = ctxInfo.get(dest.context);
+      if (info && info.feeds.length < 8) {
+        // (whether it is OpenAL's context gain is only known once alcCreateContext has registered the context – see audioGraph)
+        info.feeds.push({ node: this.constructor?.name || 'AudioNode', ref: this, t: Math.round(performance.now()) });
+        window.__audioEvent?.({ type: 'graph', what: 'feed', ctx: info.id, node: this.constructor?.name || 'AudioNode' });
+      }
       return dest;
     };
+  }
+  // What really reaches the speakers, per path (diagnostics, and a "leak" event when sound is heard where the chosen mode
+  // says it must not be): an analyser behind each gate (the core's sound outside any mixer) and behind the mixer's volume.
+  const meters = [];
+  function meter(node, kind) {
+    try {
+      const an = node.context.createAnalyser();
+      an.fftSize = 1024;
+      AudioNode.prototype.connect.call(node, an); // (an analyser is no destination: straight through the patch)
+      meters.push({ node, kind, an, buf: new Float32Array(1024), ctx: ctxInfo.get(node.context)?.id ?? null, sum: 0, n: 0, peak: 0 });
+      if (meters.length > 24) meters.splice(0, meters.length - 24);
+    } catch {
+      // diagnostics only
+    }
+  }
+  /** Called every 250 ms: the level per path; while fast-forwarding, sound where the mode says silence is a leak. */
+  function readMeters() {
+    const ff = ffNow() && !audio.paused && performance.now() - leak.changed > 500;
+    for (let i = meters.length - 1; i >= 0; i--) if (meters[i].node.context.state === 'closed') meters.splice(i, 1);
+    for (const m of meters) {
+      if (m.node.context.state !== 'running') {
+        m.last = null;
+        continue;
+      }
+      m.an.getFloatTimeDomainData(m.buf);
+      let e = 0;
+      for (let i = 0; i < m.buf.length; i++) e += m.buf[i] * m.buf[i];
+      const rms = Math.sqrt(e / m.buf.length);
+      m.sum += rms;
+      m.n++;
+      m.peak = Math.max(m.peak, rms);
+      m.last = rms;
+      if (!ff || rms < 0.003) continue;
+      // mute: nothing at all; music: nothing from the core outside the mixer, and a mixer playing the game's own sound
+      const mixerGame = m.node === audio.vol && audio.mode === 'music' && audio.info.play?.src === 'game' && audio.info.play.mixer === audio.chain?.id;
+      // (a retired chain's volume still sounding is a leak too – it should have been unplugged)
+      const bad = audio.mode === 'mute' || (audio.mode === 'music' && (m.kind === 'gate' || mixerGame || (m.kind === 'vol' && m.node !== audio.vol)));
+      const now = performance.now();
+      if (bad && now - leak.at > 5000) {
+        leak.at = now;
+        leak.count++;
+        onAudioEvent({ type: 'leak', path: m.kind, ctx: m.ctx, rms: +rms.toFixed(4), mode: audio.mode, speed: audio.speed, gate: +gateLevel().toFixed(2), vol: audio.vol ? +audio.vol.gain.value.toFixed(2) : null, play: audio.info.play?.src ?? null });
+      }
+    }
+  }
+  /** Mean / peak level per path since the last call (for the perf window), and reset. */
+  function meterWindow() {
+    const out = {};
+    for (const m of meters) {
+      if (!m.n) continue;
+      const k = `${m.kind}${m.ctx ?? ''}`;
+      out[k] = { mean: +(m.sum / m.n).toFixed(4), peak: +m.peak.toFixed(4) };
+      m.sum = m.n = m.peak = 0;
+    }
+    return out;
   }
   // DS games: the ROM's own music (lib/sdat-worker.mjs reads its sound archive) – the mixer synthesizes the song
   // that plays, so fast-forward keeps the real music at normal speed from the first second on.
@@ -635,8 +740,13 @@
     };
     sdat.worker.postMessage({ type: 'rom', url: new URL(window.EJS_gameUrl, location.href).href });
   }
+  window.__audioEvent = (e) => onAudioEvent(e);
   const onAudioEvent = (e) => {
     if (e?.type === 'error') console.warn('turbo audio:', e.message);
+    if (e?.type === 'probe') {
+      audio.info.probe = { ...e, t: Math.round(performance.now()) }; // (every few seconds – kept, not logged)
+      return;
+    }
     if (e?.type) {
       const x = { ...e, t: Math.round(performance.now()), n: ++audio.seq };
       audio.info[e.type] = e;
@@ -670,30 +780,90 @@
   }
   // Every chain built so far (lib/turbochain.mjs): when the core rebuilds its audio, the old chain is taken down – it kept
   // playing in the AudioContext OpenAL left behind, out of reach of every later command.
-  const chainsReady = import('/lib/turbochain.mjs').then(({ MixerChains }) => (audio.chains = new MixerChains()));
+  const chainsReady = import('/lib/turbochain.mjs').then((m) => {
+    turboLevels = m.turboLevels;
+    return (audio.chains = new m.MixerChains());
+  });
   /** The core still plays through this OpenAL context (it destroys a replaced one, but never closes its AudioContext). */
   const alInUse = (al) => Object.values(GM()?.Module?.AL?.contexts || {}).includes(al);
+  /**
+   * What the playing mixer recorded (its song library and the music it played last), asked for before a new chain takes
+   * over – so a rebuilt AudioContext (Windows restarts its GPU process now and then, and the core's sound with it) doesn't
+   * start from nothing and fall silent in every fast-forward until the songs are heard again at 1×.
+   */
+  function askMemory(chain, ms = 600) {
+    if (!chain?.post || chain.retired) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const done = (m) => {
+        clearTimeout(timer);
+        chain.onExport = null;
+        resolve(m);
+      };
+      const timer = setTimeout(() => done(null), ms);
+      chain.onExport = done;
+      try {
+        chain.post({ type: 'export' });
+      } catch {
+        done(null);
+      }
+    });
+  }
+  /** The mixer stopped working (an error on the audio thread, or no blocks processed while its context runs). */
+  function mixerDown(chain, why) {
+    if (!chain || chain.broken || chain.retired) return;
+    chain.broken = why;
+    onAudioEvent({ type: 'broken', mixer: chain.id, why });
+    refreshGates(); // fast-forward in "music": nothing rather than the game's sound passed through
+    // a fresh mixer for the same context (a few times per session at most – a mixer that keeps failing stays out)
+    if (chain === audio.chain && audio.renewals < 3) {
+      audio.renewals++;
+      audio.renew = true;
+    }
+  }
   async function attachAudio() {
     const al = GM()?.Module?.AL?.currentCtx;
-    if (!al?.audioCtx || !al.gain || al === audio.al || audio.busy || audio.failed) return;
+    if (!al?.audioCtx || !al.gain || (al === audio.al && !audio.renew) || audio.busy || audio.failed) return;
     audio.busy = true;
+    const renew = al === audio.al;
+    audio.renew = false;
     const ac = al.audioCtx;
+    const t0 = performance.now();
     try {
       const chains = await chainsReady;
       const id = chains.nextId();
+      const prev = audio.chain;
+      const chain = { id, al, node: null, vol: null, post: null, broken: false, retired: false, onExport: null };
+      // events from the mixer: the hand-over reply is taken here (megabytes of samples – never into the log)
+      const deliver = (e) => {
+        if (e?.type === 'export') return chain.onExport?.(e);
+        if (chain.retired) return;
+        if (e?.type === 'error') mixerDown(chain, 'error');
+        onAudioEvent({ ...e, mixer: id });
+      };
       let node;
       let post;
       let kind = 'worklet';
+      // what the mixer must know before its first block (the same is sent again once it is wired up – the state may
+      // have changed while the module loaded)
+      const initial = () => [
+        { type: 'skip', on: FF_SKIP },
+        { type: 'mode', mode: mixerMode() },
+        { type: 'paused', paused: mixerPaused() },
+        ...(audio.key ? [{ type: 'song', key: audio.key }] : []),
+        { type: 'speed', ratio: Math.min(audio.speed, MAX_SOUND_RATIO) },
+      ];
       try {
         await ac.audioWorklet.addModule('/lib/turboaudio-worklet.mjs');
-        node = new AudioWorkletNode(ac, 'turbo-audio', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit', channelInterpretation: 'speakers' });
-        node.port.onmessage = (e) => onAudioEvent({ ...e.data, mixer: id });
+        node = new AudioWorkletNode(ac, 'turbo-audio', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit', channelInterpretation: 'speakers', processorOptions: { init: initial() } });
+        node.port.onmessage = (e) => deliver(e.data);
+        node.onprocessorerror = () => mixerDown(chain, 'processorerror');
         post = (m) => node.port.postMessage(m);
       } catch (err) {
         // no AudioWorklet: the same mixer in a ScriptProcessor (runs on this thread, in larger blocks)
         console.warn('turbo audio: no AudioWorklet, using a ScriptProcessor', err);
         const { TurboMixer } = await import('/lib/turboaudio.mjs');
-        const mixer = new TurboMixer(ac.sampleRate, { onEvent: (e) => onAudioEvent({ ...e, mixer: id }) });
+        const mixer = new TurboMixer(ac.sampleRate, { onEvent: deliver });
+        for (const m of initial()) mixer.command(m);
         let broken = false;
         node = ac.createScriptProcessor(2048, 2, 2);
         node.onaudioprocess = (e) => {
@@ -707,6 +877,7 @@
             } catch (er) {
               broken = true;
               console.warn('turbo audio failed', er);
+              deliver({ type: 'error', message: String(er?.message || er) });
             }
           }
           o.getChannelData(0).set(l);
@@ -715,6 +886,8 @@
         post = (m) => mixer.command(m);
         kind = 'script';
       }
+      // what the mixer before recorded (one that broke down still answers on its port – its library is plain samples)
+      const memory = prev && !prev.retired ? await askMemory(prev) : null;
       if (GM()?.Module?.AL?.currentCtx !== al) {
         // the core replaced its context meanwhile – next round (this mixer was never wired up)
         if (node.port) node.port.onmessage = null;
@@ -722,28 +895,48 @@
         return;
       }
       const vol = ac.createGain();
-      vol.gain.value = audio.volume;
       ownNodes.add(vol);
       vol.connect(ac.destination);
+      meter(vol, 'vol');
       E().volume = 1;
       E().setVolume(1);
-      chains.adopt({ id, al, node, vol, post }, alInUse);
-      onAudioEvent({ type: 'attach', mixer: id, sampleRate: ac.sampleRate, ...chains.counts() });
-      Object.assign(audio, { al, vol, node, post, kind, attachedOnce: true, plain: null });
+      Object.assign(chain, { node, vol, post, kind });
+      chains.adopt(chain, alInUse);
+      Object.assign(audio, { al, vol, node, post, kind, chain, attachedOnce: true, plain: null });
+      vol.gain.value = volLevel();
+      onAudioEvent({ type: 'attach', mixer: id, kind, sampleRate: ac.sampleRate, ctx: ctxInfo.get(ac)?.id ?? null, renew, ms: Math.round(performance.now() - t0), ...chains.counts() });
+      for (const m of initial()) post(m);
       routeAudio();
       refreshGates(); // (from now on a context the mixer hasn't taken over yet holds its sound back)
-      post({ type: 'mode', mode: mixerMode() });
-      post({ type: 'paused', paused: mixerPaused() });
-      post({ type: 'speed', ratio: Math.min(audio.speed, MAX_SOUND_RATIO) });
-      post({ type: 'skip', on: FF_SKIP });
-      if (audio.key) post({ type: 'song', key: audio.key });
+      if (memory) {
+        post({ type: 'import', sr: memory.sr, lib: memory.lib, last: memory.last });
+        onAudioEvent({ type: 'handover', from: prev.id, to: id, songs: memory.lib?.length ?? 0, last: !!memory.last, sr: memory.sr });
+      } else if (prev) onAudioEvent({ type: 'handover', from: prev.id, to: id, songs: 0, why: 'no answer' });
       startSdat();
     } catch (err) {
       console.warn('turbo audio not attached – plain sound', err);
+      onAudioEvent({ type: 'attach', failed: true, message: String(err?.message || err) });
       audio.failed = true;
+      refreshGates();
     } finally {
       audio.busy = false;
     }
+  }
+  // A mixer that stopped processing (its context runs, its block counter doesn't move) is as good as broken. Asked every
+  // few seconds; the answer is kept for "Save diagnostics" (audio.info.probe).
+  const health = { at: 0, quanta: -1, stuck: 0 };
+  function checkMixer() {
+    const now = performance.now();
+    if (!audio.chain || audio.chain.broken || now - health.at < 3000) return;
+    const p = audio.info.probe;
+    const running = audio.al?.audioCtx?.state === 'running';
+    if (health.at && running && p && p.mixer === audio.chain.id) {
+      health.stuck = p.quanta === health.quanta ? health.stuck + 1 : 0;
+      if (health.stuck >= 2) mixerDown(audio.chain, 'stalled');
+    } else health.stuck = 0;
+    health.quanta = p?.mixer === audio.chain.id ? p.quanta : -1;
+    health.at = now;
+    tellAudio({ type: 'probe' });
   }
   // Polled while the game runs: attach once the core has audio, and tell the mixer when the game stands
   // still (paused, hidden tab) – that gap is no silence in the music and nothing should play meanwhile.
@@ -854,11 +1047,15 @@
       corr: +pace.corr.toFixed(3),
       longTasks: sound.longTasks - perfLog.lt,
       longestTaskMs: Math.round(sound.longMs),
+      heard: meterWindow(), // level per path to the speakers: gate<ctx> = the core's sound outside the mixer, vol<ctx> = the mixer
+      leaks: leak.count,
     };
     restart();
   }
   function syncAudio() {
     attachAudio();
+    readMeters();
+    checkMixer();
     hookAl();
     steerSound();
     perfWindow();
@@ -988,9 +1185,8 @@
     },
     setVolume(v) {
       audio.volume = v;
-      refreshGates();
-      if (audio.vol) audio.vol.gain.setTargetAtTime(v, audio.vol.context.currentTime, 0.015);
-      else {
+      refreshGates(); // (the mixer's volume gain too)
+      if (!audio.vol) {
         E().volume = v;
         E().setVolume(v);
       }
@@ -1002,6 +1198,7 @@
      */
     setTurboAudio(mode) {
       audio.mode = mode;
+      refreshGates();
       routeAudio();
       tellAudio({ type: 'mode', mode: mixerMode() });
       tellAudio({ type: 'paused', paused: mixerPaused() });
@@ -1021,7 +1218,49 @@
     /** Turbo audio state for checks from the console: how it is attached and the last search / switch. */
     /** The nodes that feed the speakers (the gates and the volume) – for level checks. */
     speakerNodes: () => [...gates, audio.vol].filter(Boolean),
-    turboAudio: () => ({ attached: audio.kind, current: !!audio.al && audio.al === GM()?.Module?.AL?.currentCtx, gates: [...gates].map((g) => +g.gain.value.toFixed(3)), gate: gateLevel(), once: !!audio.attachedOnce, failed: audio.failed, mode: audio.mode, speed: audio.speed, paused: audio.paused, volume: audio.volume, key: audio.key, sampleRate: audio.al?.audioCtx.sampleRate, mixers: audio.chains?.counts() ?? null, ...audio.info, log: audio.log.slice() }),
+    turboAudio: () => ({ chain: audio.chain?.id ?? null, chainBroken: audio.chain?.broken || false, vol: audio.vol ? +audio.vol.gain.value.toFixed(3) : null, attached: audio.kind, current: !!audio.al && audio.al === GM()?.Module?.AL?.currentCtx, gates: [...gates].map((g) => +g.gain.value.toFixed(3)), gate: gateLevel(), once: !!audio.attachedOnce, failed: audio.failed, mode: audio.mode, speed: audio.speed, paused: audio.paused, volume: audio.volume, key: audio.key, sampleRate: audio.al?.audioCtx.sampleRate, mixers: audio.chains?.counts() ?? null, ...audio.info, log: audio.log.slice() }),
+    /**
+     * The sound's wiring for "Save diagnostics": every AudioContext the core made (rate, state, whether OpenAL still uses
+     * it, what is connected to its speakers), the mixer chains, the gains the page set, the levels heard per path.
+     */
+    audioGraph() {
+      const AL = GM()?.Module?.AL;
+      const alCtxs = Object.values(AL?.contexts || {});
+      const now = Math.round(performance.now());
+      return {
+        t: now,
+        mode: audio.mode,
+        speed: audio.speed === Infinity ? 'max' : audio.speed,
+        volume: audio.volume,
+        paused: audio.paused,
+        policy: { gate: +gateLevel().toFixed(3), vol: +volLevel().toFixed(3) },
+        chain: audio.chain ? { id: audio.chain.id, kind: audio.chain.kind, broken: audio.chain.broken || false, ctx: ctxInfo.get(audio.chain.al?.audioCtx)?.id ?? null, plain: audio.plain } : null,
+        mixers: audio.chains?.counts() ?? null,
+        renewals: audio.renewals,
+        failed: audio.failed,
+        probe: audio.info.probe ?? null,
+        contexts: contexts.map((c) => {
+          const al = alCtxs.find((x) => x.audioCtx === c.ac);
+          const gate = [...gates].find((g) => g.context === c.ac);
+          return {
+            id: c.id,
+            rate: c.rate,
+            state: c.ac.state,
+            ageS: Math.round((now - c.born) / 1000),
+            closedAt: c.closedAt,
+            openal: al ? (AL.currentCtx === al ? 'current' : 'kept') : 'gone', // OpenAL plays through it / still has it / dropped it
+            mixer: audio.chain?.al?.audioCtx === c.ac ? audio.chain.id : null,
+            // what was connected to its speakers outside the mixer (through the gate); openal: OpenAL's context gain, and
+            // whether it is still wired to the gate (false once a mixer took its sound over)
+            feeds: c.feeds.map((f) => ({ node: f.node, t: f.t, openal: alCtxs.some((x) => x.gain === f.ref), toGate: !!gate && audio.al?.gain !== f.ref })),
+            gate: gate ? +gate.gain.value.toFixed(3) : null,
+            vol: audio.vol?.context === c.ac ? +audio.vol.gain.value.toFixed(3) : null,
+            heard: meters.filter((m) => m.node.context === c.ac).map((m) => ({ path: m.kind, rms: m.last != null ? +m.last.toFixed(4) : null })),
+          };
+        }),
+        gl: glLog.slice(),
+      };
+    },
     /** Timing and sound facts for "Save diagnostics": the sound card, the pacing, the last measuring window, totals. */
     perf() {
       const ac = GM()?.Module?.AL?.currentCtx?.audioCtx;
@@ -1072,8 +1311,25 @@
     addEventListener('keydown', go, true);
     document.body.appendChild(tap);
   }
+  // The graphics context of the game canvas: lost and restored when the GPU process restarts (Windows) – the core then
+  // re-inits its sound in a new AudioContext. Logged with the sound's events, so a report shows what came first.
+  const glLog = [];
+  function watchGl() {
+    const c = gameCanvas?.() || E()?.canvas;
+    if (!c || c.__glWatched) return;
+    c.__glWatched = true;
+    for (const what of ['webglcontextlost', 'webglcontextrestored']) {
+      c.addEventListener(what, () => {
+        const e = { what: what.slice(12), t: Math.round(performance.now()) };
+        glLog.push(e);
+        if (glLog.length > 20) glLog.shift();
+        onAudioEvent({ type: 'gl', what: e.what });
+      });
+    }
+  }
   window.EJS_onGameStart = () => {
     setTimeout(wakeAudio, 400);
+    try { watchGl(); } catch { /* diagnostics only */ }
     syncAudio();
     setInterval(syncAudio, 250);
     // the core looked somewhere else for its save → let the app fall back to loadSave()

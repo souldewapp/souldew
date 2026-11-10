@@ -3,10 +3,19 @@
 import { TurboMixer } from './turboaudio.mjs';
 
 class TurboAudio extends AudioWorkletProcessor {
-  constructor() {
+  constructor(options) {
     super();
     this.mixer = new TurboMixer(sampleRate, { onEvent: (e) => this.port.postMessage(e) });
     this.broken = false;
+    // the page's state (speed, mode, pause …) before the first block: a mixer made while fast-forwarding must not pass
+    // even one block of the sped-up sound through while its first messages are still on their way
+    for (const m of options?.processorOptions?.init || []) {
+      try {
+        this.mixer.command(m);
+      } catch (err) {
+        this.fail(err);
+      }
+    }
     this.port.onmessage = (e) => {
       try {
         this.mixer.command(e.data);
