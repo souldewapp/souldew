@@ -50,7 +50,7 @@ test('nag window: always closable, never claims payment is required, own artwork
   for (const lang of ['en', 'de', 'es', 'fr', 'it']) {
     const j = JSON.parse(readFileSync(new URL(`../web/i18n/${lang}.json`, import.meta.url), 'utf8'));
     const keys = Object.keys(j).filter((k) => k.startsWith('nag.') || k === 'set.nag' || k === 'set.nagHint');
-    assert.equal(keys.length, 17, `${lang}: all nag texts`);
+    assert.equal(keys.length, 16, `${lang}: all nag texts`);
     for (const k of keys) assert.doesNotMatch(j[k], /winrar/i, `${lang} ${k}`);
     assert.match(j['nag.free'], /souldew/);
   }

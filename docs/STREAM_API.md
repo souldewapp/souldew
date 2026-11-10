@@ -183,9 +183,8 @@ overlays show.
 
 When a player meets a **legendary or mythical** Pokémon in a wild battle (static encounters included) while live
 tracking runs, souldew rolls once for that species in that run: with a 25 % chance – at most once every 20 minutes –
-a pop-up with a joke about that Pokémon and the "Buy me a coffee" link shows on stream. souldew's own **Coffee
-pop-up** layer shows it in a corner (or the Alerts overlay, if that layer isn't in OBS). Switch it off or pick the
-corner on the Stream page; **Preview pop-up** sends a sample.
+a pop-up with a joke about that Pokémon and the "Buy me a coffee" link shows on stream, in souldew's Alerts overlay.
+Settings › About switches it off.
 
 Custom layouts get the same moment as `event: coffee` (also for previews, with `test: true`):
 

@@ -349,6 +349,8 @@ export function SettingsView() {
       </div>
       <label class="check small"><input type="checkbox" checked=${cfg.nagOff !== true} onChange=${(e) => save({ nagOff: !e.target.checked })} /><span>${t('set.nag', 'Show the joke license window now and then')}
         <span class="hint">${t('set.nagHint', 'A parody of old shareware nag screens. souldew stays free either way.')}</span></span></label>
+      <label class="check small"><input type="checkbox" checked=${cfg.stream?.coffee !== false} onChange=${async (e) => { const on = e.target.checked; try { await api.post('/api/stream', { coffee: on }); reloadStatus?.(); } catch { toast({ kind: 'warn', title: t('set.saveFailed', 'Couldn’t save the setting') }); } }} /><span>${t('set.coffeePop', 'Coffee hint on legendary encounters in stream overlays')}
+        <span class="hint">${t('set.coffeePopHint', 'Now and then a cheeky toast about the legendary pops up in your Alerts overlay, with the coffee link.')}</span></span></label>
       <p class="tiny faint">${t('set.legal', 'Pokémon and all related names are trademarks of Nintendo, Game Freak and The Pokémon Company. souldew is a fan project and does not include or download games.')}</p>
     </section>
   </div>`;

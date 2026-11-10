@@ -92,10 +92,10 @@
 
 - Meet a legendary or mythical Pokémon while live tracking runs, and there's a 1-in-4 chance that the stream overlay
   shows a small pop-up with a joke about that very Pokémon ("Mewtwo has entered the chat. souldew's developer has
-  entered the coffee shortage.") and the "Buy me a coffee" link with a QR code – in a corner of your choice, for about
-  12 seconds, at most once every 20 minutes and once per species per run. Jokes in all five languages.
-- It's a new full-screen "Coffee pop-up" layer on the Stream page (without it, the Alerts overlay shows the pop-up). On
-  by default – switch it off or preview it there. Custom layouts get it as an event from the open API.
+  entered the coffee shortage.") and the "Buy me a coffee" link with a QR code – for about 12 seconds, at most once
+  every 20 minutes and once per species per run. Jokes in all five languages.
+- It shows in the Alerts overlay – no extra setup, and no spoiler on the Stream page. On by default; Settings › About
+  switches it off. Custom layouts get it as an event from the open API.
 
 **Trophies: a Pokédex across all your runs, achievements and medals** – new in the sidebar.
 

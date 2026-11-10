@@ -17,11 +17,11 @@ Each widget has a live preview, its own URL and **Drag into OBS** (the browser s
 - **You are here** – each player's location and current battle.
 - **Alerts** – death (with the whole linked group and the opponent), catch, badge, evolution, every 10th level, run over; optional chiptune sound.
 - **Stats bar.**
-- **Coffee pop-up** – a full-screen, transparent layer. When someone meets a legendary or mythical Pokémon while
-  live tracking runs, there's a 25 % chance (once per species and run, at most every 20 minutes) that a toast with a
-  joke about that very Pokémon, the "Buy me a coffee" link and a QR code slides into the corner you pick, for about
-  12 seconds. Without this layer in OBS the Alerts overlay shows it. On by default; switch it off or preview it on the
-  Stream page.
+
+**Coffee pop-up** – when someone meets a legendary or mythical Pokémon while live tracking runs, there's a 25 % chance
+(once per species and run, at most every 20 minutes) that the Alerts overlay shows a toast with a joke about that very
+Pokémon, the "Buy me a coffee" link and a QR code, for about 12 seconds. On by default; Settings › About switches it
+off.
 
 Options per widget (layout, players, nicknames/HP/area names) and for all (glass/solid/minimal look, 75–150 % size, language). Overlays get changes pushed instantly, show "reconnecting …" if the app goes away and keep the last picture. "Test alert" sends a sample to every open overlay, and the page shows which widgets are live in OBS right now. Old links (`/overlay?run=…`) keep working.
 

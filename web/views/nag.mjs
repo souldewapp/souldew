@@ -100,7 +100,7 @@ export function LicenseNag({ open, launches = 5, onClose }) {
     <div class="nag-win">
       <div class="nag-titlebar">
         <${Pixels} rows=${BALL} colors=${SMALL_BALL_COLORS} scale=${1.25} className="nag-titleicon" />
-        <span class="nag-titletext">${t('nag.titlebar', 'Please purchase souldew license (just kidding)')}</span>
+        <span class="nag-titletext">${t('nag.titlebar', 'Please purchase souldew license')}</span>
         <button type="button" class="nag-x" onClick=${close} aria-label=${t('common.close', 'Close')} title=${t('common.close', 'Close')}>
           <${Pixels} rows=${CROSS} colors=${{ X: '#000' }} scale=${1} /></button>
       </div>
@@ -114,11 +114,10 @@ export function LicenseNag({ open, launches = 5, onClose }) {
           <div class="nag-price"><s class="nag-was">${t('nag.was', '$34.22')}</s>
             <span class="nag-pay">${t('nag.pay', 'You pay:')} <b>${t('nag.payWhat', 'whatever a coffee costs')}</b></span></div>
           <button type="button" class="nag-buy" onClick=${buy}>${t('rail.coffee', 'Buy me a coffee')}</button>
-          <p class="nag-offer">${t('nag.offer', 'Act now, this is a one time offer!')}<sup>*</sup></p>
+          <p class="nag-offer">${t('nag.offer', 'Act now, this is a one time offer!')}</p>
         </div>
       </div>
       <div class="nag-foot">
-        <span class="nag-fine">${t('nag.fine', '* It isn’t. It’ll be back – like your rival.')}</span>
         <button type="button" class="nag-btn" onClick=${close}>${t('nag.remind', 'Remind me after my next wipe')}</button>
         <button type="button" class="nag-btn" onClick=${close} autofocus>${t('common.close', 'Close')}</button>
       </div>
