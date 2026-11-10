@@ -64,6 +64,11 @@
   live tracking doesn't support them yet, instead of possibly showing wrong Pokémon. Catches can still be entered by
   hand.
 - Blaze Black 2 Redux (and Gen 5 hacks like it) now gets the place sign.
+- Game Boy hacks that moved the game's memory (Crystal Legacy keeps it 11 bytes further on) are read again: team,
+  battle, place sign and the Rare Candy cheat find their data from the hack's own code. Before, Crystal Legacy showed
+  no team and a place stuck on New Bark Town.
+- Black/White and Black 2/White 2: the battle panel no longer keeps showing the opponent for up to two minutes after a
+  fight.
 
 ## 2.2.0
 
