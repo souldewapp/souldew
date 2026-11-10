@@ -13,13 +13,33 @@ const job = JSON.parse(readFileSync(process.argv[process.argv.length - 1], 'utf8
 process.env.SLS_DATA_DIR = job.dataDir;
 process.env.NO_OPEN = '1';
 app.commandLine.appendSwitch('mute-audio');
+// Windows: a window that is never shown (or that the OS counts as covered) gets display frames at a trickle – the frame
+// pacer of player.html then runs the game at ~1/10 of its speed (measured in a Windows 11 VM: Red 137 instead of 1454
+// frames a second, DS games ran into the 15-minute limit). There the window is shown, fully transparent, without focus,
+// taskbar entry or mouse input – nothing to see or click, but frames as fast as a visible window.
+const invisible = process.platform === 'win32' && !job.show;
+if (invisible) {
+  app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+  app.commandLine.appendSwitch('disable-renderer-backgrounding');
+  app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
+}
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.setPath('userData', join(job.dataDir, 'electron'));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function runOne(url, t) {
-  const win = new BrowserWindow({ show: !!job.show, width: t.system === 'nds' ? 512 : 640, height: t.system === 'nds' ? 768 : 576, webPreferences: { backgroundThrottling: false } });
+  const win = new BrowserWindow({
+    show: !!job.show,
+    width: t.system === 'nds' ? 512 : 640,
+    height: t.system === 'nds' ? 768 : 576,
+    webPreferences: { backgroundThrottling: false },
+    ...(invisible ? { opacity: 0, focusable: false, skipTaskbar: true, frame: false } : {}),
+  });
+  if (invisible) {
+    win.setIgnoreMouseEvents(true);
+    win.showInactive();
+  }
   win.webContents.setAudioMuted(true);
   const rom = `/api/library/rom?id=${encodeURIComponent(t.file)}`;
   const q = new URLSearchParams({ system: t.system, rom, name: `matrix-${t.key}`, threads: '0', volume: '0' });
