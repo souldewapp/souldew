@@ -259,8 +259,9 @@ export function BattlePanel({ battle, mine, gen, isRun }) {
   const team = mine || [];
   const mon = team[battle.active?.index] || team.find((m) => !m.isEgg && !(m.maxHp > 0 && m.hp === 0)) || team[0];
   const monTypes = mon ? typesOf(mon.species) : [];
-  const chart = foeTypes.length ? defenseChart(foeTypes, gen) : null;
-  const myChart = monTypes.length ? defenseChart(monTypes, gen) : null;
+  const fairy = !!runData?.fairy; // a hack that added the type
+  const chart = foeTypes.length ? defenseChart(foeTypes, gen, { fairy }) : null;
+  const myChart = monTypes.length ? defenseChart(monTypes, gen, { fairy }) : null;
   const myMoves = (mon?.moves || []).map((id) => ({ id, info: moveInfo(moves, id, gen) })).filter((m) => m.info);
   const foeMoves = (foe.moves || []).map((id) => ({ id, info: moveInfo(moves, id, gen) })).filter((m) => m.info && m.info.power > 0);
   const stab = foeTypes.map((ty) => ({ type: ty, m: effectiveness(ty, monTypes, gen) }));

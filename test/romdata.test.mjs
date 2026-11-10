@@ -219,6 +219,7 @@ test('real ROMs: retail dumps are vanilla with the retail species; hacks are tol
     const gba = bytes[0xb2] === 0x96;
     if (gba) assert.ok(r.species, `${f}: a species table`);
     if (r.vanilla) {
+      assert.equal(r.types, null, `${f}: a retail game's types are the app's own`);
       if (gba) assert.deepEqual([r.species.engine, r.species.changed], ['vanilla', 0], `${f}: a retail game has the retail species`);
       if (r.data?.gen === 3 && r.data.family === 'rse' && r.data.lang === 'en') assert.equal(r.data.names[0], 'Littleroot Town', f);
       continue;
@@ -369,4 +370,34 @@ test('Gen 1 and Gold/Silver: a Pokémon that joins right after a wild battle is 
   const r2 = R.applySnapshot(doc2, manifest, 1, 'p1', { source: 'live', party: [charmander, eevee], here: route1 });
   assert.equal(r2.newCatches.length, 0);
   assert.equal(r2.inbox[0].mon.species, 133);
+});
+
+test('types from the ROM: a Gen 3 hack\'s own types; Fairy matchups only matter where a hack has the type', async () => {
+  const { romTypes } = await import('../shared/live/romspecies.mjs');
+  const { effectiveness, defenseChart, typesOfGen } = await import('../shared/typechart.mjs');
+  // a GBA ROM with a base stats table: Bulbasaur's entry as the anchor, internal #13 retyped to Bug/Poison → Fire
+  const rom = new Uint8Array(0x8000);
+  rom[3] = 0xea;
+  rom[0xb2] = 0x96;
+  const T = 0x1000;
+  for (let i = 1; i <= 411; i++) rom.set([45, 49, 49, 45, 65, 65, 0, 0], T + i * 28);
+  rom.set([12, 3], T + 28 + 6); // Bulbasaur Grass/Poison
+  rom.set([10, 10], T + 13 * 28 + 6); // #13 (Weedle in the retail games) – Fire in this hack
+  const base = (id) => ({ 1: ['grass', 'poison'], 13: ['bug', 'poison'] }[id] || ['normal']);
+  const r = romTypes(rom, { baseTypes: base, vanillaIndex: Array.from({ length: 412 }, (_, i) => i) });
+  assert.deepEqual(r.types[13], ['fire']);
+  assert.equal(r.types[1], undefined, 'unchanged types aren\'t listed');
+  assert.equal(r.fairy, false);
+  // with the hack's own species map (Venipede in slot 13) the types belong to that Pokémon
+  const r2 = romTypes(rom, { baseTypes: base, speciesMap: { map: Object.assign(Array.from({ length: 412 }, (_, i) => i), { 13: 543 }) } });
+  assert.deepEqual(r2.types[543], ['fire']);
+  assert.equal(romTypes(new Uint8Array(0x8000).fill(1), { baseTypes: base }), null, 'no table, no guess');
+  // Fairy: Dragon can't touch it, it beats Dragon; the retail chart is unchanged for everything else
+  assert.equal(effectiveness('dragon', ['fairy']), 0);
+  assert.equal(effectiveness('fairy', ['dragon', 'dark']), 4);
+  assert.equal(effectiveness('steel', ['fairy', 'normal']), 2);
+  assert.equal(effectiveness('fire', ['grass']), 2);
+  assert.ok(!typesOfGen(4).includes('fairy'));
+  assert.ok(defenseChart(['dragon'], 4, { fairy: true })[2].includes('fairy'), 'a Fairy hack: Dragon is weak to it');
+  assert.ok(!defenseChart(['dragon'], 4)[2].includes('fairy'), 'a retail game: no Fairy');
 });

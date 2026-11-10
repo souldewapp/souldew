@@ -1,4 +1,5 @@
-// Type effectiveness for Gen 1–5 (no Fairy; Steel still resists Ghost and Dark).
+// Type effectiveness for Gen 1–5 (no Fairy; Steel still resists Ghost and Dark). ROM hacks that add the Fairy type
+// (Renegade Platinum, Blaze Black 2 Redux – shared/live/romspecies.mjs romTypes) get its Gen 6 matchups on top.
 // Gen 1 differences: no Dark/Steel, Ghost → Psychic does nothing (the famous bug), Bug ↔ Poison
 // are super effective on each other, and Ice → Fire is neutral.
 
@@ -23,8 +24,15 @@ const CHART = {
   psychic: { fighting: 2, poison: 2, steel: 0.5, psychic: 0.5, dark: 0 },
   ice: { flying: 2, ground: 2, steel: 0.5, fire: 0.5, water: 0.5, grass: 2, ice: 0.5, dragon: 2 },
   dragon: { steel: 0.5, dragon: 2 },
-  dark: { fighting: 0.5, ghost: 2, steel: 0.5, psychic: 2, dark: 0.5 },
+  dark: { fighting: 0.5, ghost: 2, steel: 0.5, psychic: 2, dark: 0.5, fairy: 0.5 },
+  fairy: { fighting: 2, poison: 0.5, steel: 0.5, fire: 0.5, dragon: 2, dark: 2 },
 };
+// what Fairy takes (only a hack's Pokémon have the type): resisted by it, super effective on it, Dragon does nothing
+Object.assign(CHART.fighting, { fairy: 0.5 });
+Object.assign(CHART.bug, { fairy: 0.5 });
+Object.assign(CHART.poison, { fairy: 2 });
+Object.assign(CHART.steel, { fairy: 2 });
+Object.assign(CHART.dragon, { fairy: 0 });
 
 const GEN1 = {
   ghost: { psychic: 0 },
@@ -33,7 +41,8 @@ const GEN1 = {
   ice: { fire: 1 },
 };
 
-export const typesOfGen = (gen) => (gen === 1 ? TYPES.filter((t) => t !== 'dark' && t !== 'steel') : TYPES);
+/** The attacking types of a generation; `fairy` adds the type for a hack that has it. */
+export const typesOfGen = (gen, fairy = false) => (gen === 1 ? TYPES.filter((t) => t !== 'dark' && t !== 'steel') : fairy ? [...TYPES, 'fairy'] : TYPES);
 
 /** Multiplier of one attacking type against one defending type. Unknown types ('???', Curse) are neutral. */
 export function single(atk, def, gen = 4) {
@@ -50,9 +59,9 @@ export function effectiveness(atk, defTypes, gen = 4) {
  * How a defender fares against every attacking type, grouped like a Pokédex weakness chart:
  * { 4: [...], 2: [...], 0.5: [...], 0.25: [...], 0: [...] } (1× left out).
  */
-export function defenseChart(defTypes, gen = 4) {
+export function defenseChart(defTypes, gen = 4, { fairy = false } = {}) {
   const out = { 4: [], 2: [], 0.5: [], 0.25: [], 0: [] };
-  for (const atk of typesOfGen(gen)) {
+  for (const atk of typesOfGen(gen, fairy || defTypes.includes('fairy'))) {
     const m = effectiveness(atk, defTypes, gen);
     if (m !== 1) out[m]?.push(atk);
   }

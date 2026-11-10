@@ -4,7 +4,7 @@
 import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
 import { useApp } from '../lib/ui.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
-import { speciesName, gen4data, setRomSpecies } from '../lib/data.mjs';
+import { speciesName, gen4data, setRomSpecies, setRomTypes } from '../lib/data.mjs';
 import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation, placeName } from '/shared/live/location.mjs';
 import { pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces, areaForPlace } from '../lib/run.mjs';
 
@@ -30,6 +30,7 @@ export function loadRomLocations(src) {
   Object.assign(ROMLOC, { src, data: null, species: null, wram: null, pending: true });
   setRomPlaces(null); // (another game's names don't apply any more)
   setRomSpecies(null);
+  setRomTypes(null);
   const p = fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`)
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null)
@@ -38,6 +39,7 @@ export function loadRomLocations(src) {
       Object.assign(ROMLOC, { data: j?.data || null, species: j?.species || null, wram: j?.wram || null, pending: false });
       setRomPlaces(ROMLOC.data); // catches made now are named like the sign names their place
       setRomSpecies(ROMLOC.species); // a ROM hack's own Pokémon get the game's names
+      setRomTypes(j?.types || null); // … and the game's types (Fairy hacks)
     });
   ROMLOC.p = p;
   return p;
