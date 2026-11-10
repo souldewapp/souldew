@@ -333,6 +333,10 @@ test('Gen 5 battle without a flag: over once the battle\'s HP is copied back int
     return f;
   };
   assert.equal(poll(6)?.enemy?.species, 495, 'in battle');
+  w(0x02310000, core([me])); // a Potion heals Tepig to full: the copy agrees with the save party, the fight goes on
+  assert.equal(poll(2)?.enemy?.species, 495, 'still in battle');
+  w(0x02310000, core([{ ...me, hp: 11 }])); // hit again
+  poll(2);
   w(party, core([{ ...me, hp: 11 }])); // the fight is over: the game writes the battle's HP back
   assert.equal(poll(2), null, 'over right away');
   assert.equal(poll(6), null, 'and the leftover copies don\'t bring it back');
