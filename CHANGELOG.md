@@ -51,6 +51,21 @@
 - A game without location data no longer says "Location appears once you're in the game" forever; it says the
   location isn't available for this game yet.
 
+**Trophies: a Pokédex across all your runs, achievements and medals** – new in the sidebar.
+
+- **Pokédex:** all 1025 species, with what you caught (evolutions count) and saw in every SoulLink and Nuzlocke on
+  this computer – first catch with run, date, route and nickname, shinies, how many died, and your whole history with
+  each one. Filter by generation, type and caught/seen/missing, or search. Species from Gen 6 on aren't in any game
+  souldew plays yet: they're listed, greyed out, and say so.
+- **91 achievements** in six categories – from "Gotcha!" and "Eight for Eight" over "Untouchable" (win without a
+  death), "Soul Twins" and "Chaos Tamer" to "It's a Magikarp Moment", "Nuzlocke? More Like Nuzlose" and a few secret
+  ones. Five rarities, unlock dates, progress bars, and a toast when one unlocks while you play (no sound).
+- **Medals** in a medal case – one per category, one per regional Pokédex and the Champion's Medal, from bronze to
+  master. Original pixel-art designs.
+- Everything is worked out from the runs souldew already records (catches, deaths and their cause, badges, the end
+  of a run, the live data while you play) and stays on your computer. Your existing runs count from the first start;
+  a deleted run's catches stay in the Pokédex.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.
