@@ -66,6 +66,27 @@
   suspiciously like an old shareware "please buy a license" nag – in full old-Windows glory, on every system. souldew is
   and stays free: the window only jokes, offers the coffee link and closes with Esc. Settings › About turns it off.
 
+**Open stream API – build your own overlay layout**
+
+- Streamers who design their own OBS layout can now read souldew's data without its preset look: the current run as
+  JSON (players with their colours, every team with species, nickname, level, HP, status, held item, shiny and
+  sprites, linked groups, graveyard, encounters per route, each player's location and battle, badges and level cap,
+  the run's rules), plus a live event stream for catches, deaths, level-ups, evolutions, location changes, battles
+  and wild encounters, badges and the run's start and end. The same sprites the app shows (front, back, shiny,
+  menu icons, artwork, animated) come from the app too.
+- Safe by default: on this computer only, read-only, nothing private (no ROMs, saves, file names, invite codes or
+  spoilers); other websites need a token you can switch on. Address, copy button and docs are on the Stream page
+  under "Open API"; the documentation with copy-paste examples is in [docs/STREAM_API.md](docs/STREAM_API.md).
+
+**A surprise on legendary encounters**
+
+- Meet a legendary or mythical Pokémon while live tracking runs, and there's a 1-in-4 chance that the stream overlay
+  shows a small pop-up with a joke about that very Pokémon ("Mewtwo has entered the chat. souldew's developer has
+  entered the coffee shortage.") and the "Buy me a coffee" link with a QR code – in a corner of your choice, for about
+  12 seconds, at most once every 20 minutes and once per species per run. Jokes in all five languages.
+- It's a new full-screen "Coffee pop-up" layer on the Stream page (without it, the Alerts overlay shows the pop-up). On
+  by default – switch it off or preview it there. Custom layouts get it as an event from the open API.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.

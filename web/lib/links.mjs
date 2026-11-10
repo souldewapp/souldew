@@ -1,7 +1,3 @@
-// The project's public addresses, shown in the sidebar and in Settings › About.
-export const LINKS = {
-  coffee: 'https://buymeacoffee.com/souldew',
-  github: 'https://github.com/souldewapp/souldew',
-  issues: 'https://github.com/souldewapp/souldew/issues/new/choose',
-  releases: 'https://github.com/souldewapp/souldew/releases',
-};
+// The project's public addresses, shown in the sidebar and in Settings › About (defined in shared/links.mjs, which
+// the stream overlays use too).
+export { LINKS } from '/shared/links.mjs';

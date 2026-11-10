@@ -97,6 +97,8 @@ The Electron shell (`electron/`) starts the local server (`server/`) in the same
 | `web/lib/pacer.mjs` | Frame pacing for the built-in emulator: runs the core's frames from the display's refresh (RetroArch's own sleeps are off – they depend on the system timer) |
 | `shared/live/` | Reading team, battle and location from game memory (Gen 1–5) |
 | `shared/overlay.mjs` | The overlay snapshot (what stream tools may see) |
+| `shared/streamapi.mjs`, `server/lib/streamapi.mjs` | The open stream API `/api/v1` ([docs/STREAM_API.md](STREAM_API.md)): state, events, sprites, access rules |
+| `shared/coffee.mjs`, `shared/legendaries.mjs`, `shared/qr.mjs` | The coffee pop-up on legendary encounters: rules, jokes (5 languages), legendary list, QR code |
 | `server/lib/build.mjs` | Building runs (patch, randomizer, one ROM per player) |
 | `tools/upr/`, `tools/upr-bridge/` | Universal Pokémon Randomizer ZX and souldew's Java helper for it |
 | `research/` | Notes and data gathered while building the trackers |

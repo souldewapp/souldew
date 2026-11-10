@@ -78,3 +78,12 @@ html.streamer .sm-secret:focus { filter: blur(7px); }
 /* Pokélink themes card */
 .pl-who { flex: none; width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--acc, var(--ink)); }
 .pl-card .warn-text { color: var(--warn); }
+/* Coffee pop-up card: the corner picker */
+.cf-corner { display: inline-block; font-size: 12px; line-height: 1; transform: scale(1.15); color: var(--ink-2); }
+.seg button.on .cf-corner { color: #f0c75e; }
+/* Open API card */
+.api-k { flex: none; width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; }
+.api-rows { display: grid; gap: 6px; padding: 10px 12px; border-radius: 10px; background: var(--shell-3); }
+.api-rows .api-k { font-weight: 500; }
+.api-tok { max-width: 260px; }
+@media (max-width: 720px) { .api-k { width: auto; } .api-base { flex-wrap: wrap; } }

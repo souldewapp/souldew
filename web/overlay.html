@@ -223,6 +223,61 @@
     .alerts.bottom .alert { animation-name: alert-in-b; }
     @keyframes alert-in-b { 0% { transform: translateY(18px) scale(.94); opacity: 0; } 100% { transform: none; opacity: 1; } }
 
+    /* ---- coffee pop-up: a legendary encounter, a joke and the coffee link – a corner toast that leaves the game and
+       the middle of the screen alone (server/lib/streamapi.mjs decides when; shared/coffee.mjs has the texts) ---- */
+    .popups { position: fixed; inset: 0; pointer-events: none; }
+    .coffee, .cf-ghost { position: absolute; width: 520px; }
+    .c-tl { left: 24px; top: 24px; } .c-tr { right: 24px; top: 24px; } .c-bl { left: 24px; bottom: 24px; } .c-br { right: 24px; bottom: 24px; }
+    .coffee { --c: var(--gold); --c2: #ffe7a3; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 14px 17px 12px; overflow: hidden;
+      border-color: color-mix(in srgb, var(--c) 55%, transparent); box-shadow: var(--sh), inset 0 1px 0 #ffffff17, 0 0 0 1px #0006, 0 0 34px -10px color-mix(in srgb, var(--c) 70%, transparent);
+      animation: cf-in-l .8s cubic-bezier(.18, .95, .25, 1.18) both; }
+    .coffee.mythical { --c: #c4a2ff; --c2: #eadcff; }
+    .coffee.c-tr, .coffee.c-br { animation-name: cf-in-r; }
+    .coffee.out { animation: cf-out-l .5s cubic-bezier(.5, 0, .9, .4) both; }
+    .coffee.out.c-tr, .coffee.out.c-br { animation-name: cf-out-r; }
+    .t-minimal .coffee { background: linear-gradient(180deg, #ffffff10, transparent 40%), #16151bee; border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); padding: 14px 14px 17px 12px; text-shadow: none; }
+    .coffee::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--c) 30%, transparent) 50%, transparent 70%) no-repeat;
+      background-size: 250% 100%; animation: shine 1.2s .55s ease-out both; }
+    .cf-art { position: relative; width: 100px; height: 100px; display: grid; place-items: center; }
+    .cf-art::before { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--c) 42%, transparent), transparent 68%);
+      animation: cf-glow 2.4s ease-in-out infinite; }
+    .cf-art::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; opacity: .55; animation: cf-rays 9s linear infinite;
+      background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--c) 34%, transparent) 0 8deg, transparent 8deg 30deg);
+      -webkit-mask: radial-gradient(circle, transparent 30%, #000 46%, transparent 70%); mask: radial-gradient(circle, transparent 30%, #000 46%, transparent 70%); }
+    .cf-art img { position: relative; z-index: 1; width: 96px; height: 96px; image-rendering: pixelated; filter: drop-shadow(0 3px 0 #0007);
+      animation: cf-mon .9s .25s cubic-bezier(.2, .9, .3, 1.5) both, cf-float 3s 1.2s ease-in-out infinite; }
+    .cf-cup { position: absolute; z-index: 2; right: -8px; bottom: -4px; width: 38px; height: 38px; animation: cf-cup .7s .7s cubic-bezier(.2, .9, .3, 1.6) both; filter: drop-shadow(0 2px 0 #0009); }
+    .cf-cup .steam { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; opacity: 0; animation: cf-steam 2.2s ease-in-out infinite; }
+    .cf-cup .steam.b { animation-delay: .7s; }
+    .cf-tx { display: grid; gap: 6px; min-width: 0; }
+    .cf-tx .kick { display: flex; align-items: center; gap: 6px; min-width: 0; font: 700 11px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--c); white-space: nowrap; }
+    .cf-tx .kick b { font: inherit; flex: none; }
+    .cf-tx .kick em { font-style: normal; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .cf-tx .kick i { font-style: normal; font-size: 13px; animation: twinkle 2.4s ease-in-out infinite; }
+    .cf-joke { font: 600 17.5px/1.27 var(--body); color: var(--ink); text-wrap: pretty; text-shadow: 0 1px 0 #0008; }
+    .cf-cta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 13px; color: var(--ink-2); line-height: 1.3; }
+    .cf-cta b { color: var(--c2); font-weight: 600; letter-spacing: .01em; }
+    .cf-qr { display: grid; justify-items: center; gap: 5px; animation: cf-qr .7s .45s cubic-bezier(.2, .9, .3, 1.3) both; }
+    .cf-qr svg { width: 88px; height: 88px; display: block; border-radius: 9px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 55%, transparent), 0 6px 14px -6px #000; }
+    .cf-qr span { font: 600 9.5px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+    .cf-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, var(--c), var(--c2)); transform-origin: 0 50%;
+      animation: cf-bar var(--show, 12s) linear both; opacity: .85; }
+    .cf-ghost { height: 130px; display: grid; place-items: center; border: 2px dashed #ffffff4d; border-radius: var(--r); background: #0b0a0e66;
+      font: 500 15px/1.3 var(--body); color: var(--ink-2); text-align: center; padding: 0 24px; }
+    body:has(.coffee) .cf-ghost { visibility: hidden; }
+    @keyframes cf-in-l { 0% { transform: translateX(-115%) rotate(-5deg); opacity: 0; } 55% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+    @keyframes cf-in-r { 0% { transform: translateX(115%) rotate(5deg); opacity: 0; } 55% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+    @keyframes cf-out-l { to { transform: translateX(-115%) rotate(-3deg); opacity: 0; } }
+    @keyframes cf-out-r { to { transform: translateX(115%) rotate(3deg); opacity: 0; } }
+    @keyframes cf-mon { 0% { transform: scale(.1) translateY(30px); opacity: 0; filter: brightness(3); } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: none; filter: drop-shadow(0 3px 0 #0007); } }
+    @keyframes cf-float { 50% { transform: translateY(-4px); } }
+    @keyframes cf-glow { 50% { transform: scale(1.12); opacity: .7; } }
+    @keyframes cf-rays { to { transform: rotate(360deg); } }
+    @keyframes cf-cup { 0% { transform: scale(0) rotate(-40deg); } 70% { transform: scale(1.2) rotate(8deg); } 100% { transform: none; } }
+    @keyframes cf-steam { 0% { opacity: 0; transform: translateY(3px); } 35% { opacity: .85; } 100% { opacity: 0; transform: translateY(-5px); } }
+    @keyframes cf-qr { 0% { transform: perspective(300px) rotateY(80deg) scale(.7); opacity: 0; } 100% { transform: none; opacity: 1; } }
+    @keyframes cf-bar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
     body:has(#alerts .alert) #root .msg { visibility: hidden; } /* the preview's hint gives way to a real alert */
     /* status lines (loading, no run, the preview's hint) sit on a dark pill: readable on a bright game, too */
     .msg { display: inline-block; margin: 10px; font-size: 14px; color: var(--ink-2, #c9c5d3); padding: 8px 12px; border-radius: 10px; background: #141318d9; }
@@ -237,37 +292,40 @@
 <body>
   <div id="root"></div>
   <div id="alerts" class="alerts top" aria-live="polite"></div>
+  <div id="popups" class="popups" aria-live="polite"></div>
   <div id="net" class="net" hidden></div>
   <script type="module">
     import { teamOf, groupsOf, countersOf, alertsBetween, pickSlots, playTimeText, WIDGETS } from '/shared/overlay.mjs';
+    import { coffeeTexts, COFFEE_URL, COFFEE_CORNERS, DEFAULT_CORNER } from '/shared/coffee.mjs';
+    import { qrMatrix, qrPath } from '/shared/qr.mjs';
 
     // A standalone page in OBS: no app bundle here, so the few strings live in a small dictionary.
     const STRINGS = {
-      en: { alertsHere: 'Alerts appear here – send a test alert', lv: 'Lv', loading: 'Loading …', noRun: 'No run found', offline: 'reconnecting …', noTeam: 'no team yet', box: 'BOX', here: 'You are here', nowhere: 'Location shows once the game runs',
+      en: { popupHere: 'The coffee pop-up appears in this corner when a legendary shows up', alertsHere: 'Alerts appear here – send a test alert', lv: 'Lv', loading: 'Loading …', noRun: 'No run found', offline: 'reconnecting …', noTeam: 'no team yet', box: 'BOX', here: 'You are here', nowhere: 'Location shows once the game runs',
         alive: 'alive', alivePairs: 'pairs alive', aliveGroups: 'groups alive', dead: 'in the graveyard', caught: 'caught', badges: 'badges', playTime: 'play time',
         wild: 'Wild battle', trainer: 'Trainer battle', deathK: 'Died', deathOne: '{a} died', deathMany: '{a} died together', against: 'against {enemy} Lv {lv}',
         catchK: 'Caught', catchT: '{who} caught {name}', complete: 'Pair complete', completeG: 'Group complete', badgeK: 'Badge', badgeT: '{who} earned badge #{n}',
         evolveK: 'Evolution', evolveT: '{from} became {to}', levelK: 'Level {n}', levelT: '{name} reached level {n}', runK: 'Run over', runFailed: 'The run has failed', runWon: 'Run complete!', runEnded: 'The run has ended',
         st: { slp: 'SLP', psn: 'PSN', tox: 'TOX', brn: 'BRN', frz: 'FRZ', par: 'PAR', fnt: 'FNT' } },
-      de: { alertsHere: 'Hier erscheinen die Alerts – schick einen Test-Alert', lv: 'Lv', loading: 'Lade …', noRun: 'Kein Run gefunden', offline: 'verbinde neu …', noTeam: 'noch kein Team', box: 'BOX', here: 'Du bist hier', nowhere: 'Der Ort erscheint, sobald das Spiel läuft',
+      de: { popupHere: 'Hier in der Ecke erscheint das Kaffee-Pop-up, wenn ein Legendäres auftaucht', alertsHere: 'Hier erscheinen die Alerts – schick einen Test-Alert', lv: 'Lv', loading: 'Lade …', noRun: 'Kein Run gefunden', offline: 'verbinde neu …', noTeam: 'noch kein Team', box: 'BOX', here: 'Du bist hier', nowhere: 'Der Ort erscheint, sobald das Spiel läuft',
         alive: 'leben', alivePairs: 'Paare leben', aliveGroups: 'Gruppen leben', dead: 'auf dem Friedhof', caught: 'gefangen', badges: 'Orden', playTime: 'Spielzeit',
         wild: 'Wilder Kampf', trainer: 'Trainerkampf', deathK: 'Gestorben', deathOne: '{a} ist gestorben', deathMany: '{a} sind gemeinsam gestorben', against: 'gegen {enemy} Lv {lv}',
         catchK: 'Gefangen', catchT: '{who} fängt {name}', complete: 'Paar komplett', completeG: 'Gruppe komplett', badgeK: 'Orden', badgeT: '{who} holt Orden #{n}',
         evolveK: 'Entwicklung', evolveT: '{from} wird zu {to}', levelK: 'Level {n}', levelT: '{name} erreicht Level {n}', runK: 'Run vorbei', runFailed: 'Der Run ist gescheitert', runWon: 'Run geschafft!', runEnded: 'Der Run ist beendet',
         st: { slp: 'SLF', psn: 'GIF', tox: 'GIF+', brn: 'BRT', frz: 'GFR', par: 'PAR', fnt: 'K.O.' } },
-      fr: { alertsHere: 'Les alertes apparaissent ici – envoie une alerte de test', lv: 'N.', loading: 'Chargement …', noRun: 'Aucune partie trouvée', offline: 'reconnexion …', noTeam: 'pas encore d’équipe', box: 'BOÎTE', here: 'Tu es ici', nowhere: 'Le lieu s’affiche dès que le jeu tourne',
+      fr: { popupHere: 'Le pop-up café apparaît dans ce coin quand un légendaire se montre', alertsHere: 'Les alertes apparaissent ici – envoie une alerte de test', lv: 'N.', loading: 'Chargement …', noRun: 'Aucune partie trouvée', offline: 'reconnexion …', noTeam: 'pas encore d’équipe', box: 'BOÎTE', here: 'Tu es ici', nowhere: 'Le lieu s’affiche dès que le jeu tourne',
         alive: 'en vie', alivePairs: 'paires en vie', aliveGroups: 'groupes en vie', dead: 'au cimetière', caught: 'capturés', badges: 'badges', playTime: 'temps de jeu',
         wild: 'Combat sauvage', trainer: 'Combat de dresseur', deathK: 'Mort', deathOne: '{a} est mort', deathMany: '{a} sont morts ensemble', against: 'contre {enemy} N. {lv}',
         catchK: 'Capturé', catchT: '{who} capture {name}', complete: 'Paire complète', completeG: 'Groupe complet', badgeK: 'Badge', badgeT: '{who} obtient le badge n° {n}',
         evolveK: 'Évolution', evolveT: '{from} devient {to}', levelK: 'Niveau {n}', levelT: '{name} atteint le niveau {n}', runK: 'Fin de partie', runFailed: 'La partie a échoué', runWon: 'Partie réussie !', runEnded: 'La partie est terminée',
         st: { slp: 'SOM', psn: 'PSN', tox: 'PSN+', brn: 'BRL', frz: 'GEL', par: 'PAR', fnt: 'K.O.' } },
-      es: { alertsHere: 'Aquí aparecen las alertas – envía una alerta de prueba', lv: 'Nv.', loading: 'Cargando …', noRun: 'No se encontró la partida', offline: 'reconectando …', noTeam: 'aún sin equipo', box: 'CAJA', here: 'Estás aquí', nowhere: 'El lugar aparece cuando el juego está en marcha',
+      es: { popupHere: 'El pop-up del café aparece en esta esquina cuando sale un legendario', alertsHere: 'Aquí aparecen las alertas – envía una alerta de prueba', lv: 'Nv.', loading: 'Cargando …', noRun: 'No se encontró la partida', offline: 'reconectando …', noTeam: 'aún sin equipo', box: 'CAJA', here: 'Estás aquí', nowhere: 'El lugar aparece cuando el juego está en marcha',
         alive: 'vivos', alivePairs: 'parejas vivas', aliveGroups: 'grupos vivos', dead: 'en el cementerio', caught: 'capturados', badges: 'medallas', playTime: 'tiempo de juego',
         wild: 'Combate salvaje', trainer: 'Combate contra entrenador', deathK: 'Murió', deathOne: '{a} ha muerto', deathMany: '{a} han muerto juntos', against: 'contra {enemy} Nv. {lv}',
         catchK: 'Capturado', catchT: '{who} captura a {name}', complete: 'Pareja completa', completeG: 'Grupo completo', badgeK: 'Medalla', badgeT: '{who} consigue la medalla n.º {n}',
         evolveK: 'Evolución', evolveT: '{from} evoluciona a {to}', levelK: 'Nivel {n}', levelT: '{name} alcanza el nivel {n}', runK: 'Partida terminada', runFailed: 'La partida ha fracasado', runWon: '¡Partida superada!', runEnded: 'La partida ha terminado',
         st: { slp: 'DOR', psn: 'ENV', tox: 'ENV+', brn: 'QUE', frz: 'CON', par: 'PAR', fnt: 'DEB' } },
-      it: { alertsHere: 'Qui compaiono gli avvisi – invia un avviso di prova', lv: 'Lv.', loading: 'Caricamento …', noRun: 'Nessuna partita trovata', offline: 'riconnessione …', noTeam: 'ancora nessuna squadra', box: 'BOX', here: 'Sei qui', nowhere: 'Il luogo appare quando il gioco è avviato',
+      it: { popupHere: 'Il pop-up del caffè appare in questo angolo quando spunta un leggendario', alertsHere: 'Qui compaiono gli avvisi – invia un avviso di prova', lv: 'Lv.', loading: 'Caricamento …', noRun: 'Nessuna partita trovata', offline: 'riconnessione …', noTeam: 'ancora nessuna squadra', box: 'BOX', here: 'Sei qui', nowhere: 'Il luogo appare quando il gioco è avviato',
         alive: 'in vita', alivePairs: 'coppie in vita', aliveGroups: 'gruppi in vita', dead: 'al cimitero', caught: 'catturati', badges: 'medaglie', playTime: 'tempo di gioco',
         wild: 'Lotta selvatica', trainer: 'Lotta con allenatore', deathK: 'Morto', deathOne: '{a} è morto', deathMany: '{a} sono morti insieme', against: 'contro {enemy} Lv. {lv}',
         catchK: 'Catturato', catchT: '{who} cattura {name}', complete: 'Coppia completa', completeG: 'Gruppo completo', badgeK: 'Medaglia', badgeT: '{who} ottiene la medaglia n. {n}',
@@ -295,9 +353,11 @@
     document.body.className = [`t-${opt.theme}`, opt.bg && `bg-${opt.bg}`, !flag('anim', true) && 'no-anim'].filter(Boolean).join(' ');
     const root = document.getElementById('root');
     const alertsEl = document.getElementById('alerts');
+    const popupsEl = document.getElementById('popups');
     const net = document.getElementById('net');
     root.style.zoom = String(opt.scale);
     alertsEl.style.zoom = String(opt.scale);
+    popupsEl.style.zoom = String(opt.scale);
     alertsEl.className = `alerts ${opt.pos}`;
 
     const pick = (l) => (l && STRINGS[String(l).slice(0, 2).toLowerCase()] ? String(l).slice(0, 2).toLowerCase() : null);
@@ -546,6 +606,12 @@
         root.innerHTML = opt.preview ? `<div class="msg">${esc(L.alertsHere)}</div>` : '';
         return;
       }
+      if (opt.w === 'popup') {
+        // a full-screen layer that stays empty – in the app's preview, the corner the pop-up will use
+        root.innerHTML = '';
+        if (opt.preview && !popupsEl.querySelector('.cf-ghost')) popupsEl.insertAdjacentHTML('afterbegin', `<div class="cf-ghost c-${ghostCorner}">${esc(L.popupHere)}</div>`);
+        return;
+      }
       if (opt.w === 'team') {
         const wrap = ensure('team');
         renderTeam(wrap, slots);
@@ -660,6 +726,50 @@
       }
     }
 
+    // ---- the coffee pop-up: one at a time, ~12 s, in the streamer's corner ----
+    const ghostCorner = COFFEE_CORNERS.includes(params.get('corner')) ? params.get('corner') : DEFAULT_CORNER;
+    let qr = null;
+    const qrSvg = () => {
+      if (!qr) {
+        const m = qrMatrix(COFFEE_URL);
+        const n = m.length + 2;
+        qr = `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${n}" height="${n}" fill="#fff"/><path fill="#15141a" d="${qrPath(m, 1)}"/></svg>`;
+      }
+      return qr;
+    };
+    const CUP = `<svg class="cf-cup" viewBox="0 0 40 40" aria-hidden="true"><path class="steam" d="M15 11c-2-3 2-4 0-7"/><path class="steam b" d="M22 11c-2-3 2-4 0-7"/>
+      <path d="M8 15h24v4h3a5 5 0 0 1 0 10h-4a10 10 0 0 1-9 6h-2A11 11 0 0 1 8 24z" fill="#f4efe4"/><path d="M31 22h3a2 2 0 0 1 0 4h-3z" fill="#16151b"/>
+      <path d="M10 18h20v5a9 9 0 0 1-9 9h-2a9 9 0 0 1-9-9z" fill="#8a5a3c"/><path d="M12 19h16" stroke="#c48a5f" stroke-width="2" stroke-linecap="round"/></svg>`;
+    const seenPopups = new Set();
+    const showsPopups = opt.w === 'popup';
+    function showCoffee(p) {
+      if (!p?.species || seenPopups.has(p.id)) return;
+      seenPopups.add(p.id);
+      const corner = COFFEE_CORNERS.includes(p.corner) ? p.corner : DEFAULT_CORNER;
+      const name = S?.species?.[p.species] || p.name || `#${p.species}`;
+      const T = coffeeTexts({ species: p.species, name, lang, jokeId: p.jokeId });
+      const show = Math.min(30000, Math.max(4000, Number(p.showMs) || 12000));
+      for (const old of popupsEl.querySelectorAll('.coffee')) old.remove();
+      const el = document.createElement('div');
+      el.className = `box coffee c-${corner}${p.kind === 'mythical' ? ' mythical' : ''}`;
+      el.style.setProperty('--show', `${show}ms`);
+      el.innerHTML = `<span class="cf-art"><img src="${spriteSrc(p.species)}" alt="" />${CUP}</span>
+        <span class="cf-tx"><span class="kick"><i>✦</i><b>${esc(T.kicker)}</b>${p.player && S?.slots?.length > 1 ? `<em>· ${esc(p.player)}</em>` : ''}</span>
+          <span class="cf-joke">${esc(T.joke)}</span><span class="cf-cta">${esc(T.cta)} <b>${esc(T.short)}</b></span></span>
+        <span class="cf-qr">${qrSvg()}<span>${esc(T.scan)}</span></span><i class="cf-bar"></i>`;
+      popupsEl.append(el);
+      setTimeout(() => {
+        el.classList.add('out');
+        setTimeout(() => el.remove(), 550);
+      }, show);
+    }
+    function maybeCoffee(snap) {
+      const p = snap?.popup;
+      if (!p || Date.now() - (p.at || 0) > (p.showMs || 12000)) return;
+      // the pop-up layer shows it; without one in OBS the alerts overlay stands in
+      if (showsPopups || (showsAlerts && !p.layer)) showCoffee(p);
+    }
+
     // "Send a test alert" from the app: a sample made of this run's own Pokémon
     function sample(type) {
       const slot = S?.slots?.[0] || 'p1';
@@ -684,6 +794,7 @@
       prev = snap;
       render();
       if (fresh.length) announce(fresh);
+      maybeCoffee(snap);
     }
     if (!run) root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
     else {
@@ -756,7 +867,9 @@
       }
       // the app's builder preview: a test alert without the server round trip
       window.addEventListener('message', (e) => {
-        if (e.origin === location.origin && e.data?.souldewTest) announce([sample(e.data.souldewTest)]);
+        if (e.origin !== location.origin) return;
+        if (e.data?.souldewTest) announce([sample(e.data.souldewTest)]);
+        if (e.data?.souldewCoffee && (showsPopups || (showsAlerts && !e.data.souldewCoffee.layer))) showCoffee(e.data.souldewCoffee);
       });
     }
   </script>
