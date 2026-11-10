@@ -4,7 +4,7 @@
 "pearl_us",
 "diamond_us"
 ],
-"note": "Diamond/Pearl (US): same as Platinum up to Twinleaf Town; Diamond untested (no ROM).",
+"note": "Diamond/Pearl (US): Twinleaf \u2192 Barry's house \u2192 Route 201 \u2192 Lake Verity (briefcase: Turtwig, a wild Starly) \u2192 Route 201 \u2192 Sandgem (lab, Mart: Pok\u00e9 Balls) \u2192 a real wild catch on Route 201. Diamond untested (no ROM).",
 "pos": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()",
 "steps": [
 {
@@ -223,12 +223,272 @@
 "expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
 },
 {
+"do": "log",
+"name": "f0",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "f0"
+},
+{
 "do": "go",
 "required": false,
 "patience": 4,
-"y": 878,
-"x": 111,
+"x": 105,
+"y": 876,
+"order": "xy"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"y": 870,
+"order": "y",
+"map": 411,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "log",
+"name": "f1",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "f1"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"x": 3,
+"y": 7,
 "order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"x": 2,
+"y": 7,
+"order": "x"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"y": 3,
+"order": "y"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"x": 5,
+"y": 3,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"x": 2,
+"y": 3,
+"order": "xy"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"x": 5,
+"y": 3,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"x": 2,
+"y": 3,
+"order": "xy"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"x": 5,
+"y": 3,
+"order": "yx"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "log",
+"name": "f2",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "f2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 413,
+"leave": true,
+"x": 3,
+"y": 5,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 413,
+"leave": true,
+"x": 3,
+"y": 4,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 413,
+"leave": true,
+"x": 0,
+"order": "x"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 413,
+"leave": true,
+"x": 3,
+"y": 5,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 413,
+"leave": true,
+"x": 3,
+"y": 4,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 413,
+"leave": true,
+"x": 0,
+"order": "x"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"x": 6,
+"y": 9,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 412,
+"leave": true,
+"y": 12,
+"order": "y"
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "log",
+"name": "f3",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "f3"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"x": 105,
+"y": 877,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"x": 111,
+"y": 877,
+"order": "xy"
 },
 {
 "do": "go",
@@ -238,17 +498,37 @@
 "order": "y"
 },
 {
+"do": "wait",
+"frames": 60
+},
+{
 "do": "log",
-"name": "p",
+"name": "f4",
 "expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
 },
 {
 "do": "shot",
-"name": "t1"
+"name": "f4"
 },
 {
 "do": "check",
-"name": "r1"
+"name": "route201"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"y": 840,
+"order": "y"
 },
 {
 "do": "mash",
@@ -260,29 +540,29 @@
 "max": 2000
 },
 {
-"do": "log",
-"name": "p",
-"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
-},
-{
-"do": "shot",
-"name": "t2"
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 90,
+"order": "x"
 },
 {
 "do": "go",
 "required": false,
-"patience": 4,
+"patience": 6,
+"x": 80,
+"order": "x"
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
 "y": 830,
 "order": "y"
 },
 {
-"do": "log",
-"name": "p",
-"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
-},
-{
-"do": "shot",
-"name": "t3"
+"do": "check",
+"name": "lakefront"
 },
 {
 "do": "mash",
@@ -291,33 +571,2368 @@
 "A"
 ]
 ],
-"max": 1000
+"max": 8000,
+"until": "party"
+},
+{
+"do": "wait",
+"frames": 60
 },
 {
 "do": "log",
-"name": "p",
+"name": "f5",
 "expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
 },
 {
 "do": "shot",
-"name": "t4"
+"name": "f5"
 },
 {
 "do": "check",
-"name": "r2"
+"name": "starter"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 4000,
+"until": "battle",
+"required": false
+},
+{
+"do": "wait",
+"frames": 300
 },
 {
 "do": "log",
-"name": "core",
-"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const base=u(u(33557360)+0x20);const o=parseInt(ctx.entry.partyMonsOffset||'0xA8',16);return {base:base.toString(16), core:[...read(base+o-8,8)], ok:ctx.state.saveBase?.toString(16)}})()"
+"name": "f6",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "f6"
+},
+{
+"do": "check",
+"name": "starly"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 12000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "check",
+"name": "afterStarly"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1000
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"required": false,
+"patience": 10,
+"x": 81,
+"y": 852,
+"order": "yx"
+},
+{
+"do": "go",
+"required": false,
+"patience": 8,
+"x": 100,
+"order": "x",
+"map": 334,
+"leave": true
+},
+{
+"do": "go",
+"required": false,
+"patience": 8,
+"x": 113,
+"y": 854,
+"order": "xy"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "log",
+"name": "f7",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "f7"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"map": 414,
+"leave": true,
+"x": 6,
+"y": 10,
+"order": "xy"
+},
+{
+"do": "walk",
+"dir": "DOWN",
+"steps": 2
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"x": 111,
+"y": 870,
+"order": "xy"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"y": 856,
+"order": "y"
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"x": 113,
+"y": 854,
+"order": "yx"
+},
+{
+"do": "log",
+"name": "f9",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "f9"
+},
+{
+"do": "check",
+"name": "route201b"
+},
+{
+"do": "log",
+"name": "inBattleFlag",
+"expr": "[...read(35896120,2)]"
+},
+{
+"do": "give",
+"item": "ball",
+"count": 10,
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 4,
+"x": 120,
+"order": "x"
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+],
+[
+"RIGHT"
+]
+],
+"hold": 16,
+"every": 4,
+"max": 6000,
+"until": "battle",
+"required": false
+},
+{
+"do": "wait",
+"frames": 500
+},
+{
+"do": "log",
+"name": "wild",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "wild"
+},
+{
+"do": "log",
+"name": "inBattleFlag",
+"expr": "[...read(35896120,2)]"
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "give",
+"item": "ball",
+"count": 10,
+"required": false
+},
+{
+"do": "tap",
+"x": 128,
+"y": 100
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "tap",
+"x": 64,
+"y": 50
+},
+{
+"do": "wait",
+"frames": 500
+},
+{
+"do": "log",
+"name": "turn",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "turn"
+},
+{
+"do": "check",
+"name": "wild2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 900
+},
+{
+"do": "log",
+"name": "end",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "end"
+},
+{
+"do": "log",
+"name": "inBattleFlag",
+"expr": "[...read(35896120,2)]"
+},
+{
+"do": "check",
+"name": "end"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 146,
+"y": 853,
+"order": "xy"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 146,
+"y": 853,
+"order": "xy"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 146,
+"y": 853,
+"order": "xy"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 146,
+"y": 853,
+"order": "xy"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 146,
+"y": 846,
+"order": "yx"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 146,
+"y": 846,
+"order": "yx"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 146,
+"y": 846,
+"order": "yx"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 146,
+"y": 846,
+"order": "yx"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 152,
+"y": 846,
+"order": "xy"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 152,
+"y": 846,
+"order": "xy"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 152,
+"y": 846,
+"order": "xy"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 152,
+"y": 846,
+"order": "xy"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 180,
+"order": "x",
+"map": 342,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 180,
+"order": "x",
+"map": 342,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 180,
+"order": "x",
+"map": 342,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "go",
+"required": false,
+"patience": 6,
+"x": 180,
+"order": "x",
+"map": 342,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "tap",
+"x": 128,
+"y": 180
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 60,
+"max": 4000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "log",
+"name": "c1",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "c1"
+},
+{
+"do": "check",
+"name": "sandgem"
+},
+{
+"do": "go",
+"x": 175,
+"order": "x",
+"required": false,
+"patience": 8
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 15000
+},
+{
+"do": "log",
+"name": "c2",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "c2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"y": 14,
+"order": "y",
+"map": 422,
+"leave": true,
+"required": false,
+"patience": 8
+},
+{
+"do": "walk",
+"dir": "DOWN",
+"steps": 2
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 6000
+},
+{
+"do": "log",
+"name": "c3",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "c3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 200
+},
+{
+"do": "go",
+"x": 187,
+"y": 844,
+"order": "yx",
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"y": 838,
+"order": "y",
+"map": 418,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "go",
+"y": 5,
+"order": "y",
+"required": false,
+"patience": 3
+},
+{
+"do": "go",
+"x": 3,
+"y": 7,
+"order": "xy",
+"required": false,
+"patience": 3
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 3
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "log",
+"name": "c4",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "c4"
+},
+{
+"do": "check",
+"name": "mart"
+},
+{
+"do": "give",
+"item": "ball",
+"count": 10
+},
+{
+"do": "go",
+"y": 13,
+"order": "y",
+"map": 419,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "go",
+"y": 846,
+"order": "y",
+"required": false,
+"patience": 4
+},
+{
+"do": "go",
+"x": 152,
+"order": "x",
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"x": 152,
+"y": 846,
+"order": "xy",
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"x": 145,
+"y": 853,
+"order": "yx",
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"y": 849,
+"order": "y",
+"required": false,
+"patience": 6
+},
+{
+"do": "log",
+"name": "c5",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "c5"
+},
+{
+"do": "check",
+"name": "grass"
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 16,
+"every": 4,
+"max": 8000,
+"until": "battle"
+},
+{
+"do": "wait",
+"frames": 1000
+},
+{
+"do": "log",
+"name": "c6",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "c6"
+},
+{
+"do": "check",
+"name": "wild3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"DOWN"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 40,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 80,
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 30,
+"every": 40,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 1200,
+"required": false
+},
+{
+"do": "until",
+"until": "party>=2",
+"max": 10
+},
+{
+"do": "log",
+"name": "c7",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "c7"
+},
+{
+"do": "check",
+"name": "caughtNow"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 2500
+},
+{
+"do": "log",
+"name": "c8",
+"expr": "(()=>{const u=(a)=>{const b=read(a,4);return (b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0};const p=u(0x02000b70);if(p<0x2000000||p>=0x2400000)return [-1,-1,-1];const s=u(p+0x20);if(s<0x2000000||s>=0x2400000)return [-1,-1,-1];return [u(s+0x144c),u(s+0x144c+8),u(s+0x144c+12)]})()"
+},
+{
+"do": "shot",
+"name": "c8"
+},
+{
+"do": "check",
+"name": "caught"
 }
 ],
 "expect": {
-"r1": {
-"place": "Twinleaf Town"
+"route201": {
+"place": "Route 201"
 },
-"r2": {
-"place": "Twinleaf Town"
+"lakefront": {
+"place": "Verity Lakefront"
+},
+"starter": {
+"party": {
+"species": [
+387,
+390,
+393
+],
+"level": 5
+},
+"place": "Lake Verity"
+},
+"starly": {
+"battle": {
+"kind": "wild",
+"level": 2,
+"species": [
+396
+]
+}
+},
+"sandgem": {
+"place": "Sandgem Town"
+},
+"caught": {
+"catch": {
+"area": "Route 201"
+}
 }
 }
 }
