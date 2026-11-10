@@ -1,6 +1,7 @@
 # Streaming with souldew
 
-OBS overlays, Pokélink themes and the overlay API. Back to the [README](../README.md).
+OBS overlays, the coffee pop-up, Pokélink themes and the overlay API. Back to the [README](../README.md).
+Building your own layout? The **[open stream API](STREAM_API.md)** has the run's data, live events and sprites.
 
 ## Streamer mode
 
@@ -16,10 +17,17 @@ Each widget has a live preview, its own URL and **Drag into OBS** (the browser s
 - **You are here** – each player's location and current battle.
 - **Alerts** – death (with the whole linked group and the opponent), catch, badge, evolution, every 10th level, run over; optional chiptune sound.
 - **Stats bar.**
+- **Coffee pop-up** – a full-screen, transparent layer. When someone meets a legendary or mythical Pokémon while
+  live tracking runs, there's a 25 % chance (once per species and run, at most every 20 minutes) that a toast with a
+  joke about that very Pokémon, the "Buy me a coffee" link and a QR code slides into the corner you pick, for about
+  12 seconds. Without this layer in OBS the Alerts overlay shows it. On by default; switch it off or preview it on the
+  Stream page.
 
 Options per widget (layout, players, nicknames/HP/area names) and for all (glass/solid/minimal look, 75–150 % size, language). Overlays get changes pushed instantly, show "reconnecting …" if the app goes away and keep the last picture. "Test alert" sends a sample to every open overlay, and the page shows which widgets are live in OBS right now. Old links (`/overlay?run=…`) keep working.
 
 ## Overlay API
+
+The endpoints below feed souldew's own overlays. For your own layout use the versioned [open stream API](STREAM_API.md) (`/api/v1`) – it is documented, stable and has CORS.
 
 Everything runs on this computer only (`127.0.0.1`), read-only, without room keys, file names, device IDs or spoilers. The app port is normally `47390`; if that's taken the app picks a free one (the Stream page shows the real addresses).
 
