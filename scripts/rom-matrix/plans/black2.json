@@ -3,9 +3,6 @@
 "entries": [
 "black2_us"
 ],
-"hacks": [
-"volt-white-2-redux"
-],
 "core": "desmume",
 "note": "Black 2 (US/EU): intro \u2192 Aspertia (Hugh, the Lookout: Bianca gives the starter) \u2192 Hugh's battle \u2192 Route 19 \u2192 a real wild catch.",
 "pos": "[(p=>(b=>b[0]|b[1]<<8)(read(0x02000000+((p[0]|p[1]<<8|p[2]<<16)&0xffffff)+0x41b5c,2)))(read(0x02000024,4)), (b=>b[0]|b[1]<<8)(read(0x0223b44a,2)), (b=>b[0]|b[1]<<8)(read(0x0223b452,2))]",
