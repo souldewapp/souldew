@@ -141,6 +141,22 @@
 - Red/Blue/Yellow and Gold/Silver don't store where a Pokémon was caught: a catch right after a wild battle is now
   filed under the place the sign shows (before, every catch went to the inbox). Gifts and trades still go to the inbox.
 
+
+**Known issues**
+
+- **Run & Bun:** during a battle the panel shows your own Pokémon's HP from before the fight, and whether it's a wild
+  or a trainer battle is a guess.
+- **Unbound, Radical Red and other hacks on an expanded engine** weren't tested in the running game. If souldew can't
+  find their team, the play view says live tracking doesn't support the hack – enter catches by hand there.
+- **Renegade Platinum** and **Light Platinum:** place names, Pokémon and types come from the game file and were
+  checked there; a full play-through with catches is still to come.
+- **White 2:** team and places are checked, the battle panel only in Black 2 so far.
+- Original games in languages other than English and German count as modified: they show the game's own place
+  names (in the game's language) instead of the translated ones.
+- **Trophies from earlier runs:** catches, deaths, badges and wins of runs from before 2.3.0 count, but moments
+  souldew only notices while you play (a Pokémon at 1 HP, a badge won underleveled, a monotype team) don't. In older
+  SoulLinks souldew guesses which player you were until you open the run once.
+
 ## 2.2.0
 
 **Smoother built-in emulator, and fast-forward at its full speed** – mainly on Windows.
