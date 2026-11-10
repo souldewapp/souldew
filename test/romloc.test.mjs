@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { gen4Messages, gen5Messages, gen4MapLocations, gen5ZoneLocations, gen3Names, romLocations, prettyName, langOfCode } from '../shared/live/romloc.mjs';
 import { readLocation, canReadLocation } from '../shared/live/location.mjs';
 import { blzDecompress } from '../shared/nds.mjs';
+import { romCrc } from '../server/lib/romloc.mjs';
 
 const json = (f) => JSON.parse(readFileSync(new URL(`../shared/data/${f}`, import.meta.url), 'utf8'));
 const maps = json('maps.json');
@@ -189,21 +190,35 @@ test('readLocation with ROM data: Gen 5 zone id behind the main pointer (Black 2
 
 const DIR = process.env.SOULDEW_TEST_ROMS;
 const roms = DIR && existsSync(DIR) ? readdirSync(DIR).filter((f) => /\.(nds|gba)$/i.test(f)).map((f) => join(DIR, f)) : [];
+// only retail dumps can be compared with the tables (a hack or a randomized game is checked in test/romdata.test.mjs)
+const RETAIL = new Set(json('catalog.json').games.flatMap((g) => g.crc32 || []).map((c) => String(c).toUpperCase()));
+const retail = (bytes) => RETAIL.has(romCrc(bytes));
 
 test('real ROMs: the ROM-derived locations match the tables', { skip: roms.length ? false : 'set SOULDEW_TEST_ROMS to a folder with ROMs' }, () => {
   const table4 = { hgss: maps.tables.gen4.hgss, pt: maps.tables.gen4.pt, dp: maps.tables.gen4.dp };
   for (const f of roms) {
-    const r = romLocations(new Uint8Array(readFileSync(f)), opts);
+    const bytes = new Uint8Array(readFileSync(f));
+    if (!retail(bytes)) continue;
+    const r = romLocations(bytes, opts);
     assert.ok(r, `${f}: location data found`);
     if (r.gen === 4) {
       const t = table4[r.family];
       assert.deepEqual(r.mapLoc.slice(0, t.length), t, `${f}: map → location equals maps.json ${r.family}`);
-      if (r.lang === 'en') assert.deepEqual(r.names, gen4.locations, `${f}: names equal gen4.json`);
+      // gen4.json holds the HeartGold/SoulSilver names; Diamond/Pearl/Platinum have their own list
+      if (r.lang === 'en' && r.family === 'hgss') assert.deepEqual(r.names, gen4.locations, `${f}: names equal gen4.json`);
+      if (r.lang === 'en' && r.family !== 'hgss') assert.equal(r.names[1], 'Twinleaf Town', f);
     } else if (r.gen === 3) {
+      assert.equal(r.vanilla, undefined, 'romLocations itself knows nothing about checksums (the server adds it)');
+      // the table's labels carry notes for the other versions: "Battle Tower (RS) / Battle Frontier (E)"
+      const variants = (label) => label.split(' / ').map((x) => x.replace(/\s*\([^)]*\)/g, '').trim().toLowerCase());
+      let same = 0;
       for (const [k, v] of Object.entries(loc3.map)) {
         const n = r.names[Number(k)];
-        if (n && r.lang === 'en') assert.ok(v.en.toLowerCase().startsWith(n.toLowerCase()), `${f}: section ${k} "${n}" vs "${v.en}"`);
+        if (!n || r.lang !== 'en') continue;
+        assert.ok(variants(v.en).some((x) => x.startsWith(n.toLowerCase()) || n.toLowerCase().startsWith(x) || n.toLowerCase().endsWith(x)), `${f}: section ${k} "${n}" vs "${v.en}"`);
+        same++;
       }
+      if (r.lang === 'en') assert.ok(same >= 80, `${f}: ${same} sections compared`);
     } else if (r.gen === 5) {
       if (r.lang === 'en') {
         assert.equal(r.names[4], 'Nuvema Town', f);

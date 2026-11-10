@@ -243,6 +243,16 @@ export function gen5Messages(buf) {
   return out;
 }
 
+/**
+ * The place names of a Gen 5 text file: its strings without the empty ones at the end – a hack may pad the file for
+ * places still to come (Blaze Black 2 Redux: 660 entries, 155 used).
+ */
+export function gen5PlaceNames(buf) {
+  const names = gen5Messages(buf);
+  while (names.length && !names[names.length - 1]) names.pop();
+  return names;
+}
+
 const GEN5 = {
   bw: { msgFile: 89 },
   b2w2: { msgFile: 109 },
@@ -272,9 +282,7 @@ function gen5(rom, h, files) {
   const map = gen5ZoneLocations(parseNarc(zoneNarc)[0]);
   const msg = parseNarc(msgNarc)[GEN5[family].msgFile];
   if (!map || !msg) return null;
-  const names = gen5Messages(msg);
-  // a hack may pad the file with empty entries for places still to come (Blaze Black 2 Redux: 660, 155 used)
-  while (names.length && !names[names.length - 1]) names.pop();
+  const names = gen5PlaceNames(msg);
   // fail closed: nearly every zone must name an existing place, and most places must have a name
   const inRange = map.filter((v) => v < names.length).length;
   if (names.length < 50 || inRange < map.length * 0.95 || names.filter(Boolean).length < names.length * 0.6) return null;
