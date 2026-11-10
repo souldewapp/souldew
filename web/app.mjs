@@ -29,6 +29,8 @@ import { RestartOffer, RunOverNotice } from './views/restart.mjs';
 import { FirstStepsPill } from './views/firststeps.mjs';
 import { mySlotIn } from './lib/restart.mjs';
 import { IS_MAC, IS_WIN, shortcut } from './lib/platform.mjs';
+import { TrophiesView, TrophyToasts } from './views/trophies.mjs';
+import { syncTrophies, rememberSlots, watchRun, onTrophyUnlock } from './lib/trophies.mjs';
 
 applyStoredTheme(); // before the first render: no flash of the wrong colours
 
@@ -176,6 +178,7 @@ function App() {
   const [inbox, setInboxState] = useState(NO_INBOX);
   const [liveInfo, setLiveInfo] = useState(null);
   const [toasts, setToasts] = useState([]);
+  const [trophyToasts, setTrophyToasts] = useState([]);
   const [deathAlert, setDeathAlert] = useState(null);
   const [restartOffer, setRestartOffer] = useState(null);
   const [runOver, setRunOver] = useState(null);
@@ -407,6 +410,27 @@ function App() {
     return runDoc.subscribe((keys) => keys.includes('run:restart') && check());
   }, [runDoc, me, status?.runs?.length]);
 
+  // ---- trophies: the slot played per run, live moments of the open run, unlock toasts ----
+  const runCount = status?.runs?.length || 0;
+  useEffect(() => {
+    if (!ready || boot) return; // after the start-up animation: a back-fill note shouldn't hide behind it
+    rememberSlots(status?.runs);
+    syncTrophies();
+  }, [ready, boot, runCount, me]);
+  useEffect(() => {
+    if (!runDoc) return undefined;
+    return watchRun(runDoc, manifest, me, (sp) => runData?.types?.(sp, me) || []);
+  }, [runDoc, manifest, me, runData]);
+  useEffect(() => onTrophyUnlock(({ fresh, backfilled, state }) => {
+    const byId = Object.fromEntries((state.achievements || []).map((a) => [a.id, a]));
+    // the first start counted the runs that were already there: one quiet note instead of a toast each
+    if (backfilled.length) toast({ kind: 'ok', title: t('trophy.backfillTitle', 'Trophies are here'), text: t('trophy.backfillText', 'Your past runs already earned {n} achievement – have a look under Trophies.|Your past runs already earned {n} achievements – have a look under Trophies.', { n: backfilled.length, count: backfilled.length }), ttl: 9000 });
+    const items = fresh.map((id) => byId[id]).filter(Boolean).slice(0, 4).map((a) => ({ key: `${a.id}-${Date.now()}`, a }));
+    if (!items.length) return;
+    setTrophyToasts((ts) => [...ts, ...items].slice(-3));
+    for (const it of items) setTimeout(() => setTrophyToasts((ts) => ts.filter((x) => x.key !== it.key)), 7000);
+  }), []);
+
   // ---- snapshots (live RAM / save files / external bridge) ---------------------------
   // battle: what the live loop sees on the other side right now – a death in it gets its cause (opponent, level).
   const applySnap = useCallback((snap, { notify = true, battle = null } = {}) => {
@@ -542,7 +566,7 @@ function App() {
     return html`<div class="boot"><div class="boot-screen"></div></div>`;
   }
   const showOnboarding = !!status && !status.config?.onboarded;
-  const View = { library: LibraryView, soullink: SoulLinkView, nuzlocke: NuzlockeView, play: PlayView, link: LinkView, stream: StreamView, settings: SettingsView, guide: GuideView }[route.route] || LibraryView;
+  const View = { library: LibraryView, soullink: SoulLinkView, nuzlocke: NuzlockeView, play: PlayView, link: LinkView, stream: StreamView, trophies: TrophiesView, settings: SettingsView, guide: GuideView }[route.route] || LibraryView;
   const names = runDoc ? getPlayers(runDoc, manifest) : null;
   // Fullscreen – the window's (macOS: green button, Windows: F11) or the game's (F): the side rail folds away, the game gets the room
   const [winFs, setWinFs] = useState(false);
@@ -605,6 +629,7 @@ function App() {
     { id: 'nuzlocke', label: t('nav.nuzlocke', 'Nuzlocke'), icon: 'nuzlocke', count: manifest && runMode(manifest) === 'nuzlocke' ? warnCount : 0, accent: '#e8735f' },
     { id: 'link', label: t('nav.link', 'Connection'), icon: 'signal', accent: '#6f9bff' },
     { id: 'stream', label: t('nav.stream', 'Stream'), icon: 'stream', accent: '#ff5b6e', onAir: streamer },
+    { id: 'trophies', label: t('nav.trophies', 'Trophies'), icon: 'trophy', accent: '#e7c24f' },
     { id: 'settings', label: t('nav.settings', 'Settings'), icon: 'gear', accent: '#9a8ee6' },
     { id: 'guide', label: t('nav.guide', 'Help'), icon: 'help', accent: '#4fb8c4' },
   ];
@@ -661,6 +686,7 @@ function App() {
       <p class="muted">${unsavedTexts(unsavedProgress()).text}</p>
     <//>
     <${Toasts} toasts=${toasts} dismiss=${(id) => setToasts((ts) => ts.filter((x) => x.id !== id))} />
+    <${TrophyToasts} items=${trophyToasts} navigate=${navigate} dismiss=${(key) => setTrophyToasts((ts) => ts.filter((x) => x.key !== key))} />
     <${DeathAlert} alert=${runOver ? null : deathAlert} onClose=${() => setDeathAlert(null)} />
     <${RunOverNotice} status=${restartOffer ? null : runOver} onClose=${() => setRunOver(null)} />
     <${RestartOffer} offer=${restartOffer} onClose=${() => { try { sessionStorage.setItem(`sl-restart-seen-${restartOffer?.id}`, '1'); } catch {} setRestartOffer(null); }} />

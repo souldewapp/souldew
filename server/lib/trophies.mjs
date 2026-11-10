@@ -109,6 +109,7 @@ export function syncTrophies({ slots = {}, seen = [], moments = [] } = {}) {
   const loaded = load();
   const first = !loaded;
   const state = loaded || migrate({ schema: SCHEMA, createdAt: Date.now() });
+  const before = first ? '' : JSON.stringify(state);
   for (const [id, s] of Object.entries(slots && typeof slots === 'object' ? slots : {})) {
     if (/^[a-f0-9]{8}$/.test(id) && /^p[1-4]$/.test(s)) state.slots[id] = s;
   }
@@ -140,7 +141,8 @@ export function syncTrophies({ slots = {}, seen = [], moments = [] } = {}) {
     fresh.push(s.id);
   }
   if (first) state.backfilledAt = now;
-  save(state);
+  if (JSON.stringify(state) !== before) save(state); // nothing new (a sync while nothing happened): no write
+
   const achievements = states.map((s) => ({ ...s, ...(state.unlocked[s.id] ? { ok: true, at: state.unlocked[s.id].at, n: s.target } : {}) }));
   return {
     schema: state.schema,
