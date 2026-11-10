@@ -799,19 +799,17 @@ function battleDS(entry, read, T, state, party) {
     state.enemySig = sig;
     state.enemySince = now;
   }
-  // Without a flag: "an opponent party that changed recently, or a player copy with different HP". Once the player's
-  // copy has differed from the save party in this battle, the two agreeing again means the game copied the battle's
-  // HP back – the battle is over (Black: the rival's Pokémon stayed on the panel ~2 minutes after the fight otherwise).
-  // (the save party itself must have changed – a Potion that heals to full in battle also makes the two agree)
-  const saveHp = party.map((m) => m.hp).join();
-  if (enemy && state.battleStartHp === undefined) state.battleStartHp = saveHp;
-  if (anyDiff && enemy) state.diffSeen = true;
-  const over = flag === null && state.diffSeen && !anyDiff && saveHp !== state.battleStartHp;
+  // Without a flag: "an opponent party that changed recently, or a player copy with different HP". The save party
+  // stays as it was for the whole battle (HP, level, a catch all land in it when the battle ends), so once it differs
+  // from what it was when the battle began, the battle is over – a Potion in battle doesn't touch it. (Black: the
+  // rival's Pokémon stayed on the panel ~2 minutes after the fight otherwise.)
+  const saveSig = party.map((m) => `${m.pid}:${m.level}:${m.hp}:${m.maxHp}`).join();
+  if (enemy && state.battleStartSig === undefined) state.battleStartSig = saveSig;
+  const over = flag === null && state.battleStartSig !== undefined && saveSig !== state.battleStartSig;
   const on = flag ?? (!over && ((!!enemy && now - (state.enemySince || 0) < 90000) || anyDiff));
   if (!on || !enemy) {
     if (flag === null && state.battle) retireCopies(read, size, entry.gen, T, state); // battle ended (no flag)
-    state.diffSeen = false;
-    state.battleStartHp = undefined;
+    state.battleStartSig = undefined;
     state.battle = null;
     state.battleHp = state.activePid = null;
     return null;
