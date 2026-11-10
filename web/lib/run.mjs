@@ -5,8 +5,9 @@ import { PROGRESSION, VANILLA_CAPS, areaForMetLocation, levelCapFor, gymCapsFami
 import { gen4data, speciesName, pokeapi } from './data.mjs';
 import { t, currentLang } from './i18n.mjs';
 import { ALL_SLOTS, slotsOf, runMode, isNuzlocke, othersOf } from '/shared/slots.mjs';
+import { DEFAULT_RULES, RULE_PRESETS, NUZLOCKE_RULES, rulesWithDefaults } from '/shared/rules.mjs';
 
-export { ALL_SLOTS, slotsOf, runMode, isNuzlocke, othersOf };
+export { ALL_SLOTS, slotsOf, runMode, isNuzlocke, othersOf, DEFAULT_RULES, RULE_PRESETS, NUZLOCKE_RULES };
 // Runs from before 1–4 players were always a pair – the default where no slots/manifest are passed.
 const PAIR = ['p1', 'p2'];
 
@@ -15,21 +16,6 @@ export const LIVE_FRESH_MS = 10 * 60 * 1000;
 export const liveFresh = (doc, slot, now = Date.now()) => {
   const at = doc.get(`live:${slot}`, null)?.at;
   return !!at && Math.abs(now - at) < LIVE_FRESH_MS; // abs: the clocks of two computers differ a little
-};
-
-export const DEFAULT_RULES = {
-  typeClause: 'global',
-  dupes: 'player',
-  shinyClause: true,
-  gifts: 'area', // 'area' (a gift is that area's encounter) | 'free' | 'banned' – older docs say giftsCount: true/false
-  giftsCount: true,
-  levelCaps: true,
-  failKillsPair: true,
-  autoAssign: true,
-  autoDeath: true,
-  sounds: true,
-  cheats: false, // the play screen's cheats (Rare Candies) – off until the run allows them; every use goes to the log
-  // (the Discord webhook is not a rule: it stays on this computer – GET/PUT /api/runs/:id/discord)
 };
 
 let LOC3 = null;
@@ -68,28 +54,6 @@ export function genOfRun(manifest, runData) {
   return runData?.gen || { gb: 1, gbc: 2, gba: 3, nds: 4 }[manifest?.game?.system] || 4;
 }
 
-// Solo Nuzlocke rules. A preset only sets the rule toggles; tool settings (autoAssign, sounds) stay as they are.
-const CLASSIC = {
-  autoDeath: true, // faint = dead
-  blackout: 'party', // 'party' (a whiteout ends the run) | 'box' (only when nothing alive is left anywhere) | 'off'
-  deathless: false, // the first death ends the run
-  dupes: 'line', // 'off' | 'species' | 'line' (dead ones count too)
-  shinyClause: true,
-  gifts: 'area',
-  statics: 'area', // 'area' | 'free' | 'banned'
-  nicknames: false,
-  levelCaps: false, // false | 'warn' | 'strict'
-  noBattleItems: false,
-  setMode: false,
-  centerLimit: 0, // Pokémon Center visits per badge, 0 = no limit (counted by hand)
-  typeClause: 'off', // 'off' | 'party'
-};
-export const RULE_PRESETS = {
-  classic: CLASSIC,
-  hardcore: { ...CLASSIC, levelCaps: 'strict', noBattleItems: true, setMode: true },
-};
-export const NUZLOCKE_RULES = { ...CLASSIC, autoAssign: true, sounds: true };
-
 /** 'classic' | 'hardcore' | 'custom' – which preset a set of rules matches (caps `true` count as 'strict'). */
 export function presetOf(r) {
   const same = (k, v) => (k === 'levelCaps' && v === 'strict' ? r[k] === 'strict' || r[k] === true : r[k] === v);
@@ -101,12 +65,7 @@ export function presetOf(r) {
 
 /** The run's rules: its doc `rules` over the defaults of its mode (pass the manifest – without it, SoulLink). */
 export function rules(doc, manifest) {
-  const stored = doc.get('rules') || {};
-  const r = { ...(runMode(manifest) === 'nuzlocke' ? { ...DEFAULT_RULES, ...NUZLOCKE_RULES } : DEFAULT_RULES), ...stored };
-  // `giftsCount` (true/false) came first; `gifts` is the same rule with a third option
-  if (stored.gifts === undefined && stored.giftsCount !== undefined) r.gifts = stored.giftsCount ? 'area' : 'free';
-  r.giftsCount = r.gifts !== 'free';
-  return r;
+  return rulesWithDefaults(doc.get('rules'), runMode(manifest));
 }
 
 export function players(doc, manifest) {
