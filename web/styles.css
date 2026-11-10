@@ -1272,3 +1272,100 @@ html.platform-linux .app-native .main-inner { padding-top: 30px; }
 html.platform-linux .app-native .session.full { padding-top: 16px; }
 html.platform-linux .app-native .rail-open { top: 12px; left: 12px; width: 34px; height: 34px; }
 html.platform-linux .app-native .rules-drawer-wrap { padding-top: 14px; }
+
+/* "Buy me a coffee" moments (views/coffee.mjs): a stage just above the cup – its bottom edge is the cup's rim, so a
+   Pokémon rising from below peeks out of the cup. Real gen 3 sprites at 1×, pixel-crisp; never takes clicks. */
+.coffee:not(.coffee-float) { position: relative; } /* the folded-rail button stays position: fixed */
+.coffee.cfx-live { color: var(--ink, #fff); }
+.coffee-float.cfx-live { opacity: 1; }
+.coffee.cfx-live > svg { animation: cfx-cup .45s ease var(--bump, 0s) both; transform-origin: 50% 100%; }
+.coffee.cfx-on-peek { --bump: 1.72s; }
+.coffee.cfx-on-nap { --bump: .38s; }
+.coffee.cfx-on-ball { --bump: .5s; }
+.coffee.cfx-on-hop > svg { animation: none; }
+.cfx { --cx: 42px; --cup-top: 7px; position: absolute; left: -24px; bottom: calc(100% - var(--cup-top)); width: 220px; height: 124px; overflow: hidden;
+  pointer-events: none; z-index: 2; }
+.coffee-float .cfx { --cx: 41px; --cup-top: 10px; }
+.cfx img { display: block; image-rendering: pixelated; image-rendering: crisp-edges; -webkit-user-drag: none; filter: drop-shadow(0 2px 0 #0000008c); }
+.cfx svg { display: block; }
+.cfx-mon { position: absolute; left: calc(var(--cx) - 32px); bottom: calc(-1px * var(--pad, 8)); width: 64px; height: 64px; transform-origin: 50% 100%; }
+.cfx-spark { position: absolute; left: calc(var(--cx) - 4px); bottom: 24px; opacity: 0; filter: drop-shadow(1px 1px 0 #000000b0); }
+@keyframes cfx-cup { 0%, 100% { transform: none; } 40% { transform: translateY(1.5px) scale(1.14, .84); } 70% { transform: translateY(-1px); } }
+@keyframes cfx-spark { 0% { opacity: 0; transform: translate(calc(var(--dx) * .5), calc(var(--dy) * .5)) scale(.6); } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); } }
+
+/* Pikachu peeks out of the cup, looks around, hops onto it and sparks */
+.cfx-peek .cfx-mon { --pad: 9; animation: cfx-peek 3.2s ease-in-out both; }
+.cfx-peek .cfx-sprite { animation: cfx-look 3.2s steps(1, end) both; }
+.cfx-peek .cfx-spark { animation: cfx-spark .6s steps(6, end) calc(1.85s + var(--i) * .07s) both; }
+@keyframes cfx-peek {
+  0% { transform: translateY(54px); }
+  13% { transform: translateY(30px); }
+  33% { transform: translateY(30px); }
+  44% { transform: translateY(-30px); animation-timing-function: ease-in; }
+  54% { transform: translateY(0); }
+  57% { transform: translateY(0) scale(1.07, .9); }
+  61%, 84% { transform: translateY(0); }
+  90% { transform: translateY(-8px); animation-timing-function: ease-in; }
+  100% { transform: translateY(54px); }
+}
+@keyframes cfx-look { 0% { transform: none; } 19% { transform: scaleX(-1); } 27% { transform: none; } }
+
+/* Snorlax plops onto the cup and naps – Z z z */
+.cfx-nap .cfx-mon { --pad: 5; animation: cfx-plop 3.6s ease both; }
+.cfx-nap .cfx-sprite { animation: cfx-breathe 1.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.cfx-z { position: absolute; left: calc(var(--cx) + 14px); bottom: 34px; opacity: 0; transform-origin: 0 100%; filter: drop-shadow(1px 1px 0 #000a);
+  animation: cfx-z 1.5s ease-out calc(.6s + var(--i) * .7s) both; }
+@keyframes cfx-plop {
+  0% { opacity: 0; transform: translateY(-30px); animation-timing-function: ease-in; }
+  10% { opacity: 1; transform: translateY(0); }
+  13% { transform: scale(1.05, .92); }
+  17% { transform: none; }
+  86% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(2px); }
+}
+@keyframes cfx-breathe { 0%, 100% { transform: none; } 50% { transform: scale(1.025, 1.06); } }
+@keyframes cfx-z { 0% { opacity: 0; transform: translate(0, 0) scale(.6); } 20% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(20px, -40px) scale(1.5); } }
+
+/* a Poké Ball drops onto the cup, wobbles three times and pops – Togepi! */
+.cfx-pokeball { position: absolute; left: calc(var(--cx) - 12px); bottom: 0; transform-origin: 50% 100%; animation: cfx-ballfx 3s both; }
+.cfx-flash { position: absolute; left: calc(var(--cx) - 14px); bottom: -2px; width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(#fff 0 35%, #fff0 70%);
+  opacity: 0; animation: cfx-flash 3s ease-out both; }
+.cfx-ball .cfx-mon { --pad: 20; animation: cfx-pop 3s both; }
+.cfx-ball .cfx-spark { animation: cfx-spark .55s steps(6, end) calc(2.18s + var(--i) * .04s) both; }
+@keyframes cfx-ballfx {
+  0% { transform: translateY(-112px); animation-timing-function: cubic-bezier(.55, 0, 1, .6); }
+  17% { transform: translateY(0); animation-timing-function: ease-out; }
+  23% { transform: translateY(-12px); animation-timing-function: ease-in; }
+  29% { transform: translateY(0); }
+  33% { transform: rotate(-24deg); } 38% { transform: rotate(18deg); } 42% { transform: none; }
+  47% { transform: rotate(-24deg); } 52% { transform: rotate(18deg); } 56% { transform: none; }
+  61% { transform: rotate(-14deg); } 65% { transform: rotate(10deg); } 68% { transform: none; }
+  71% { transform: none; opacity: 1; }
+  74% { transform: scale(1.3); opacity: 0; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+@keyframes cfx-flash { 0%, 71% { opacity: 0; transform: scale(.3); } 75% { opacity: 1; transform: scale(1.5); } 86%, 100% { opacity: 0; transform: scale(2.6); } }
+@keyframes cfx-pop {
+  0%, 72% { opacity: 0; transform: scale(.2); }
+  78% { opacity: 1; transform: scale(1.12, .9); }
+  82% { transform: scale(.95, 1.06); }
+  86% { transform: none; }
+  93% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(4px); }
+}
+
+/* Jigglypuff hops along the button, singing */
+.cfx-walk { position: absolute; left: calc(var(--cx) - 32px); bottom: 0; width: 64px; height: 64px; animation: cfx-walk 2.8s linear both; }
+.cfx-walk .cfx-mon { --pad: 16; left: 0; animation: cfx-hop .7s ease-in-out 4; }
+.cfx-note { position: absolute; left: calc(var(--cx) + var(--nx)); bottom: 46px; opacity: 0; animation: cfx-note 1s ease-out calc(.45s + var(--i) * .7s) both; }
+@keyframes cfx-walk { 0% { transform: translateX(-58px); opacity: 0; } 8%, 90% { opacity: 1; } 100% { transform: translateX(124px); opacity: 0; } }
+@keyframes cfx-hop {
+  0%, 100% { transform: scale(1.06, .93); }
+  14% { transform: none; animation-timing-function: ease-out; }
+  50% { transform: translateY(-14px); animation-timing-function: ease-in; }
+  86% { transform: none; }
+}
+@keyframes cfx-note { 0% { opacity: 0; transform: translateY(6px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -20px) rotate(12deg); } }
+
+@media (prefers-reduced-motion: reduce) { .cfx { display: none; } .coffee.cfx-live > svg { animation: none; } }
+@media (max-width: 860px) { .rail .cfx { display: none; } }

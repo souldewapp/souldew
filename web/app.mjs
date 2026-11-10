@@ -27,6 +27,7 @@ import { UpdateBanner } from './views/update.mjs';
 import { DeathAlert } from './views/session-info.mjs';
 import { RestartOffer, RunOverNotice } from './views/restart.mjs';
 import { FirstStepsPill } from './views/firststeps.mjs';
+import { useCoffeeFx, CoffeeFx } from './views/coffee.mjs';
 import { mySlotIn } from './lib/restart.mjs';
 import { IS_MAC, IS_WIN, shortcut } from './lib/platform.mjs';
 
@@ -107,11 +108,11 @@ function navLight(e) {
 }
 
 /** "Buy me a coffee" – always at the bottom left: in the rail, or as a small button while the rail is folded. */
-function CoffeeLink({ float = false }) {
+function CoffeeLink({ float = false, fx = null, onOpen }) {
   const label = t('rail.coffee', 'Buy me a coffee');
   const hint = t('rail.coffeeHint', 'Support souldew on Buy Me a Coffee');
-  return html`<a class=${`coffee no-drag ${float ? 'coffee-float' : ''}`} href=${LINKS.coffee} target="_blank" rel="noopener" title=${hint} aria-label=${float ? hint : undefined}
-    onClick=${(e) => { e.preventDefault(); openExternal(LINKS.coffee); }}><${Icon} name="coffee" size=${float ? 18 : 16} />${!float && html`<span>${label}</span>`}</a>`;
+  return html`<a class=${`coffee no-drag ${float ? 'coffee-float' : ''} ${fx ? `cfx-live cfx-on-${fx.id}` : ''}`} href=${LINKS.coffee} target="_blank" rel="noopener" title=${hint} aria-label=${float ? hint : undefined}
+    onClick=${(e) => { e.preventDefault(); onOpen?.(); openExternal(LINKS.coffee); }}><${Icon} name="coffee" size=${float ? 18 : 16} />${!float && html`<span>${label}</span>`}<${CoffeeFx} fx=${fx} /></a>`;
 }
 
 /** The open run at the foot of the rail: who of the others is live – or, in a solo Nuzlocke, whether you play.
@@ -191,6 +192,10 @@ function App() {
   const inboxKey = useRef('');
   const [route, navigate] = useRoute();
   const streamer = useStreamer();
+  // the coffee button's little Pokémon moments – never while a game runs (full or in the corner), in the game's
+  // fullscreen, during boot or onboarding (fxBusy is set further down, once those are known)
+  const fxBusy = useRef(true);
+  const coffee = useCoffeeFx(() => fxBusy.current);
 
   const toast = useCallback((x) => {
     const id = Math.random().toString(36).slice(2);
@@ -582,6 +587,7 @@ function App() {
   }, [fs, railHidden, setHidden]);
   const playing = !!session;
   useEffect(() => { window.sls?.setPlaying?.(playing); }, [playing]);
+  fxBusy.current = playing || fs || boot || showOnboarding;
   const native = !!window.sls?.native;
   // The game fills the Play page when that page shows it, otherwise it keeps running in the corner.
   const sp = session?.target.params || {};
@@ -613,7 +619,7 @@ function App() {
     <div class=${`frame ${native ? 'app-native' : ''} ${folded ? 'rail-folded' : ''} ${folded && peek ? 'rail-peek' : ''}`}>
       ${native && html`<div class="titlebar-drag"></div>`}
       ${folded && html`<div class="rail-edge" aria-hidden="true" onPointerEnter=${peekIn} onPointerLeave=${peekOut}></div>`}
-      ${folded && !fs && !peek && html`<${CoffeeLink} float />`}
+      ${folded && !fs && !peek && html`<${CoffeeLink} float fx=${coffee.fx} onOpen=${coffee.clicked} />`}
       ${railHidden && !fs && !peek && html`<button class="rail-open no-drag" onClick=${() => setHidden(false)} title=${`${t('rail.show', 'Show the sidebar')} (${shortcut('Mod+B')})`} aria-label=${t('rail.show', 'Show the sidebar')}><${Icon} name="sidebar" size=${18} /></button>`}
       <aside class=${`rail ${native ? '' : 'web'} ${native ? 'drag' : ''}`} onPointerEnter=${folded ? peekIn : undefined} onPointerLeave=${folded ? peekOut : undefined}
         onfocusin=${folded ? peekIn : undefined} onfocusout=${folded ? (e) => { if (!e.currentTarget.contains(e.relatedTarget)) peekOut(); } : undefined}>
@@ -633,7 +639,7 @@ function App() {
           <${FirstStepsPill} />
           ${native && html`<${UpdateBanner} />`}
           ${manifest && names && html`<${RailRun} manifest=${manifest} names=${names} me=${me} onlineSlots=${onlineSlots} linkStatus=${linkStatus} session=${session} navigate=${navigate} />`}
-          <${CoffeeLink} />
+          <${CoffeeLink} fx=${!folded || peek ? coffee.fx : null} onOpen=${coffee.clicked} />
         </div>
       </aside>
       <main class="main">
