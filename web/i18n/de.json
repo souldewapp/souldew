@@ -2175,5 +2175,13 @@
   "trophy.unlocked": "Erfolg freigeschaltet",
   "play.liveHack": "Für diesen Hack noch nicht unterstützt",
   "play.liveHackRun": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon. Der Run funktioniert trotzdem: Trag Fänge von Hand ein.",
-  "play.liveHackSolo": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon."
+  "play.liveHackSolo": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon.",
+  "lib.live": "Live-Tracking",
+  "lib.liveYes": "Wird live gelesen",
+  "lib.livePartial": "Wird live gelesen, mit Einschränkungen",
+  "lib.liveUntested": "Noch nicht getestet",
+  "lib.liveNo": "Nicht unterstützt – trag Fänge von Hand ein",
+  "lib.liveNote.rnb": "Team, Ort, Kämpfe und Fänge werden live gelesen. Im Kampf zeigt die KP deines eigenen Pokémon den Wert von vor dem Kampf.",
+  "lib.liveNote.types": "souldew kennt die eigenen Typen dieses Hacks nicht: Board und Typ-Regeln nutzen die offiziellen.",
+  "lib.liveNote.ownMons": "Seine Wesen sind keine Pokémon: souldew zeigt sie unter den Namen aus dem Spiel, ohne Sprites – von Hand wählst du sie auch über diese Namen."
 }

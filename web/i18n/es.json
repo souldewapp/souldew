@@ -2175,5 +2175,13 @@
   "trophy.unlocked": "Logro desbloqueado",
   "play.liveHack": "Aún no compatible con este hack",
   "play.liveHackRun": "Este hack de ROM usa un motor ampliado (nuevos números de Pokémon y otra estructura de memoria) que souldew aún no puede leer con fiabilidad, así que no muestra nada antes que Pokémon equivocados. El run funciona igual: introduce las capturas a mano.",
-  "play.liveHackSolo": "Este hack de ROM usa un motor ampliado (nuevos números de Pokémon y otra estructura de memoria) que souldew aún no puede leer con fiabilidad, así que no muestra nada antes que Pokémon equivocados."
+  "play.liveHackSolo": "Este hack de ROM usa un motor ampliado (nuevos números de Pokémon y otra estructura de memoria) que souldew aún no puede leer con fiabilidad, así que no muestra nada antes que Pokémon equivocados.",
+  "lib.live": "Seguimiento en directo",
+  "lib.liveYes": "Se lee en directo",
+  "lib.livePartial": "Se lee en directo, con limitaciones",
+  "lib.liveUntested": "Aún sin probar",
+  "lib.liveNo": "No compatible: apunta las capturas a mano",
+  "lib.liveNote.rnb": "El equipo, el lugar, los combates y las capturas se leen en directo. En combate, los PS de tu propio Pokémon muestran el valor de antes de la pelea.",
+  "lib.liveNote.types": "souldew no conoce los tipos propios de este hack: el tablero y las reglas de tipo usan los oficiales.",
+  "lib.liveNote.ownMons": "Sus criaturas no son Pokémon: souldew las muestra con los nombres del juego, sin sprites, y a mano también las eliges por esos nombres."
 }

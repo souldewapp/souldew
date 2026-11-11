@@ -15,6 +15,13 @@
   before the starter. Checked in the game: Chimchar lands under "Starter", a Zigzagoon caught on Route 101 under
   "Route 101". Pokémon whose names the game shortens (Corviknight, Crabominable, Fletchinder …) are recognised, and the
   title screen no longer claims you are in Petalburg City.
+- **Enter every Pokémon the game holds by hand**: the species picker only offered the base game's generation – no
+  Sinnoh starters in Run & Bun. It now follows the ROM: up to #905 in Run & Bun, the Gen 4/5 Pokémon of Light
+  Platinum, the randomizer's Pokémon, and a hack's own creatures (Mariomon) under the names the game gives them.
+- **More ROM hacks in the library**: Too Many Types, Too Many Types 2, Super Mariomon and Mariomon are recognised, and
+  a hack's details now say how far live tracking works for it (read live, with limits, not checked yet) and what to
+  know – e.g. that Too Many Types' own types aren't known to souldew. A patch named after the longer of two hacks
+  ("Too Many Types 2") is linked to that one.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged

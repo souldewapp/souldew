@@ -2175,5 +2175,13 @@
   "upd.updatedTitle": "Updated",
   "upd.version": "Version {version}",
   "upd.whatsNew": "What’s new",
-  "upd.youHave": "You have {version}."
+  "upd.youHave": "You have {version}.",
+  "lib.live": "Live tracking",
+  "lib.liveYes": "Read live",
+  "lib.livePartial": "Read live, with limits",
+  "lib.liveUntested": "Not checked yet",
+  "lib.liveNo": "Not supported – enter catches by hand",
+  "lib.liveNote.rnb": "Team, place, battles and catches are read live. During a battle your own Pokémon’s HP shows the value from before the fight.",
+  "lib.liveNote.types": "souldew doesn’t know this hack’s own types: the board and the type rules use the official ones.",
+  "lib.liveNote.ownMons": "Its creatures aren’t Pokémon: souldew shows them under the game’s own names, without sprites – by hand you pick them by those names too."
 }

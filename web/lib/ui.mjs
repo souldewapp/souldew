@@ -1,6 +1,6 @@
 // Shared UI pieces.
 import { html, useState, useEffect, useRef, useMemo, createContext, useContext } from '/vendor/htm-preact.mjs';
-import { spriteUrl, typeLabel, pokeapi, speciesName } from './data.mjs';
+import { spriteUrl, typeLabel, pokeapi, speciesName, FAKEMON as FAKEMON_ID } from './data.mjs';
 import { t } from './i18n.mjs';
 import { diagDump } from './diag.mjs';
 
@@ -111,8 +111,11 @@ export function Modal({ open, onClose, title, children, footer, wide }) {
   </dialog>`;
 }
 
-/** Species autocomplete over all species of the run's generation (names in the UI language). */
-export function SpeciesPicker({ value, onChange, autoFocus, maxId = 649, typesOf }) {
+/**
+ * Species autocomplete over all species the run's game holds (names in the UI language): National Dex 1…maxId plus
+ * `extra` – a ROM hack's own Pokémon (FAKEMON ids, named as the game names them).
+ */
+export function SpeciesPicker({ value, onChange, autoFocus, maxId = 649, extra = [], typesOf }) {
   const [q, setQ] = useState(value ? speciesName(value) : '');
   const [open, setOpen] = useState(false);
   const [hl, setHl] = useState(0);
@@ -123,10 +126,13 @@ export function SpeciesPicker({ value, onChange, autoFocus, maxId = 649, typesOf
     const num = Number(s);
     const out = [];
     const max = Math.min(maxId, (pokeapi()?.names?.en?.length || 650) - 1);
-    for (let i = 1; i <= max && out.length < 12; i++) if ((num && i === num) || speciesName(i).toLowerCase().startsWith(s)) out.push(i);
-    for (let i = 1; i <= max && out.length < 12; i++) if (!out.includes(i) && speciesName(i).toLowerCase().includes(s)) out.push(i);
+    const ids = [];
+    for (let i = 1; i <= max; i++) ids.push(i);
+    ids.push(...extra);
+    for (const i of ids) if (out.length < 12 && ((num && i === num) || speciesName(i).toLowerCase().startsWith(s))) out.push(i);
+    for (const i of ids) if (out.length < 12 && !out.includes(i) && speciesName(i).toLowerCase().includes(s)) out.push(i);
     return out;
-  }, [q, maxId]);
+  }, [q, maxId, extra]);
   const choose = (id) => {
     onChange(id);
     setQ(speciesName(id));
@@ -143,7 +149,7 @@ export function SpeciesPicker({ value, onChange, autoFocus, maxId = 649, typesOf
       }} />
     ${open && results.length > 0 && html`<div class="suggest-list" role="listbox">
       ${results.map((id, i) => html`<button type="button" class=${i === hl ? 'hl' : ''} onMouseDown=${(e) => { e.preventDefault(); choose(id); }}>
-        <${Sprite} id=${id} size=${32} /> <span class="grow">${speciesName(id)}</span>${typesOf && html`<${Types} types=${typesOf(id)} />`}<span class="faint tiny">#${id}</span>
+        <${Sprite} id=${id} size=${32} /> <span class="grow">${speciesName(id)}</span>${typesOf && html`<${Types} types=${typesOf(id)} />`}<span class="faint tiny">${id < FAKEMON_ID ? `#${id}` : ''}</span>
       </button>`)}
     </div>`}
   </div>`;
