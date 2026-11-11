@@ -55,6 +55,9 @@ async function runOne(url, t) {
   }
   const res = { key: t.key, file: t.file, steps: [], error: null };
   const shots = [];
+  // the ROM's own data first (types, caps, places – a few seconds for a big ROM the first time): the page reads it
+  // while the game already runs, and a slow answer there would start the plan frames later than it was built for
+  await fetch(`${url}/api/rom/locations?src=${encodeURIComponent(rom)}`).catch(() => null);
   try {
     // (a fresh window right after the previous game's was closed sometimes reports ERR_FAILED once)
     for (let i = 0; ; i++) {

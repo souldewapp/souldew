@@ -29,8 +29,9 @@
   **Too Many Types** shows its own types under the game's names, with their matchups, instead of none. In a GBA battle
   the helper uses the types both sides have right now, so a type change during the battle shows at once.
 - **Level caps for more games**, read from the game's own trainers: the gym leaders' aces, then the champion's after the
-  last badge – Ruby, Sapphire, Emerald, FireRed and LeafGreen (also German), Platinum and Renegade Platinum. Badges are
-  now read live in GBA games and in Diamond, Pearl and Platinum. Where the caps can't be told apart with confidence
+  last badge – Ruby, Sapphire, Emerald, FireRed and LeafGreen (also German), Diamond, Pearl, Platinum and Renegade Platinum. Badges are
+  now read live in Ruby, Sapphire, Emerald, FireRed and LeafGreen (and hacks on their engine), and in Diamond, Pearl
+  and Platinum. Where the caps can't be told apart with confidence
   (Unbound's difficulty settings, Radical Red's and Light Platinum's second set of leaders, Blaze Black 2 Redux's
   Challenge Mode) no cap is shown rather than a wrong one, and "Level cap: unknown for this game" is gone – the cap
   only shows when it's known and the run uses caps.
