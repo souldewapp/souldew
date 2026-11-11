@@ -1,11 +1,10 @@
 {
 "id": "black",
 "entries": [
-"black_us",
-"white_us"
+"black_us"
 ],
 "core": "desmume",
-"note": "Black/White (US/EU): gift box (Tepig) \u2192 both rival battles in the room \u2192 Nuvema Town \u2192 Juniper's lab \u2192 Route 1 \u2192 a real wild catch (Pok\u00e9 Balls given into the bag). White untested (no ROM).",
+"note": "Black/White (US/EU): gift box (Tepig) \u2192 both rival battles in the room \u2192 Nuvema Town \u2192 Juniper's lab \u2192 Route 1 \u2192 a real wild catch (Pok\u00e9 Balls given into the bag). White has its own plan (white.json): its position sits 0x20 further on.",
 "pos": "[(b=>b[0]|b[1]<<8)(read(0x022592b2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f912,2)), (b=>b[0]|b[1]<<8)(read(0x0224f91a,2))]",
 "steps": [
 {

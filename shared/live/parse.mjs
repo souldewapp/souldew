@@ -1049,6 +1049,15 @@ function battleDS(entry, read, T, state, party) {
   const standing = (m) => hpOf(byPid.get(m.pid) || m) > 0;
   const hit = party.findIndex((m) => m.pid === state.activePid && (real || standing(m)));
   const index = live || real ? (hit >= 0 ? hit : Math.max(0, party.findIndex(standing))) : null;
+  if (entry.inBattle?.npcBattles && !entry.scanOnly && index === null) {
+    // White: Juniper's catching demo on Route 1 runs as a battle (flag 0x2100, checked live), but none of the
+    // player's Pokémon is in it – no copy of their party, none of their PIDs at battleActive. Not the player's battle:
+    // the panel showed it as a trainer battle against her Minccino. (Not in the game's other languages – scanOnly –
+    // whose memory may lie elsewhere: there a real battle would vanish.)
+    note(state, 'not the player\'s battle', flag);
+    state.battle = null;
+    return null;
+  }
   const cur = index !== null ? byPid.get(party[index].pid) || party[index] : null;
   note(state, `heap ${foe.species}/${foe.level}`, flag);
   // Gen 5: the HP the battle shows (the copies keep the starting HP) – the opponent's, and the player's Pokémon that is

@@ -142,6 +142,39 @@ test('Black 2: the summary screen (flag 0x88C2) is no battle – the catching de
   assert.equal(poll(de, 0x88c2, st), null);
 });
 
+test('White: Juniper\'s catching demo is no battle of the player\'s – during it (flag 0x2100) and after it (#9)', () => {
+  const e = findEntry(TABLE, { platform: 'nds', code: 'IRAO' });
+  assert.equal(e.id, 'white_us');
+  const me = pk5({ pid: 0x8efb4911, species: 498, level: 6, hp: 25, maxHp: 25 });
+  const m = memory();
+  m.write(0x022349cc, [6, 0, 0, 0, 1, 0, 0, 0, ...me]); // the party (count at 0x022349D0)
+  // the demo's party in the heap: Juniper's Minccino (another trainer, none of the player's Pokémon)
+  const minccino = pk5({ pid: 0x5eed0001, species: 572, level: 7, hp: 25, maxHp: 25 });
+  m.write(0x02300000, [6, 0, 0, 0, 1, 0, 0, 0, ...minccino]);
+  // (battleActive: in White it holds the wild opponent's PID – the demo's Patrat there, checked live)
+  const poll = (flag, pidAt, state, n = 6) => {
+    m.write(0x021d07b8, [flag & 0xff, flag >> 8]);
+    m.write(0x022a7e34, [pidAt & 0xff, (pidAt >> 8) & 0xff, (pidAt >> 16) & 0xff, pidAt >>> 24]);
+    let fight = null;
+    for (let i = 0; i < n; i++) fight = readLiveBattle(e, m.read, T, state, readLiveParty(e, m.read, T, state).party);
+    return fight;
+  };
+  // checked live in White: the flag is 0x2100 in the demo too
+  assert.equal(poll(0xf841, 0, {}), null, 'overworld');
+  assert.equal(poll(0x2100, 0xd56bfdba, {}), null, 'the demo: a battle by the flag, but none of the player\'s Pokémon in it');
+  assert.equal(poll(0xf841, 0xd56bfdba, {}), null, 'after the demo: its leftover copy stays off the panel');
+  // a real battle: a copy of the player's party in the heap (here the demo copy stands in for the opponent) …
+  m.write(0x02310000, [6, 0, 0, 0, 1, 0, 0, 0, ...pk5({ pid: 0x8efb4911, species: 498, level: 6, hp: 19, maxHp: 25 })]);
+  const fight = {};
+  assert.equal(poll(0x2100, 0xc44634a6, fight)?.enemy?.species, 572);
+  assert.equal(poll(0x2100, 0xc44634a6, fight)?.active?.index, 0);
+  // … and the flag (checked live: 0xF841 out of battle) ends it at once – the copies alone would keep it for up to 90 s
+  assert.equal(poll(0xf841, 0xc44634a6, fight), null, 'the battle is over');
+  // the game's other languages (memory unchecked) keep the copies' verdict: the rule is off for them (scanOnly)
+  const de = findEntry(TABLE, { platform: 'nds', code: 'IRAD' });
+  assert.equal(de.scanOnly, true);
+});
+
 test('Gen 5 level caps: the gym aces of Black/White and Black 2/White 2, then the Elite Four (#13)', () => {
   assert.equal(gymCapsFamily('pokemon-black'), 'bw');
   assert.equal(gymCapsFamily('pokemon-white-de'), 'bw');
