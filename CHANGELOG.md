@@ -14,6 +14,8 @@
   new "Kalos Complete" and "Alola Complete" achievements; the Gen 6/7 starters, Sylveon, the Kalos fossils and X/Y's
   roaming bird count for their achievements, and "Time Traveller" now asks for all seven generations (already
   unlocked stays unlocked).
+- **Trophies: a hack run counts for its base game's generation** – Blaze Black 2 Redux or Blaze Black were counted as
+  Gen 4 ("a DS game"), so "Time Traveller" and the per-generation numbers missed Gen 5; 3DS runs count as Gen 6/7.
 - **Battle helper for Gen 6/7**: the type chart knows Fairy and that Steel no longer resists Ghost and Dark; the
   species picker offers up to #721 / #809 in 3DS runs.
 - **Radical Red shows your team** (#17): the Complete FireRed Upgrade keeps its own species table next to FireRed's,

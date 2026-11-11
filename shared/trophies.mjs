@@ -159,7 +159,7 @@ export function digestRun(manifest, entries, slot, opts = {}) {
   const badges = Math.max(lives[me]?.badges || 0, ...Object.keys(badgeAt).map(Number), 0);
   return {
     id: str(manifest?.id, 16), name: str(manifest?.name, 80), mode, players: slots.length, me, names,
-    gameId: str(game.id || manifest?.base?.gameId, 60) || null, gen: opts.gen || { gb: 1, gbc: 2, gba: 3, nds: 4 }[game.system] || null,
+    gameId: str(game.id || manifest?.base?.gameId, 60) || null, gen: opts.gen || num(game.generation) || { gb: 1, gbc: 2, gba: 3, nds: 4 }[game.system] || null,
     randomized: manifest?.randomizer ? manifest.randomizer.enabled !== false : false, hack: !!(manifest?.patch || game.hackId),
     createdAt: time(manifest?.createdAt), attempt: Number(manifest?.attempt) || Number(/#(\d+)\s*$/.exec(manifest?.name || '')?.[1]) || 1,
     status: st?.state ? { state: st.state, reason: str(st.reason, 20) || null, at: num(st.at), by: str(st.by, 4) || null } : null,

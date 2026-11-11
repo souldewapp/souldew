@@ -92,7 +92,11 @@ function refreshRuns(state) {
       // a damaged doc: keep what was known of it
       if (prev?.digest) continue;
     }
-    const game = games.find((g) => g.id === (m.game?.id || m.base?.gameId));
+    // the run's game – or a hack's base game (a hack run's game id can be the hack's): its generation counts, not one
+    // guessed from the system (a DS hack of Black 2 is Gen 5, a 3DS game has its own)
+    const hackIds = [m.game?.hackId, m.patch?.hackId].filter(Boolean);
+    const hack = (catalog().hacks || []).find((h) => hackIds.includes(h.id) || h.id === m.game?.id);
+    const game = [m.game?.id, m.base?.gameId, hack?.baseGameId].filter(Boolean).map((id) => games.find((g) => g.id === id)).find(Boolean);
     state.runs[m.id] = { sig, digest: digestRun(m, entries, slot, { areaName: curatedAreaName, gen: game?.generation || null }) };
   }
   // a deleted run stays in the trophies (its catches really happened); it is only marked

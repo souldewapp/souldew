@@ -372,6 +372,18 @@ test('syncTrophies: back-fills quietly on the first start, then unlocks live; ke
   assert.ok(existsSync(TROPHY_PATH));
 });
 
+test('syncTrophies: a run\'s generation is its game\'s – a hack\'s base game (Blaze Black 2: Gen 5, not "a DS game: 4"), a 3DS game\'s', () => {
+  writeRun(solo('ffff0101', { game: { id: 'blaze-black-2-redux', system: 'nds', hackId: 'blaze-black-2-redux' } }), docOf({ 'enc:starter:p1': caught(495, T0) }));
+  writeRun(solo('ffff0102', { game: { id: 'pokemon-x', system: '3ds' } }), docOf({ 'enc:starter:p1': caught(650, T0) }));
+  writeRun(solo('ffff0103', { game: { id: null, system: 'nds', hackId: 'blaze-black' }, patch: { hackId: 'blaze-black' } }), docOf({}));
+  const r = syncTrophies({});
+  const gen = (id) => r.runs.find((x) => x.id === id).gen;
+  assert.equal(gen('ffff0101'), 5);
+  assert.equal(gen('ffff0102'), 6);
+  assert.equal(gen('ffff0103'), 5, 'found through the hack\'s base game');
+  for (const id of ['ffff0101', 'ffff0102', 'ffff0103']) rmSync(join(DATA, 'runs', id), { recursive: true });
+});
+
 test('rules: the classic memes – Miltank, Garchomp, Selfdestruct, Abra, roamers, Gyarados, Feebas, Helix, Bird Jesus, too much water', () => {
   const run = T.digestRun(solo('eeee0001', { game: { id: 'pokemon-emerald', system: 'gba' } }), docOf({
     'enc:a1:p1': caught(16, T0 + 1),
