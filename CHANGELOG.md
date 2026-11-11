@@ -229,6 +229,8 @@
 
 **Known issues**
 
+- **Run & Bun:** during a battle the panel shows your own Pokémon's HP from before the fight, and whether it's a wild
+  or a trainer battle is a guess.
 - **Unbound, Radical Red and other hacks on an expanded engine** weren't tested in the running game. If souldew can't
   find their team, the play view says live tracking doesn't support the hack – enter catches by hand there.
 - **Renegade Platinum** and **Light Platinum:** place names, Pokémon and types come from the game file and were
