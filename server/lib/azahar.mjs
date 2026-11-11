@@ -17,7 +17,7 @@
 import { createSocket } from 'node:dgram';
 import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, posix, win32 } from 'node:path';
 import { homedir } from 'node:os';
 import { findEntry, regionsFor } from '../../shared/live/parse.mjs';
 import { titleKind } from '../../shared/ctr.mjs';
@@ -185,12 +185,14 @@ export class AzaharRpc {
  * $XDG_CONFIG_HOME/azahar-emu (Flathub's build: its own under ~/.var/app). The one in use first.
  */
 export function configCandidates({ platform = process.platform, env = process.env, home = homedir() } = {}) {
-  const xdgConfig = env.XDG_CONFIG_HOME || join(home, '.config');
-  if (platform === 'win32') return [join(env.APPDATA || join(home, 'AppData', 'Roaming'), 'Azahar', 'config', 'qt-config.ini')];
+  // (that system's path rules – the tests ask for another system's paths, Windows CI for Linux's)
+  const { join: pj } = platform === 'win32' ? win32 : posix;
+  const xdgConfig = env.XDG_CONFIG_HOME || pj(home, '.config');
+  if (platform === 'win32') return [pj(env.APPDATA || pj(home, 'AppData', 'Roaming'), 'Azahar', 'config', 'qt-config.ini')];
   if (platform === 'darwin') {
-    return [join(xdgConfig, 'azahar-emu', 'qt-config.ini'), join(home, 'Library', 'Application Support', 'Azahar', 'config', 'qt-config.ini')];
+    return [pj(xdgConfig, 'azahar-emu', 'qt-config.ini'), pj(home, 'Library', 'Application Support', 'Azahar', 'config', 'qt-config.ini')];
   }
-  return [join(xdgConfig, 'azahar-emu', 'qt-config.ini'), join(home, '.var', 'app', 'org.azahar_emu.Azahar', 'config', 'azahar-emu', 'qt-config.ini')];
+  return [pj(xdgConfig, 'azahar-emu', 'qt-config.ini'), pj(home, '.var', 'app', 'org.azahar_emu.Azahar', 'config', 'azahar-emu', 'qt-config.ini')];
 }
 
 /**
