@@ -5,6 +5,8 @@ import { t, currentLang } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
 import { serverErrorText } from '../lib/errors.mjs';
 import { catalog, gameTitle } from '../lib/data.mjs';
+import { romFeatures, FEATURES } from '/shared/live/features.mjs';
+import { gymCapsFamily } from '/shared/routes.mjs';
 import { FirstSteps } from './firststeps.mjs';
 import { IS_MAC, IS_WIN, shortPath } from '../lib/platform.mjs';
 
@@ -487,6 +489,7 @@ function GameDetail({ id, onClose, openHack }) {
           ${g.releaseYear && html`<dt>${t('lib.year', 'Released')}</dt><dd>${g.releaseYear}</dd>`}
           <dt>${t('lib.randomizer', 'Randomizer')}</dt><dd>${g.uprSupported ? t('lib.yes', 'Supported') : t('lib.no', 'Not supported')}</dd>
           <dt>${t('lib.liveTracking', 'Live tracking')}</dt><dd>${liveSupportText(g)}</dd>
+          ${rom && html`<${ReadsLine} src=${`/api/library/rom?id=${encodeURIComponent(rom.id)}`} gameId=${g.id} />`}
           <dt>${t('lib.yourRom', 'Your ROM')}</dt><dd>${rom ? html`<span class="mono small">${rom.name}</span> ${rom.exact ? html`<span class="chip ok">${t('lib.verified', 'verified dump')}</span>` : ''}` : html`<span class="muted">${t('lib.notOwned', 'Not in your library')}</span>`}</dd>
         </dl>
         ${rom
@@ -513,6 +516,41 @@ function GameDetail({ id, onClose, openHack }) {
   <//>`;
 }
 
+/**
+ * "What souldew can read for this game": the features its ROM data makes possible (shared/live/features.mjs – the same
+ * judgement the play view starts from), worked out from the file itself (/api/rom/locations, cached after the first
+ * time). `src` = the /api/… URL the emulator would load, `gameId` = the catalog game (its curated cap list).
+ */
+let ADDRESSES = null;
+export function ReadsLine({ src, gameId = null }) {
+  const [f, setF] = useState(null);
+  useEffect(() => {
+    let on = true;
+    setF(null);
+    if (!src) return undefined;
+    ADDRESSES ||= fetch('/shared/data/addresses.json').then((r) => r.json()).catch(() => null);
+    Promise.all([fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null), ADDRESSES]).then(([rd, addr]) => {
+      if (!on || !rd || !addr) return;
+      const curatedCaps = /^IP[KG]/.test(String(rd.header?.code || '')) || (!!rd.vanilla && !!gymCapsFamily(gameId || ''));
+      setF(romFeatures(rd, addr, { curatedCaps }));
+    });
+    return () => {
+      on = false;
+    };
+  }, [src, gameId]);
+  if (!src) return null;
+  const label = {
+    party: t('reads.party', 'team'), items: t('reads.items', 'held items'), moves: t('reads.moves', 'moves'), location: t('reads.location', 'place'),
+    battle: t('reads.battle', 'battles'), catch: t('reads.catch', 'catches'), types: t('reads.types', 'types and matchups'), caps: t('reads.caps', 'level caps'),
+  };
+  const yes = f ? FEATURES.filter((k) => f[k] === 'yes').map((k) => label[k]) : [];
+  if (f?.types === 'partial') yes.push(t('reads.typesOnly', 'types (no matchups)'));
+  const no = f ? FEATURES.filter((k) => f[k] === 'no').map((k) => label[k]) : [];
+  return html`<dt>${t('reads.title', 'souldew reads')}</dt><dd class="reads-line">${!f ? html`<span class="muted small">${t('reads.checking', 'Checking the ROM …')}</span>`
+    : yes.length ? yes.join(' · ') : html`<span class="muted">${t('reads.nothing', 'Nothing live – enter catches by hand')}</span>`}
+    ${f && no.length > 0 && yes.length > 0 && html`<div class="small muted">${t('reads.not', 'Not for this game: {list} – hidden rather than guessed.', { list: no.join(', ') })}</div>`}</dd>`;
+}
+
 // How far souldew reads a ROM hack live (catalog `live`, docs/TESTED_GAMES.md) and what to know about it (`liveNote`).
 const liveLabel = (v) => ({
   yes: t('lib.liveYes', 'Read live'),
@@ -521,9 +559,9 @@ const liveLabel = (v) => ({
   no: t('lib.liveNo', 'Not supported – enter catches by hand'),
 }[v] || '–');
 const liveNote = (k) => ({
-  cfru: t('lib.liveNote.cfru', 'Team, place and battles are read live, held items by the names the game gives them. souldew shows no level cap for the hack, and the Rare Candy cheat is off.'),
+  cfru: t('lib.liveNote.cfru', 'Team, place, battles and catches are read live, held items by the names the game gives them, types and matchups from the ROM. No level cap is shown – the hack’s leaders can’t be told apart with confidence – and the Rare Candy cheat is off.'),
   rnb: t('lib.liveNote.rnb', 'Team, place, battles and catches are read live. The Rare Candy cheat is off and held items aren’t named – the hack numbers its items its own way.'),
-  types: t('lib.liveNote.types', 'Team, place, battles and catches are read live. souldew doesn’t know the hack’s own types: it shows no types, matchups or type rule for its Pokémon rather than the official ones. The Rare Candy cheat is off.'),
+  types: t('lib.liveNote.types', 'Team, place, battles and catches are read live, the hack’s own types and their matchups from the ROM. The Rare Candy cheat is off.'),
 }[k] || '');
 
 function HackDetail({ id, onClose, openGame }) {
@@ -554,6 +592,7 @@ function HackDetail({ id, onClose, openGame }) {
           <dt>${t('lib.difficulty', 'Difficulty')}</dt><dd>${difficultyLabel(h.difficulty)}${h.nuzlockeFriendly ? ` · ${t('lib.nuzlocke', 'Nuzlocke-friendly')}` : ''}</dd>
           <dt>${t('lib.randomizer', 'Randomizer')}</dt><dd>${{ yes: t('lib.yes', 'Supported'), no: t('lib.no', 'Not supported'), unknown: t('lib.unknown', 'Unknown') }[h.uprCompatible] || '–'}</dd>
           ${h.live && html`<dt>${t('lib.live', 'Live tracking')}</dt><dd>${liveLabel(h.live)}${h.liveNote && html`<div class="small muted">${liveNote(h.liveNote)}</div>`}</dd>`}
+          ${(ready || canPatch) && html`<${ReadsLine} src=${ready ? `/api/library/rom?id=${encodeURIComponent(ready.id)}` : `/api/library/patched?romId=${encodeURIComponent(baseRom.id)}&patchId=${encodeURIComponent(patch.id)}`} />`}
           ${ready ? html`<dt>${t('lib.patchedRom', 'Your ROM')}</dt><dd><span class="mono small">${ready.name}</span><div class="small muted">${t('lib.patchedRomHint', 'Already patched – recognised by its checksum.')}</div></dd>` : html`
           <dt>${t('lib.patch', 'Patch')}</dt><dd>${patch ? html`<span class="mono small">${patch.name}</span>` : html`<span class="muted">${t('lib.noPatch', 'Not added yet')}</span>`}</dd>
           <dt>${t('lib.baseRom', 'Your base ROM')}</dt><dd>${baseRom ? html`<span class="mono small">${baseRom.name}</span>` : html`<span class="muted">${t('lib.notOwned', 'Not in your library')}</span>`}</dd>`}
@@ -600,6 +639,7 @@ function RomDetail({ id, onClose }) {
           <dt>${t('lib.system', 'System')}</dt><dd>${SYS[r.system] || r.system}</dd>
           <dt>${t('lib.code', 'Game code')}</dt><dd class="mono">${r.code || '–'}</dd>
           <dt>CRC32</dt><dd class="mono">${r.crc}</dd>
+          <${ReadsLine} src=${`/api/library/rom?id=${encodeURIComponent(r.id)}`} />
         </dl>
         <p class="small muted">${t('lib.unknownRom', 'This ROM is not in the catalog (maybe a hack or another region). You can still play it.')}</p>
         <${PlayButtons} romId=${r.id} system=${r.system} close=${onClose} />

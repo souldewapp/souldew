@@ -11,7 +11,7 @@ function helper() {
 
   async function setup(romSrc, header) {
     const j = (f) => fetch(`/shared/data/${f}`).then((r) => r.json());
-    const [parse, location, romwram, romloc] = await Promise.all([import('/shared/live/parse.mjs'), import('/shared/live/location.mjs'), import('/shared/live/romwram.mjs'), fetch(`/api/rom/locations?src=${encodeURIComponent(romSrc)}`).then((r) => r.json())]);
+    const [parse, location, romwram, romloc, routes] = await Promise.all([import('/shared/live/parse.mjs'), import('/shared/live/location.mjs'), import('/shared/live/romwram.mjs'), fetch(`/api/rom/locations?src=${encodeURIComponent(romSrc)}`).then((r) => r.json()), import('/shared/routes.mjs')]);
     const [charsetGen1, charsetGen2, charsetGen3, gen1Index, gen3Index, gen4, addresses, maps, loc2, loc3, api] = await Promise.all(
       ['charset_gen1.json', 'charset_gen2.json', 'charset_gen3.json', 'gen1_index_to_dex.json', 'gen3_index_to_dex.json', 'gen4.json', 'addresses.json', 'maps.json', 'locations_gen2_crystal.json', 'locations_gen3.json', 'pokeapi.json'].map(j));
     const T0 = new parse.LiveTables({ charsetGen1, charsetGen2, charsetGen3, gen1Index, gen3Index, gen4 });
@@ -24,12 +24,15 @@ function helper() {
     const species = romloc?.species || null;
     // what the play view does (web/views/play.mjs): a GBA ROM's own species table – for an expanded engine also its own
     // item names and move numbers (server/lib/romloc.mjs ownTables3)
-    const T = entry?.gen === 3 && species ? T0.withSpecies(species, romloc) : T0;
+    // (and the ROM's types and badge flags: the battle's current types, Gen 3 badges)
+    const T = (entry?.gen === 3 && species ? T0.withSpecies(species, romloc) : T0).withRom(romloc);
     // the app's own run logic (web/lib/run.mjs): every team read goes into a solo Nuzlocke document like the play view's
     // snapshots do – a new catch is filed under its area, named like the place sign names it
     let run = null;
+    let names = null;
     try {
       const [R, D, data] = await Promise.all([import('/lib/run.mjs'), import('/lib/doc.mjs'), import('/lib/data.mjs')]);
+      names = data;
       await Promise.all([data.loadData().catch(() => {}), R.loadLocationTables()]);
       R.setRomPlaces(romloc?.data || null);
       data.setRomSpecies?.(romloc?.species || null);
@@ -40,7 +43,7 @@ function helper() {
     } catch (err) {
       run = { error: String(err?.message || err) };
     }
-    ctx = { run, parse, location, T, T0, entry, maps, tables: { maps, loc2, loc3, gen4 }, rom: romloc?.data || null, species, hack: entry?.gen === 3 && species?.engine === 'expanded' && !species?.map, names: api.names.en, state: {}, rawState: {}, header };
+    ctx = { run, parse, location, routes, romloc, data: names, T, T0, entry, maps, tables: { maps, loc2, loc3, gen4 }, rom: romloc?.data || null, species, hack: entry?.gen === 3 && species?.engine === 'expanded' && !species?.map, names: api.names.en, state: {}, rawState: {}, header };
     return {
       entry: entry?.id || null,
       vanilla: romloc?.vanilla ?? null,
@@ -88,10 +91,11 @@ function helper() {
     for (let i = 0; i < (entry.gen >= 4 ? 6 : 1) && !fight?.enemy; i++) fight = parse.readLiveBattle(entry, e.read, T, raw ? ctx.rawState : state, res.party);
     return {
       // the HP the play view shows: in battle the battle copy's (withBattleHp), the party struct lags there
-      party: parse.withBattleHp(res.party, fight).map((m) => ({ species: m.species, name: name(m.species), nickname: m.nickname, level: m.level, hp: m.hp, maxHp: m.maxHp, status: m.status, metLocation: m.metLocation ?? null, metLevel: m.metLevel ?? null, isEgg: !!m.isEgg, key: m.key, item: m.item || 0, ...(m.itemName ? { itemName: m.itemName } : {}), moves: m.moves || [] })),
+      // (itemLabel: the name the play view would show – '' for an item it can't name)
+      party: parse.withBattleHp(res.party, fight).map((m) => ({ species: m.species, name: name(m.species), nickname: m.nickname, level: m.level, hp: m.hp, maxHp: m.maxHp, status: m.status, metLocation: m.metLocation ?? null, metLevel: m.metLevel ?? null, isEgg: !!m.isEgg, key: m.key, item: m.item || 0, ...(m.itemName ? { itemName: m.itemName } : {}), itemLabel: m.item ? (m.itemOwn ? m.itemName || '' : ctx.data?.itemName?.(m.item, entry.gen) || '') : '', moves: m.moves || [] })),
       boxes: Array.isArray(res.boxes) ? res.boxes.length : null,
       badges: res.badges ?? null,
-      battle: fight ? { kind: fight.kind, enemy: fight.enemy ? { species: fight.enemy.species, name: name(fight.enemy.species), level: fight.enemy.level, hp: fight.enemy.hp, maxHp: fight.enemy.maxHp, moves: fight.enemy.moves || [] } : null, active: fight.active || null } : null,
+      battle: fight ? { kind: fight.kind, enemy: fight.enemy ? { species: fight.enemy.species, name: name(fight.enemy.species), level: fight.enemy.level, hp: fight.enemy.hp, maxHp: fight.enemy.maxHp, moves: fight.enemy.moves || [], ...(fight.enemy.types ? { types: fight.enemy.types } : {}) } : null, active: fight.active || null } : null,
     };
   }
 
@@ -301,7 +305,23 @@ function helper() {
         } catch (err) {
           probe = String(err?.message || err);
         }
-        log.push({ do: 'check', name: s.name, frame: e.frames(), place: place(), team: tm, run: runNote(tm), ...(probe !== undefined ? { probe } : {}) });
+        // the level cap the app would show now: the curated list of an unmodified game, else the caps read from the ROM
+        // (romcaps.mjs) – with the badges read live
+        let cap = null;
+        if (tm && Number.isInteger(tm.badges)) {
+          const R = ctx.routes;
+          const fam = ctx.romloc?.vanilla ? R.gymCapsFamily(plan.gameId || '') : null;
+          const v = fam ? R.vanillaCapFor(fam, tm.badges) : R.romCapFor(ctx.romloc?.caps, tm.badges);
+          cap = { badges: tm.badges, cap: v?.cap ?? null };
+        }
+        log.push({ do: 'check', name: s.name, frame: e.frames(), place: place(), team: tm, run: runNote(tm), cap, ...(probe !== undefined ? { probe } : {}) });
+        continue;
+      } else if (s.do === 'poke') {
+        // write bytes into RAM (s.addr: a number or an expression → address; s.bytes) – e.g. room in a full team
+        const at = typeof s.addr === 'string' ? new Function('read', 'ctx', `return (${s.addr});`)(e.read, ctx) : s.addr;
+        const bytes = typeof s.bytes === 'string' ? new Function('read', 'ctx', `return (${s.bytes});`)(e.read, ctx) : s.bytes;
+        e.write(at, Uint8Array.from(bytes));
+        log.push({ do: 'poke', addr: at, n: bytes.length, note: s.note });
         continue;
       } else if (s.do === 'give') {
         // items into the bag (shared/live/cheats.mjs addItem) – Poké Balls for a catch early in the game

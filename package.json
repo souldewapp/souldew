@@ -25,7 +25,8 @@
     "dist": "node scripts/fetch-jre.mjs arm64 && CUSTOM_DMGBUILD_PATH=scripts/dmgbuild-wrapper.mjs electron-builder --mac dmg --arm64",
     "dist:win": "node scripts/fetch-jre.mjs x64 && electron-builder --win nsis --x64",
     "dist:linux": "node scripts/fetch-jre.mjs x64 && electron-builder --linux AppImage deb --x64",
-    "release": "node scripts/release.mjs"
+    "release": "node scripts/release.mjs",
+    "matrix": "node scripts/rom-matrix.mjs --live"
   },
   "updates": {
     "repo": "souldewapp/souldew",
