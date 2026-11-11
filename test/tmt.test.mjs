@@ -181,4 +181,8 @@ test('TMT2: the team without a count byte in front, the Tera type masked off, th
   put(0x02032c94 + 100, [...pk3x({ pid: 0x0a0b0c0d, otId: ME, species: 540, level: 2, hp: 14, maxHp: 14 })]);
   put(0x030044bd, [0]);
   assert.deepEqual(readLiveParty(entry, read, T, state).party.map((m) => m.species), [390, 540]);
+  // a struct the game is writing right now (checksum off): read again – never a team of one or none
+  mem.set(0x02032c94 + 100 + 28, (mem.get(0x02032c94 + 100 + 28) + 1) & 0xff);
+  assert.deepEqual(readLiveParty(entry, read, T, state), { torn: true });
+  assert.equal(state.party3, 0x02032c94, 'and the team stays where it is');
 });

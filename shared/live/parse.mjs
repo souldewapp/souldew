@@ -264,7 +264,8 @@ function pk3Run(ram, o, T) {
     const pid = u32le(d, 0);
     if (!pid && !u32le(d, 4)) break;
     const m = parsePk3(d, T);
-    if (!validPk3(m) || pids.includes(pid)) return { n: 0, empty: false };
+    // (a struct the game is writing right now, or a slot shown twice while the menu swaps two: torn, read again)
+    if (!validPk3(m) || pids.includes(pid)) return { n: 0, empty: false, torn: true };
     pids.push(pid);
   }
   let empty = true;
@@ -284,8 +285,10 @@ function findGen3Party(read, T, state, hint = null) {
   };
   if (state.party3) {
     if (state.count3 === null) {
+      // (a static array: kept unless it holds no team any more – a torn read is read again by readGen3)
       const b = read(state.party3, 600);
-      if (b && pk3Run(b, 0, T).n >= 1) return state.party3;
+      const r = b ? pk3Run(b, 0, T) : null;
+      if (r && (r.n >= 1 || r.torn)) return state.party3;
     } else {
       const b = read(state.party3 - 4, 4 + 600);
       if (b && okAt(b, 4)) return state.party3;
@@ -320,7 +323,8 @@ function findGen3Party(read, T, state, hint = null) {
 function party3Count(read, T, state) {
   if (state.count3 === null) {
     const b = read(state.party3, 600);
-    return b ? pk3Run(b, 0, T).n : 0;
+    const r = b ? pk3Run(b, 0, T) : null;
+    return r && !r.torn ? r.n : null; // null: torn – try again next poll
   }
   return read(state.count3 ?? state.party3 - 3, 1)?.[0] ?? 0;
 }
@@ -342,6 +346,7 @@ function readGen3(entry, read, T, state = {}) {
     const at = findGen3Party(read, T, state, entry.party3At);
     if (!at) return null;
     count = party3Count(read, T, state);
+    if (count === null) return { torn: true };
     entry = { ...entry, partyAddr: `0x${at.toString(16)}` };
   } else {
     const c = read(hex(entry.partyCountAddr), 1);
@@ -811,7 +816,7 @@ function battleGen3(entry, read, T, state = {}) {
     // parties are found (gEnemyParty 600 bytes after the player's); who is out on both sides comes from gBattleMons
     // (searched for, findBattleMons3x) – without it the opponent is gEnemyParty's first one standing.
     if (!state.party3) return null;
-    const count = party3Count(read, T, state);
+    const count = party3Count(read, T, state) ?? 0;
     const mine = count >= 1 && count <= 6 ? rawParty3(read, state.party3, count, T) : [];
     const foes = rawParty3(read, state.enemy3 || state.party3 + 600, 6, T);
     if (!foes.length) return { kind: 'wild', enemy: null, active: null };
