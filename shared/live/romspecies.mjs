@@ -64,15 +64,20 @@ export const nameKey = (s) => String(s || '').toUpperCase().replace(/♀/g, 'F')
 
 /**
  * internal index → National Dex number for a Gen 3 ROM. `names` = gen3SpeciesNames().names, `vanilla` = the retail
- * index table (gen3_index_to_dex.json map), `dexNames` = English species names by National Dex number. A slot whose
- * name is the vanilla Pokémon's keeps the vanilla number; any other name is looked up by name; a name no Pokémon has
- * (a fakémon) is listed in `unknown`, never mapped to a real one. → { map, unknown, changed }
+ * index table (gen3_index_to_dex.json map), `dexNames` = English species names by National Dex number, `otherNames` =
+ * the same lists in the other languages the games came out in (German, French, Spanish, Italian: a German ROM calls
+ * Charmander "GLUMANDA"). A slot whose name is the vanilla Pokémon's – in any of these languages – keeps the vanilla
+ * number; any other name is looked up by name (English first); a name no Pokémon has (a fakémon) is listed in
+ * `unknown`, never mapped to a real one. → { map, unknown, changed }
  */
-export function gen3SpeciesMap(names, vanilla, dexNames) {
+export function gen3SpeciesMap(names, vanilla, dexNames, otherNames = []) {
   const byKey = new Map();
-  dexNames.forEach((n, id) => {
-    if (n && id && !byKey.has(nameKey(n))) byKey.set(nameKey(n), id);
-  });
+  for (const list of [dexNames, ...otherNames]) {
+    (list || []).forEach((n, id) => {
+      if (n && id && !byKey.has(nameKey(n))) byKey.set(nameKey(n), id);
+    });
+  }
+  const isVanilla = (v, key) => [dexNames, ...otherNames].some((list) => list?.[v] && nameKey(list[v]) === key);
   // A name that fills the game's 10 letters may be a shortened longer one (Run & Bun: "Corvknight", "Flechinder",
   // "Crabminabl"): the one longer Pokémon name that has its letters in that order and starts the same is it.
   const longer = [...byKey.entries()].filter(([k]) => k.length > 10);
@@ -92,7 +97,7 @@ export function gen3SpeciesMap(names, vanilla, dexNames) {
   for (let i = 1; i < names.length; i++) {
     const v = vanilla[i] || 0;
     const key = nameKey(names[i]);
-    if (v && nameKey(dexNames[v]) === key) {
+    if (v && isVanilla(v, key)) {
       map[i] = v;
       continue;
     }
@@ -111,7 +116,7 @@ export function gen3SpeciesMap(names, vanilla, dexNames) {
 
 /**
  * Species data of a ROM for the live reader: Gen 3 only (see the top). `opts` = { gen3Charset, gen3Index (the
- * vanilla map), dexNames }. → { gen: 3, engine: 'vanilla' | 'expanded', count, changed, map?, unknown?, source } or
+ * vanilla map), dexNames, dexNamesOther (gen3SpeciesMap otherNames) }. → { gen: 3, engine: 'vanilla' | 'expanded', count, changed, map?, unknown?, source } or
  * null (not a GBA Pokémon ROM, or no species table found). `map` is left out when nothing differs from vanilla.
  * Never throws.
  */
@@ -125,7 +130,7 @@ export function romSpecies(rom, opts = {}) {
     const source = { names: t.offset, stride: t.stride };
     // an expanded engine numbers its species its own way (Run & Bun: National Dex order, forms after them) – mapped by
     // name alone; a form ("Zigzagoon" from Galar) is its species
-    const m = gen3SpeciesMap(t.names, engine === 'expanded' ? [] : opts.gen3Index || [], opts.dexNames || []);
+    const m = gen3SpeciesMap(t.names, engine === 'expanded' ? [] : opts.gen3Index || [], opts.dexNames || [], opts.dexNamesOther || []);
     const out = { gen: 3, engine, count: t.names.length - 1, changed: m.changed, source };
     if (m.changed) Object.assign(out, { map: m.map, unknown: m.unknown });
     return out;

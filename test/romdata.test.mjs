@@ -101,6 +101,22 @@ test('Gen 3 species table: an expanded engine (hundreds more species) is recogni
   assert.equal(romSpecies(Uint8Array.from({ length: 0x400 }, () => 0x55), {}), null, 'not a GBA ROM');
 });
 
+test('Gen 3 species table: a German, French, Spanish or Italian retail ROM is the retail table, not 275 fakémon (#16)', () => {
+  const api = json('pokeapi.json');
+  const other = ['de', 'fr', 'es', 'it'].map((l) => api.names[l]);
+  // German FireRed's table: "BISASAM", "GLUMANDA", "SCHIGGY", … (the retail order, German names)
+  const de = Array.from({ length: 411 }, (_, i) => (vanilla3[i + 1] ? api.names.de[vanilla3[i + 1]].toUpperCase() : '?'));
+  const r = romSpecies(gbaWithNames(de), { gen3Charset: cs3, gen3Index: vanilla3, dexNames, dexNamesOther: other });
+  assert.deepEqual([r.engine, r.changed, r.map, r.unknown], ['vanilla', 0, undefined, undefined]);
+  const without = romSpecies(gbaWithNames(de), { gen3Charset: cs3, gen3Index: vanilla3, dexNames });
+  assert.ok(without.changed > 200, 'English names alone: the German names look like fakémon');
+  // a randomized or hacked German ROM: another Pokémon in a slot is found by its German name
+  const m = gen3SpeciesMap(['', 'GLUMANDA', 'SCHIGGY', 'Flufftail'], [0, 1, 2, 3], dexNames, other);
+  assert.deepEqual(m.map, [0, 4, 7, 0]);
+  assert.deepEqual(m.unknown, { 3: 'Flufftail' });
+  assert.equal(gen3SpeciesMap(['', 'SALAMÈCHE'], [0, 4], dexNames, other).changed, 0, 'French Charmander');
+});
+
 test('gen3SpeciesMap: the vanilla Pokémon of a slot wins over a same-named later one', () => {
   const m = gen3SpeciesMap(['', 'BULBASAUR', 'IVYSAUR'], [0, 1, 2], dexNames);
   assert.deepEqual(m, { map: [0, 1, 2], unknown: {}, changed: 0 });

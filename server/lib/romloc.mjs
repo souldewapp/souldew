@@ -15,7 +15,7 @@ import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 7; // bump when romLocations() / romSpecies() change what they find
+const VERSION = 8; // bump when romLocations() / romSpecies() change what they find
 const memo = new Map();
 let tables = null;
 
@@ -33,7 +33,7 @@ function opts(sharedDir) {
       const k = past ? Object.keys(past).map(Number).sort((a, b) => a - b).find((x) => x >= gen) : undefined;
       return k !== undefined ? past[k] : api.types?.[id] || [];
     };
-    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: api.names?.en || [], addresses: j('addresses.json'), maps: j('maps.json'), baseTypes };
+    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: api.names?.en || [], dexNamesOther: ['de', 'fr', 'es', 'it'].map((l) => api.names?.[l]).filter(Boolean), addresses: j('addresses.json'), maps: j('maps.json'), baseTypes };
   }
   return tables;
 }
