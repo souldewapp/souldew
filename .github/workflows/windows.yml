@@ -54,6 +54,7 @@ jobs:
         run: |
           node scripts/build-ctr.mjs --check
           & tools/ctr/win32-x64/ctrhost.exe; if ($LASTEXITCODE -ne 2) { throw "ctrhost.exe exit $LASTEXITCODE" }
+          exit 0 # (Actions' pwsh would otherwise end the step with ctrhost's 2)
 
       - name: Build the installer
         env:
