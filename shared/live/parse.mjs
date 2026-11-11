@@ -670,21 +670,92 @@ function activeGB(entry, read, T, state, party, stale) {
   return state.gbActive !== null && state.gbActive !== undefined ? { index: state.gbActive } : null;
 }
 
+/**
+ * An expanded engine's gBattleMons (pokeemerald-expansion's BattlePokemon: 0x5C bytes per battler, the base game's
+ * 0x58 plus a third type and a 16-bit ability – species +0x00, hp +0x2A, level +0x2C, maxHP +0x2E, personality +0x4C,
+ * status1 +0x50, otId +0x58). Measured in Run & Bun 1.07, where it sits at 0x020233FC – the address its code uses
+ * third most often, as gBattleMons is in the base game. Like the party it is searched for, never assumed: battler 0
+ * holds one of the player's Pokémon there (its PID and OT ID 12 bytes apart, species, level and max HP as in the
+ * party) and battler 1 one of gEnemyParty's. The array is static, so once found it is kept for the session.
+ */
+const BMON3X = { size: 0x5c, species: 0x00, hp: 0x2a, level: 0x2c, maxHp: 0x2e, pid: 0x4c, status: 0x50, otId: 0x58 };
+
+/** The mons of a gen 3 party array (count, 100-byte structs): raw PID and OT ID next to the parsed mon. */
+function rawParty3(read, at, n, T) {
+  const raw = read(at, n * 100);
+  const out = [];
+  for (let i = 0; raw && i < n; i++) {
+    const d = raw.subarray(i * 100, i * 100 + 100);
+    const m = parsePk3(d, T);
+    if (m && !m.bad && m.level >= 1 && m.level <= 100 && m.hp <= m.maxHp) out.push({ m, pid: u32le(d, 0), otId: u32le(d, 4) });
+  }
+  return out;
+}
+
+/** The battler at `b` (one BattlePokemon of gBattleMons) if it is one of `mons` (rawParty3), with its live numbers. */
+function battler3x(read, b, mons) {
+  const d = read(b, BMON3X.size);
+  if (!d) return null;
+  const L = BMON3X;
+  const pid = u32le(d, L.pid);
+  const p = mons.find((x) => x.pid === pid && x.otId === u32le(d, L.otId));
+  if (!p) return null;
+  const hp = u16le(d, L.hp);
+  const maxHp = u16le(d, L.maxHp);
+  // (level and max HP as in the party struct – both are written together with the battle's; HP at most the max)
+  if (maxHp !== p.m.maxHp || d[L.level] !== p.m.level || hp > maxHp) return null;
+  return { p, hp, maxHp, status: u32le(d, L.status) & 0xff };
+}
+
+/** Finds gBattleMons in EWRAM (see BMON3X) while a battle is on; at most once a second while it isn't found. */
+function findBattleMons3x(read, T, state, mine, foes) {
+  if (state.bmons3) return state.bmons3;
+  if (state.lastBmScan3 && Date.now() - state.lastBmScan3 < 1000) return null;
+  state.lastBmScan3 = Date.now();
+  const ram = read(0x02000000, 0x40000);
+  if (!ram) return null;
+  const L = BMON3X;
+  for (let o = L.pid; o + L.size * 2 <= ram.length; o += 4) {
+    const pid = u32le(ram, o);
+    if (!pid) continue;
+    const p = mine.find((x) => x.pid === pid);
+    if (!p || u32le(ram, o + L.otId - L.pid) !== p.otId) continue;
+    const b = 0x02000000 + o - L.pid;
+    // battler 0 is ours – the same species, level and max HP – and battler 1 one of the opponent's
+    if (T.idx3?.[u16le(ram, o - L.pid + L.species)] !== p.m.species) continue;
+    if (!battler3x(read, b, mine) || !battler3x(read, b + L.size, foes)) continue;
+    return (state.bmons3 = b);
+  }
+  return null;
+}
+
 function battleGen3(entry, read, T, state = {}) {
   const flag = read(hex(entry.inBattle.addr), 1)?.[0];
   if (flag === undefined || !(flag & hex(entry.inBattle.mask || '0x02'))) return null;
   if (entry.scan3) {
-    // an expanded engine: gMain (the flag) stays where it was, gBattleTypeFlags and gBattlerPartyIndexes moved – the
-    // opponent is the first one standing of gEnemyParty (600 bytes after the party found), several of them a trainer
+    // an expanded engine: gMain (the flag) stays where it was, gBattleTypeFlags and gBattlerPartyIndexes moved. The
+    // parties are found (gEnemyParty 600 bytes after the player's); who is out on both sides comes from gBattleMons
+    // (searched for, findBattleMons3x) – without it the opponent is gEnemyParty's first one standing.
     if (!state.party3) return null;
-    const raw = read(state.party3 + 600, 600);
-    const mons = [];
-    for (let i = 0; raw && i < 6; i++) {
-      const m = parsePk3(raw.subarray(i * 100, i * 100 + 100), T);
-      if (m && !m.bad && m.level >= 1 && m.level <= 100 && m.maxHp > 0 && m.hp <= m.maxHp) mons.push(m);
-    }
-    const m = mons.find((x) => x.hp > 0) || mons[0];
-    return { kind: mons.length > 1 ? 'trainer' : 'wild', enemy: m ? { species: m.species, level: m.level, hp: m.hp, maxHp: m.maxHp, shiny: m.shiny, moves: m.moves } : null, active: null };
+    const count = read(state.party3 - 3, 1)?.[0];
+    const mine = count >= 1 && count <= 6 ? rawParty3(read, state.party3, count, T) : [];
+    const foes = rawParty3(read, state.party3 + 600, 6, T);
+    if (!foes.length) return { kind: 'wild', enemy: null, active: null };
+    const bm = mine.length ? findBattleMons3x(read, T, state, mine, foes) : null;
+    // (both battlers must belong to this battle: before the new battle's mons are sent out the array still holds
+    // the previous battle's, whose opponent isn't in gEnemyParty any more)
+    const me = bm ? battler3x(read, bm, mine) : null;
+    const foe = me ? battler3x(read, bm + BMON3X.size, foes) : null;
+    const e = foe ? foe.p.m : (foes.find((x) => x.m.hp > 0) || foes[0]).m;
+    const enemy = { species: e.species, level: e.level, hp: foe ? foe.hp : e.hp, maxHp: e.maxHp, shiny: e.shiny, moves: e.moves };
+    // wild or trainer: a wild Pokémon is created with the player's trainer ID (CreateWildMon → OT_ID_PLAYER_ID, the
+    // same in pokeemerald-expansion), a trainer's with a random one (OT_ID_RANDOM_NO_SHINY) – the opponent's OT ID
+    // is one of the team's (its own catches) only in a wild battle
+    const ot = (foe ? foe.p : foes[0]).otId;
+    const kind = mine.length ? (mine.some((x) => x.otId === ot) ? 'wild' : 'trainer') : foes.length > 1 ? 'trainer' : 'wild';
+    // (the index into the team as readGen3 lists it – the same structs, the same checks)
+    const active = me && foe ? { index: mine.indexOf(me.p), hp: me.hp, maxHp: me.maxHp, ...(statusOk(me.status) ? { status: me.status } : {}) } : null;
+    return { kind, enemy, active };
   }
   const types = read(hex(entry.battleTypeFlagsAddr), 4);
   const trainer = !!types && !!(u32le(types, 0) & 0x08); // BATTLE_TYPE_TRAINER
