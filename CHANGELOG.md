@@ -41,8 +41,13 @@
 - **German, French, Italian and Spanish FireRed/LeafGreen are read live** (Feuerrote/Blattgrüne, Rouge Feu/Vert
   Feuille, Rosso Fuoco/Verde Foglia, Rojo Fuego/Verde Hoja – also randomized, #16): they showed "No live data for this
   game". Their memory layout is now in the table – the team, battles, the place sign and the Rare Candy cheat. The
-  addresses come from two trackers that run on these versions and agree; no such ROM was at hand to check them in a
-  running game, so please report it if something looks off.
+  addresses come from two trackers that run on these versions and agree, and were checked in the German games
+  (Feuerrote and Blattgrüne; French, Italian and Spanish ROMs weren't at hand): Charmander from Oak lands under
+  "Starter", the rival's Squirtle shows as a trainer battle with the HP going down as on screen, a Rattata caught on
+  Route 1 lands under "Route 1", and the place sign says Pallet Town / Alabastia and Route 1. Two things the check
+  found are fixed too: the Pokémon of German, French, Spanish and Italian GBA games were read as unknown ones – their
+  names weren't recognised (also German Ruby/Sapphire since 2.3.0) – and German FireRed/LeafGreen named places after
+  the Fame Checker's list ("Arena Marmoria" on Route 1).
 - **Run & Bun: the starter and your catches are filed** (#3, also in other expanded-engine hacks):
   about every second Pokémon was read as an egg – Run & Bun stores the IVs one bit further on than the original
   games – and never reached the run, and the search for the team gave up after half a minute without one, long

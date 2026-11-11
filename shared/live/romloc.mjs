@@ -22,9 +22,16 @@ export function langOfCode(code) {
   return { E: 'en', O: 'en', P: 'en', D: 'de', F: 'fr', I: 'it', S: 'es', H: 'nl', J: 'ja', K: 'ko' }[String(code || '').slice(3, 4).toUpperCase()] || null;
 }
 
-/** "ROUTE 101" → "Route 101", "MT. PYRE" → "Mt. Pyre", "S.S. TIDAL" stays; mixed-case names stay as they are. */
+/**
+ * "ROUTE 101" → "Route 101", "MT. PYRE" → "Mt. Pyre", "S.S. TIDAL" → "S.S. Tidal"; a capitals name with a lower-case
+ * letter or two is one too ("POKéMON-HAUS" → "Pokémon-Haus", German "DIGDAs HÖHLE" → "Digdas Höhle"). Mixed-case names
+ * stay as they are.
+ */
 export function prettyName(s) {
-  if (!s || /[a-zà-ÿ]/.test(s)) return s;
+  if (!s) return s;
+  const lower = (s.match(/[a-zß-ÿ]/g) || []).length;
+  const upper = (s.match(/[A-ZÀ-Þ]/g) || []).length;
+  if (lower * 3 >= upper) return s;
   return s.toLowerCase().replace(/(^|[\s.\-(])([a-zà-ÿ])/g, (_, a, b) => a + b.toUpperCase());
 }
 
@@ -88,6 +95,26 @@ function longestRun(bytes, stride, ok, from = 0, to = bytes.length) {
   return best;
 }
 
+/** Every run of at least `min` `stride`-byte entries passing `ok(offset)`, over 4-byte aligned offsets: [{ start, len }]. */
+function allRuns(bytes, stride, ok, min) {
+  const out = [];
+  for (let r = 0; r < stride; r += 4) {
+    let run = 0;
+    let start = 0;
+    for (let o = r; o + stride <= bytes.length; o += stride) {
+      if (ok(o)) {
+        if (!run) start = o;
+        run++;
+      } else {
+        if (run >= min) out.push({ start, len: run });
+        run = 0;
+      }
+    }
+    if (run >= min) out.push({ start, len: run });
+  }
+  return out;
+}
+
 /**
  * Gen 3 place names by region map section id (MAPSEC). Ruby/Sapphire/Emerald: struct RegionMapLocation
  * { u8 x, y, width, height; const u8 *name } – one per section, section 0 first. FireRed/LeafGreen: const u8 *name[]
@@ -103,12 +130,18 @@ export function gen3Names(rom, charset, code = String.fromCharCode(...rom.subarr
     for (let i = 0; i < struct.len; i++) names.push(prettyName(str(u32(rom, struct.start + i * 8 + 4))));
     return { names, base: 0, layout: 'regionMapLocations', offset: struct.start };
   }
-  // FireRed/LeafGreen: short one-line names only (move descriptions & co. are pointer tables too, with longer text)
+  // FireRed/LeafGreen: short one-line names in capitals (move descriptions & co. are pointer tables too, with longer
+  // text) – a letter or two in lower case is allowed: the German games call Diglett's Cave "DIGDAs HÖHLE".
   const shortName = (p) => {
     const s = str(p);
-    return !!s && s.length <= 20 && !/[a-z]/.test(s);
+    return !!s && s.length <= 20 && (s.match(/[a-z]/g) || []).length <= 2;
   };
-  const ptrs = longestRun(rom, 4, (o) => shortName(u32(rom, o)));
+  // Not the longest such table: the German games' Fame Checker has a longer one ("ALABASTIA", "POKéMON-LABOR",
+  // "POKéMON-LABOR", … then people), and there is a run of blank names. The place names are the one with the most
+  // different names.
+  const ptrs = allRuns(rom, 4, (o) => shortName(u32(rom, o)), 60)
+    .map((r) => ({ ...r, distinct: new Set(Array.from({ length: r.len }, (_, i) => str(u32(rom, r.start + i * 4)))).size }))
+    .sort((a, b) => b.distinct - a.distinct || b.len - a.len)[0] || { len: 0 };
   if (ptrs.len >= 60) {
     const names = new Array(0x58).fill(null);
     for (let i = 0; i < ptrs.len; i++) names.push(prettyName(str(u32(rom, ptrs.start + i * 4))));

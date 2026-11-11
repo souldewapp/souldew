@@ -34,6 +34,7 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 | **Crystal** | ✅ | ✅ | ✅ | ✅ | ✅ | As Silver; met location and level are read. **Real catch:** Sentret L2 (also Pidgey, Rattata), met location Route 29 → "Route 29". Randomized: Poliwag as the starter, wild Rattata L2 – all read. |
 | **Ruby / Sapphire** | ✅ | ✅ | ✅ | ✅ | – | Torchic L5 (nickname, HP checked on the party screen), Littleroot Town, Route 101, wild Poochyena L2. The starter's met location is Route 101 – the same id the sign reads there. |
 | **Emerald** | ✅ | ✅ | ✅ | ✅ | ✅ | As Ruby, wild Zigzagoon L2. **Real catch:** Poochyena L2 (also Wurmple) on Route 101 → "Route 101". Randomized: Weedle as the starter, all read. |
+| **Feuerrote / Blattgrüne** (German FireRed / LeafGreen, 2.3.1) | ✅ | ✅ | ✅ | ✅ | – | Recognised as `firered_eu` / `leafgreen_eu` (game code BPRD/BPGD, retail CRC). Charmander L5 18/18 "GLUMANDA" from Oak, filed as the starter (met location Pallet Town); the rival's Squirtle L5 as a trainer battle, HP live as on screen (Squirtle 19 → 11, Charmander 18 → 13 / 18 → 7); level-up to 6 read after the fight; wild Rattata L2/L3, Pidgey L4 on Route 1. Place sign: Pallet Town (Alabastia in German – the house, Oak's lab), Route 1. Battle flag (gMain.inBattle at 0x03003479, −0xB0) set in both battles and cleared after them; the English address stays 0. **Real catch:** Rattata → "Route 1", in both games. sCurrentMapMusic 0x03000FC0 holds the map header's music on every map (300 Pallet Town, 301 Oak's lab, 291 Route 1) and the battle music during a battle (297/298) – the turbo music reads the song. Badges aren't read live in any Gen 3 game, and FireRed/LeafGreen have no built-in level caps (as in English). **Fixed:** the Pokémon were read as unknown ones (the German species names) and the German place names came from the Fame Checker ("Arena Marmoria" on Route 1) – see below. |
 | **Pearl** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Turtwig L5 21/21 from the briefcase at Lake Verity (met location Lake Verity), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity, Sandgem Town (also inside the Mart); wild Starly L2 at the lake, Bidoof / Starly L3 on Route 201. **Real catch:** Bidoof L3 / Starly L3 → "Route 201", 2 of 2 runs. **Fixed (2.3.0):** the battle flag (checked live: 0x2101 / 0x2000) – battles stayed on the panel after running away. Randomized: built ✓, no live run. |
 | **Platinum** | ✅ | ✅ | ✅ | ✅ | – | Turtwig L5 21/21 on Route 201 (met location Route 201), Barry's Chimchar L5 (trainer), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity; wild Starly / Bidoof / Kricketot L3 on Route 201. **Fixed (2.3.0):** the battle flag (checked live: 0x2100 / 0x2800) – a wild battle showed up ~1100 frames late and stayed after running away. **Real catch:** Bidoof L3 (met location Route 201) → "Route 201" (balls thrown on the touch screen). |
 | **Black** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Tepig L5, met location Nuvema Town = the sign's place; zones: bedroom, downstairs, Nuvema Town, Route 1. Rival battles Snivy / Oshawott L5, wild Lillipup / Patrat on Route 1. **Real catch:** Lillipup → "Route 1", 2 of 2 runs. **Fixed (2.3.0):** the opponent's HP stayed at full (now 19 → 14 → 4 as on screen) and your Pokémon's HP during the fight; the battle flag (checked live: 0x2100 / 0x2800). Randomized: built ✓, the plan lost its way at the naming screen. |
@@ -56,15 +57,18 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 
 ### Not in the test set
 
-Blue, Yellow, Gold, FireRed, LeafGreen, Diamond, HeartGold, SoulSilver and all non-English ROMs weren't part of this
-round (HeartGold US, Definitive HeartGold and Silver were checked live before 2.2.1). FireRed/LeafGreen's place-name
-table layout is read by a separate path that no ROM here could check.
+Blue, Yellow, Gold, the English FireRed and LeafGreen, Diamond, HeartGold, SoulSilver and all non-English ROMs except
+German FireRed/LeafGreen weren't part of this round (HeartGold US, Definitive HeartGold and Silver were checked live
+before 2.2.1). FireRed/LeafGreen's place-name table is now checked with the German ROMs only (108 of 109 names as in
+souldew's German table).
 
 **German, French, Italian and Spanish FireRed/LeafGreen (2.3.1)** have their own memory-table entries now
 (`firered_eu` / `leafgreen_eu`, issue #16): the English game's EWRAM, IWRAM from `gMain` on 0xB0 lower. Taken from two
 trackers that run on these ROMs (pokebot-gen3's per-language symbol patches, Ironmon-Tracker's address files), which
-agree address for address – see [research/live_ram.md](../research/live_ram.md). **Not checked in a running game**
-(no such ROM here); the unit tests cover the table logic only.
+agree address for address – see [research/live_ram.md](../research/live_ram.md). **Checked in the running German games**
+(Feuerrote, Blattgrüne – the matrix above, plan `scripts/rom-matrix/plans/firered-leafgreen-eu.json`): team, battles,
+battle flag, place sign, catch, the bag (the test's Poké/Master Balls went in through the cheat's SaveBlock1 pointer
+0x03004F58) and the map music. French, Italian and Spanish ROMs share the table but weren't at hand.
 
 ## What the checks found and what changed
 
@@ -93,6 +97,17 @@ bag by the test, the game itself throws and catches):
 - **Gen 5 battle HP** from the battle's own structs: the opponent's and your Pokémon's HP go down as on screen.
 - **Types from hack ROMs** (Gen 3 base stats, Gen 4/5 personal data), Fairy matchups for hacks that add the type.
 - **Run & Bun** is read live (expanded engine).
+
+German FireRed/LeafGreen (2.3.1, issue #16) – the memory table was right, two readers of the ROM file weren't:
+
+- **Species names in the game's language:** the species table read from a GBA ROM was matched by English names only,
+  so in German (also French, Spanish, Italian) Gen 3 ROMs 275 Pokémon looked like a hack's own ("GLUMANDA" instead of
+  Charmander #4) – the starter was filed as an unknown Pokémon. This also hit German Ruby/Sapphire since 2.3.0. Names
+  now match in all five languages: the German retail ROMs read as the retail table.
+- **FireRed/LeafGreen place names from the ROM:** the scan took the longest table of short capitals names – in the
+  German games that is the Fame Checker's ("ALABASTIA", "POKéMON-LABOR", … then people), so Route 1 was "Arena
+  Marmoria" for a German app. It now takes the table with the most different names, a name may have a lower-case
+  letter ("DIGDAs HÖHLE"), and "POKéMON-HAUS" is shown as "Pokémon-Haus".
 
 ## Known gaps
 

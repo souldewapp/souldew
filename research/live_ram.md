@@ -172,7 +172,18 @@ list the same layout – EWRAM exactly as in the English game, IWRAM from `gMain
 
 So in battle = `0x03003479 & 0x02`. `sCurrentMapMusic` (`0x03000FC0`) is in neither table; it is kept (it sits
 0x18 after the unchanged `sSaveDialogDelay`) – a wrong value would only make the turbo music fall back to the map's
-song. Not yet checked in a running game (no such ROM in the test set).
+song. **Checked in the running German FireRed and LeafGreen (2.3.1 ROM matrix,
+`scripts/rom-matrix/plans/firered-leafgreen-eu.json`):** the party (Charmander L5 from Oak, the Rattata caught on Route 1
+with met location Route 1), gBattleMons HP of both sides going down as on screen, `0x03003479 & 0x02` set in the rival
+and the wild battle and clear before and after (the English address stays 0), gBattleTypeFlags 0x1C (rival) / 0x04
+(wild), gMapHeader sections 88 (Pallet Town) / 101 (Route 1), gSaveBlock1Ptr 0x03004F58 (the player's position and
+the bag – the cheat's balls arrived), and `sCurrentMapMusic` 0x03000FC0 = the map header's music (`gMapHeader + 0x10`:
+300 Pallet Town, 301 Oak's lab, 291 Route 1; the battle's song in a battle). The ROMs' literal pools agree: gMain
+0x03003040 is loaded 581 times, gSaveBlock1Ptr 0x03004F58 452 times, 0x03000FC0 11 times.
+
+The German ROMs need two things beside the addresses (fixed in 2.3.1): the species table read from the ROM has German
+names (matched in all five languages now, else 275 Pokémon count as a hack's own), and FireRed/LeafGreen's place-name
+pointer table isn't the longest table of short capitals names there – the Fame Checker's is (see `gen3Names`).
 
 **In battle:** `gMain.inBattle` is bit 1 of the byte at `gMain + 0x439` (E/FRLG) or `gMain + 0x43D` (R/S) (`include/main.h` `struct Main`: `/*0x439*/ u8 oamLoadDisabled:1; u8 inBattle:1;`). That gives:
 - Emerald `0x030026F9 & 0x02`
