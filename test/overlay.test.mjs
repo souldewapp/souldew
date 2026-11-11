@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { request } from 'node:http';
 import { overlaySnapshot, teamOf, groupsOf, countersOf, alertsBetween, pickSlots, overlayUrl, areaLabel, statusKey, playTimeText,
-  overlayRun, currentRunId } from '../shared/overlay.mjs';
+  overlayRun, currentRunId, overlaySize, overlayBox, WIDGETS } from '../shared/overlay.mjs';
 
 const DATA = mkdtempSync(join(tmpdir(), 'sls-overlay-'));
 process.env.SLS_DATA_DIR = DATA;
@@ -124,7 +124,7 @@ test('helpers: status bytes, play time, OBS URL with its layer size', () => {
   assert.deepEqual(Object.fromEntries(u.searchParams), { run: 'c0ffee01', w: 'team', layout: 'v', hp: '0', sound: '1', 'layer-width': '300', 'layer-height': '800', 'layer-name': 'souldew · Team' });
 });
 
-// ---- links that keep working across runs (issue #8) ---------------------------------------------------------
+// ---- links that keep working across runs, and a size that doesn't change (issues #8 and #7) ----------------
 
 test('overlay links: "current" follows the run being played, a run ID stays on that run, old links keep working', () => {
   assert.equal(overlayRun('c0ffee01'), 'c0ffee01', 'an old link with its run ID');
@@ -146,6 +146,42 @@ test('current run: the one open in the app while it exists, else the one played 
   assert.equal(currentRunId({ runs: [{ id: 'eeee0005' }] }), 'eeee0005');
   assert.equal(currentRunId({ lastRun: 'aaaa0001', runs: [] }), null);
   assert.equal(currentRunId(), null);
+});
+
+test('widget size: one fixed box per widget and player count – the same for one Pokémon and six', () => {
+  for (const w of WIDGETS) {
+    for (const n of [1, 2, 3, 4]) {
+      for (const layout of ['h', 'v']) {
+        const [bw, bh] = overlaySize(w, n, { layout, nick: n <= 2, hp: true });
+        assert.ok(Number.isInteger(bw) && Number.isInteger(bh) && bw >= 100 && bh >= 50 && bw <= 1920 && bh <= 1080, `${w} ${layout} ×${n}: ${bw}×${bh}`);
+      }
+    }
+  }
+  // more players → never smaller; the team strip makes room for nicknames and HP bars
+  for (const w of ['team', 'counters', 'where', 'stats']) {
+    for (const layout of ['h', 'v']) {
+      const a = overlaySize(w, 1, { layout });
+      const b = overlaySize(w, 4, { layout });
+      assert.ok(b[0] >= a[0] && b[1] >= a[1], `${w} ${layout}`);
+    }
+  }
+  assert.ok(overlaySize('team', 2, { nick: true }).at(1) > overlaySize('team', 2, { nick: false }).at(1));
+  assert.ok(overlaySize('team', 2, { hp: true }).at(1) > overlaySize('team', 2, { hp: false }).at(1));
+  assert.deepEqual(overlaySize('team', 9), overlaySize('team', 4), 'at most four players');
+  assert.deepEqual(overlaySize('team', 0), overlaySize('team', 1));
+});
+
+test('overlay box: the size the browser source was made with wins – also when the run it follows has more players', () => {
+  const q = (s) => new URLSearchParams(s);
+  assert.deepEqual(overlayBox(q('layer-width=838&layer-height=304'), 'team', 4), [838, 304], 'the URL’s size, not the 4-player one');
+  assert.deepEqual(overlayBox(q('layer-width=1257&layer-height=456&scale=1.5'), 'team', 2), [838, 304], 'the layer size includes the scale');
+  assert.deepEqual(overlayBox(q(''), 'counters', 2), overlaySize('counters', 2));
+  assert.deepEqual(overlayBox(q('layer-width=abc&layer-height=10'), 'stats', 1, { layout: 'v' }), overlaySize('stats', 1, { layout: 'v' }), 'junk sizes are ignored');
+  // what the Stream page puts in the link is what the overlay lays out in
+  const size = overlaySize('where', 3, { layout: 'v' });
+  const url = new URL(overlayUrl('http://localhost:1', 'current', { w: 'where', layout: 'v', scale: 1.25 }, size.map((x) => x * 1.25)));
+  const box = overlayBox(url.searchParams, 'where', 1);
+  assert.ok(Math.abs(box[0] - size[0]) < 1 && Math.abs(box[1] - size[1]) < 1, `${box} ≈ ${size}`);
 });
 
 // ---- the server: snapshot route, live push, test alerts ----------------------------------------------------

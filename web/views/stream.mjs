@@ -9,7 +9,7 @@ import { Icon } from '../lib/icons.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
 import { players as getPlayers, slotsOf, runMode } from '../lib/run.mjs';
-import { overlayUrl } from '/shared/overlay.mjs';
+import { overlayUrl, overlaySize } from '/shared/overlay.mjs';
 import { useStreamer, setStreamer } from '../lib/streamer.mjs';
 import { LINKS } from '../lib/links.mjs';
 
@@ -29,18 +29,6 @@ const ls = {
       // private mode – the choice holds for this visit
     }
   },
-};
-
-// [w, h] of the browser source for n players – what the widget needs at scale 1 with the biggest (DS) sprites and
-// long names; the team strip grows a row's height for HP bars (9 px) and nicknames (19 px) when they are on
-const SIZES = {
-  team: (n, v, { nick, hp }) => (v ? [110 + n * 112, 690 + (hp ? 50 : 0) + (nick ? 110 : 0)]
-    : [210 + 6 * 108, (n > 1 ? 280 + (n - 2) * 96 : 160) + n * ((hp ? 9 : 0) + (nick ? 19 : 0))]),
-  card: (n, v) => (v ? [560, 470] : [900, 310]),
-  counters: (n, v) => (v ? [300, 340] : [760 + n * 70, 120]),
-  where: (n, v) => (v ? [400, 30 + n * 140] : [40 + n * 340, 180]),
-  alerts: () => [960, 440],
-  stats: (n, v) => (v ? [340, 340] : [880 + n * 130, 90]),
 };
 
 // Every overlay holds one open connection, and a browser (OBS's too, shared by all its sources) keeps at most six
@@ -135,7 +123,8 @@ function WidgetCard({ w, run, follow, slots, names, global, live, onTest }) {
   const chosen = w.players === 'one' ? [slots.includes(o.p) ? o.p : slots[0]] : (o.p || []).filter((s) => slots.includes(s));
   const n = (w.players === 'one' ? 1 : chosen.length || slots.length);
   const showNick = o.nick ?? n <= 2; // the overlay's own default: nicknames for one or two players
-  const size = (SIZES[w.id] || SIZES.team)(n, v, { nick: w.toggles?.includes('nick') && showNick, hp: o.hp !== false });
+  // the browser source's size (shared/overlay.mjs): room for a full team, so it never has to change while the team grows
+  const size = overlaySize(w.id, n, { layout: v ? 'v' : 'h', nick: w.toggles?.includes('nick') && showNick, hp: o.hp !== false });
   const opts = {
     w: w.id, layout: v ? 'v' : null, p: chosen.length && (w.players === 'one' || chosen.length < slots.length) ? chosen.join(',') : null,
     theme: global.theme !== 'glass' ? global.theme : null, scale: global.scale !== 1 ? global.scale : null, lang: global.lang || null,
