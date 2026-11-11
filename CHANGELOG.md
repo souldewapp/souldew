@@ -64,6 +64,18 @@
   first one to press it builds the new run, and everybody else sees "… is already building the new attempt" and gets
   the invite to join it; if the new run is already there, "New attempt" opens the invite instead of building a second
   one. Works with 3 and 4 players too.
+- **Black/White and Black 2/White 2** (thanks to a player's reports, #5, #9, #13, #14, #15):
+  - No more battles that aren't there: opening a Pokémon's summary (to look at or swap its moves) in Black 2 and
+    White 2, and Bianca's catching demo in White 2, put the catching demo's Pokémon (Lillipup, in Black/White Patrat)
+    on the battle panel.
+  - Status conditions show what the game shows – poison, burn, paralysis, freeze or sleep. Before, every Pokémon with
+    a status condition showed SLP: Gen 5 stores them differently from Gen 4.
+  - Level caps: the board, the play view and the stream API now know the badges and show the cap – the ace of the
+    next gym leader, after the eighth badge the Elite Four (unmodified game, Normal mode).
+  - Catches an older souldew filed under a number ("#6") get their place name once you play the game again, for
+    every player of the run.
+- Held items are shown by name on the board and in the play view (Gen 3–5), in your app's language – before it only
+  said "Holds an item".
 
 ## 2.3.0
 

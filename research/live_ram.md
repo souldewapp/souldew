@@ -332,7 +332,7 @@ For each 4-byte-aligned offset `o` in the 4 MiB dump:
 | **Met location** | 0x80 (DP field). Rule: use 0x46 if it is non-zero, else 0x80 (`G4PKM.cs:229-237`) | **0x80 u16 only**, egg 0x7E |
 | Ball | 0x83 (DPPt) + 0x86 (HGSS) | 0x83 |
 | Met level / OT gender | 0x84 bits 0–6 / bit 7 | identical |
-| Status / level / HP / max HP | 0x88 u32 / 0x8C / 0x8E / 0x90 | identical |
+| Status / level / HP / max HP | 0x88 u32 (bits: sleep turns 0–2, PSN, BRN, FRZ, PAR, TOX) / 0x8C / 0x8E / 0x90 | same offsets, but the status is a **number**: 1 PAR, 2 SLP, 3 FRZ, 4 BRN, 5 PSN (PKHeX `StatusType`; checked in Black 2's party screen 2026-11-11) |
 | Stats | 0x92–0x9A | identical |
 
 Gen 4/5 identity: `(PID, OT ID u32)`.

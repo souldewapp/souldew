@@ -38,7 +38,7 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 | **Platinum** | ✅ | ✅ | ✅ | ✅ | – | Turtwig L5 21/21 on Route 201 (met location Route 201), Barry's Chimchar L5 (trainer), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity; wild Starly / Bidoof / Kricketot L3 on Route 201. **Fixed (2.3.0):** the battle flag (checked live: 0x2100 / 0x2800) – a wild battle showed up ~1100 frames late and stayed after running away. **Real catch:** Bidoof L3 (met location Route 201) → "Route 201" (balls thrown on the touch screen). |
 | **Black** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Tepig L5, met location Nuvema Town = the sign's place; zones: bedroom, downstairs, Nuvema Town, Route 1. Rival battles Snivy / Oshawott L5, wild Lillipup / Patrat on Route 1. **Real catch:** Lillipup → "Route 1", 2 of 2 runs. **Fixed (2.3.0):** the opponent's HP stayed at full (now 19 → 14 → 4 as on screen) and your Pokémon's HP during the fight; the battle flag (checked live: 0x2100 / 0x2800). Randomized: built ✓, the plan lost its way at the naming screen. |
 | **Black 2** | ✅ | ✅ | ✅ | ✅ | – | Tepig L5 from Bianca at the Lookout (met location Aspertia City), Aspertia City, Aspertia Gate, Route 19; Hugh's Oshawott L5 (HP going down as on screen), wild Purrloin / Patrat L2. **Real catch:** Purrloin L2 → "Route 19". **Fixed (2.3.0):** Bianca's catching demo (an NPC's battle) showed as the player's trainer battle and stayed after it ended – the battle flag (checked live: 0x2100 / 0x2800). |
-| **White 2** | ✅ | ✅ | ✅ | ✅ | – | As Black 2 (its position sits 0x40 further on); wild Patrat L2. **Real catch:** Patrat L2 → "Route 19". Its battle flag isn't checked yet (0x2100 in battle, but no fixed value outside): the catching demo still shows as a battle for a while. |
+| **White 2** | ✅ | ✅ | ✅ | ✅ | – | As Black 2 (its position sits 0x40 further on); wild Patrat L2. **Real catch:** Patrat L2 → "Route 19". **Fixed (2.3.1):** the battle flag (checked live: 0x2100 in battles, 0xFAE3 elsewhere) – Bianca's catching demo showed as a battle against her Lillipup, and the summary screen (0x88C2, also in Black 2) did too. |
 
 ### ROM hacks
 
@@ -97,8 +97,8 @@ bag by the test, the game itself throws and catches):
 
 ## Known gaps
 
-- White 2's battle flag isn't checked (a demo battle lingers for a while); Gen 5 catching demos may show as a battle
-  in White/White 2.
+- White's battle flag isn't checked (no White ROM in the matrix): its catching demo may show as a battle for a while.
+  Black, Black 2 and White 2 count only the flag's battle values (2.3.1, #9).
 - Run & Bun: your own Pokémon's HP during a battle (its battle structs moved), the battle kind is a guess.
 - Expanded-engine hacks (Run & Bun, Too Many Types …): the Rare Candy cheat is off (other item numbers).
 - Hacks with types of their own (Too Many Types: 62/80 types) show the official types.

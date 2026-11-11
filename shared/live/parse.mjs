@@ -314,6 +314,14 @@ function readGen3(entry, read, T, state = {}) {
 const statusOk = (s) => s === 0 || (s & ~7) === 0 || s === 8 || s === 16 || s === 32 || s === 64 || ((s & ~0xf80) === 0 && !!(s & 0x80));
 
 /**
+ * Gen 5 stores the status condition as a number, not as Gen 3/4's bits (PKHeX StatusType: 1 paralysis, 2 sleep,
+ * 3 freeze, 4 burn, 5 poison – no sleep turns, and bad poison is plain poison outside battle). Read as bits, every one
+ * of them has a "sleep counter" (1–7): every Pokémon with a status showed SLP. → the Gen 3/4 bits the app reads
+ * everywhere (sleep as one turn), 0 for anything else.
+ */
+export const gen5Status = (s) => [0, 0x40, 1, 0x20, 0x10, 0x08][s & 0xff] ?? 0;
+
+/**
  * The battle stats block of a party mon (0x88-0xEB) is not covered by the checksum. GetMonData/SetMonData decrypt
  * a mon in place – the battle stats first, then the box block – and encrypt it again afterwards, without setting the
  * lock flags (pokeheartgold src/pokemon.c GetMonData: DECRYPT_PTY, DECRYPT_BOX, …, ENCRYPT_PTY, ENCRYPT_BOX). The
@@ -362,7 +370,7 @@ function pkMon(raw, gen, T) {
     moves: [u16le(d, 0x28), u16le(d, 0x2a), u16le(d, 0x2c), u16le(d, 0x2e)].filter(Boolean),
     metLocation, metLevel: d[0x84] & 0x7f, gender: ['M', 'F', '-'][(d[0x40] >> 1) & 3],
     shiny: (((pid >>> 16) ^ (pid & 0xffff) ^ tid ^ sid) >>> 0) < 8,
-    status: d[0x88], level: d[0x8c], hp: u16le(d, 0x8e), maxHp: u16le(d, 0x90),
+    status: gen === 5 ? gen5Status(d[0x88]) : d[0x88], level: d[0x8c], hp: u16le(d, 0x8e), maxHp: u16le(d, 0x90),
   };
 }
 
@@ -429,7 +437,7 @@ function readDS(entry, read, T, state) {
     if (party) {
       state.partyAddr = core;
       state.ptrOk = true;
-      return { party, boxes: readBoxesGen4(entry, read, T, state), badges: readBadgesGen4(entry, read, state) };
+      return { party, boxes: readBoxesGen4(entry, read, T, state), badges: gen === 5 ? readBadgesGen5(entry, read, state, party) : readBadgesGen4(entry, read, state) };
     }
     // The pointer has worked in this session, so the layout is right and the party is just not there right
     // now (title screen after a soft reset, save being reloaded). Scanning would grab whatever PartyCore is
@@ -444,7 +452,7 @@ function readDS(entry, read, T, state) {
     const party = readPartyCore(read, state.partyAddr, size, gen, T);
     if (party) {
       saveBaseFromScan(entry, read, state);
-      return { party };
+      return gen === 5 ? { party, badges: readBadgesGen5(entry, read, state, party) } : { party };
     }
     state.partyAddr = null;
   }
@@ -458,7 +466,8 @@ function readDS(entry, read, T, state) {
   // The canonical party is the lowest stable hit; battle copies come and go.
   state.partyAddr = hits[0];
   const party = readPartyCore(read, state.partyAddr, size, gen, T);
-  return party ? { party } : null;
+  if (!party) return null;
+  return gen === 5 ? { party, badges: readBadgesGen5(entry, read, state, party) } : { party };
 }
 
 /**
@@ -483,6 +492,28 @@ function readBadgesGen4(entry, read, state) {
   const j = read(general + hex(b.johtoOffset), 1);
   const k = read(general + hex(b.kantoOffset), 1);
   return j && k ? popcount(j[0]) + popcount(k[0]) : undefined;
+}
+
+/**
+ * Gen 5 badges: the game keeps its save blocks in RAM in the order of the .sav (the bag 0xA00 before the party block –
+ * shared/live/cheats.mjs), so the "Misc" block (money u32, badge flags u8 at +4) sits a fixed step after the party
+ * block: 0x21200 − 0x18E00 in Black/White, 0x21100 − 0x18E00 in Black 2/White 2 (PKHeX SaveBlockAccessor5BW/B2W2.cs,
+ * Misc5.cs). Only trusted when the trainer data block (0x19400: TID/SID at +0x14) belongs to the party's own trainer –
+ * a scanned copy of the party (a battle's) has neither block behind it – and the money is a real amount.
+ */
+const GEN5_MISC = { bw: 0x21200 - 0x18e00, b2w2: 0x21100 - 0x18e00 };
+const GEN5_TRAINER = 0x19400 - 0x18e00;
+function readBadgesGen5(entry, read, state, party) {
+  const core = state.partyAddr;
+  if (!core || !party?.length) return undefined;
+  const misc = /^(black2|white2)_/.test(entry.id) ? GEN5_MISC.b2w2 : GEN5_MISC.bw;
+  const tr = read(core + GEN5_TRAINER + 0x14, 4);
+  if (!tr) return undefined;
+  const ot = `${u16le(tr, 0)}-${u16le(tr, 2)}`;
+  if (!party.some((m) => m.key?.endsWith(`-${ot}`))) return undefined;
+  const b = read(core + misc, 5);
+  if (!b || u32le(b, 0) > 9999999) return undefined;
+  return popcount(b[4]);
 }
 
 /** HGSS keeps the whole save image in RAM: storage follows the general block like in the file. */
@@ -685,15 +716,26 @@ function scanStep(read, size, gen, T, state) {
   state.scan = null;
 }
 
-function battleFlag(entry, read) {
+function battleFlag(entry, read, state = {}) {
   // only flags checked in a running game (addresses.json `verified`: HeartGold, Platinum, Pearl) – the community
   // addresses of the others haven't been, and a wrong flag would hide every battle
   if (!entry.inBattle?.addr || !entry.inBattle.verified) return null;
   const f = read(hex(entry.inBattle.addr), 2);
   if (!f) return null;
   const v = u16le(f, 0);
-  if ((entry.inBattle.inBattleValues || []).map(hex).includes(v)) return true;
-  if ((entry.inBattle.notInBattleValues || []).map(hex).includes(v)) return false;
+  const on = (entry.inBattle.inBattleValues || []).map(hex).includes(v);
+  const off = !on && (entry.inBattle.notInBattleValues || []).map(hex).includes(v);
+  if (on || off) {
+    const seen = state.flagSeen || (state.flagSeen = new Set());
+    seen.add(on);
+    return on;
+  }
+  // Black/White, Black 2/White 2: the flag has its battle values in every battle and any other value means none
+  // (NDS-Ironmon-Tracker reads it the same way). The summary screen of Black 2, for one, sets 0x88C2 – left to the
+  // copies, a freed copy of the catching demo's party read as a battle against its Patrat / Lillipup there (#9).
+  // The game's other languages (scanOnly) may keep the flag elsewhere: there only once this session has seen both its
+  // battle and its overworld value at that address.
+  if (entry.inBattle.othersNotInBattle && (!entry.scanOnly || state.flagSeen?.size === 2)) return false;
   return null; // some other screen – decide by the copies
 }
 
@@ -771,7 +813,7 @@ const shinyOf = (pid, otId) => (((pid >>> 16) ^ (pid & 0xffff) ^ (otId >>> 16) ^
 function battleDS(entry, read, T, state, party) {
   if (!party?.length) return null;
   const now = Date.now();
-  const flag = battleFlag(entry, read);
+  const flag = battleFlag(entry, read, state);
   const size = entry.gen === 5 ? 220 : 236;
   if (flag === false) {
     // overworld: nothing to scan. The battle structs keep this battle's opponent until the next one is sent out.

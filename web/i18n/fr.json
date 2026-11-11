@@ -2222,5 +2222,8 @@
   "lib.liveNo": "Non pris en charge – note tes captures à la main",
   "lib.liveNote.rnb": "L’équipe, le lieu, les combats et les captures sont lus en direct. Pendant un combat, les PV de ton propre Pokémon affichent la valeur d’avant le combat.",
   "lib.liveNote.types": "souldew ne connaît pas les types propres à ce hack : le tableau et les règles de type utilisent les types officiels.",
-  "lib.liveNote.ownMons": "Ses créatures ne sont pas des Pokémon : souldew les affiche sous les noms du jeu, sans sprites – à la main, tu les choisis aussi par ces noms."
+  "lib.liveNote.ownMons": "Ses créatures ne sont pas des Pokémon : souldew les affiche sous les noms du jeu, sans sprites – à la main, tu les choisis aussi par ces noms.",
+  "party.holds": "tient {item}",
+  "cap.champion": "Maître",
+  "cap.eliteFour": "Conseil 4"
 }

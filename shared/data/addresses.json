@@ -1401,7 +1401,9 @@
      "0x2800"
     ],
     "source": "NDS-Ironmon-Tracker (community)",
-    "verified": "runtime-checked on Black (IRBO) 2026-11-10 by the ROM matrix: 0x2100 in both rival battles and a wild battle on Route 1, 0x2800 everywhere else (house, town, lab, after the catch)"
+    "verified": "runtime-checked on Black (IRBO) 2026-11-10 by the ROM matrix: 0x2100 in both rival battles and a wild battle on Route 1, 0x2800 everywhere else (house, town, lab, after the catch)",
+    "othersNotInBattle": true,
+    "othersNote": "any value but the battle values is no battle (NDS-Ironmon-Tracker BattleHandlerBase.lua treats it the same way): the summary screen sets 0x88C2 (checked 2026-11-11), where the heap copies showed the catching demo's opponent as a battle (#9)"
    },
    "liveBattleParty": {
     "monsAddr": "0x0226A794",
@@ -1516,7 +1518,9 @@
      "0x2800"
     ],
     "source": "NDS-Ironmon-Tracker (community)",
-    "verified": "runtime-checked on Black 2 (IREO) 2026-11-10 by the ROM matrix: 0x2100 in Hugh's battle and a wild battle on Route 19, 0x2800 elsewhere – also during Bianca's catching demo, which isn't the player's battle"
+    "verified": "runtime-checked on Black 2 (IREO) 2026-11-10 by the ROM matrix: 0x2100 in Hugh's battle and a wild battle on Route 19, 0x2800 elsewhere – also during Bianca's catching demo, which isn't the player's battle",
+    "othersNotInBattle": true,
+    "othersNote": "any value but the battle values is no battle (NDS-Ironmon-Tracker BattleHandlerBase.lua treats it the same way): the summary screen sets 0x88C2 (checked 2026-11-11), where the heap copies showed the catching demo's opponent as a battle (#9)"
    },
    "liveBattleParty": {
     "monsOffsetFromPtr": "0x53610",
@@ -1567,7 +1571,10 @@
      "0x2100",
      "0x2101"
     ],
-    "source": "NDS-Ironmon-Tracker (community, unverified)"
+    "source": "NDS-Ironmon-Tracker (community)",
+    "verified": "runtime-checked on White 2 (IRDO) 2026-11-11 by the ROM matrix: 0x2100 in Hugh's battle and a wild battle on Route 19, 0xFAE3 in town, on the route, during Bianca's catching demo and after the catch",
+    "othersNotInBattle": true,
+    "othersNote": "any value but the battle values is no battle (NDS-Ironmon-Tracker BattleHandlerBase.lua treats it the same way); left to the heap copies, Bianca's catching demo showed as a battle against her Lillipup (#9)"
    },
    "liveBattleParty": {
     "monsOffsetFromPtr": "0x53610",

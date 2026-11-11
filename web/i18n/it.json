@@ -2222,5 +2222,8 @@
   "lib.liveNo": "Non supportato: inserisci le catture a mano",
   "lib.liveNote.rnb": "Squadra, luogo, lotte e catture vengono letti dal vivo. Durante una lotta i PS del tuo Pokémon mostrano il valore di prima dello scontro.",
   "lib.liveNote.types": "souldew non conosce i tipi propri di questo hack: la bacheca e le regole sui tipi usano quelli ufficiali.",
-  "lib.liveNote.ownMons": "Le sue creature non sono Pokémon: souldew le mostra con i nomi del gioco, senza sprite, e a mano le scegli con quei nomi."
+  "lib.liveNote.ownMons": "Le sue creature non sono Pokémon: souldew le mostra con i nomi del gioco, senza sprite, e a mano le scegli con quei nomi.",
+  "party.holds": "tiene {item}",
+  "cap.champion": "Campione",
+  "cap.eliteFour": "Superquattro"
 }

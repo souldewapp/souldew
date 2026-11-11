@@ -326,7 +326,9 @@ test('Gen 5 battle without a flag: over once the battle\'s HP is copied back int
   const { readLiveParty, readLiveBattle, findEntry, LiveTables } = await import('../shared/live/parse.mjs');
   const { encryptPK4 } = await import('../shared/gen4save.mjs');
   const T5 = new LiveTables({ gen4: json('gen4.json') });
-  const BLACK = findEntry(json('addresses.json'), { platform: 'nds', code: 'IRBO' });
+  // (German Black: the US flag address isn't trusted there before it has shown its values – the copies decide; the US
+  // game counts any value but the battle ones as no battle)
+  const BLACK = findEntry(json('addresses.json'), { platform: 'nds', code: 'IRBD' });
   const m = new Uint8Array(0x400000);
   const w = (addr, bytes) => m.set(bytes, addr - 0x02000000);
   const read = (addr, len) => (addr >= 0x02000000 && addr + len <= 0x02400000 ? m.slice(addr - 0x02000000, addr - 0x02000000 + len) : null);
