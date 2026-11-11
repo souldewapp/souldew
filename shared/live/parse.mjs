@@ -711,15 +711,26 @@ function scanStep(read, size, gen, T, state) {
   state.scan = null;
 }
 
-function battleFlag(entry, read) {
+function battleFlag(entry, read, state = {}) {
   // only flags checked in a running game (addresses.json `verified`: HeartGold, Platinum, Pearl) – the community
   // addresses of the others haven't been, and a wrong flag would hide every battle
   if (!entry.inBattle?.addr || !entry.inBattle.verified) return null;
   const f = read(hex(entry.inBattle.addr), 2);
   if (!f) return null;
   const v = u16le(f, 0);
-  if ((entry.inBattle.inBattleValues || []).map(hex).includes(v)) return true;
-  if ((entry.inBattle.notInBattleValues || []).map(hex).includes(v)) return false;
+  const on = (entry.inBattle.inBattleValues || []).map(hex).includes(v);
+  const off = !on && (entry.inBattle.notInBattleValues || []).map(hex).includes(v);
+  if (on || off) {
+    const seen = state.flagSeen || (state.flagSeen = new Set());
+    seen.add(on);
+    return on;
+  }
+  // Black/White, Black 2/White 2: the flag has its battle values in every battle and any other value means none
+  // (NDS-Ironmon-Tracker reads it the same way). The summary screen of Black 2, for one, sets 0x88C2 – left to the
+  // copies, a freed copy of the catching demo's party read as a battle against its Patrat / Lillipup there (#9).
+  // The game's other languages (scanOnly) may keep the flag elsewhere: there only once this session has seen both its
+  // battle and its overworld value at that address.
+  if (entry.inBattle.othersNotInBattle && (!entry.scanOnly || state.flagSeen?.size === 2)) return false;
   return null; // some other screen – decide by the copies
 }
 
@@ -797,7 +808,7 @@ const shinyOf = (pid, otId) => (((pid >>> 16) ^ (pid & 0xffff) ^ (otId >>> 16) ^
 function battleDS(entry, read, T, state, party) {
   if (!party?.length) return null;
   const now = Date.now();
-  const flag = battleFlag(entry, read);
+  const flag = battleFlag(entry, read, state);
   const size = entry.gen === 5 ? 220 : 236;
   if (flag === false) {
     // overworld: nothing to scan. The battle structs keep this battle's opponent until the next one is sent out.
