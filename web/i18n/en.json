@@ -1424,6 +1424,7 @@
   "play.speedStepDown": "{set}× is too much for this computer here – steady {n}× now",
   "play.statLosses": "losses",
   "play.statRuns": "runs",
+  "play.stateLoadFailed": "Couldn’t load this state – the game goes on where it was",
   "play.stateLoaded": "State {n} loaded",
   "play.stateReadFailed": "Couldn’t read slot {n}",
   "play.stateSaveFailed": "Couldn’t save state {n}",

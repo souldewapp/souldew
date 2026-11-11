@@ -1096,6 +1096,7 @@
   "play.speedStepDown": "{set}× è troppo per questo computer qui – ora {n}× stabile",
   "play.statLosses": "perdite",
   "play.statRuns": "run",
+  "play.stateLoadFailed": "Impossibile caricare questo stato: il gioco continua da dove era",
   "play.stateLoaded": "Stato {n} caricato",
   "play.stateReadFailed": "Impossibile leggere lo slot {n}",
   "play.stateSaveFailed": "Impossibile salvare lo stato {n}",

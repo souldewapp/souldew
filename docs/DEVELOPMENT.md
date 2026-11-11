@@ -70,7 +70,9 @@ games then open in the Azahar app.
 Windows and Linux: `.github/workflows/ctr.yml` builds host and core (Linux with gcc 12 on Ubuntu 22.04, Windows
 cross-compiled in libretro's MXE container – as Azahar's own CI) and keeps them per source hash in the Actions cache;
 `release.yml`, `windows.yml` and `linux.yml` bundle the artifact. `node scripts/build-ctr.mjs --platform win32-x64
---host-only` cross-builds the Windows host on a Mac with MinGW-w64 (`brew install mingw-w64`); `native/ctr-host/compat.h`
+--host-only` cross-builds the Windows host on a Mac with MinGW-w64 (`brew install mingw-w64`); the Windows core also
+cross-builds with Ubuntu's MinGW-w64 (`g++-mingw-w64-x86-64-posix`, a CMake toolchain file, `-DLIBTYPE=static` and an
+`x86_64-w64-mingw32.static-gcc-ar` link to the MinGW `ar` – Azahar's CMake expects MXE's names); `native/ctr-host/compat.h`
 holds the few OS calls. Vulkan there is the system's loader (`vulkan-1.dll` / `libvulkan.so.1`); without it
 `server/lib/ctr.mjs` reports the part as missing and 3DS games open in the Azahar app.
 

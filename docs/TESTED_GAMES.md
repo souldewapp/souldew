@@ -103,8 +103,11 @@ builds come from `.github/workflows/ctr.yml` (gcc 12 on Ubuntu 22.04, as Azahar'
 **Windows** (Wine 9 x86-64 in the same VM, through Rosetta; Vulkan through Wine onto Mesa): `ctrhost.exe` (MinGW-w64,
 cross-compiled here without a warning, only Windows' own DLLs) with Azahar's official Windows core runs Ultra Sun over
 souldew's protocol – stdin/stdout pipes, the command thread, ~60 fps, pictures, the title, a clean answer to a savestate
-the core rejects (one made on the Mac with another build) and QUIT. Live memory needs the patched Windows core, which
-`.github/workflows/ctr.yml` builds in libretro's MXE container (as Azahar's CI) and checks for the two exports; the
+the core rejects (one made on the Mac – Windows builds of the core write their states differently, and souldew keeps
+states on the machine that made them; the play view now says so instead of "loaded") and QUIT. **With the patched
+Windows core** (cross-built in the VM with Ubuntu's MinGW-w64; it exports `souldew_read_memory` / `souldew_title_id`
+and needs only Windows' own DLLs) live memory works: the title ID from the core, the watched regions every 6 frames.
+`.github/workflows/ctr.yml` builds that core in libretro's MXE container (as Azahar's CI) and checks the exports; the
 Windows workflow starts the host on `windows-latest`. A game on a real Windows PC is still to come. (Wine only hands
 console programs Vulkan in a virtual desktop – a Wine detail, not one of Windows.) Without Vulkan (no graphics driver)
 souldew opens the Azahar app instead.

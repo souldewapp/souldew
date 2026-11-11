@@ -392,9 +392,13 @@ export function GameSession({ session, mode }) {
       const p = pendingRef.current;
       armLoad(null);
       if (!p || !emu()?.ready) return;
-      emu().loadState(p.bytes);
-      pickSlot(p.slot);
-      flash(MANUAL_SLOTS.includes(p.slot) ? t('play.stateLoaded', 'State {n} loaded', { n: p.slot }) : t('states.loaded', '“{name}” loaded', { name: slotName(p.slot) }));
+      // the 3DS player answers whether the core took the state (false: another build's or a broken one); EmulatorJS
+      // answers nothing – loaded
+      Promise.resolve(emu().loadState(p.bytes)).catch(() => false).then((ok) => {
+        if (ok === false) return flash(t('play.stateLoadFailed', 'Couldn’t load this state – the game goes on where it was'));
+        pickSlot(p.slot);
+        flash(MANUAL_SLOTS.includes(p.slot) ? t('play.stateLoaded', 'State {n} loaded', { n: p.slot }) : t('states.loaded', '“{name}” loaded', { name: slotName(p.slot) }));
+      });
     },
     cancelLoad: () => armLoad(null),
     screenshot: async () => {
@@ -724,8 +728,8 @@ export function GameSession({ session, mode }) {
           try {
             const r = await fetch(stateUrl(AUTO_SLOT));
             if (r.ok && !stopped) {
-              emu().loadState(new Uint8Array(await r.arrayBuffer()));
-              flash(t('play.resumed', 'Picked up where you left off'));
+              const ok = await Promise.resolve(emu().loadState(new Uint8Array(await r.arrayBuffer()))).catch(() => false);
+              if (ok !== false) flash(t('play.resumed', 'Picked up where you left off'));
             }
           } catch {
             // start from the save instead

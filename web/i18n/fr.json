@@ -1096,6 +1096,7 @@
   "play.speedStepDown": "{set}× est trop pour cet ordinateur ici – maintenant {n}× stable",
   "play.statLosses": "pertes",
   "play.statRuns": "runs",
+  "play.stateLoadFailed": "Impossible de charger cette sauvegarde d’état – le jeu continue là où il en était",
   "play.stateLoaded": "État {n} chargé",
   "play.stateReadFailed": "Impossible de lire l’emplacement {n}",
   "play.stateSaveFailed": "Impossible de sauvegarder l’état {n}",

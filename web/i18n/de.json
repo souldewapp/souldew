@@ -1096,6 +1096,7 @@
   "play.speedStepDown": "{set}× schafft dieser Rechner hier nicht – jetzt stabil {n}×",
   "play.statLosses": "Verluste",
   "play.statRuns": "Runs",
+  "play.stateLoadFailed": "Dieser Spielstand ließ sich nicht laden – das Spiel läuft weiter, wo es war",
   "play.stateLoaded": "Savestate {n} geladen",
   "play.stateReadFailed": "Slot {n} konnte nicht gelesen werden",
   "play.stateSaveFailed": "Savestate {n} konnte nicht gespeichert werden",
