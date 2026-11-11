@@ -197,6 +197,24 @@
    "mapIdOffset": "0x144C",
    "table": "dp",
    "source": "as diamond_us"
+  },
+  "firered_eu": {
+   "gen": 3,
+   "kind": "gen3",
+   "mapHeaderAddr": "0x02036DFC",
+   "source": "gMapHeader 0x02036DFC: same as firered_us (EWRAM; pokebot-gen3 pokefirered.yml has no D/F/I/S override, Ironmon-Tracker Feuerrote.json gMapHeader 0x02036DFC)",
+   "musicAddr": "0x03000FC0",
+   "musicSize": 2,
+   "musicSource": "sCurrentMapMusic of firered_us – inferred, not in either table: it sits 0x18 after sSaveDialogDelay (0x03000FA8), which Ironmon-Tracker lists unchanged for D/F/I/S, while the 0xB0 IWRAM shift shows from gMain on. A wrong value only makes the turbo music fall back to the map's song."
+  },
+  "leafgreen_eu": {
+   "gen": 3,
+   "kind": "gen3",
+   "mapHeaderAddr": "0x02036DFC",
+   "source": "gMapHeader 0x02036DFC: same as leafgreen_us (EWRAM; pokebot-gen3 pokeleafgreen.yml has no D/F/I/S override, Ironmon-Tracker Feuerrote.json gMapHeader 0x02036DFC)",
+   "musicAddr": "0x03000FC0",
+   "musicSize": 2,
+   "musicSource": "sCurrentMapMusic of leafgreen_us – inferred, not in either table: it sits 0x18 after sSaveDialogDelay (0x03000FA8), which Ironmon-Tracker lists unchanged for D/F/I/S, while the 0xB0 IWRAM shift shows from gMain on. A wrong value only makes the turbo music fall back to the map's song."
   }
  },
  "tables": {

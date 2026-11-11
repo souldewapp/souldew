@@ -153,8 +153,26 @@ Absolute GBA bus addresses. EWRAM `0x02000000` (256 KiB), IWRAM `0x03000000` (32
 | Rubin/Saphir **German** rev 0/1 (`AXVD`/`AXPD`) | `0x03004360` | `0x03004370` | `0x030045D0` | `0x03001770` | `pokeruby_de.sym:615,616,618,526` |
 | Emerald (`BPEE`) | `0x020244E9` EWRAM | `0x020244EC` EWRAM | `0x02024744` | `0x030022C0` | `pokeemerald.sym:200,202,203,894` |
 | FireRed/LeafGreen rev 0/1 (`BPRE`/`BPGE`) | `0x02024029` | `0x02024284` | `0x0202402C` | `0x030030F0` | `pokefirered.sym:158,161,160,745` (rev1 and LeafGreen identical) |
+| FireRed/LeafGreen **German, French, Italian, Spanish** (`BPRD/F/I/S`, `BPGD/F/I/S`) | `0x02024029` | `0x02024284` | `0x0202402C` | `0x03003040` | no pret build – see below |
 
 **Revisions:** Ruby/Sapphire rev 0, 1 and 2 have identical addresses for every symbol used here, and so do FRLG rev 0 and 1. The generator asserts this across all sym files. German R/S are shifted by +0x10. There are **no German Emerald/FRLG symbols**: the pokeemerald `multi-language` branch has only `rom_es/fr/it.sha1`, and pokefirered has no German build. Use the scan fallback below for those.
+
+**Other-language FireRed/LeafGreen** (`firered_eu` / `leafgreen_eu`, souldew 2.3.1): two trackers that run on those ROMs
+list the same layout – EWRAM exactly as in the English game, IWRAM from `gMain` on `0xB0` lower:
+- pokebot-gen3 `modules/data/symbols/patches/language/pokefirered.yml` / `pokeleafgreen.yml` override, for D/F/I/S, only
+  IWRAM symbols: `gMain` `0x03003040`, `gSaveBlock1Ptr` `0x03004F58`, `gSaveBlock2Ptr` `0x03004F5C`,
+  `gPokemonStoragePtr` `0x03004F60`, `gBattleMainFunc`, `gTasks`, `gBattleResults`, `gRngValue` (all −0xB0). `gPlayerParty`,
+  `gPlayerPartyCount`, `gEnemyParty`, `gBattleTypeFlags`, `gBattleMons`, `gBattlerPartyIndexes`, `gMapHeader` only get a
+  Japanese override – the European ROMs use the base `.sym` address.
+- Ironmon-Tracker `GameAddresses/Pokemon Feuerrote|Rouge Feu|Rosso Fuoco|Rojo Fuego.json`: `pstats` `0x02024284`,
+  `estats` `0x0202402C`, `gPlayerPartyCount` `0x02024029`, `gBattleMons` `0x02023BE4`, `gBattlerPartyIndexes`
+  `0x02023BCE`, `gBattleTypeFlags` `0x02022B4C`, `gMapHeader` `0x02036DFC` (= English), `gSaveBlock1ptr` `0x03004F58`
+  (−0xB0); `sSaveDialogDelay` `0x03000FA8` unchanged. `GameSettings.lua`: "IWRAM addresses are the same between all
+  english versions of a game, and between all non-english versions"; all four have software version 0.
+
+So in battle = `0x03003479 & 0x02`. `sCurrentMapMusic` (`0x03000FC0`) is in neither table; it is kept (it sits
+0x18 after the unchanged `sSaveDialogDelay`) – a wrong value would only make the turbo music fall back to the map's
+song. Not yet checked in a running game (no such ROM in the test set).
 
 **In battle:** `gMain.inBattle` is bit 1 of the byte at `gMain + 0x439` (E/FRLG) or `gMain + 0x43D` (R/S) (`include/main.h` `struct Main`: `/*0x439*/ u8 oamLoadDisabled:1; u8 inBattle:1;`). That gives:
 - Emerald `0x030026F9 & 0x02`

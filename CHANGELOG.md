@@ -4,6 +4,11 @@
 
 ## 2.3.1
 
+- **German, French, Italian and Spanish FireRed/LeafGreen are read live** (Feuerrote/Blattgrüne, Rouge Feu/Vert
+  Feuille, Rosso Fuoco/Verde Foglia, Rojo Fuego/Verde Hoja – also randomized): they showed "No live data for this
+  game". Their memory layout is now in the table – the team, battles, the place sign and the Rare Candy cheat. The
+  addresses come from two trackers that run on these versions and agree; no such ROM was at hand to check them in a
+  running game, so please report it if something looks off.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged

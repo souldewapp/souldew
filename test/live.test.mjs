@@ -123,6 +123,32 @@ test('Gen 3 (FireRed): encrypted party struct', () => {
   assert.ok(parsePk3(bad, T).bad);
 });
 
+test('Gen 3 FireRed/LeafGreen in German, French, Italian and Spanish: their own table entry, the English EWRAM layout', () => {
+  for (const code of ['BPRD', 'BPRF', 'BPRI', 'BPRS', 'BPGD', 'BPGF', 'BPGI', 'BPGS']) {
+    const e = findEntry(TABLE, { platform: 'gba', code });
+    assert.equal(e?.id, code[2] === 'R' ? 'firered_eu' : 'leafgreen_eu', code);
+    assert.ok(!e.scanOnly, code);
+  }
+  // the English ROMs keep theirs
+  assert.equal(findEntry(TABLE, { platform: 'gba', code: 'BPGE' }).id, 'leafgreen_us');
+  const us = findEntry(TABLE, { platform: 'gba', code: 'BPGE' });
+  const de = findEntry(TABLE, { platform: 'gba', code: 'BPGD' }); // the issue's ROM: "POKEMON LEAF", BPGD
+  // EWRAM as in the English game (pokebot-gen3 language patches, Ironmon-Tracker Feuerrote.json …)
+  for (const k of ['partyCountAddr', 'partyAddr', 'enemyPartyAddr', 'battleTypeFlagsAddr']) assert.equal(de[k], us[k], k);
+  assert.deepEqual(de.liveBattleHp.battleMonsAddr, us.liveBattleHp.battleMonsAddr);
+  // IWRAM from gMain on 0xB0 lower: gMain 0x03003040 + 0x439
+  assert.equal(de.inBattle.addr, '0x03003479');
+  assert.equal(parseInt(us.inBattle.addr, 16) - parseInt(de.inBattle.addr, 16), 0xb0);
+  assert.deepEqual([de.saveBlockPtrs.sb1, de.saveBlockPtrs.sb2], ['0x03004F58', '0x03004F5C']);
+  // the party reads like the English one
+  const m = memory();
+  m.write(0x02024029, [1]);
+  m.write(0x02024284, pk3({ pid: 0x0badf00d, otId: 0xbeefcafe, internal: 1, nick: 'BISASAM', level: 5, hp: 20, maxHp: 21, met: 88 }));
+  const r = readLiveParty(de, m.read, T);
+  assert.deepEqual(r.party.map((x) => [x.species, x.nickname, x.level, x.hp, x.maxHp, x.metLocation]), [[1, 'BISASAM', 5, 20, 21, 88]]);
+  assert.deepEqual(regionsFor(de), regionsFor(us));
+});
+
 test('Gen 4 (HeartGold): party via save-data pointer', () => {
   const e = findEntry(TABLE, { platform: 'nds', code: 'IPKE' });
   const m = memory();

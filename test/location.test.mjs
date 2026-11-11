@@ -82,6 +82,9 @@ test('Gen 3: gMapHeader.regionMapSectionId = the met-location MAPSEC', () => {
   assert.equal(em(hdr(0xd5)), null, 'MAPSEC_NONE');
   const fr = readLocation(maps, 'firered_us', bus({ 0x02036dfc: hdr(88) }));
   assert.equal(name(fr), 'Pallet Town');
+  // German / French / Italian / Spanish FireRed/LeafGreen: the same gMapHeader (EWRAM)
+  assert.equal(name(readLocation(maps, 'leafgreen_eu', bus({ 0x02036dfc: hdr(88) })), 'de'), 'Alabastia');
+  assert.equal(name(readLocation(maps, 'firered_eu', bus({ 0x02036dfc: hdr(88) }))), 'Pallet Town');
   assert.equal(name(readLocation(maps, 'ruby_de', bus({ 0x0202e828: hdr(0) })), 'de'), 'Wurzelheim');
 });
 

@@ -155,6 +155,9 @@ test('Gen 3 Emerald / FireRed: through the save block pointers, quantities XOR t
     BPEE: { sb1Ptr: 0x03005d8c, sb2Ptr: 0x03005d90, keyOff: 0xac, money: 0x490, items: 0x560, balls: 0x650 },
     BPRE: { sb1Ptr: 0x03005008, sb2Ptr: 0x0300500c, keyOff: 0xf20, money: 0x290, items: 0x310, balls: 0x430 },
     BPGE: { sb1Ptr: 0x03005008, sb2Ptr: 0x0300500c, keyOff: 0xf20, money: 0x290, items: 0x310, balls: 0x430 },
+    // the German, French, Italian and Spanish FireRed/LeafGreen: same save blocks, pointers 0xB0 lower in IWRAM
+    BPGD: { sb1Ptr: 0x03004f58, sb2Ptr: 0x03004f5c, keyOff: 0xf20, money: 0x290, items: 0x310, balls: 0x430 },
+    BPRS: { sb1Ptr: 0x03004f58, sb2Ptr: 0x03004f5c, keyOff: 0xf20, money: 0x290, items: 0x310, balls: 0x430 },
   };
   for (const [code, L] of Object.entries(layouts)) {
     const e = entry({ platform: 'gba', code });
