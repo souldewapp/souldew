@@ -4,6 +4,13 @@
 
 ## 2.3.1
 
+- **When a game runs too slowly on your computer, the play view now says so and what helps** (#4 – Platinum lagged
+  and crackled in the built-in emulator while the melonDS app ran it fine): the built-in emulator runs the whole DS on
+  one processor core, without the tricks the melonDS app uses, and Platinum's overworld needs ~12–14 ms per frame
+  even on an M1 – of the 16.7 ms a frame may take. A slower PC then plays at half speed, and the sound crackles
+  because only half of it gets made. If a game stays clearly below full speed for about ten seconds, a note under the
+  game shows how fast it really runs and what helps: the melonDS app for DS games (one click in Settings ›
+  Emulators, the run syncs on every in-game save), another graphics backend on Windows and Linux, and power settings.
 - **A USB microphone or headset no longer takes the controller's place** (#2): on Windows some of them show up as a
   game controller, and when one was listed first, souldew used it and the real controller (a PS5 controller in the
   report) pressed nothing in the game. souldew now picks the controller itself – a real one, skipping microphones,

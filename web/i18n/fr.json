@@ -2182,5 +2182,14 @@
   "trophy.unlocked": "Succès débloqué",
   "play.liveHack": "Pas encore pris en charge pour ce hack",
   "play.liveHackRun": "Ce hack de ROM tourne sur un moteur étendu (nouveaux numéros de Pokémon et autre organisation de la mémoire) que souldew ne sait pas encore lire de façon fiable – il n’affiche donc rien plutôt que de faux Pokémon. Le run fonctionne quand même : saisis les captures à la main.",
-  "play.liveHackSolo": "Ce hack de ROM tourne sur un moteur étendu (nouveaux numéros de Pokémon et autre organisation de la mémoire) que souldew ne sait pas encore lire de façon fiable – il n’affiche donc rien plutôt que de faux Pokémon."
+  "play.liveHackSolo": "Ce hack de ROM tourne sur un moteur étendu (nouveaux numéros de Pokémon et autre organisation de la mémoire) que souldew ne sait pas encore lire de façon fiable – il n’affiche donc rien plutôt que de faux Pokémon.",
+  "play.slowTitle": "Cet ordinateur ne fait tourner le jeu qu’à environ {pct} % de sa vitesse",
+  "play.slowWhyDs": "C’est pour ça que l’image saccade et que le son grésille. L’émulateur intégré calcule toute la DS sur un seul cœur du processeur et ne peut pas aller plus vite ici – la limite, c’est ton ordinateur, pas un réglage.",
+  "play.slowWhy": "C’est pour ça que l’image saccade et que le son grésille. L’émulateur intégré calcule la console sur un seul cœur du processeur et ne peut pas aller plus vite ici.",
+  "play.slowExternal": "Joue avec l’application melonDS : elle fait tourner les jeux DS à pleine vitesse sur des ordinateurs bien moins puissants. Paramètres › Émulateurs l’installe en un clic – ta partie se synchronise à chaque sauvegarde dans le jeu.",
+  "play.slowExternalReady": "Joue avec l’application melonDS (installée) : elle fait tourner les jeux DS à pleine vitesse sur des ordinateurs bien moins puissants. Choisis-la dans Paramètres › Émulateurs – ta partie se synchronise à chaque sauvegarde dans le jeu.",
+  "play.slowGraphics": "Essaie une autre interface graphique dans Paramètres › Général (actuellement : {backend}) – sur certains PC, l’émulateur ne tourne de façon fluide qu’avec l’une d’elles.",
+  "play.slowPower": "Sur un portable : branche-le sur secteur et choisis le mode d’alimentation « meilleures performances ». Ferme les autres programmes qui occupent l’ordinateur.",
+  "play.slowSettings": "Ouvrir les paramètres",
+  "play.slowOk": "Compris"
 }

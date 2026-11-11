@@ -694,6 +694,13 @@ details.group details.group { margin: 0 14px 8px; }
 /* "set: 4×" when the computer can't keep up: a small tag above the number, so the bar never changes width (and wraps) */
 .session-bar .speed-real { position: absolute; left: 50%; bottom: calc(100% + 7px); transform: translateX(-50%); white-space: nowrap; padding: 1px 6px;
   border-radius: 999px; background: #141318; box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn) 45%, transparent), 0 4px 10px #0008; line-height: 15px; pointer-events: none; }
+/* "this computer runs the game at only about 52 %" (play.mjs SlowNotice): a calm card under the bar, in the warn colour */
+.slow-note { align-self: center; width: min(100%, 640px); display: grid; gap: 6px; padding: 10px 12px 10px 14px; border-radius: var(--r-m);
+  background: var(--shell-3); border: 1px solid var(--edge); border-left: 3px solid var(--warn); color: var(--ink-2); }
+.slow-note .slow-head { gap: 8px; color: var(--ink); }
+.slow-note .slow-head svg { color: var(--warn); flex: none; }
+.slow-note .slow-head .btn.icon { width: 26px; height: 26px; min-width: 26px; padding: 0; }
+.slow-tips { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 .session-side { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
 /* the popover hangs off the whole bar (right edge), not the button – so it never sticks out of a narrow game column */
 .sound-wrap { display: inline-flex; }

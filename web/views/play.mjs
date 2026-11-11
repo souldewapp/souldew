@@ -1,7 +1,7 @@
 import { html, useState, useEffect, useRef, useCallback } from '/vendor/htm-preact.mjs';
 import { useApp, Led, saveDiagnostics, copy } from '../lib/ui.mjs';
 import { bridgeState } from '../lib/livebridge.mjs';
-import { IS_MAC, IS_WIN } from '../lib/platform.mjs';
+import { IS_MAC, IS_WIN, PLATFORM } from '../lib/platform.mjs';
 import { diag } from '../lib/diag.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, ago } from '../lib/i18n.mjs';
@@ -22,6 +22,9 @@ import { RulesTab } from './board.mjs';
 import { CartInsert } from './cartinsert.mjs';
 import { play as playCue } from '../lib/sound.mjs';
 import { addSample, typicalReach, offeredSteps, beyondReach, HELD } from '../lib/reach.mjs';
+import { SlowWatch, slowTips } from '../lib/slowdown.mjs';
+import { gpuBackends } from '/shared/gpu.mjs';
+import { GPU_LABELS } from './settings.mjs';
 
 let TABLES = null;
 async function liveTables() {
@@ -193,6 +196,7 @@ export function GameSession({ session, mode }) {
   const [soundOpen, setSoundOpen] = useState(false);
   const [cheatOpen, setCheatOpen] = useState(false);
   const [confirmCheat, setConfirmCheat] = useState(false);
+  const [slow, setSlow] = useState(null); // { reached, tips } – this computer can't hold full speed (lib/slowdown.mjs)
   const [cheatGame, setCheatGame] = useState(false); // this game's bag layout is known (shared/live/cheats.mjs)
   const liveRef = useRef({ entry: null, state: null }); // the live reader's game entry and state – the cheats find the bag with them
   const [layout, setLayoutState] = useState(() => ls.get('sl-ds-layout', 'tb')); // tb | lr
@@ -871,27 +875,40 @@ export function GameSession({ session, mode }) {
     if (phase === 'running') emu()?.setFullTurbo?.(fullTurbo);
   }, [phase, fullTurbo]);
 
-  // DS on a slower computer: when DeSmuME can't hold full speed at 1× for a while, let it skip every other
-  // frame's rendering (the game itself keeps its speed and timing). Stays on for this session.
+  // A slower computer: measured every 2 s at 1×. DeSmuME first skips every other frame's rendering once it can't hold
+  // 55 fps for a while (the game itself keeps its speed and timing; stays on for this session). When the game still
+  // runs clearly below full speed for ~10 s, the play view says so and what helps (lib/slowdown.mjs, issue #4: Platinum
+  // at half speed with crackling sound on a player's PC – the core itself was too slow there, ~30 ms per frame).
   useEffect(() => {
-    if (phase !== 'running' || core !== 'desmume') return undefined;
+    if (phase !== 'running') return undefined;
     let last = null;
-    let slow = 0;
-    let done = false;
+    let skipSlow = 0;
+    let skipped = false;
+    const watch = new SlowWatch();
     const id = setInterval(() => {
       const e = emu();
-      if (done || !e?.ready || !e.frames || e.paused?.() || speedRef.current !== 1 || document.hidden) {
+      if (!e?.ready || !e.frames || e.paused?.() || speedRef.current !== 1 || document.hidden) {
         last = null;
+        watch.reset();
         return;
       }
       const now = { f: e.frames(), t: performance.now() };
       if (last && now.t > last.t) {
         const fps = (now.f - last.f) / ((now.t - last.t) / 1000);
-        slow = fps < 55 ? slow + 1 : 0;
-        if (slow >= 3) {
-          done = true;
-          e.setOption?.('desmume_frameskip', '1'); // (for 1× – fast-forward has its own, see player.html applySkip)
-          flash(t('play.frameskipOn', 'Smoother play: frame skipping on'));
+        if (core === 'desmume' && !skipped) {
+          skipSlow = fps < 55 ? skipSlow + 1 : 0;
+          if (skipSlow >= 3) {
+            skipped = true;
+            watch.reset(); // give the frame skipping its chance first
+            e.setOption?.('desmume_frameskip', '1'); // (for 1× – fast-forward has its own, see player.html applySkip)
+            flash(t('play.frameskipOn', 'Smoother play: frame skipping on'));
+          }
+        }
+        if (watch.add(fps)) {
+          const reached = watch.reached();
+          const tips = slowTips({ system: target.system, backends: window.sls ? gpuBackends(PLATFORM) : [] });
+          setSlow({ reached, tips });
+          diag('perf', { type: 'slow', reached, core: core || e.system?.() || null, tips });
         }
       }
       last = now;
@@ -1127,6 +1144,7 @@ export function GameSession({ session, mode }) {
           </span>
           ${btn(fs ? 'shrink' : 'full', (fs ? t('play.exitFullscreen', 'Leave fullscreen') : t('keys.fullscreen', 'Fullscreen game')) + ' (F)', actions.fullscreen)}
         </div>
+        ${slow && mode === 'full' && html`<${SlowNotice} slow=${slow} isDs=${isDs} onClose=${() => { setSlow(null); focusGame(); }} />`}
         ${statesOpen && mode === 'full' && html`<${StatePanel} id=${target.stateId} core=${core} gen=${GEN[target.system]} version=${statesVer} selected=${sel}
           onClose=${closeStates} onSave=${(n) => actions.quicksave(n)} onLoad=${(n) => { setStatesOpen(false); actions.quickload(n); }} />`}
       </div>
@@ -1159,6 +1177,33 @@ export function GameSession({ session, mode }) {
     <${RulesDrawer} open=${rulesOpen && mode === 'full'} onClose=${() => { setRulesOpen(false); focusGame(); }} RulesTab=${RulesTab} />
     ${mode === 'mini' && html`<button class="mini-open" onClick=${(e) => { e.currentTarget.blur(); actions.expand(); }} aria-label=${t('play.backToGameNamed', 'Back to the game: {name}', { name: target.label })}>
       <span class="mini-open-label"><${Icon} name="play" size=${14} />${t('play.backToGame', 'Back to the game')}</span></button>`}
+  </div>`;
+}
+
+/**
+ * The game runs clearly below full speed at 1× on this computer (lib/slowdown.mjs): how fast it really runs, why it
+ * stutters and crackles, and what helps – the melonDS app for DS games, another graphics backend, power settings.
+ */
+function SlowNotice({ slow, isDs, onClose }) {
+  const { navigate, status } = useApp();
+  const backend = GPU_LABELS()[status?.config?.gpuBackend || 'auto'] || status?.config?.gpuBackend;
+  const melon = status?.emulators?.melonds;
+  const tip = {
+    external: melon?.installed
+      ? t('play.slowExternalReady', 'Play with the melonDS app (installed): it runs DS games at full speed on much weaker computers. Pick it under Settings › Emulators – your run syncs on every in-game save.')
+      : t('play.slowExternal', 'Play with the melonDS app: it runs DS games at full speed on much weaker computers. Settings › Emulators installs it with one click – your run syncs on every in-game save.'),
+    graphics: t('play.slowGraphics', 'Try another graphics backend in Settings › General (now: {backend}) – on some PCs the emulator only runs smoothly with one of them.', { backend }),
+    power: t('play.slowPower', 'On a laptop: plug it in and choose the best-performance power mode. Close other programs that keep the computer busy.'),
+  };
+  const pct = Math.round((slow.reached || 0) * 100);
+  return html`<div class="note slow-note" role="status">
+    <div class="row nowrap slow-head"><${Icon} name="signal" size=${16} /><b class="grow">${t('play.slowTitle', 'This computer runs the game at only about {pct} % of its speed', { pct })}</b>
+      <button class="btn icon ghost" title=${t('common.close', 'Close')} aria-label=${t('common.close', 'Close')} onClick=${onClose}><${Icon} name="close" size=${14} /></button></div>
+    <span class="small">${isDs ? t('play.slowWhyDs', 'That’s why it stutters and the sound crackles. The built-in emulator runs the whole DS on one processor core and can’t go faster here – your computer is the limit, not a setting.')
+      : t('play.slowWhy', 'That’s why it stutters and the sound crackles. The built-in emulator runs the console on one processor core and can’t go faster here.')}</span>
+    <ul class="small slow-tips">${slow.tips.map((k) => html`<li>${tip[k]}</li>`)}</ul>
+    <div class="row">${(slow.tips.includes('external') || slow.tips.includes('graphics')) && html`<button class="btn small" onClick=${() => navigate('settings')}><${Icon} name="gear" size=${14} />${t('play.slowSettings', 'Open Settings')}</button>`}
+      <button class="btn small ghost" onClick=${onClose}>${t('play.slowOk', 'Got it')}</button></div>
   </div>`;
 }
 
