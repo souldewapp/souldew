@@ -167,8 +167,11 @@ test('code expires: a waiting partner is told, and so is one who comes later whi
   const broker = fakeMqtt();
   const { host } = await hostOn(broker, { ttl: 1500, linger: 3000 });
   const g = guest(broker, host.code);
-  await until(() => host.state.phase === 'request');
-  await assert.rejects(g.promise, { code: 'expired' });
+  // expect the rejection right away: it can land while we still wait for the request (a slow machine), and an
+  // unawaited rejection would fail the test on its own
+  const told = assert.rejects(g.promise, { code: 'expired' });
+  await until(() => ['request', 'expired'].includes(host.state.phase));
+  await told;
   assert.equal(host.state.phase, 'expired');
   // somebody types the code after the 15 minutes: "expired", not "nobody answered – check the digits"
   await assert.rejects(guest(broker, host.code, { noHostMs: 2000 }).promise, { code: 'expired' });
