@@ -106,7 +106,7 @@ export function progression(doc, manifest) {
   } else {
     list = [{ kind: 'area', key: 'starter', name: t('area.starter', 'Starter'), met: [], special: 'starter' }];
   }
-  const dynamic = Object.entries(custom).map(([key, a]) => ({ kind: 'area', key, name: a.name, met: a.met || [], custom: !a.auto, order: a.order || 0, after: a.after }));
+  const dynamic = Object.entries(custom).map(([key, a]) => ({ kind: 'area', key, name: numberedAreaName(key, a) || a.name, met: a.met || [], custom: !a.auto, order: a.order || 0, after: a.after }));
   for (const item of dynamic.sort((a, b) => a.order - b.order)) {
     if (item.after) {
       const idx = list.findIndex((x) => x.key === item.after);
@@ -118,6 +118,29 @@ export function progression(doc, manifest) {
     if (!list.some((x) => x.key === item.key)) list.push(item);
   }
   return list;
+}
+
+/**
+ * A catch filed under its place number ("#45") because the place's name wasn't known then – Black/White and Black 2/
+ * White 2 before 2.3.0 (no names at all), or a catch read before the ROM's own names had loaded: its name now, from the
+ * ROM's names or the tables. null when the area has a real name or the place is still unknown.
+ */
+function numberedAreaName(key, a) {
+  const m = /^m(\d)-(\d+)$/.exec(key);
+  if (!m || !a?.auto || !(a.name === `#${m[2]}` || !a.name)) return null;
+  const name = locationName(Number(m[1]), Number(m[2]));
+  return name && name !== `#${m[2]}` ? name : null;
+}
+
+/**
+ * Gives such numbered areas their place name in the run document, so every player sees it – also the partners whose
+ * app doesn't know this game's names (it's read from the player's own ROM). Called with each live snapshot.
+ */
+export function nameNumberedAreas(doc) {
+  for (const [k, a] of Object.entries(doc.scan('area:'))) {
+    const name = numberedAreaName(k, a);
+    if (name) doc.set(`area:${k}`, { ...a, name });
+  }
 }
 
 /** Area key for a catch location; creates a dynamic area entry when needed. */
@@ -745,6 +768,7 @@ export function applySnapshot(doc, manifest, gen, slot, snap, { auto = true, rd 
   if (snap.source === 'save' && was?.source === 'live' && Date.now() - (was.at || 0) < LIVE_FRESH) {
     return { inbox: [], alerts: [], newCatches: [], deaths: [], failed: null };
   }
+  if (snap.source === 'live' && !profileOf(manifest).curated) nameNumberedAreas(doc);
   const r = rules(doc, manifest);
   const solo = runMode(manifest) === 'nuzlocke';
   const statusBefore = doc.get('run:status', null);
