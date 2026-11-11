@@ -434,7 +434,7 @@ function NewRun({ gameId, hackId, from, mode: sectionMode }) {
   const { status, navigate, reloadStatus, setRunId, setMe } = useApp();
   const { roms, patchesFor, preferredPatch } = useGameChoices(gameId || null, hackId);
   // `from`: restart of an old run – same game, hack, settings, mode and players; seeds stay fresh.
-  const [romId, setRomId] = useState(() => (from && roms.find((r) => r.crc === from.base?.crc))?.id || (hackId && !roms.some((r) => preferredPatch(r)) && roms.find((r) => r.hackId === hackId))?.id || (!hackId && roms.find((r) => !r.hackId))?.id || roms[0]?.id || null);
+  const [romId, setRomId] = useState(() => (from && roms.find((r) => r.crc === from.base?.crc))?.id || (hackId && !roms.some((r) => preferredPatch(r)) && roms.find((r) => r.hackId === hackId))?.id || (!hackId && roms.find((r) => !r.hackId))?.id || (hackId && roms.find((r) => preferredPatch(r)))?.id || roms[0]?.id || null);
   const rom = roms.find((r) => r.id === romId) || roms[0];
   const [patchId, setPatchId] = useState(() => (from ? (from.patch ? (patchesFor(rom).find((p) => p.sha1 && p.sha1 === from.patch.sha1) || preferredPatch(rom))?.id || null : null) : preferredPatch(rom)?.id || null));
   const [inspect, setInspect] = useState(null);

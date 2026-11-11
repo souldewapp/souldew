@@ -271,10 +271,10 @@ function pk3Run(ram, o, T, state = null) {
     // (a struct the game is writing right now, or a slot shown twice while the menu swaps two: torn, read again)
     if (!validPk3(m) || pids.includes(pid)) {
       if (state && !pids.includes(pid) && m?.bad) {
-        const sig = `${n}:${Array.prototype.join.call(d.subarray(0, 32), ',')}`;
-        state.runBadSeen = state.runBadSig === sig ? (state.runBadSeen || 0) + 1 : 1;
-        state.runBadSig = sig;
-        if (state.runBadSeen >= 3) {
+        const sig = Array.prototype.join.call(d.subarray(0, 32), ',');
+        const seen = state.runBad || (state.runBad = {});
+        seen[n] = seen[n]?.sig === sig ? { sig, n: seen[n].n + 1 } : { sig, n: 1 };
+        if (seen[n].n >= 3) {
           pids.push(pid);
           continue;
         }
@@ -324,7 +324,7 @@ function findGen3Party(read, T, state, hint = null) {
   // after it – a run of structs that goes on is some other array)
   const at = hint?.player;
   if (at >= 0x02000000 && at + 600 <= 0x02040000) {
-    const r = pk3Run(ram, at - 0x02000000, T);
+    const r = pk3Run(ram, at - 0x02000000, T, state);
     if (r.n >= 1 && r.empty) {
       Object.assign(state, { count3: null, enemy3: hint.enemy });
       return (state.party3 = at);
@@ -379,10 +379,11 @@ function readGen3(entry, read, T, state = {}) {
     if (m.bad) {
       // A checksum mismatch is normally a read while the game writes the struct ("torn") – try again next poll.
       // The very same bytes failing for several polls is a Bad Egg: skip that slot instead of stopping tracking.
-      const sig = `${i}:${Array.prototype.join.call(slot.subarray(0, 32), ',')}`;
-      state.badSeen = state.badSig === sig ? (state.badSeen || 0) + 1 : 1;
-      state.badSig = sig;
-      if (state.badSeen < 3) return { torn: true };
+      // (one counter per slot: two Bad Eggs at once don't reset each other)
+      const sig = Array.prototype.join.call(slot.subarray(0, 32), ',');
+      const seen = state.bad3 || (state.bad3 = {});
+      seen[i] = seen[i]?.sig === sig ? { sig, n: seen[i].n + 1 } : { sig, n: 1 };
+      if (seen[i].n < 3) return { torn: true };
       continue;
     }
     if (m.level < 1 || m.level > 100 || m.hp > m.maxHp) return { invalid: true };

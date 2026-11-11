@@ -189,6 +189,19 @@ test('TMT2: the team without a count byte in front, the Tera type masked off, th
   let last = null;
   for (let i = 0; i < 6; i++) last = readLiveParty(entry, read, T, state);
   assert.deepEqual(last.party.map((m) => m.species), [390], 'the Bad Egg is left out, the rest of the team is read');
+  // after a restart (fresh state) the team is found again despite the Bad Egg
+  const fresh = {};
+  for (let i = 0; i < 6; i++) {
+    fresh.lastScan3 = 0; // (the app searches again every 3 s)
+    last = readLiveParty(entry, read, T, fresh);
+  }
+  assert.equal(fresh.party3, 0x02032c94, 'found after a restart');
+  assert.deepEqual(last.party.map((m) => m.species), [390]);
+  // two Bad Eggs at once: each slot keeps its own count – the team is still read
+  put(0x02032c94 + 200, [...pk3x({ pid: 0x0e0e0e0e, otId: ME, species: 656, level: 3, hp: 15, maxHp: 15 })]);
+  mem.set(0x02032c94 + 200 + 28, (mem.get(0x02032c94 + 200 + 28) + 1) & 0xff);
+  for (let i = 0; i < 8; i++) last = readLiveParty(entry, read, T, state);
+  assert.deepEqual(last.party.map((m) => m.species), [390], 'two Bad Eggs: both left out');
 });
 
 test('the disk cache gives back every field romDataFor finds – the own types too (lost after a restart before)', async () => {
