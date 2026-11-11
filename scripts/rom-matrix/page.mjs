@@ -323,6 +323,40 @@ function helper() {
         e.write(at, Uint8Array.from(bytes));
         log.push({ do: 'poke', addr: at, n: bytes.length, note: s.note });
         continue;
+      } else if (s.do === 'give' && s.pocketPtr) {
+        // an engine with a bag of its own (Complete FireRed Upgrade keeps it outside SaveBlock1): gBagPockets[s.pocket]
+        // at s.pocketPtr = { item slots pointer, capacity (u16) }; the item goes onto its own slot or the first free one
+        // (quantity XOR the key at SaveBlock2 + s.keyOff when given – 0 in Radical Red)
+        await ensureRam();
+        const u32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+        const at = parseInt(s.pocketPtr, 16) + (s.pocket ?? 2) * 8;
+        const pk = e.read(at, 8);
+        const slots = u32(pk, 0);
+        const cap = pk[4] | (pk[5] << 8);
+        const item = s.item === 'ball' ? 4 : s.item;
+        let key = 0;
+        if (s.keyOff) {
+          const sb2 = u32(e.read(parseInt(s.sb2Ptr || '0x0300500C', 16), 4), 0);
+          key = u32(e.read(sb2 + parseInt(s.keyOff, 16), 4), 0) & 0xffff;
+        }
+        let r = { error: 'no free slot' };
+        if (slots >= 0x02000000 && slots < 0x02040000 && cap > 0 && cap < 1000) {
+          const b = e.read(slots, cap * 4);
+          for (let i = 0; i < cap; i++) {
+            const id = b[i * 4] | (b[i * 4 + 1] << 8);
+            if (id && id !== item) continue;
+            const q = ((s.count || 5) ^ key) & 0xffff;
+            e.write(slots + i * 4, Uint8Array.from([item & 0xff, item >> 8, q & 0xff, q >> 8]));
+            r = { slot: i, at: slots + i * 4 };
+            break;
+          }
+        } else r = { error: `no pocket at ${at.toString(16)}` };
+        log.push({ do: 'give', item, result: r, required: s.required !== false, ok: !r.error });
+        if (r.error && s.required !== false) {
+          shots.push(await shot(`fail-${log.length}`));
+          break;
+        }
+        continue;
       } else if (s.do === 'give') {
         // items into the bag (shared/live/cheats.mjs addItem) – Poké Balls for a catch early in the game
         await ensureRam();

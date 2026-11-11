@@ -23,6 +23,7 @@
 //   --attempts n  tries per game when a plan loses its way (default 3)
 //   --show        show the emulator windows (they stay muted)
 //   --plan <json> play this plan file instead of the game's own (with --only: a probe for one game)
+//   --saves <dir> where saves for the plans that start from one are, too: <patch or ROM name>.sav or <hack id>.sav
 // Zipped ROMs are unpacked one at a time when they are needed and deleted again right after (a DS ROM is up to 512 MB);
 // the same ROM found twice (the same CRC32) is checked once.
 // A plan with "save": true starts from a save instead of a new game: <name>.sav next to the patch (or the ROM) of the
@@ -47,7 +48,7 @@ const opt = (n, d = null) => {
 };
 // ROM folders (or single files): every argument that is neither an option nor an option's value (any order – `npm run
 // matrix -- <dir>` puts them after --live)
-const VALUED = new Set(['--only', '--out', '--tools', '--attempts', '--plan']);
+const VALUED = new Set(['--only', '--out', '--tools', '--attempts', '--plan', '--saves']);
 const sources = [];
 for (let i = 0; i < args.length; i++) {
   if (VALUED.has(args[i])) i++;
@@ -321,7 +322,9 @@ async function runLive(list) {
   // (a plan that starts from a save: <name>.sav next to the patch or the ROM)
   const saveFor = (r) => {
     const p = r.patch ? patches.find((x) => x.name === r.patch) : null;
-    const near = [p && join(dirname(p.file), `${basename(p.file, extname(p.file))}.sav`), join(dirname(r.file), `${basename(r.file, extname(r.file))}.sav`)];
+    const saves = opt('saves') ? resolve(opt('saves')) : null;
+    const near = [p && join(dirname(p.file), `${basename(p.file, extname(p.file))}.sav`), join(dirname(r.file), `${basename(r.file, extname(r.file))}.sav`),
+      saves && p && join(saves, `${basename(p.name, extname(p.name))}.sav`), saves && join(saves, `${basename(r.name, extname(r.name))}.sav`), saves && r.hack && join(saves, `${r.hack}.sav`)];
     return near.find((f) => f && existsSync(f)) || null;
   };
   const override = opt('plan') ? JSON.parse(readFileSync(resolve(opt('plan')), 'utf8')) : null;
@@ -432,10 +435,13 @@ function judge(r, plan, x) {
       verdict.notes.push(`${c.name}: place "${shown}"`);
     }
     if (exp.catch) {
-      // a real catch: a second Pokémon in the team, filed by the app's run logic under the area the plan names
+      // a real catch: a Pokémon that wasn't in the first team read (a second one – or a full team's sixth after the plan
+      // made room), filed by the app's run logic under the area the plan names (area: true – the place the sign shows)
       const encs = (c.run?.encounters || []).filter((x) => x.area !== 'starter');
-      const mon = team?.party?.[1];
-      const hit = encs.find((x) => x.name === exp.catch.area && (!mon || x.species === mon.species));
+      const firstKeys = new Set((checks.find((k) => k.team?.party?.length)?.team.party || []).map((m) => m.key));
+      const mon = team?.party?.find((m) => !firstKeys.has(m.key)) || null;
+      const area = exp.catch.area === true ? c.place?.shown : exp.catch.area;
+      const hit = encs.find((x) => x.name === area && (!mon || x.species === mon.species));
       verdict.catch = verdict.catch === false ? false : !!hit;
       verdict.notes.push(`${c.name}: ${mon ? `caught ${mon.name} Lv${mon.level}` : 'no catch'} → ${hit ? `area "${hit.name}"` : `areas ${JSON.stringify(encs.map((x) => x.name))}, inbox ${(c.run?.inbox || []).length}`}`);
     }
@@ -445,7 +451,10 @@ function judge(r, plan, x) {
       if (!ok) verdict.battle = false;
       verdict.notes.push(`${c.name}: ${team?.battle ? `still a battle (${team.battle.enemy?.name || '?'})` : 'no battle'}`);
     }
-    if (exp.battle) {
+    if (exp.battle && exp.optional && !team?.battle) {
+      // (a battle the plan only tries for – a save that stands where no wild Pokémon appear)
+      verdict.notes.push(`${c.name}: no battle came up`);
+    } else if (exp.battle) {
       const b = team?.battle;
       const ok = !!b?.enemy && b.kind === (exp.battle.kind ?? b.kind) && [].concat(exp.battle.level ?? b.enemy.level).includes(b.enemy.level) && (randomized || !exp.battle.species || [].concat(exp.battle.species).includes(b.enemy.species));
       verdict.battle = verdict.battle === false ? false : ok;

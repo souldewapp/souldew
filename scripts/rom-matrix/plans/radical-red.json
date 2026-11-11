@@ -3,7 +3,7 @@
 "hacks": [
 "radical-red"
 ],
-"note": "Radical Red 4.1 (Complete FireRed Upgrade: FireRed's RAM layout, species, items and moves numbered its own way, the Pok\u00e9mon data stored unencrypted) from power-on: the notice, the default names, 'play without custom options' Yes, Mom's question about another region's starters No, the right-hand ball in Oak's lab (Charmander), the rival's battle at the door, Route 1's grass and the first wild Pok\u00e9mon (hit once, then run). The game gives no Pok\u00e9 Balls this early and its bag isn't the base game's, so there is no catch. Built and checked against a pre-patched 4.1 ROM (CRC32 FBA55DD8). pos: SaveBlock1 through gSaveBlock1Ptr 0x03005008 (as in FireRed). probe: gMain.inBattle, gBattleTypeFlags, the party count.",
+"note": "Radical Red 4.1 (Complete FireRed Upgrade: FireRed's RAM layout, species, items and moves numbered its own way, the Pok\u00e9mon data stored unencrypted) from power-on: the notice, the default names, 'play without custom options' Yes, Mom's question about another region's starters No, the right-hand ball in Oak's lab (Charmander), the rival's battle at the door, Route 1's grass and the first wild Pok\u00e9mon (hit once, then run). The game gives no Pok\u00e9 Balls this early and its bag isn't the base game's: after running, Master Balls go into its Pok\u00e9 Balls pocket (CFRU's gBagPockets at 0x0203988C points to a bag outside SaveBlock1, the balls are pocket 2), then the grass again and a real catch. Built and checked against a pre-patched 4.1 ROM (CRC32 FBA55DD8). pos: SaveBlock1 through gSaveBlock1Ptr 0x03005008 (as in FireRed). probe: gMain.inBattle, gBattleTypeFlags, the party count.",
 "pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4))))",
 "probe": "({inBattle: read(0x03003529,1)[0] & 2, btf: Array.from(read(0x02022B4C,4)), count: read(0x02024029,1)[0]})",
 "steps": [
@@ -552,6 +552,755 @@
 {
 "do": "check",
 "name": "fled"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "give",
+"item": 1,
+"count": 5,
+"pocketPtr": "0x0203988C",
+"pocket": 2,
+"note": "Master Balls into the Poke Balls pocket: Complete FireRed Upgrade keeps its bag outside SaveBlock1 (gBagPockets 0x0203988C points to it, the balls are pocket 2)"
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 16,
+"every": 4,
+"max": 12000,
+"until": "battle",
+"note": "tall grass again"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "check",
+"name": "wild2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "check",
+"name": "caught0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000,
+"until": "nobattle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "caught"
+},
+{
+"do": "shot",
+"name": "caught"
 }
 ],
 "expect": {
@@ -604,6 +1353,23 @@
 }
 },
 "fled": {
+"battle": null
+},
+"wild2": {
+"battle": {
+"kind": "wild",
+"level": [
+2,
+3,
+4,
+5
+]
+}
+},
+"caught": {
+"catch": {
+"area": "Route 1"
+},
 "battle": null
 }
 }
