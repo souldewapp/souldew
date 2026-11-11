@@ -2,6 +2,29 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## Unreleased
+
+- **Pokémon Unbound and Radical Red are read live** (a player's report: neither synced anything – souldew never found
+  their team). Both run on the Complete FireRed Upgrade engine, which souldew didn't understand: its species table
+  starts differently from FireRed's (Radical Red even keeps a renamed copy of FireRed's next to its own), its place
+  names are written in mixed case, and it stores the Pokémon data without FireRed's encryption. Now the team (species
+  under the game's own names, level, HP, status condition, held items by the names the game gives them), the place
+  sign (the game's own place names – Unbound's Borrius region too) and the battle panel (wild or trainer, the opponent
+  with its HP and moves, who is out after a switch; in a double battle the left Pokémon of each side, and its partner
+  once the left one is down) work. Checked in the games: Radical Red 4.1 from a new game – Charmander holding an Oran
+  Berry under "Starter", the rival's Squirtle as a trainer battle with the HP going down, a wild Pokémon on Route 1;
+  Unbound with a save – a team of six with their held items, the place sign in the Battle Frontier, the Battle Tower
+  and Icy Hole, a wild Golbat and a Battle Tower trainer, HP as on screen, a switch.
+- **The battle helper shows the moves these two hacks really have**: they number the moves after the original 354
+  their own way (in Unbound #355 is a different move than everywhere else). Moves souldew has no data for are left out
+  instead of showing another move's name.
+- **A pre-patched Radical Red 4.1 ROM shows up as Radical Red** – in the library, when you play it and in a new run –
+  instead of as FireRed, and the official Unbound patch is linked to Unbound whatever its file is called (the library
+  listed it as a BPS patch; it is a UPS patch).
+- Not for these hacks yet: level caps (Unbound's optional cap isn't read; Radical Red 4.1 has none), the Rare Candy
+  cheat, and types that differ from the original games (Clefairy is Fairy there) – the battle helper uses souldew's
+  own type data, as for Run & Bun.
+
 ## 2.3.1
 
 - **OBS overlays keep working from run to run** (#8): the links on
