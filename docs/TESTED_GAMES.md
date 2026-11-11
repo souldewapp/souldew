@@ -91,11 +91,18 @@ through souldew's one-click install, in its own portable profile, with free home
 | Stand-in Omega Ruby, party at the 1.4 update's address | ✅ version found by itself, party read |
 | Stand-ins Sun / Ultra Moon | ⚠️ title → entry ✅; the party addresses lie outside the small homebrew process, so only the unit tests (real PK7 files) cover the Gen 7 party |
 
-Not checked: X/Alpha Sapphire/Moon/Ultra Moon (same code as their pairs), the built-in player on a real Windows or Linux
-PC. The host builds for Windows (MinGW-w64, cross-compiled here without a warning; it needs only Windows' own DLLs) and
-Linux; `.github/workflows/ctr.yml` builds host and core for both as Azahar's own CI does, and the Windows and Linux
-workflows bundle them – the first run there is still to come. Without Vulkan (no graphics driver) souldew opens the
+**Linux** (Ubuntu 24.04 arm64 in a VM on the Mac, Mesa's software Vulkan "llvmpipe"): `node scripts/build-ctr.mjs`
+clones Azahar 2126.2, applies the patch and builds core and host (gcc 13) without help; the host runs Ultra Sun through
+the system's `libvulkan.so.1`, loads a savestate made on the Mac, reads the team (Rowlet L5 23/23) and the zone over the
+same protocol and sends the picture (60 fps in the core; the software renderer hands over ~35 pictures a second).
+x86-64 Linux is built by `.github/workflows/ctr.yml` the same way (gcc 12, as Azahar's CI).
+
+**Windows**: the host builds with MinGW-w64 (cross-compiled here without a warning; it needs only Windows' own DLLs),
+the core in `.github/workflows/ctr.yml` as Azahar's CI builds it; the Windows workflow starts the host on
+`windows-latest` – a game on a real Windows PC is still to come. Without Vulkan (no graphics driver) souldew opens the
 Azahar app instead.
+
+Not checked: X/Alpha Sapphire/Moon/Ultra Moon (same code as their pairs).
 
 ### Not in the test set
 

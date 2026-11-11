@@ -1,8 +1,8 @@
 diff --git a/src/citra_libretro/citra_libretro.cpp b/src/citra_libretro/citra_libretro.cpp
-index 8a65f9d..f5a0d94 100644
+index 8a65f9d..e474722 100644
 --- a/src/citra_libretro/citra_libretro.cpp
 +++ b/src/citra_libretro/citra_libretro.cpp
-@@ -750,3 +750,47 @@ size_t retro_get_memory_size(unsigned id) {
+@@ -750,3 +750,46 @@ size_t retro_get_memory_size(unsigned id) {
  void retro_cheat_reset() {}
  
  void retro_cheat_set(unsigned index, bool enabled, const char* code) {}
@@ -49,7 +49,6 @@ index 8a65f9d..f5a0d94 100644
 +}
 +
 +} // extern "C"
-+
 diff --git a/src/citra_libretro/libretro.osx.def b/src/citra_libretro/libretro.osx.def
 index 53a556a..34f20c9 100644
 --- a/src/citra_libretro/libretro.osx.def
