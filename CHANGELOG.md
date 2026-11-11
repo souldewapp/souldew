@@ -75,8 +75,7 @@
   the others see it too. Works with 3 and 4 players.
 - **Black/White and Black 2/White 2** (thanks to a player's reports, #5, #9, #13, #14):
   - No more battles that aren't there: opening a Pokémon's summary (to look at or swap its moves) in Black 2 and
-    White 2, and Bianca's catching demo in White 2, put the catching demo's Pokémon (Lillipup, in Black/White Patrat)
-    on the battle panel.
+    White 2, and Bianca's catching demo in White 2, put the catching demo's Pokémon (Lillipup) on the battle panel.
   - White: after Professor Juniper's catching demo on Route 1, its Patrat stayed on the panel as a trainer battle until
     your next real battle. White's battle flag is now checked in the running game, so every battle – the demo too –
     leaves the panel the moment it ends. While the demo runs it still shows: the game flags it like a real battle.

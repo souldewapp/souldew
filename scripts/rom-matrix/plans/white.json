@@ -1348,8 +1348,7 @@
 "place": "Nuvema Town"
 },
 "route1": {
-"place": "Route 1",
-"battle": null
+"place": "Route 1"
 },
 "caught": {
 "catch": {
@@ -1375,6 +1374,9 @@
 4
 ]
 }
+},
+"demo28": {
+"battle": null
 }
 }
 }
