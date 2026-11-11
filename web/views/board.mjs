@@ -165,7 +165,7 @@ function BoardHead({ counts: c }) {
   const g = gameById(manifest.game?.id);
   const h = manifest.game?.hackId ? hackById(manifest.game.hackId) : null;
   const st = doc.get('run:status', null);
-  // "New attempt …" from the run list lands here (?restart=1): the dialog opens once this run's document is live
+  // "New attempt …" from the run list lands here (?restart=1): this run's live document is open now – the dialog opens for an ended run
   useEffect(() => {
     if (app.route?.params?.restart === undefined) return;
     if (st) setModal('restart');

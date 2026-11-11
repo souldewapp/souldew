@@ -117,6 +117,20 @@ test('Black 2: the summary screen (flag 0x88C2) is no battle – the catching de
   assert.equal(poll(e, 0x88c2, fight, 1)?.enemy?.species, 504, 'a single odd value: still the battle');
   assert.equal(poll(e, 0x2100, fight)?.enemy?.species, 504, 'and the panel keeps its opponent afterwards');
   assert.equal(poll(e, 0x88c2, fight, 4), null, 'several odd values in a row: the battle is over');
+  // a long wait in a battle menu (the copies look stale by then): one odd value still doesn't end the battle
+  const realNow = Date.now;
+  try {
+    const slow = {};
+    const t0 = realNow();
+    Date.now = () => t0;
+    assert.equal(poll(e, 0x2100, slow)?.enemy?.species, 504);
+    Date.now = () => t0 + 5 * 60000;
+    poll(e, 0x2100, slow);
+    assert.equal(poll(e, 0x88c2, slow, 1)?.enemy?.species, 504, 'one odd read after minutes in the menu: still the battle');
+    assert.equal(poll(e, 0x2100, slow)?.enemy?.species, 504, 'and the opponent is still there afterwards');
+  } finally {
+    Date.now = realNow;
+  }
   // another language of the game (its memory may lie elsewhere): an unknown value is left to the copies as before …
   const de = findEntry(TABLE, { platform: 'nds', code: 'IRED' });
   assert.equal(de.scanOnly, true);
