@@ -119,7 +119,10 @@ static void die(const char *fmt, ...) {
   fprintf(stderr, "ctrhost: %s\n", buf);
   // JSON-safe enough: the messages are ours, without quotes
   send_event("{\"event\":\"error\",\"message\":\"%s\"}", buf);
-  exit(1);
+  // _exit, not exit: the exit handlers of what is loaded by then (the Vulkan driver, the core) may hang or crash
+  fflush(stderr);
+  fflush(stdout);
+  _exit(1);
 }
 
 // ---- the core --------------------------------------------------------------------------------------------------

@@ -63,10 +63,10 @@ function buildHost() {
   const inc = ['-I', src];
   // the Vulkan headers (only the types are used – the loader is opened at run time)
   // (CTR_VULKAN_INCLUDE first – e.g. Azahar's externals/vulkan-headers/include; a cross build never takes the
-  // system's /usr/include, it would bring the build machine's C headers along)
+  // system's /usr/include, it would bring the build machine's C headers along – Homebrew's is only libraries)
   const env = process.env;
   const fromAzahar = azahar && join(azahar, 'externals', 'vulkan-headers', 'include'); // the checkout that builds the core
-  const dirs = [env.CTR_VULKAN_INCLUDE, env.VULKAN_SDK && join(env.VULKAN_SDK, 'include'), env.VULKAN_SDK && join(env.VULKAN_SDK, 'Include'), ...(cross ? [] : ['/opt/homebrew/include', '/usr/local/include', '/usr/include']), fromAzahar];
+  const dirs = [env.CTR_VULKAN_INCLUDE, env.VULKAN_SDK && join(env.VULKAN_SDK, 'include'), env.VULKAN_SDK && join(env.VULKAN_SDK, 'Include'), '/opt/homebrew/include', '/usr/local/include', ...(cross ? [] : ['/usr/include']), fromAzahar];
   for (const d of dirs.filter(Boolean)) {
     if (existsSync(join(d, 'vulkan', 'vulkan.h'))) {
       inc.push('-I', d);

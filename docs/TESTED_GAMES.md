@@ -76,7 +76,7 @@ and Ultra Sun**, in the development app and in the packaged app (`electron-build
 | **Ultra Sun live:** team | ✅ Rowlet ♂ L5 23/23 the moment Kukui hands it over |
 | **Ultra Sun battle panel** | ✅ wild Yungoos ("Mangunior") L3 16/16 → HP as on screen, "wild"; Hau's Popplio L5 → "Trainer", Water vs Rowlet ×½; gone after both. **Fixed:** Gen 7 keeps the opponents after the player's 12 battlers (block 12+, 24 read now – the panel stayed empty), and the Stream Tool's trainer byte reads 1 in wild battles too on 1.0 – the battle type byte 0x33FC1F44 (found by souldew: 1 from the trainer's cutscene on, 0 for wild, also right after a trainer battle) |
 | **Ultra Sun place sign** | ✅ "Route 1" (the house 36, outside 1, the grass 5 – all Route 1 in the ROM's table). The zone sits in the player's position { u16, u16 zone, float x, y, z } at 0x33F6D74A, found with a heap scan across house → outside → house; the same after a fresh start |
-| Sun | ⚠️ team not seen (the save is before the starter); zone 0x34183CC6 found the same way (the house: zone 27, Route 1). Its trainer byte is taken from Ultra Sun's layout (0x21 before the in-battle flag), not checked in a battle |
+| Sun | ⚠️ team not seen (the save is before the starter); zone 0x34183CC6 found the same way (the house: zone 27, Route 1). The battle type byte 0x341C8CAC sits in the same structure as Ultra Sun's (compared outside battle byte for byte: the type, a pointer at +4, the same block at +0x28, in-battle at +0x21) – a Sun battle wasn't played |
 
 **Azahar app** (the external route, Windows/Linux or by choice): checked on macOS with **Azahar 2126.2**, installed
 through souldew's one-click install, in its own portable profile, with free homebrew and stand-ins:
@@ -95,7 +95,10 @@ through souldew's one-click install, in its own portable profile, with free home
 clones Azahar 2126.2, applies the patch and builds core and host (gcc 13) without help; the host runs Ultra Sun through
 the system's `libvulkan.so.1`, loads a savestate made on the Mac, reads the team (Rowlet L5 23/23) and the zone over the
 same protocol and sends the picture (60 fps in the core; the software renderer hands over ~35 pictures a second).
-x86-64 Linux is built by `.github/workflows/ctr.yml` the same way (gcc 12, as Azahar's CI).
+**x86-64 Linux** (the same VM, x86-64 programs through Rosetta, Mesa's x86-64 llvmpipe): the host cross-built with
+`x86_64-linux-gnu-gcc` and the patched core cross-built for x86-64 run Ultra Sun the same way – state, team (Rowlet L5
+23/23), zone, title, picture; Azahar's own unpatched x86-64 core runs it too (no live data, as expected). The release
+builds come from `.github/workflows/ctr.yml` (gcc 12 on Ubuntu 22.04, as Azahar's CI).
 
 **Windows**: the host builds with MinGW-w64 (cross-compiled here without a warning; it needs only Windows' own DLLs),
 the core in `.github/workflows/ctr.yml` as Azahar's CI builds it; the Windows workflow starts the host on
