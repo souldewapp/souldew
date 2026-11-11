@@ -1,35 +1,84 @@
 // Ending a run and trying again: the "run is over" notice, the "new attempt" dialog (a new run with the old
 // run's settings and new seeds) and the offer to the other players to join that new attempt. A run has 1–4
 // players; a solo Nuzlocke has nobody to tell.
-import { html, useState } from '/vendor/htm-preact.mjs';
-import { useApp, Modal, Sprite } from '../lib/ui.mjs';
+import { html, useState, useEffect } from '/vendor/htm-preact.mjs';
+import { useApp, Modal, Sprite, Led } from '../lib/ui.mjs';
 import { counts, players as getPlayers, live, resumeRun, runMode, slotsOf, runStats } from '../lib/run.mjs';
 import { speciesName } from '../lib/data.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t } from '../lib/i18n.mjs';
-import { restartRun } from '../lib/restart.mjs';
+import { restartRun, mySlotIn } from '../lib/restart.mjs';
 import { api } from '../lib/api.mjs';
-import { numberedName, baseName } from '/shared/restart.mjs';
+import { numberedName, baseName, newAttempt, restartPlan, RESTART_KEY, CLAIM_TTL } from '/shared/restart.mjs';
 
-/** r: the old run (status list entry or manifest). rules: its live doc rules, if at hand (board). */
+/**
+ * r: the old run (status list entry or manifest). rules: its live doc rules, if at hand (board).
+ * In a SoulLink every player sees "New attempt": when another player already started it (or is building it right
+ * now), this joins theirs instead – two new runs would each get their own room, and the players would never meet.
+ */
 export function RestartModal({ r, rules, onClose }) {
-  const { navigate, setRunId, setMe, reloadStatus, toast, status, doc, manifest, me } = useApp();
+  const { navigate, setRunId, setMe, reloadStatus, toast, status, doc, manifest, me, offerRestart } = useApp();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [lost, setLost] = useState(false); // our build lost a same-moment race and was set aside
   const next = numberedName(baseName(r.name), status?.runs);
   const solo = runMode(r) === 'nuzlocke';
   const n = slotsOf(r).length;
-  // a manifest knows; a run-list entry may not (then the line is left out rather than guessed)
+  // the old run's live document (open now) – else what this computer saved of it (run list menu)
+  const live = !solo && doc && manifest?.id === r.id ? doc : null;
+  const mine = live ? me : mySlotIn(r);
+  const [saved, setSaved] = useState(undefined); // undefined: still loading
+  useEffect(() => {
+    if (solo || live) return undefined;
+    let gone = false;
+    api.get(`/api/runs/${r.id}/doc`).then((d) => d?.[RESTART_KEY]?.v ?? null, () => null).then((v) => !gone && setSaved(v));
+    return () => { gone = true; };
+  }, [r.id, !!live]);
+  const [, setTick] = useState(0);
+  useEffect(() => live?.subscribe((keys) => keys.includes(RESTART_KEY) && setTick((x) => x + 1)), [live]);
+  const plan = solo ? { action: 'build' } : restartPlan(live ? live.get(RESTART_KEY) : saved, { me: mine, runs: status?.runs });
+  // a claim that is never finished (app closed mid-build) stops blocking after a while
+  useEffect(() => {
+    if (plan.action !== 'wait') return undefined;
+    const id = setTimeout(() => setTick((x) => x + 1), Math.max(1000, CLAIM_TTL - (Date.now() - plan.at) + 500));
+    return () => clearTimeout(id);
+  }, [plan.action, plan.at]);
+  // another player's new run is ready: the usual "join" offer takes over
+  const join = (offer) => {
+    onClose();
+    offerRestart({ ...offer, slot: mine });
+  };
+  useEffect(() => {
+    if (!busy && plan.action === 'join') join(plan.offer);
+  }, [busy, plan.action, plan.offer?.id]);
+  const who = (by, byName) => byName || r.players?.[by]?.name || r.summary?.names?.[by] || (live && live.get(`player:${by}`)?.name) || t('common.partner', 'Partner');
+  // randomized: a manifest knows; a run-list entry may not (then the line is left out rather than guessed)
   const randomized = r.randomizer ? r.randomizer.enabled !== false : typeof r.randomized === 'boolean' ? r.randomized : null;
   const close = () => !busy && onClose();
   const go = async () => {
     setBusy(true);
     setError(null);
+    setLost(false);
     try {
-      const res = await restartRun(r, { runs: status?.runs, ...(rules ? { rules } : {}) });
-      // Tell the partner through the old run's document: it syncs right away when they're connected, otherwise
-      // the next time they open the old run – and their app offers to join the new one.
-      if (doc && manifest?.id === r.id && runMode(r) !== 'nuzlocke') doc.set('run:restart', { id: res.manifest.id, name: res.manifest.name, by: me, at: Date.now(), pack: res.pack });
+      const myName = (live && getPlayers(live, manifest)[mine]?.name) || r.players?.[mine]?.name || null;
+      // claims the new attempt in the old run's document (the others wait for our invite), builds it and hands the
+      // invite to the others through that document: right away when they're connected, otherwise the next time they
+      // open the old run – their app offers to join the new one
+      const out = await newAttempt({
+        doc: live, entry: live ? null : saved ?? null, me: mine, byName: myName, runs: status?.runs,
+        build: () => restartRun(r, { runs: status?.runs, ...(rules ? { rules } : {}) }),
+        discard: (id) => api.del(`/api/runs/${id}`),
+      });
+      if (!out.started) {
+        // another player's new attempt is the one to play: wait for it here – the effect above opens its offer
+        if (out.discarded) {
+          setLost(true);
+          reloadStatus();
+        }
+        setBusy(false);
+        return;
+      }
+      const res = out.started;
       await reloadStatus();
       setRunId(res.manifest.id);
       setMe(res.mySlot, res.manifest.id);
@@ -47,10 +96,30 @@ export function RestartModal({ r, rules, onClose }) {
     onClose();
     navigate('soullink', { new: '', from: r.id });
   };
+  const open = () => {
+    onClose();
+    setRunId(plan.id);
+    navigate('soullink', { run: plan.id });
+  };
+  const waiting = !busy && plan.action === 'wait';
+  const loading = !solo && !live && saved === undefined;
+  if (!busy && plan.action === 'open') {
+    return html`<${Modal} open=${true} onClose=${close} title=${t('restart.title', 'New attempt')}
+      footer=${html`<button class="btn ghost" onClick=${close}>${t('common.cancel', 'Cancel')}</button>
+        <button class="btn primary" onClick=${open}><${Icon} name="play" size=${14} />${t('restart.openJoined', 'Open “{run}”', { run: plan.name || next })}</button>`}>
+      <p>${t('restart.joinedText', '{name} already started the new attempt “{run}” – you joined it. Play on there, so you stay together.', { name: who(plan.by), run: plan.name || next })}</p>
+    <//>`;
+  }
   return html`<${Modal} open=${true} onClose=${close} title=${t('restart.title', 'New attempt')}
     footer=${html`<button class="btn ghost" disabled=${busy} onClick=${close}>${t('common.cancel', 'Cancel')}</button>
-      <button class="btn ghost" disabled=${busy} onClick=${edit}>${t('restart.edit', 'Adjust settings …')}</button>
-      <button class="btn primary" disabled=${busy} onClick=${go}><${Icon} name="reset" size=${14} />${busy ? t('new.building', 'Building …') : t('restart.go', 'Start new attempt')}</button>`}>
+      ${!waiting && html`<button class="btn ghost" disabled=${busy} onClick=${edit}>${t('restart.edit', 'Adjust settings …')}</button>`}
+      <button class="btn primary" disabled=${busy || waiting || loading} onClick=${go}><${Icon} name="reset" size=${14} />${busy ? t('new.building', 'Building …')
+        : waiting ? t('restart.waitingFor', 'Waiting for {name} …', { name: who(plan.by, plan.byName) }) : t('restart.go', 'Start new attempt')}</button>`}>
+    ${waiting ? html`
+      <p>${t('restart.waitText', '{name} is already building the new attempt. The invite shows up here in a moment – so you play the same new run together.', { name: who(plan.by, plan.byName) })}</p>
+      ${lost && html`<p class="small muted">${t('restart.lostText', '{name} started at the same moment. Their new run is the one to play – yours was set aside.', { name: who(plan.by, plan.byName) })}</p>`}
+      <p class="small muted restart-wait" role="status"><${Led} on color="amber" blink />${t('restart.waitHint', 'Keep souldew open – you don’t need to do anything else.')}</p>`
+    : html`
     <p>${t('restart.text', 'This creates the new run “{name}”:', { name: next })}</p>
     <ul class="restart-list">
       <li>${solo ? t('restart.same1Solo', 'same game or ROM hack, same rules') : t('restart.same1', 'same game or ROM hack, same rules, same players')}</li>
@@ -59,7 +128,7 @@ export function RestartModal({ r, rules, onClose }) {
       ${!solo && html`<li>${n > 2 ? t('restart.same3Group', 'the other players get an invitation to join right away') : t('restart.same3', 'your partner gets an invitation to join right away')}</li>`}
     </ul>
     <p class="small faint">${t('restart.note', 'Saves, encounters and the board start empty. “{old}” stays in your list as it is.', { old: r.name })}</p>
-    ${busy && html`<p class="small muted" role="status">${t('restart.building', 'Building the new games – this can take a minute …')}</p>`}
+    ${busy && html`<p class="small muted" role="status">${t('restart.building', 'Building the new games – this can take a minute …')}</p>`}`}
     ${error && html`<div class="warning error" role="alert">${error}</div>`}
   <//>`;
 }
@@ -73,7 +142,7 @@ export function RestartOffer({ offer, onClose }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   if (!offer) return null;
-  const name = (manifest?.players?.[offer.by]?.name) || (doc?.get(`player:${offer.by}`)?.name) || t('common.partner', 'Partner');
+  const name = offer.byName || (manifest?.players?.[offer.by]?.name) || (doc?.get(`player:${offer.by}`)?.name) || t('common.partner', 'Partner');
   // The running game belongs to the old run – close it first (asks when progress isn't saved in-game).
   const join = () => closeSession(doJoin);
   const doJoin = async () => {
@@ -83,8 +152,9 @@ export function RestartOffer({ offer, onClose }) {
       const m = await api.post('/api/runs/import', { pack: offer.pack });
       await reloadStatus();
       setRunId(m.id);
-      // a new attempt keeps every player's slot – ours is the one we had in the old run
-      setMe(me, m.id);
+      // a new attempt keeps every player's slot – ours is the one we had in the old run (offer.slot: that run
+      // wasn't the open one – the run list's "New attempt")
+      setMe(offer.slot || me, m.id);
       onClose();
       navigate('soullink', { join: '' });
     } catch (e) {

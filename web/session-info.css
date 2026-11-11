@@ -153,6 +153,8 @@
 .run-strip.ended .btn { justify-self: start; }
 .rs-ended { margin: 0; }
 .restart-list { margin: 0 0 6px; padding-left: 20px; display: grid; gap: 3px; color: var(--ink-2); }
+/* "New attempt" while another player builds it: the blinking LED of the rail next to the hint */
+.restart-wait { display: flex; align-items: center; gap: 8px; margin: 0; }
 
 /* ===================================================================================================
    1–4 players and the solo Nuzlocke (board, sidebar, party columns). Player colours p3/p4 sit next to
