@@ -49,6 +49,12 @@
   before the starter. Checked in the game: Chimchar lands under "Starter", a Zigzagoon caught on Route 101 under
   "Route 101". Pokémon whose names the game shortens (Corviknight, Crabominable, Fletchinder …) are recognised, and the
   title screen no longer claims you are in Petalburg City.
+- **Run & Bun: the battle panel follows the battle**: it didn't know who was out – after a switch it kept showing your
+  lead, with its moves, its matchups and an HP bar that didn't move while the other Pokémon took the hits, a trainer
+  who switched kept their first Pokémon on the panel, and a trainer with a single Pokémon (your rival's first battle)
+  counted as a wild battle, so the Nuzlocke catch rules showed up there. souldew now finds the hack's own battle data
+  in its memory and reads who is out on both sides, and tells wild from trainer battles by the opponent's trainer
+  ID. Checked in the game: a switch in a wild battle and the rival's Mudkip on Route 103, HP as on screen.
 - **Enter every Pokémon the game holds by hand**: the species picker only offered the base game's generation – no
   Sinnoh starters in Run & Bun. It now follows the ROM: up to #905 in Run & Bun, the Gen 4/5 Pokémon of Light
   Platinum, the randomizer's Pokémon, and a hack's own creatures (Mariomon) under the names the game gives them.
@@ -223,8 +229,6 @@
 
 **Known issues**
 
-- **Run & Bun:** during a battle the panel shows your own Pokémon's HP from before the fight, and whether it's a wild
-  or a trainer battle is a guess.
 - **Unbound, Radical Red and other hacks on an expanded engine** weren't tested in the running game. If souldew can't
   find their team, the play view says live tracking doesn't support the hack – enter catches by hand there.
 - **Renegade Platinum** and **Light Platinum:** place names, Pokémon and types come from the game file and were
