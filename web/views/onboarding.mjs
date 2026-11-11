@@ -3,7 +3,7 @@ import { useApp, Sprite } from '../lib/ui.mjs';
 import { Icon, AppMark } from '../lib/icons.mjs';
 import { LANGS, t, setLang, currentLang } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
-import { PRESETS, presetMap, activePreset, keyLabel, padFamily, padLabel } from '../lib/controls.mjs';
+import { PRESETS, presetMap, activePreset, keyLabel, padFamily, padLabel, pickPad } from '../lib/controls.mjs';
 import { addGamesFlow, DropZone, DiscoverModal, discoverLabel } from './library.mjs';
 import { ThemePicker, usePads, FAMILY_NAMES, PAD_POS } from './settings.mjs';
 
@@ -25,7 +25,7 @@ export function Onboarding({ onDone }) {
   const [, force] = useState(0);
   const nameRef = useRef(null);
   const panelRef = useRef(null);
-  const pads = usePads();
+  const pad = pickPad(usePads(), cfg.pads?.device); // the controller that plays – not a microphone listed before it (#2)
   // Move focus into the new step so keyboard and screen-reader users land on its first control.
   useEffect(() => {
     const id = setTimeout(() => {
@@ -106,9 +106,9 @@ export function Onboarding({ onDone }) {
               dpad: ['up', 'left', 'down', 'right'].map((b) => keyLabel(presetMap(p.id)[b])).join(' '), a: keyLabel(presetMap(p.id).a), b: keyLabel(presetMap(p.id).b), start: keyLabel(presetMap(p.id).start) })}</span></button>`;
         })}
       </div>
-      <div class=${`pad-status ${pads[0] ? 'on' : ''}`} role="status">
-        <span class=${`led green ${pads[0] ? 'on' : ''}`}></span>
-        ${pads[0] ? html`<span><b>${FAMILY_NAMES()[padFamily(pads[0].id)]}</b> ${t('onb.padReady', 'is ready – A is {a}, B is {b}.', { a: padLabel('BUTTON_2', padFamily(pads[0].id), PAD_POS()), b: padLabel('BUTTON_1', padFamily(pads[0].id), PAD_POS()) })}</span>`
+      <div class=${`pad-status ${pad ? 'on' : ''}`} role="status">
+        <span class=${`led green ${pad ? 'on' : ''}`}></span>
+        ${pad ? html`<span><b>${FAMILY_NAMES()[padFamily(pad.id)]}</b> ${t('onb.padReady', 'is ready – A is {a}, B is {b}.', { a: padLabel('BUTTON_2', padFamily(pad.id), PAD_POS()), b: padLabel('BUTTON_1', padFamily(pad.id), PAD_POS()) })}</span>`
           : html`<span class="small">${t('onb.padNone', 'Controller? Connect it now (USB or Bluetooth) and press a button – PlayStation, Xbox, Switch and others work.')}</span>`}
       </div>
     </div>` },

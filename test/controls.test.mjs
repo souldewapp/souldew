@@ -146,3 +146,64 @@ test('controllers: Nintendo layout by default, family from the id, re-bound butt
   const table = c.ejsControls(null, undefined, { preset: 'xbox' });
   assert.equal(table[0][8].value2, 'BUTTON_1'); // RetroArch A
 });
+
+// ---- which connected device plays (issue #2: a USB microphone was taken for the controller) ----
+const fakePad = (index, id, { mapping = '', buttons = 17, axes = 4, connected = true } = {}) => ({
+  index, id, mapping, connected, buttons: Array.from({ length: buttons }, () => ({ pressed: false, value: 0 })), axes: Array(axes).fill(0),
+});
+const DUALSENSE = 'DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)';
+const XBOX = 'Xbox 360 Controller (XInput STANDARD GAMEPAD)';
+const MIC = 'DGM20 USB Microphone (Vendor: 1fc9 Product: 0117)';
+
+test('controllers: a USB microphone listed first never beats the PS5 controller', async () => {
+  const c = await import('../web/lib/controls.mjs');
+  const mic = fakePad(0, MIC, { buttons: 3, axes: 0 });
+  const ps5 = fakePad(1, DUALSENSE, { mapping: 'standard' });
+  assert.equal(c.pickPad([mic, ps5]), ps5);
+  assert.equal(c.pickPad([ps5, mic]), ps5);
+  // the microphone alone is no controller – nothing plays rather than the mic
+  assert.equal(c.pickPad([mic]), null);
+  assert.equal(c.looksLikePad(mic), false);
+  // even a microphone/headset that reports plenty of buttons and axes, by its name
+  assert.equal(c.pickPad([fakePad(0, 'HyperX Cloud II Wireless Headset (Vendor: 03f0)', { buttons: 12, axes: 2 })]), null);
+  assert.equal(c.pickPad([fakePad(0, 'USB Audio Device (Vendor: 0d8c Product: 0014)', { buttons: 8, axes: 1 })]), null);
+  // anything with 0–3 buttons and no standard layout
+  for (const n of [0, 1, 2, 3]) assert.equal(c.pickPad([fakePad(0, `HID device ${n} (Vendor: 1234 Product: 5678)`, { buttons: n, axes: n ? 1 : 0 })]), null, `${n} buttons`);
+  // "Microsoft" is no "mic": an Xbox pad by its maker's name still plays
+  assert.ok(c.looksLikePad(fakePad(0, 'Controller (Xbox One For Windows) (Vendor: 045e Product: 02ea) Microsoft', { mapping: 'standard' })));
+});
+
+test('controllers: the most controller-like device plays – standard layout, known make, buttons and sticks', async () => {
+  const c = await import('../web/lib/controls.mjs');
+  const xbox = fakePad(2, XBOX, { mapping: 'standard' });
+  const ps5 = fakePad(1, DUALSENSE, { mapping: 'standard' });
+  const generic = fakePad(0, 'USB Gamepad (Vendor: 0079 Product: 0011)', { buttons: 10, axes: 2 });
+  // a cheap pad without the standard layout is still a controller – and plays when it is the only one
+  assert.equal(c.pickPad([generic]), generic);
+  assert.ok(c.padScore(ps5) > c.padScore(generic));
+  // standard + known make: the lowest index among equals (the one connected first)
+  assert.equal(c.pickPad([generic, ps5, xbox]), ps5);
+  assert.equal(c.pickPad([xbox, generic]), xbox);
+  // disconnected slots and holes (Chrome keeps null for a pad that left)
+  assert.equal(c.pickPad([null, fakePad(1, DUALSENSE, { mapping: 'standard', connected: false }), xbox]), xbox);
+  assert.equal(c.pickPad([]), null);
+  assert.equal(c.pickPad(null), null);
+  // counts work as well as arrays (the Settings page keeps counts)
+  assert.equal(c.padScore({ id: DUALSENSE, standard: true, buttons: 17, axes: 4 }), c.padScore(ps5));
+});
+
+test('controllers: the controller chosen in Settings plays whenever it is connected – even one that looks odd', async () => {
+  const c = await import('../web/lib/controls.mjs');
+  const mic = fakePad(0, MIC, { buttons: 3, axes: 0 });
+  const ps5 = fakePad(1, DUALSENSE, { mapping: 'standard' });
+  const xbox = fakePad(2, XBOX, { mapping: 'standard' });
+  assert.equal(c.pickPad([mic, ps5, xbox], XBOX), xbox);
+  // the player's own choice wins over the heuristics
+  assert.equal(c.pickPad([mic, ps5], MIC), mic);
+  // remembered but not connected: the automatic choice
+  assert.equal(c.pickPad([mic, ps5], 'Some Other Pad (Vendor: 0001)'), ps5);
+  // the stored key is the trimmed id (indexes change from start to start, the id doesn't)
+  assert.equal(c.padKey(`  ${DUALSENSE} `), DUALSENSE);
+  assert.equal(c.pickPad([mic, xbox, ps5], ` ${DUALSENSE}`), ps5);
+  assert.equal(c.padKey('x'.repeat(300)).length, 200);
+});

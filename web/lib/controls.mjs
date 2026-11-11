@@ -205,3 +205,54 @@ const DPAD_PRINT = { DPAD_UP: '↑', DPAD_DOWN: '↓', DPAD_LEFT: '←', DPAD_RI
 /** names: the page's localized words for buttons without a print (generic pads: "bottom button" …). */
 export const padLabel = (label, family = 'generic', names = {}) => (label
   ? DPAD_PRINT[label] || (family === 'generic' && names[label]) || PAD_PRINT[family]?.[label] || PAD_PRINT.generic[label] || label : '–');
+
+// ---- which connected device plays ---------------------------------------------------------------------------------
+// The Gamepad API lists more than controllers: on Windows a USB microphone or headset with its own buttons (a player's
+// "DGM20 USB Microphone", issue #2) shows up as a gamepad too – often before the real one, which then never got to
+// play. So souldew picks the controller itself: the one chosen in Settings › Controller (config.pads.device, the id
+// the browser reports, remembered across starts) when it is connected, else the most controller-like device. A device
+// that doesn't look like a controller at all is never picked on its own – only when the player chooses it.
+
+/** Names of devices that are no controllers (audio, cameras, keyboards, mice …) – unless they report a standard layout. */
+const NOT_A_PAD = /\b(mic|mics|microphone|headset|headphones?|earphones?|earbuds?|speakers?|audio|sound|webcam|camera|keyboard|mouse|dac|yeti|quadcast|stream ?deck)\b/i;
+
+const count = (x) => (Array.isArray(x) || (x && typeof x === 'object' && Number.isInteger(x.length)) ? x.length : Number(x) || 0);
+const isStandard = (p) => p?.mapping === 'standard' || p?.standard === true;
+
+/** A device's id without what changes from start to start – what config.pads.device stores. */
+export const padKey = (id) => String(id || '').trim().slice(0, 200);
+
+/**
+ * How much a device looks like a game controller: -1 = not one (a microphone, headset or anything with fewer than
+ * four buttons), else higher = more likely (standard layout, a known make, enough buttons and a stick).
+ * `p`: a Gamepad from navigator.getGamepads() or { id, mapping | standard, buttons, axes } (arrays or counts).
+ */
+export function padScore(p) {
+  if (!p) return -1;
+  const standard = isStandard(p);
+  const buttons = count(p.buttons);
+  const axes = count(p.axes);
+  if (!standard && (buttons < 4 || NOT_A_PAD.test(String(p.id || '')))) return -1;
+  return (standard ? 8 : 0) + (padFamily(p.id) !== 'generic' ? 4 : 0) + (buttons >= 10 ? 2 : 0) + (axes >= 2 ? 1 : 0);
+}
+
+export const looksLikePad = (p) => padScore(p) >= 0;
+
+/**
+ * The connected device that plays: the remembered one (`wanted` = config.pads.device) if it is there – the player
+ * chose it, whatever it looks like – else the most controller-like one (the lowest index among equals), or null when
+ * nothing connected looks like a controller.
+ */
+export function pickPad(pads, wanted = null) {
+  const list = [...(pads || [])].filter((p) => p && p.connected !== false);
+  const key = wanted ? padKey(wanted) : '';
+  const mine = key && list.find((p) => padKey(p.id) === key);
+  if (mine) return mine;
+  let best = null;
+  let bestScore = -1;
+  for (const p of list) {
+    const s = padScore(p);
+    if (s > bestScore || (s === bestScore && s >= 0 && p.index < best.index)) [best, bestScore] = [p, s];
+  }
+  return bestScore >= 0 ? best : null;
+}

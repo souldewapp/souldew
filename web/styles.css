@@ -997,6 +997,7 @@ button.hack-card:active, .run-card:active, .theme-card:active { transform: trans
 tr.pad-lit td { background: color-mix(in srgb, var(--tri) 16%, transparent); }
 tr.pad-lit .kbd { border-color: var(--tri); color: var(--ink); }
 .pad-hints { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.pad-pick-hint { align-self: end; padding-bottom: 4px; } /* next to the controller picker, level with the select */
 
 /* Starting a game: the module slides into the console's slot, clicks in, the power LED lights up (cartinsert.mjs) */
 .cart-insert { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; cursor: pointer;

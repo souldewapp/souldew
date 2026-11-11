@@ -4,6 +4,11 @@
 
 ## 2.3.1
 
+- **A USB microphone or headset no longer takes the controller's place** (#2): on Windows some of them show up as a
+  game controller, and when one was listed first, souldew used it and the real controller (a PS5 controller in the
+  report) pressed nothing in the game. souldew now picks the controller itself – a real one, skipping microphones,
+  headsets and devices with hardly any buttons – and Settings › Controller has a new "Controller to use" choice
+  that lists every connected device; the one you pick is remembered and used whenever it is connected.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged

@@ -672,9 +672,14 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     if ('pads' in allowed) {
       const p = allowed.pads;
       const ok = p === null || (typeof p === 'object' && !Array.isArray(p) && (!p.preset || ['nintendo', 'xbox'].includes(p.preset))
-        && (!p.map || (typeof p.map === 'object' && Object.entries(p.map).length <= 16 && Object.values(p.map).every((v) => typeof v === 'string' && /^[A-Z_0-9]{1,24}$/.test(v)))));
+        && (!p.map || (typeof p.map === 'object' && Object.entries(p.map).length <= 16 && Object.values(p.map).every((v) => typeof v === 'string' && /^[A-Z_0-9]{1,24}$/.test(v))))
+        // device: the controller chosen in Settings (the id the browser reports for it, web/lib/controls.mjs pickPad)
+        && (p.device == null || (typeof p.device === 'string' && p.device.length <= 200 && !/[\u0000-\u001f]/.test(p.device))));
       if (!ok) delete allowed.pads;
-      else if (p) allowed.pads = { ...(p.preset ? { preset: p.preset } : {}), ...(p.map ? { map: Object.fromEntries(Object.entries(p.map).filter(([k]) => /^[a-z]{1,8}$/.test(k))) } : {}) };
+      else if (p) {
+        allowed.pads = { ...(p.preset ? { preset: p.preset } : {}), ...(p.map ? { map: Object.fromEntries(Object.entries(p.map).filter(([k]) => /^[a-z]{1,8}$/.test(k))) } : {}),
+          ...(p.device ? { device: p.device.trim() } : {}) };
+      }
     }
     return saveConfig(allowed);
   });

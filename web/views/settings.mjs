@@ -6,7 +6,7 @@ import { t, LANGS, setLang, currentLang } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
 import { applyTheme } from '../lib/theme.mjs';
 import { BUTTONS, RESERVED, PRESETS, bindable, keyLabel, resolve as resolveControls, presetMap, activePreset, detectLayout, currentLayout,
-  PAD_LABELS, PAD_PRESETS, PAD_HOTKEYS, padMap, padFamily, padLabel } from '../lib/controls.mjs';
+  PAD_LABELS, PAD_PRESETS, PAD_HOTKEYS, padMap, padFamily, padLabel, pickPad, padKey, looksLikePad } from '../lib/controls.mjs';
 import { SHORTCUTS, buttonLabel } from './guide.mjs';
 import { UpdateSection } from './update.mjs';
 import { PLATFORM } from '../lib/platform.mjs';
@@ -126,7 +126,7 @@ export function usePads() {
     let last = '';
     const read = () => {
       const now = [...(navigator.getGamepads?.() || [])].filter((g) => g && g.connected)
-        .map((g) => ({ id: g.id, index: g.index, family: padFamily(g.id), standard: g.mapping === 'standard', pressed: g.buttons.map((b) => b.pressed) }));
+        .map((g) => ({ id: g.id, index: g.index, family: padFamily(g.id), standard: g.mapping === 'standard', axes: g.axes.length, buttons: g.buttons.length, pressed: g.buttons.map((b) => b.pressed) }));
       const sig = JSON.stringify(now);
       if (sig !== last) setPads(now); // re-render only when something changed
       last = sig;
@@ -143,9 +143,37 @@ export const PAD_POS = () => ({ BUTTON_1: t('pad.posBottom', 'bottom button'), B
 
 export const FAMILY_NAMES = () => ({ playstation: 'PlayStation (DualSense / DualShock)', xbox: 'Xbox', switch: t('pad.switch', 'Nintendo Switch (Pro Controller / Joy-Con)'), generic: t('pad.generic', 'Controller') });
 
+/** A device's name as the browser reports it, without the vendor/product part in brackets. */
+export const padName = (id) => String(id || '').replace(/\s*\(.*\)\s*$/, '') || String(id || '');
+
+/**
+ * Which connected device plays (lib/controls.mjs pickPad): "Automatic" or one the player picked – remembered as
+ * config.pads.device. Shown as soon as there is a choice to make: two devices, one that doesn't look like a controller,
+ * or a remembered one.
+ */
+function PadPicker({ pads, saved, pad, onPick }) {
+  const wanted = saved?.device ? padKey(saved.device) : '';
+  const missing = wanted && !pads.some((p) => padKey(p.id) === wanted);
+  if (pads.length < 2 && !wanted && (!pads.length || looksLikePad(pads[0]))) return null;
+  const auto = pickPad(pads);
+  // the same model twice has the same id – they are told apart by their slot
+  const twice = (p) => pads.filter((q) => q.id === p.id).length > 1;
+  const label = (p) => `${padName(p.id)}${twice(p) ? ` (${p.index + 1})` : ''}${looksLikePad(p) ? '' : ` – ${t('pad.notAPad', 'doesn’t look like a controller')}`}`;
+  return html`<div class="grid-2"><label class="field"><span>${t('pad.use', 'Controller to use')}</span>
+    <select value=${wanted} onChange=${(e) => onPick(e.target.value || null)}>
+      <option value="">${auto ? t('pad.auto', 'Automatic – {name}', { name: padName(auto.id) }) : t('pad.autoNone', 'Automatic')}</option>
+      ${pads.filter((p, i) => pads.findIndex((q) => q.id === p.id) === i).map((p) => html`<option value=${padKey(p.id)}>${label(p)}</option>`)}
+      ${missing && html`<option value=${wanted}>${t('pad.missing', '{name} (not connected)', { name: padName(wanted) })}</option>`}
+    </select></label>
+    <span class="small faint pad-pick-hint">${pad && wanted && padKey(pad.id) === wanted ? t('pad.remembered', 'souldew remembers this controller and uses it whenever it is connected.')
+      : t('pad.autoHint', 'Automatic picks a real controller and skips microphones, headsets and other devices the system lists as controllers.')}</span></div>`;
+}
+
 function PadSection({ saved, save }) {
   const pads = usePads();
-  const pad = pads[0];
+  const pad = pickPad(pads, saved?.device);
+  const odd = !pad && pads.length ? pads : null; // only devices that don't look like a controller
+  const keep = saved?.device ? { device: saved.device } : {};
   const family = pad?.family || 'generic';
   const map = padMap(saved);
   const preset = PAD_PRESETS.find((p) => p.id === saved?.preset) || PAD_PRESETS[0];
@@ -169,7 +197,7 @@ function PadSection({ saved, save }) {
     const next = { ...map, [listen]: label, ...(other ? { [other.id]: map[listen] } : {}) };
     setListen(null);
     setMsg(other ? t('pad.swapped', '{button} was on {other} – the two swapped.', { button: padLabel(label, family, PAD_POS()), other: buttonLabel(other.id) }) : null);
-    save({ pads: { preset: preset.id, map: next } });
+    save({ pads: { preset: preset.id, map: next, ...keep } });
   }, [pad?.pressed?.join(), listen]);
   useEffect(() => {
     if (!listen) return undefined;
@@ -177,16 +205,22 @@ function PadSection({ saved, save }) {
     addEventListener('keydown', esc);
     return () => removeEventListener('keydown', esc);
   }, [listen]);
-  const pick = (id) => { setListen(null); setMsg(null); save({ pads: { preset: id } }); };
+  const pick = (id) => { setListen(null); setMsg(null); save({ pads: { preset: id, ...keep } }); };
+  const choose = (device) => {
+    setListen(null);
+    setMsg(null);
+    save({ pads: { ...(saved?.preset ? { preset: saved.preset } : {}), ...(saved?.map ? { map: saved.map } : {}), ...(device ? { device } : {}) } });
+  };
   return html`<section class="panel stack">
     <h2>${t('pad.title', 'Controller')}</h2>
     <p class="small muted">${t('pad.text', 'PlayStation, Xbox, Switch and other controllers work over USB or Bluetooth. Click a button in the table, then press the new one on the controller. Changes apply the next time a game starts.')}</p>
     <div class=${`pad-status ${pad ? 'on' : ''}`} role="status">
       <span class=${`led green ${pad ? 'on' : ''}`}></span>
-      ${pad ? html`<span><b>${FAMILY_NAMES()[family]}</b> <span class="small faint">${pad.id.replace(/\s*\(.*\)\s*$/, '')}</span>${!pad.standard ? html` <span class="chip">${t('pad.nonStandard', 'unusual layout – check the buttons below')}</span>` : ''}</span>`
+      ${pad ? html`<span><b>${FAMILY_NAMES()[family]}</b> <span class="small faint">${padName(pad.id)}</span>${!pad.standard ? html` <span class="chip">${t('pad.nonStandard', 'unusual layout – check the buttons below')}</span>` : ''}</span>`
+        : odd ? html`<span class="small">${t('pad.onlyOdd', 'No controller found – {name} doesn’t look like one. Connect your controller and press a button on it, or pick the device below if it is one.', { name: odd.map((p) => padName(p.id)).join(', ') })}</span>`
         : html`<span class="small">${t('pad.none', 'No controller found. Connect one and press any button on it.')}</span>`}
-      ${pads.length > 1 && html`<span class="small faint">${t('pad.more', '+{n} more – the first one plays', { n: pads.length - 1 })}</span>`}
     </div>
+    <${PadPicker} pads=${pads} saved=${saved} pad=${pad} onPick=${choose} />
     <div class="row">
       <div class="seg" role="group" aria-label=${t('pad.layouts', 'Button layout')}>
         ${PAD_PRESETS.map((p) => html`<button type="button" class=${!custom && preset.id === p.id ? 'on' : ''} aria-pressed=${!custom && preset.id === p.id} onClick=${() => pick(p.id)}>${p.id === 'nintendo' ? t('pad.nintendo', 'Nintendo layout (A right)') : t('pad.xbox', 'Xbox layout (A bottom)')}</button>`)}

@@ -1372,10 +1372,15 @@
 
   // Controllers beyond what EmulatorJS does itself: the left stick works as the D-pad, ZR/RT/R2 toggles turbo,
   // ZL/LT/L2 and the Home/PS/Guide button pause – those go to the page like the keyboard shortcuts.
-  function startPads(c) {
+  // Which device plays is souldew's choice (lib/controls.mjs pickPad): the one picked in Settings › Controller, else the
+  // most controller-like one. EmulatorJS gives player 1 to whatever the browser lists first – on Windows that can be a
+  // USB microphone (issue #2), and the real controller then pressed nothing. So its gamepad events go through here:
+  // only the chosen device's reach the game, always as player 1.
+  function startPads(c, wanted) {
     const idx = Object.fromEntries(c.BUTTONS.map((b) => [b.id, b.ejs]));
     const stick = { up: false, down: false, left: false, right: false };
     const held = {};
+    let chosen = null; // `${id}_${index}` of the device that plays (EmulatorJS' name for it)
     const set = (dir, on) => {
       if (stick[dir] === on) return;
       stick[dir] = on;
@@ -1385,10 +1390,48 @@
       for (const b of c.BUTTONS) try { GM()?.simulateInput(0, b.ejs, 0); } catch { /* core not ready */ }
       for (const d of Object.keys(stick)) stick[d] = false;
     };
+    const choose = () => {
+      const pad = c.pickPad(navigator.getGamepads?.() || [], wanted);
+      const name = pad ? `${pad.id}_${pad.index}` : null;
+      if (name !== chosen) {
+        if (chosen) release(); // a new device: nothing stays pressed from the old one
+        chosen = name;
+        Object.keys(held).forEach((k) => delete held[k]);
+      }
+      // player 1 = the chosen device, nothing else (players 2–4 have no buttons in souldew anyway)
+      const sel = E()?.gamepadSelection;
+      if (Array.isArray(sel)) for (let i = 0; i < sel.length; i++) sel[i] = i === 0 ? (chosen || '') : '';
+      return pad;
+    };
+    let routed = null;
+    const route = () => {
+      const g = E()?.gamepad;
+      if (!g?.on || routed === g || typeof E().gamepadEvent !== 'function') return;
+      routed = g;
+      // EmulatorJS looks a device up by its position in its own list with the browser's index – wrong as soon as an
+      // index is skipped (a controller left), which also stopped its polling with an error. Hand it the position.
+      const forward = (e) => {
+        const list = g.gamepads || [];
+        const pos = list.findIndex((p) => p && p.index === e.gamepadIndex);
+        const p = list[pos];
+        if (!p || `${p.id}_${p.index}` !== chosen) return;
+        E().gamepadEvent({ ...e, gamepadIndex: pos });
+      };
+      for (const what of ['buttondown', 'buttonup', 'axischanged']) g.on(what, forward);
+      // its own (dis)connect handlers hand out player slots in the order devices appear – choose() does that now
+      g.on('connected', () => choose());
+      g.on('disconnected', () => setTimeout(choose, 0));
+      // (re)start its polling – one of those errors may already have ended it
+      if (typeof g.loop === 'function') {
+        clearTimeout(g.timeout);
+        g.loop();
+      }
+    };
     const HOT = { 7: 'turbo', 6: 'pause', 16: 'pause' };
     setInterval(() => {
+      route(); // as soon as EmulatorJS is there – a controller may appear before the game runs
       if (!window.__emu?.ready || document.visibilityState === 'hidden') return;
-      const pad = [...(navigator.getGamepads?.() || [])].find((g) => g && g.connected);
+      const pad = choose();
       if (!pad) return;
       const [x = 0, y = 0] = pad.axes;
       set('left', x < -0.5);
@@ -1407,7 +1450,7 @@
     .then(async ([c, st]) => {
       await c.detectLayout(st?.config?.lang); // keyCodes follow the printed letters (QWERTZ, AZERTY …)
       window.EJS_defaultControls = c.ejsControls(st?.config?.controls, undefined, st?.config?.pads);
-      startPads(c);
+      startPads(c, st?.config?.pads?.device || null);
     })
     .catch((e) => console.warn('controls not applied', e))
     .then(() => pacerReady)
