@@ -1,0 +1,134 @@
+{
+"id": "unbound",
+"hacks": [
+"unbound"
+],
+"save": true,
+"note": "Unbound from a save (its intro is long): the official UPS patch on FireRed (U) 1.0 and Pokemon Unbound Official.sav next to it \u2013 any save that stands where wild Pok\u00e9mon appear (a cave or tall grass; checked with one in Icy Hole). Continue, read the team (species by the game's own names, held items by its own item names, moves in the app's numbering) and the place sign, walk until a wild Pok\u00e9mon appears, then run. Complete FireRed Upgrade keeps FireRed's RAM layout (team at 0x02024284, gBattleMons at 0x02023BE4 with FireRed's 0x58-byte battlers) and stores the Pok\u00e9mon data unencrypted. pos: SaveBlock1 through gSaveBlock1Ptr 0x03005008. probe: gMain.inBattle, gBattleTypeFlags, the party count.",
+"pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4))))",
+"probe": "({inBattle: read(0x03003529,1)[0] & 2, btf: Array.from(read(0x02022B4C,4)), count: read(0x02024029,1)[0]})",
+"steps": [
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"START"
+],
+[
+"A"
+]
+],
+"max": 3000,
+"until": "overworld",
+"note": "title screen, Continue"
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "check",
+"name": "save"
+},
+{
+"do": "shot",
+"name": "save"
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+],
+[
+"RIGHT"
+],
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 20,
+"every": 10,
+"max": 30000,
+"until": "battle",
+"note": "walk until a wild Pok\u00e9mon appears"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 500
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "shot",
+"name": "wild"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+],
+[
+"RIGHT"
+],
+[
+"DOWN"
+],
+[
+"A"
+]
+],
+"every": 30,
+"max": 6000,
+"until": "nobattle",
+"note": "Run"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "fled"
+},
+{
+"do": "shot",
+"name": "fled"
+}
+],
+"expect": {
+"save": {
+"party": {},
+"place": true
+},
+"wild": {
+"battle": {
+"kind": "wild"
+}
+},
+"fled": {
+"battle": null,
+"party": {}
+}
+}
+}

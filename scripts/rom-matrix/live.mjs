@@ -3,8 +3,9 @@
 // the app's live readers (shared/live/*) – the same code the play view runs. Writes one JSON result per ROM.
 // Not started by hand: node scripts/rom-matrix.mjs <rom-dir> --live
 import { app, BrowserWindow } from 'electron';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { PAGE_HELPER } from './page.mjs';
 
@@ -44,6 +45,14 @@ async function runOne(url, t) {
   const rom = `/api/library/rom?id=${encodeURIComponent(t.file)}`;
   const q = new URLSearchParams({ system: t.system, rom, name: `matrix-${t.key}`, threads: '0', volume: '0' });
   if (t.core) q.set('core', t.core);
+  if (t.save) {
+    // a plan that starts from a save: served the way the app serves a solo game's save (server/app.mjs /api/saves/solo)
+    const id = `matrix-${t.key}`;
+    const dir = join(job.dataDir, 'Saves');
+    mkdirSync(dir, { recursive: true });
+    copyFileSync(t.save, join(dir, `${createHash('sha1').update(id).digest('hex').slice(0, 16)}.sav`));
+    q.set('save', `/api/saves/solo?id=${encodeURIComponent(id)}`);
+  }
   const res = { key: t.key, file: t.file, steps: [], error: null };
   const shots = [];
   try {

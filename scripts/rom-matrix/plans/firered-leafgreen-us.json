@@ -1,0 +1,1130 @@
+{
+"id": "firered-leafgreen",
+"entries": [
+"firered_us",
+"leafgreen_us"
+],
+"note": "English FireRed/LeafGreen (US/Europe): the steps of firered-leafgreen-eu.json with the English game's addresses (gSaveBlock1Ptr 0x03005008, gMain.inBattle 0x03003529). Checked against FireRed (U) 1.0.",
+"pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4))))",
+"probe": "({inBattle: read(0x03003529,1)[0] & 2, btf: Array.from(read(0x02022B4C,4)), count: read(0x02024029,1)[0]})",
+"steps": [
+{
+"do": "wait",
+"frames": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"START"
+],
+[
+"A"
+]
+],
+"max": 900,
+"note": "title screen"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 8000,
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))[0]===1025"
+},
+"note": "Oak's talk, the controls, names: the default ones"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "home"
+},
+{
+"do": "go",
+"x": 9,
+"y": 2,
+"order": "xy",
+"map": 1025,
+"leave": true,
+"required": false
+},
+{
+"do": "go",
+"x": 10,
+"y": 2,
+"order": "xy",
+"map": 1025,
+"leave": true,
+"required": false,
+"note": "stairs"
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "go",
+"x": 4,
+"y": 8,
+"order": "yx",
+"map": 1024,
+"leave": true,
+"required": false
+},
+{
+"do": "go",
+"x": 3,
+"y": 9,
+"order": "xy",
+"map": 1024,
+"leave": true,
+"required": false,
+"note": "out of the house"
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "go",
+"x": 12,
+"y": 1,
+"order": "xy",
+"required": false,
+"patience": 4,
+"note": "towards Route 1: Oak stops you"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500,
+"note": "Oak takes you to the lab"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "go",
+"x": 10,
+"y": 3,
+"order": "yx",
+"required": false,
+"patience": 4,
+"note": "above the right-hand ball"
+},
+{
+"do": "press",
+"keys": "DOWN",
+"hold": 3
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000,
+"until": "party",
+"note": "take it"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500,
+"note": "no nickname"
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "shot",
+"name": "starter"
+},
+{
+"do": "go",
+"x": 7,
+"y": 10,
+"order": "xy",
+"required": false,
+"patience": 4,
+"note": "round the table to the door: the rival"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000,
+"until": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "rival"
+},
+{
+"do": "shot",
+"name": "rival"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "check",
+"name": "rivalhp"
+},
+{
+"do": "shot",
+"name": "rivalhp"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 8000,
+"until": "nobattle"
+},
+{
+"do": "check",
+"name": "after"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500
+},
+{
+"do": "go",
+"x": 6,
+"y": 12,
+"order": "yx",
+"map": 1027,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "walk",
+"dir": "DOWN",
+"steps": 2
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "give",
+"item": 1,
+"pocket": "balls",
+"count": 3,
+"note": "Master Balls: Route 1's Pidgey at full HP breaks out of Pok\u00e9 Balls too often (a blackout in a test run)"
+},
+{
+"do": "go",
+"x": 12,
+"y": -1,
+"order": "xy",
+"map": 768,
+"leave": true,
+"required": false,
+"patience": 6,
+"note": "the girl with the help stops you"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"y": -1,
+"order": "y",
+"map": 768,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "check",
+"name": "route1"
+},
+{
+"do": "walk",
+"dir": "UP",
+"steps": 2
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 16,
+"every": 4,
+"max": 12000,
+"until": "battle",
+"note": "tall grass"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "shot",
+"name": "wild"
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+]
+],
+"every": 30,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 10,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 900,
+"until": "party>=2",
+"required": false
+},
+{
+"do": "check",
+"name": "caught0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000,
+"until": "nobattle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "caught"
+},
+{
+"do": "shot",
+"name": "caught"
+}
+],
+"expect": {
+"home": {
+"place": "Pallet Town"
+},
+"starter": {
+"party": {
+"species": [
+1,
+4,
+7
+],
+"level": 5
+},
+"place": "Pallet Town"
+},
+"rival": {
+"battle": {
+"kind": "trainer",
+"level": 5,
+"species": [
+1,
+4,
+7
+]
+}
+},
+"after": {
+"party": {
+"level": [
+5,
+6
+]
+},
+"battle": null
+},
+"route1": {
+"place": "Route 1"
+},
+"wild": {
+"battle": {
+"kind": "wild",
+"level": [
+2,
+3,
+4,
+5
+]
+}
+},
+"caught": {
+"catch": {
+"area": "Route 1"
+},
+"battle": null
+}
+}
+}

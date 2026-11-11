@@ -1,6 +1,6 @@
 // Runs inside souldew's player page (web/player.html) for scripts/rom-matrix/live.mjs: presses buttons frame by frame
 // following a plan, and reads team, place and battle with the app's own live readers. Exported as source text.
-/* global window, MouseEvent */
+/* global window, MouseEvent, location */
 
 function helper() {
   const BTN = { B: 0, Y: 1, SELECT: 2, START: 3, UP: 4, DOWN: 5, LEFT: 6, RIGHT: 7, A: 8, X: 9, L: 10, R: 11 };
@@ -22,8 +22,9 @@ function helper() {
     const expanded = found?.gen === 3 && romloc?.species?.engine === 'expanded';
     const entry = wram ? { ...romwram.shiftEntry(found, wram), wram } : expanded ? parse.expandedEntry(found, romloc?.data?.maps3) : found;
     const species = romloc?.species || null;
-    // what the play view does (web/views/play.mjs): a GBA ROM's own species table; an expanded engine isn't read
-    const T = entry?.gen === 3 && species ? T0.withSpecies(species) : T0;
+    // what the play view does (web/views/play.mjs): a GBA ROM's own species table – for an expanded engine also its own
+    // item names and move numbers (server/lib/romloc.mjs ownTables3)
+    const T = entry?.gen === 3 && species ? T0.withSpecies(species, romloc) : T0;
     // the app's own run logic (web/lib/run.mjs): every team read goes into a solo Nuzlocke document like the play view's
     // snapshots do – a new catch is filed under its area, named like the place sign names it
     let run = null;
@@ -87,10 +88,10 @@ function helper() {
     for (let i = 0; i < (entry.gen >= 4 ? 6 : 1) && !fight?.enemy; i++) fight = parse.readLiveBattle(entry, e.read, T, raw ? ctx.rawState : state, res.party);
     return {
       // the HP the play view shows: in battle the battle copy's (withBattleHp), the party struct lags there
-      party: parse.withBattleHp(res.party, fight).map((m) => ({ species: m.species, name: name(m.species), nickname: m.nickname, level: m.level, hp: m.hp, maxHp: m.maxHp, status: m.status, metLocation: m.metLocation ?? null, metLevel: m.metLevel ?? null, isEgg: !!m.isEgg, key: m.key })),
+      party: parse.withBattleHp(res.party, fight).map((m) => ({ species: m.species, name: name(m.species), nickname: m.nickname, level: m.level, hp: m.hp, maxHp: m.maxHp, status: m.status, metLocation: m.metLocation ?? null, metLevel: m.metLevel ?? null, isEgg: !!m.isEgg, key: m.key, item: m.item || 0, ...(m.itemName ? { itemName: m.itemName } : {}), moves: m.moves || [] })),
       boxes: Array.isArray(res.boxes) ? res.boxes.length : null,
       badges: res.badges ?? null,
-      battle: fight ? { kind: fight.kind, enemy: fight.enemy ? { species: fight.enemy.species, name: name(fight.enemy.species), level: fight.enemy.level, hp: fight.enemy.hp, maxHp: fight.enemy.maxHp } : null, active: fight.active || null } : null,
+      battle: fight ? { kind: fight.kind, enemy: fight.enemy ? { species: fight.enemy.species, name: name(fight.enemy.species), level: fight.enemy.level, hp: fight.enemy.hp, maxHp: fight.enemy.maxHp, moves: fight.enemy.moves || [] } : null, active: fight.active || null } : null,
     };
   }
 
@@ -185,6 +186,16 @@ function helper() {
     const t0 = performance.now();
     const log = [];
     const shots = [];
+    // a plan that starts from a save (plan.save, scripts/rom-matrix.mjs): the player page boots with it, and when the core
+    // looked for it elsewhere the save is loaded the way the play view does it (loadSave, a restart)
+    const saveUrl = new URLSearchParams(location.search).get('save');
+    if (plan.save && saveUrl && e.bootSave?.() !== 'loaded') {
+      const r = await fetch(saveUrl);
+      if (r.ok) {
+        e.loadSave(new Uint8Array(await r.arrayBuffer()));
+        await sleep(1500);
+      }
+    }
     const info = await setup(romSrc, plan.header);
     e.setSpeed(Infinity);
     let state = null;

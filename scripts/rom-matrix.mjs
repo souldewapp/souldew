@@ -21,6 +21,8 @@
 //                 patched and randomized ROMs are deleted at the end unless --keep
 //   --attempts n  tries per game when a plan loses its way (default 3)
 //   --show        show the emulator windows (they stay muted)
+// A plan with "save": true starts from a save instead of a new game: <name>.sav next to the patch (or the ROM) of the
+// same name. Without one the game is skipped. Never commit saves either.
 // Results: <out>/matrix.json, <out>/matrix.md (the table for docs/TESTED_GAMES.md) and <out>/shots/*.png.
 // Never commit ROMs, patched ROMs or the screenshots.
 import { spawn } from 'node:child_process';
@@ -220,7 +222,7 @@ for (const r of targets) {
   if (r.system === 'gb' && entry?.gen === 2) r.gen = 2;
   // what the app does with it, read from the file alone
   r.static = {
-    live: !entry ? 'none' : r.species?.engine === 'expanded' ? 'hack-unsupported' : 'reads',
+    live: !entry ? 'none' : r.species?.engine === 'expanded' ? (d.species?.map ? 'reads (expanded engine)' : 'hack-unsupported') : 'reads',
     // Gen 1/2 read places from the tables (their RAM holds the map, the tables name it); Gen 3–5 from the ROM
     places: r.gen <= 2 ? (entry ? 'tables' : 'none') : d.data ? (r.vanilla === false ? 'rom (own names)' : 'rom') : 'none',
   };
@@ -231,11 +233,21 @@ for (const r of targets) {
 const mark = (v) => (v === true ? '✅' : v === false ? '❌' : v === 'hack' ? '⚠️ not supported (shown as such)' : '–');
 
 async function runLive(list) {
+  // (a plan that starts from a save: <name>.sav next to the patch or the ROM)
+  const saveFor = (r) => {
+    const p = r.patch ? patches.find((x) => x.name === r.patch) : null;
+    const near = [p && join(dirname(p.file), `${basename(p.file, extname(p.file))}.sav`), join(dirname(r.file), `${basename(r.file, extname(r.file))}.sav`)];
+    return near.find((f) => f && existsSync(f)) || null;
+  };
   const jobs = list.map((r) => {
     const plan = planFor(r);
+    if (plan?.save && !saveFor(r)) {
+      r.liveResult = { skipped: `the plan starts from a save: put one next to the ${r.patch ? 'patch' : 'ROM'} (${basename(r.patch || r.name, extname(r.patch || r.name))}.sav)` };
+      return null;
+    }
     return plan ? { r, plan } : null;
   }).filter(Boolean);
-  for (const r of list) if (!jobs.some((j) => j.r === r)) r.liveResult = { skipped: 'no input plan for this game' };
+  for (const r of list) if (!r.liveResult && !jobs.some((j) => j.r === r)) r.liveResult = { skipped: 'no input plan for this game' };
   if (!jobs.length) return;
   const dataDir = join(out, 'data');
   mkdirSync(dataDir, { recursive: true });
@@ -250,7 +262,7 @@ async function runLive(list) {
     rmSync(resultFile, { force: true });
     const job = {
       dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), timeoutMs: 60 * 60000,
-      targets: [{ key, file: r.file, system: r.system, core: plan.core || '', plan: { ...plan, header: r.header } }],
+      targets: [{ key, file: r.file, system: r.system, core: plan.core || '', ...(plan.save ? { save: saveFor(r) } : {}), plan: { ...plan, header: r.header } }],
     };
     writeFileSync(join(out, 'job.json'), JSON.stringify(job));
     // Inputs land a frame or two apart from run to run (the page polls the frame counter), so a plan can lose its
@@ -296,11 +308,12 @@ function judge(r, plan, x) {
       const want = exp.party;
       const ok = !!mon && [].concat(want.level ?? mon.level).includes(mon.level) && (randomized || !want.species || [].concat(want.species).includes(mon.species)) && mon.species > 0 && mon.hp <= mon.maxHp;
       verdict.party = verdict.party === false ? false : ok;
-      verdict.notes.push(`${c.name}: ${mon ? `${mon.name} Lv${mon.level} ${mon.hp}/${mon.maxHp} "${mon.nickname}"` : 'no party'}`);
+      verdict.notes.push(`${c.name}: ${mon ? `${mon.name} Lv${mon.level} ${mon.hp}/${mon.maxHp} "${mon.nickname}"${mon.itemName ? ` holding ${mon.itemName}` : ''}` : 'no party'}${team?.party?.length > 1 ? ` (+${team.party.length - 1})` : ''}`);
     }
     if (exp.place !== undefined) {
       const shown = c.place?.shown || null;
-      const ok = r.kind === 'patched' && exp.placeHack !== undefined ? shown === exp.placeHack : [].concat(exp.place).includes(shown);
+      // (place: true – any name of the game's own: a plan that starts from a save doesn't know where it is)
+      const ok = exp.place === true ? !!shown : r.kind === 'patched' && exp.placeHack !== undefined ? shown === exp.placeHack : [].concat(exp.place).includes(shown);
       verdict.place = verdict.place === false ? false : ok;
       verdict.notes.push(`${c.name}: place "${shown}"`);
     }
@@ -322,7 +335,7 @@ function judge(r, plan, x) {
       const b = team?.battle;
       const ok = !!b?.enemy && b.kind === (exp.battle.kind ?? b.kind) && [].concat(exp.battle.level ?? b.enemy.level).includes(b.enemy.level) && (randomized || !exp.battle.species || [].concat(exp.battle.species).includes(b.enemy.species));
       verdict.battle = verdict.battle === false ? false : ok;
-      verdict.notes.push(`${c.name}: battle ${b?.enemy ? `${b.kind} ${b.enemy.name} Lv${b.enemy.level}` : 'none'}`);
+      verdict.notes.push(`${c.name}: battle ${b?.enemy ? `${b.kind} ${b.enemy.name} Lv${b.enemy.level} ${b.enemy.hp}/${b.enemy.maxHp}` : 'none'}`);
     }
   }
   return verdict;

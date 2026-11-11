@@ -1,0 +1,610 @@
+{
+"id": "radical-red",
+"hacks": [
+"radical-red"
+],
+"note": "Radical Red 4.1 (Complete FireRed Upgrade: FireRed's RAM layout, species, items and moves numbered its own way, the Pok\u00e9mon data stored unencrypted) from power-on: the notice, the default names, 'play without custom options' Yes, Mom's question about another region's starters No, the right-hand ball in Oak's lab (Charmander), the rival's battle at the door, Route 1's grass and the first wild Pok\u00e9mon (hit once, then run). The game gives no Pok\u00e9 Balls this early and its bag isn't the base game's, so there is no catch. Built and checked against a pre-patched 4.1 ROM (CRC32 FBA55DD8). pos: SaveBlock1 through gSaveBlock1Ptr 0x03005008 (as in FireRed). probe: gMain.inBattle, gBattleTypeFlags, the party count.",
+"pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4))))",
+"probe": "({inBattle: read(0x03003529,1)[0] & 2, btf: Array.from(read(0x02022B4C,4)), count: read(0x02024029,1)[0]})",
+"steps": [
+{
+"do": "wait",
+"frames": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"START"
+],
+[
+"A"
+]
+],
+"max": 900,
+"note": "title screen"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 12000,
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))[0]===1025"
+},
+"note": "notice, Oak's talk, names (the default ones)"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 600,
+"note": "in the bedroom: 'play Radical Red without any custom options?' Yes"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "home"
+},
+{
+"do": "go",
+"x": 10,
+"y": 2,
+"order": "xy",
+"map": 1025,
+"leave": true,
+"required": false,
+"note": "beside the stairs (Radical Red's bedroom: they go down to the left, from (10, 2))"
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 8,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1025"
+},
+"note": "stairs"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "go",
+"x": 10,
+"y": 2,
+"order": "yx",
+"map": 1025,
+"leave": true,
+"required": false,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1025"
+}
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 8,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1025"
+}
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 900,
+"note": "Mom: a starter from another region? No \u2013 Kanto's"
+},
+{
+"do": "go",
+"x": 4,
+"y": 8,
+"order": "yx",
+"map": 1024,
+"leave": true,
+"required": false,
+"hold": 4
+},
+{
+"do": "go",
+"x": 3,
+"y": 9,
+"order": "xy",
+"map": 1024,
+"leave": true,
+"required": false,
+"note": "out of the house",
+"hold": 4
+},
+{
+"do": "go",
+"x": 3,
+"y": 9,
+"order": "xy",
+"map": 1024,
+"leave": true,
+"required": false,
+"hold": 4,
+"note": "again, if a step ran past the mat"
+},
+{
+"do": "press",
+"keys": "DOWN",
+"hold": 8,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1024"
+},
+"note": "off the mat: outside"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "press",
+"keys": "DOWN",
+"hold": 8,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1024"
+}
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 8,
+"times": 2,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===768"
+},
+"note": "away from the door"
+},
+{
+"do": "go",
+"x": 12,
+"y": 1,
+"order": "xy",
+"required": false,
+"patience": 4,
+"note": "towards Route 1: Oak stops you"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500,
+"note": "Oak takes you to the lab"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "go",
+"x": 10,
+"y": 3,
+"order": "yx",
+"required": false,
+"patience": 4,
+"note": "above the right-hand ball"
+},
+{
+"do": "press",
+"keys": "DOWN",
+"hold": 3
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000,
+"until": "party",
+"note": "take it"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500,
+"note": "no nickname"
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "shot",
+"name": "starter"
+},
+{
+"do": "go",
+"x": 7,
+"y": 10,
+"order": "xy",
+"required": false,
+"patience": 4,
+"note": "round the table to the door: the rival"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000,
+"until": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "rival"
+},
+{
+"do": "shot",
+"name": "rival"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 700
+},
+{
+"do": "check",
+"name": "rivalhp"
+},
+{
+"do": "shot",
+"name": "rivalhp"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 8000,
+"until": "nobattle"
+},
+{
+"do": "check",
+"name": "after"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500
+},
+{
+"do": "go",
+"x": 6,
+"y": 12,
+"order": "yx",
+"map": 1027,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1027"
+}
+},
+{
+"do": "go",
+"x": 6,
+"y": 12,
+"order": "yx",
+"map": 1027,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1027"
+}
+},
+{
+"do": "press",
+"keys": "DOWN",
+"hold": 8,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1027"
+},
+"note": "out of the lab"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "press",
+"keys": "DOWN",
+"hold": 8,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===1027"
+}
+},
+{
+"do": "wait",
+"frames": 150
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 8,
+"times": 3,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return b[4]*256+b[5];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4)))))===768"
+},
+"note": "away from the lab's door"
+},
+{
+"do": "go",
+"x": 12,
+"y": -1,
+"order": "xy",
+"map": 768,
+"leave": true,
+"required": false,
+"patience": 6,
+"note": "the girl with the help stops you"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"y": -1,
+"order": "y",
+"map": 768,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "check",
+"name": "route1"
+},
+{
+"do": "walk",
+"dir": "UP",
+"steps": 2
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 16,
+"every": 4,
+"max": 12000,
+"until": "battle",
+"note": "tall grass"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "shot",
+"name": "wild"
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 400,
+"note": "the first move: the opponent's HP goes down"
+},
+{
+"do": "check",
+"name": "wildhp"
+},
+{
+"do": "shot",
+"name": "wildhp"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+],
+[
+"RIGHT"
+],
+[
+"DOWN"
+],
+[
+"A"
+]
+],
+"every": 30,
+"max": 6000,
+"until": "nobattle",
+"note": "Run (or the opponent goes down)"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "fled"
+}
+],
+"expect": {
+"home": {
+"place": "Pallet Town"
+},
+"starter": {
+"party": {
+"species": [
+1,
+4,
+7
+],
+"level": 5
+},
+"place": "Pallet Town"
+},
+"rival": {
+"battle": {
+"kind": "trainer",
+"level": 5,
+"species": [
+1,
+4,
+7
+]
+}
+},
+"after": {
+"party": {
+"level": [
+5,
+6
+]
+},
+"battle": null
+},
+"route1": {
+"place": "Route 1"
+},
+"wild": {
+"battle": {
+"kind": "wild",
+"level": [
+2,
+3,
+4,
+5
+]
+}
+},
+"fled": {
+"battle": null
+}
+}
+}
