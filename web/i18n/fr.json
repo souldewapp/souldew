@@ -2225,5 +2225,6 @@
   "lib.liveNote.types": "souldew ne connaît pas les types propres à ce hack : le tableau et les règles de type utilisent les types officiels.",
   "party.holds": "tient {item}",
   "cap.champion": "Maître",
-  "cap.eliteFour": "Conseil 4"
+  "cap.eliteFour": "Conseil 4",
+  "battle.ownTypes": "Ce hack ROM a ses propres types, que souldew ne connaît pas – il n’affiche donc ici ni types, ni efficacités, ni règle de type plutôt que des informations fausses."
 }

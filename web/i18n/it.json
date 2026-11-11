@@ -2225,5 +2225,6 @@
   "lib.liveNote.types": "souldew non conosce i tipi propri di questo hack: la bacheca e le regole sui tipi usano quelli ufficiali.",
   "party.holds": "tiene {item}",
   "cap.champion": "Campione",
-  "cap.eliteFour": "Superquattro"
+  "cap.eliteFour": "Superquattro",
+  "battle.ownTypes": "Questo hack ROM ha tipi propri che souldew non conosce: per questo qui non mostra tipi, efficacia o regola dei tipi invece di mostrarli sbagliati."
 }

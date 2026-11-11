@@ -2225,5 +2225,6 @@
   "lib.liveNote.types": "souldew no conoce los tipos propios de este hack: el tablero y las reglas de tipo usan los oficiales.",
   "party.holds": "lleva {item}",
   "cap.champion": "Campeón",
-  "cap.eliteFour": "Alto Mando"
+  "cap.eliteFour": "Alto Mando",
+  "battle.ownTypes": "Este hack de ROM tiene tipos propios que souldew no conoce, así que aquí no muestra tipos, efectividades ni la regla de tipos en lugar de mostrarlos mal."
 }

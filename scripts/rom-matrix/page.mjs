@@ -20,7 +20,7 @@ function helper() {
     const wram = found?.gen <= 2 ? romloc?.wram || null : null;
     // an expanded GBA engine: the team searched for, the place through SaveBlock1 (as web/views/play.mjs does)
     const expanded = found?.gen === 3 && romloc?.species?.engine === 'expanded';
-    const entry = wram ? { ...romwram.shiftEntry(found, wram), wram } : expanded ? { ...found, scan3: true } : found;
+    const entry = wram ? { ...romwram.shiftEntry(found, wram), wram } : expanded ? parse.expandedEntry(found, romloc?.data?.maps3) : found;
     const species = romloc?.species || null;
     // what the play view does (web/views/play.mjs): a GBA ROM's own species table; an expanded engine isn't read
     const T = entry?.gen === 3 && species ? T0.withSpecies(species) : T0;

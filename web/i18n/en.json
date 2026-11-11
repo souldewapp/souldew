@@ -2225,5 +2225,6 @@
   "upd.updatedTitle": "Updated",
   "upd.version": "Version {version}",
   "upd.whatsNew": "What’s new",
-  "upd.youHave": "You have {version}."
+  "upd.youHave": "You have {version}.",
+  "battle.ownTypes": "This ROM hack has types of its own that souldew doesn’t know – so it shows no types, matchups or type rule here rather than wrong ones."
 }

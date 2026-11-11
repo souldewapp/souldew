@@ -4,7 +4,7 @@
 import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
 import { useApp } from '../lib/ui.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
-import { speciesName, gen4data, setRomSpecies, setRomTypes } from '../lib/data.mjs';
+import { speciesName, gen4data, setRomSpecies, setRomTypes, setRomOwnTypes } from '../lib/data.mjs';
 import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation, placeName } from '/shared/live/location.mjs';
 import { pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces, areaForPlace } from '../lib/run.mjs';
 
@@ -31,6 +31,7 @@ export function loadRomLocations(src) {
   setRomPlaces(null); // (another game's names don't apply any more)
   setRomSpecies(null);
   setRomTypes(null);
+  setRomOwnTypes(null);
   const p = fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`)
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null)
@@ -40,6 +41,7 @@ export function loadRomLocations(src) {
       setRomPlaces(ROMLOC.data); // catches made now are named like the sign names their place
       setRomSpecies(ROMLOC.species); // a ROM hack's own Pokémon get the game's names
       setRomTypes(j?.types || null); // … and the game's types (Fairy hacks)
+      setRomOwnTypes(j?.ownTypes || null); // … or none, for a hack with types of its own
     });
   ROMLOC.p = p;
   return p;
@@ -49,6 +51,8 @@ export function loadRomLocations(src) {
 export const romSpeciesNow = () => ROMLOC.species;
 /** A Game Boy hack's moved RAM variables (romwram.mjs gbWramShift), null: the retail addresses. */
 export const romWramNow = () => ROMLOC.wram;
+/** An expanded GBA engine's hints from its code (romloc.mjs gen3MapTable: the party pair, gMain), or null. */
+export const romMaps3Now = () => ROMLOC.data?.maps3 || null;
 /** Has the running ROM's own data arrived (or failed)? */
 export const romDataReady = () => !ROMLOC.pending;
 

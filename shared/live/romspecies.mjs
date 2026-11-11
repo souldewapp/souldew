@@ -53,10 +53,45 @@ export function gen3SpeciesNames(rom, charset) {
       }
       if (names.length >= 380 && (!best || names.length > best.names.length)) best = { offset: o, stride, names: ['', ...names] };
     }
+    if (!best) best = speciesInfoNames(rom, o, table);
     if (best) break;
     o += 10;
   }
   return best;
+}
+
+/**
+ * Newer pokeemerald-expansion builds (Too Many Types 2) have no name table: each species' name is a 13-byte field of
+ * its entry in gSpeciesInfo, a struct of a few hundred bytes (0x104 in Too Many Types 2). The entry of "??????????"
+ * (SPECIES_NONE) starts the field, the stride is where Bulbasaur's name follows. Species the build left out are
+ * zeroed – an empty name (no Pokémon) – and the table ends at the first entry that is neither, or where a second
+ * array of the same struct starts again with the first species. → { offset, stride, names } or null.
+ */
+function speciesInfoNames(rom, o, table) {
+  const field = (p) => {
+    if (p + 13 > rom.length) return null;
+    let blank = true;
+    for (let k = 0; k < 13; k++) if (rom[p + k] !== 0) blank = false;
+    if (blank) return '';
+    const s = decode(rom, p, 13, table);
+    return okName(s) && !/^\?+$/.test(s) ? s : null;
+  };
+  for (let stride = 14; stride <= 0x400; stride++) {
+    if (!field(o + stride) || !field(o + 2 * stride) || !field(o + 3 * stride)) continue;
+    const names = [''];
+    let blanks = 0;
+    for (let i = 1; ; i++) {
+      const s = field(o + i * stride);
+      if (s === null) break;
+      if (i > 2 && s && s === names[1] && field(o + (i + 1) * stride) === names[2]) break; // a second array
+      blanks = s ? 0 : blanks + 1;
+      if (blanks > 16) break;
+      names.push(s);
+    }
+    while (names.length > 1 && !names[names.length - 1]) names.pop();
+    if (names.length > 380) return { offset: o, stride, names };
+  }
+  return null;
 }
 
 /** Name → comparable key: "Farfetch’d" = "FARFETCH'D" = "FARFETCHD", "Nidoran♀" = "NIDORANF". */
@@ -147,6 +182,47 @@ export function speciesCeiling(species) {
 }
 
 // ---------------------------------------------------------------- types from the ROM
+
+/**
+ * The type names of a GBA Pokémon ROM (gTypeNames, in pokeemerald-expansion the names in gTypesInfo): "Normal" /
+ * "NORMAL", then "Fight…" one entry on, as many entries as are names. The retail games have 18 (with "???"),
+ * pokeemerald-expansion adds Fairy and Stellar; a hack with types of its own has more – Too Many Types 58 entries,
+ * Too Many Types 2 81. → { count, names } or null (no table found). Never throws.
+ */
+export function gen3TypeNames(rom, charset) {
+  try {
+    const table = charset?.table || charset || {};
+    const code = {};
+    for (const [k, v] of Object.entries(table)) if (v.length === 1 && !(v in code)) code[v] = parseInt(k, 16);
+    const enc = (w) => [...w].map((c) => code[c]);
+    const starts = [enc('Normal'), enc('NORMAL')].filter((b) => b.every((x) => x !== undefined));
+    const TYPE = /^[A-Za-z?][A-Za-z0-9?'’ -]*$/;
+    const nameAt = (o, n) => {
+      const v = decode(rom, o, n, table);
+      return v && v.length <= 12 && TYPE.test(v.trim()) ? v.trim() : null;
+    };
+    for (let o = 0; o + 64 < rom.length; o++) {
+      const b = starts.find((w) => w.every((x, k) => rom[o + k] === x) && rom[o + w.length] === 0xff);
+      if (!b) continue;
+      for (let stride = 7; stride <= 48; stride++) {
+        if (!/^fight/i.test(nameAt(o + stride, Math.min(stride, 13)) || '')) continue;
+        const names = [];
+        for (let i = 0; i < 255; i++) {
+          const v = nameAt(o + i * stride, Math.min(stride, 13));
+          if (!v) break;
+          names.push(v);
+        }
+        if (names.length >= 17) return { count: names.length, names };
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** More type names than the retail games and pokeemerald-expansion have (18 + Fairy + Stellar): types of its own. */
+export const OWN_TYPES_ABOVE = 20;
 
 // type ids of the games' own tables (pokeemerald include/constants/pokemon.h, pokeplatinum, pokeblack):
 // Gen 3/4 have '???' (9) in the middle – Fairy hacks of Gen 4 (Renegade Platinum) reuse it; Gen 5 has none and Fairy

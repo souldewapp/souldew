@@ -168,7 +168,47 @@ export function gen3MapTable(rom) {
     if (v >= 0x03000000 && v < 0x03008000 && (v & 3) === 0) count.set(v, (count.get(v) || 0) + 1);
   }
   const iwram = [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16).map(([v]) => v);
-  return { mapsec, iwram, offset: table };
+  return { mapsec, iwram, party3: partyPair(rom), gMain: gMainOf(rom), offset: table };
+}
+
+/**
+ * gMain of a Gen 3 engine, from the code: the battle flag is read as gMain + 0x439 (`ldr` gMain and the offset 0x439
+ * from one literal pool), so the IWRAM address most often next to a literal 0x439 is gMain – 0x030022C0 in Emerald,
+ * 0x03004084 in Too Many Types 2 (measured: bit 1 of 0x030044BD is set in its battles only). null if none stands out.
+ */
+export function gMainOf(rom) {
+  const count = new Map();
+  for (let o = 0; o + 4 <= rom.length; o += 4) {
+    if (u32(rom, o) !== 0x439) continue;
+    for (let d = -16; d <= 16; d += 4) {
+      const v = d && o + d >= 0 && o + d + 4 <= rom.length ? u32(rom, o + d) : 0;
+      if (v >= 0x03000000 && v < 0x03008000) count.set(v, (count.get(v) || 0) + 1);
+    }
+  }
+  const [best, second] = [...count.entries()].sort((a, b) => b[1] - a[1]);
+  return best && best[1] >= 10 && best[1] >= 3 * (second?.[1] || 0) ? best[0] : null;
+}
+
+/**
+ * gPlayerParty and gEnemyParty of an expanded Gen 3 engine, from the code: two EWRAM addresses 600 bytes apart (six
+ * 100-byte structs) among the ones its literal pools hold most often – the pair used most, the player's party the
+ * busier of the two (Too Many Types 2: 0x02032C94 577 times, gEnemyParty 0x02032A3C 275 times). → { player, enemy } or
+ * null. Only a hint: the live reader takes it when the RAM there holds a team (parse.mjs findGen3Party).
+ */
+export function partyPair(rom) {
+  const count = new Map();
+  for (let o = 0; o + 4 <= rom.length; o += 4) {
+    const v = u32(rom, o);
+    if (v >= 0x02000000 && v < 0x02040000 && (v & 3) === 0) count.set(v, (count.get(v) || 0) + 1);
+  }
+  const top = [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 64);
+  let best = null;
+  for (const [a, n] of top) {
+    const m = count.get(a + 600) || 0;
+    if (m < 20 || !top.some(([v]) => v === a + 600)) continue;
+    if (!best || n + m > best.n) best = { n: n + m, player: n >= m ? a : a + 600, enemy: n >= m ? a + 600 : a };
+  }
+  return best ? { player: best.player, enemy: best.enemy } : null;
 }
 
 // ---------------------------------------------------------------- Gen 4 (DS)

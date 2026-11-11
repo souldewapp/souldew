@@ -212,7 +212,9 @@ export function parsePk3(d, T) {
   const G = sub('G');
   const A = sub('A');
   const M = sub('M');
-  const internal = u16le(G, 0);
+  // (newer pokeemerald-expansion builds keep the Tera type in the top 5 bits: species:11, teraType:5 – Too Many
+  // Types 2's Chimchar reads 0x5986 = 390 | 11 << 11)
+  const internal = T.expanded3 ? u16le(G, 0) & 0x7ff : u16le(G, 0);
   const species = T.idx3?.[internal] || (T.fake3?.[internal] ? FAKEMON + internal : 0);
   if (!species) return null;
   const origins = u16le(M, 2);
@@ -245,20 +247,49 @@ function gen3StatsOk(d, isEgg) {
  * An expanded GBA engine (entry.scan3): gPlayerParty isn't at the base game's address. Searched for in EWRAM – the
  * party count byte 3 bytes before `count` valid 100-byte structs (checksums) – and remembered while it holds; Run & Bun
  * keeps it at 0x02023A98 (count 0x02023A95), gEnemyParty 600 bytes on, as in the base game.
+ * Newer pokeemerald-expansion builds keep the count elsewhere and gEnemyParty in front of the player's (Too Many
+ * Types 2: gEnemyParty 0x02032A3C, gPlayerParty 0x02032C94, the count at 0x02032715 – measured). For them the ROM's
+ * code names the pair (`entry.party3At` = romloc.mjs gen3MapTable `party3`: the two addresses 600 bytes apart that
+ * the code loads most often, the player's the busier one) and the team is the valid structs from its start on.
+ * state.party3 = the player's party, state.enemy3 = the opponent's, state.count3 = where the count is (null: counted).
  */
-function findGen3Party(read, T, state) {
+const validPk3 = (m) => m && !m.bad && m.level >= 1 && m.level <= 100 && m.maxHp >= 1 && m.hp <= m.maxHp;
+
+/** The run of valid structs at `o` in `ram` (no PID twice) and whether the slots after it are empty. */
+function pk3Run(ram, o, T) {
+  const pids = [];
+  let n = 0;
+  for (; n < 6; n++) {
+    const d = ram.subarray(o + n * 100, o + n * 100 + 100);
+    const pid = u32le(d, 0);
+    if (!pid && !u32le(d, 4)) break;
+    const m = parsePk3(d, T);
+    if (!validPk3(m) || pids.includes(pid)) return { n: 0, empty: false };
+    pids.push(pid);
+  }
+  let empty = true;
+  for (let i = n; i < 6; i++) if (ram.subarray(o + i * 100, o + i * 100 + 8).some((b) => b)) empty = false;
+  return { n, empty };
+}
+
+function findGen3Party(read, T, state, hint = null) {
   const okAt = (ram, o) => {
     const n = ram[o - 3];
     if (n < 1 || n > 6) return false;
     for (let i = 0; i < n; i++) {
       const m = parsePk3(ram.subarray(o + i * 100, o + i * 100 + 100), T);
-      if (!m || m.bad || m.level < 1 || m.level > 100 || m.maxHp < 1 || m.hp > m.maxHp) return false;
+      if (!validPk3(m)) return false;
     }
     return true;
   };
   if (state.party3) {
-    const b = read(state.party3 - 4, 4 + 600);
-    if (b && okAt(b, 4)) return state.party3;
+    if (state.count3 === null) {
+      const b = read(state.party3, 600);
+      if (b && pk3Run(b, 0, T).n >= 1) return state.party3;
+    } else {
+      const b = read(state.party3 - 4, 4 + 600);
+      if (b && okAt(b, 4)) return state.party3;
+    }
   }
   if (state.lastScan3 && Date.now() - state.lastScan3 < 3000) return null;
   state.lastScan3 = Date.now();
@@ -266,21 +297,57 @@ function findGen3Party(read, T, state) {
   if (!ram) return null;
   for (let o = 4; o + 600 <= ram.length; o += 4) {
     if (ram[o] === 0 && ram[o + 1] === 0 && ram[o + 2] === 0 && ram[o + 3] === 0) continue;
-    if (okAt(ram, o)) return (state.party3 = 0x02000000 + o);
+    if (okAt(ram, o)) {
+      Object.assign(state, { count3: 0x02000000 + o - 3, enemy3: 0x02000000 + o + 600 });
+      return (state.party3 = 0x02000000 + o);
+    }
+  }
+  // no count byte in front of a team: the pair the ROM's code names, if its player half holds a team (and nothing
+  // after it – a run of structs that goes on is some other array)
+  const at = hint?.player;
+  if (at >= 0x02000000 && at + 600 <= 0x02040000) {
+    const r = pk3Run(ram, at - 0x02000000, T);
+    if (r.n >= 1 && r.empty) {
+      Object.assign(state, { count3: null, enemy3: hint.enemy });
+      return (state.party3 = at);
+    }
   }
   state.party3 = null;
   return null;
 }
 
-function readGen3(entry, read, T, state = {}) {
-  if (entry.scan3) {
-    const at = findGen3Party(read, T, state);
-    if (!at) return null;
-    entry = { ...entry, partyAddr: `0x${at.toString(16)}`, partyCountAddr: `0x${(at - 3).toString(16)}`, enemyPartyAddr: `0x${(at + 600).toString(16)}` };
+/** The size of the found team: the count byte, or (no count byte, see findGen3Party) its valid structs. */
+function party3Count(read, T, state) {
+  if (state.count3 === null) {
+    const b = read(state.party3, 600);
+    return b ? pk3Run(b, 0, T).n : 0;
   }
-  const c = read(hex(entry.partyCountAddr), 1);
-  if (!c) return null;
-  const count = c[0];
+  return read(state.count3 ?? state.party3 - 3, 1)?.[0] ?? 0;
+}
+
+/**
+ * The memory-table entry for an expanded Gen 3 engine (Run & Bun, Too Many Types …): its team is searched for (scan3),
+ * with the ROM's own hints from romloc.mjs gen3MapTable `maps3` – the party pair its code names and gMain, whose
+ * battle flag (+0x439, bit 1) moved in newer builds (Too Many Types 2: gMain 0x03004084 instead of 0x030022C0).
+ */
+export function expandedEntry(entry, maps3 = null) {
+  const out = { ...entry, scan3: true, party3At: maps3?.party3 || null };
+  if (maps3?.gMain && entry.inBattle) out.inBattle = { ...entry.inBattle, addr: `0x${(maps3.gMain + 0x439).toString(16)}` };
+  return out;
+}
+
+function readGen3(entry, read, T, state = {}) {
+  let count;
+  if (entry.scan3) {
+    const at = findGen3Party(read, T, state, entry.party3At);
+    if (!at) return null;
+    count = party3Count(read, T, state);
+    entry = { ...entry, partyAddr: `0x${at.toString(16)}` };
+  } else {
+    const c = read(hex(entry.partyCountAddr), 1);
+    if (!c) return null;
+    count = c[0];
+  }
   if (count > 6) return { invalid: true };
   const raw = read(hex(entry.partyAddr), entry.structSize * count);
   if (!raw) return null;
@@ -677,8 +744,11 @@ function activeGB(entry, read, T, state, party, stale) {
  * third most often, as gBattleMons is in the base game. Like the party it is searched for, never assumed: battler 0
  * holds one of the player's Pokémon there (its PID and OT ID 12 bytes apart, species, level and max HP as in the
  * party) and battler 1 one of gEnemyParty's. The array is static, so once found it is kept for the session.
+ * The fields sit where they sit in Run & Bun in other builds too, but a build may add fields at the end: Too Many
+ * Types 1.6 has 0x60 bytes per battler (measured: Fennekin at 0x020230F8, the wild Poochyena 0x60 on). The size is
+ * found with the array – battler 1 one of the opponent's at one of `sizes` on – and kept with it (state.bmSize3).
  */
-const BMON3X = { size: 0x5c, species: 0x00, hp: 0x2a, level: 0x2c, maxHp: 0x2e, pid: 0x4c, status: 0x50, otId: 0x58 };
+const BMON3X = { size: 0x5c, sizes: [0x5c, 0x60, 0x64, 0x68], species: 0x00, hp: 0x2a, level: 0x2c, maxHp: 0x2e, pid: 0x4c, status: 0x50, otId: 0x58 };
 
 /** The mons of a gen 3 party array (count, 100-byte structs): raw PID and OT ID next to the parsed mon. */
 function rawParty3(read, at, n, T) {
@@ -715,7 +785,8 @@ function findBattleMons3x(read, T, state, mine, foes) {
   const ram = read(0x02000000, 0x40000);
   if (!ram) return null;
   const L = BMON3X;
-  for (let o = L.pid; o + L.size * 2 <= ram.length; o += 4) {
+  const biggest = Math.max(...L.sizes);
+  for (let o = L.pid; o + biggest * 2 <= ram.length; o += 4) {
     const pid = u32le(ram, o);
     if (!pid) continue;
     const p = mine.find((x) => x.pid === pid);
@@ -723,7 +794,10 @@ function findBattleMons3x(read, T, state, mine, foes) {
     const b = 0x02000000 + o - L.pid;
     // battler 0 is ours – the same species, level and max HP – and battler 1 one of the opponent's
     if (T.idx3?.[u16le(ram, o - L.pid + L.species)] !== p.m.species) continue;
-    if (!battler3x(read, b, mine) || !battler3x(read, b + L.size, foes)) continue;
+    if (!battler3x(read, b, mine)) continue;
+    const size = L.sizes.find((n) => battler3x(read, b + n, foes));
+    if (!size) continue;
+    state.bmSize3 = size;
     return (state.bmons3 = b);
   }
   return null;
@@ -737,21 +811,23 @@ function battleGen3(entry, read, T, state = {}) {
     // parties are found (gEnemyParty 600 bytes after the player's); who is out on both sides comes from gBattleMons
     // (searched for, findBattleMons3x) – without it the opponent is gEnemyParty's first one standing.
     if (!state.party3) return null;
-    const count = read(state.party3 - 3, 1)?.[0];
+    const count = party3Count(read, T, state);
     const mine = count >= 1 && count <= 6 ? rawParty3(read, state.party3, count, T) : [];
-    const foes = rawParty3(read, state.party3 + 600, 6, T);
+    const foes = rawParty3(read, state.enemy3 || state.party3 + 600, 6, T);
     if (!foes.length) return { kind: 'wild', enemy: null, active: null };
     const bm = mine.length ? findBattleMons3x(read, T, state, mine, foes) : null;
+    const size = state.bmSize3 || BMON3X.size; // (per build: see BMON3X)
     // (both battlers must belong to this battle: before the new battle's mons are sent out the array still holds
     // the previous battle's, whose opponent isn't in gEnemyParty any more)
     let me = bm ? battler3x(read, bm, mine) : null;
-    let foe = me ? battler3x(read, bm + BMON3X.size, foes) : null;
+    let foe = me ? battler3x(read, bm + size, foes) : null;
     if (bm) {
       // a found address that keeps failing in battle (another copy of a battler pair, a hack with another layout):
       // search again rather than keep it for the session
       state.bmFail3 = me && foe ? 0 : (state.bmFail3 || 0) + 1;
       if (state.bmFail3 >= 10) {
         state.bmons3 = null;
+        state.bmSize3 = null;
         state.bmFail3 = 0;
       }
     }
@@ -760,9 +836,9 @@ function battleGen3(entry, read, T, state = {}) {
       // one still fighting. Only when battler 3 is one of this battle's opponents is it a double battle at all –
       // battler 2 can still hold the partner of an earlier double battle (an opponent of an earlier battle is never
       // in gEnemyParty), which must not stand in for a fainted Pokémon in a single battle
-      const foe2 = battler3x(read, bm + 3 * BMON3X.size, foes);
+      const foe2 = battler3x(read, bm + 3 * size, foes);
       if (foe2) {
-        const me2 = battler3x(read, bm + 2 * BMON3X.size, mine);
+        const me2 = battler3x(read, bm + 2 * size, mine);
         if (me.hp === 0 && me2?.hp > 0) me = me2;
         if (foe.hp === 0 && foe2.hp > 0) foe = foe2;
       }
