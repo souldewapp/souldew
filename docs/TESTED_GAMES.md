@@ -108,8 +108,11 @@ the core rejects (one made on the Mac – Windows builds of the core write their
 states on the machine that made them; the play view now says so instead of "loaded") and QUIT. **With the patched
 Windows core** (cross-built in the VM with Ubuntu's MinGW-w64; it exports `souldew_read_memory` / `souldew_title_id`
 and needs only Windows' own DLLs) live memory works: the title ID from the core, the watched regions every 6 frames.
-`.github/workflows/ctr.yml` builds that core in libretro's MXE container (as Azahar's CI) and checks the exports; the
-Windows workflow starts the host on `windows-latest`. A game on a real Windows PC is still to come. (Wine only hands
+**GitHub Actions** (the branch pushed for it, no release): `.github/workflows/ctr.yml` built the 3DS part for Windows
+(the core in libretro's MXE container, as Azahar's CI; its two souldew exports checked) and for Linux (gcc 12 on Ubuntu
+22.04); the Windows workflow ran `ctrhost.exe` on `windows-latest` and built and smoke-tested the installer with the 3DS
+part inside (unpacked and installed app), the Linux workflow the AppImage and the .deb. A game on a real Windows PC is
+still to come – `windows-latest` has no GPU for Vulkan. (Wine only hands
 console programs Vulkan in a virtual desktop – a Wine detail, not one of Windows.) Without Vulkan (no graphics driver)
 souldew opens the Azahar app instead.
 
