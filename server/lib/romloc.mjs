@@ -4,8 +4,8 @@
 // (shared/live/romspecies.mjs) and for Game Boy hacks where their RAM variables moved (shared/live/romwram.mjs). Both are small and cached per file (path, size, time) in CACHE_DIR/romloc.
 // `vanilla` says whether the file is an unmodified retail ROM (its CRC32 is in the catalog): a randomized game, a
 // ROM hack or anything else changed shows the ROM's own place names (shared/live/location.mjs placeName).
-import { readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, statSync, existsSync, mkdirSync, writeFileSync, openSync, readSync, closeSync } from 'node:fs';
+import { join, extname } from 'node:path';
 import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
 import { romLocations, gen3MapTable } from '../../shared/live/romloc.mjs';
@@ -14,8 +14,11 @@ import { gbWramShift } from '../../shared/live/romwram.mjs';
 import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
+import { isCtrExt } from '../../shared/romid.mjs';
+import { identifyCtr } from '../../shared/ctr.mjs';
+import { ctrZonePlaces } from '../../shared/live/ctrzones.mjs';
 
-const VERSION = 11; // bump when romLocations() / romSpecies() change what they find (both 2.3.1 branches bumped it)
+const VERSION = 12; // bump when romLocations() / romSpecies() / ctrData() change what they find
 const memo = new Map();
 let tables = null;
 
@@ -83,6 +86,29 @@ function gbShift(u8, o) {
  * Never throws.
  */
 /** What romDataFor finds when there's nothing to find – also the list of fields the disk cache must give back. */
+/**
+ * A Nintendo 3DS game (1–4 GB – read a few KB at a time, never whole): the zone → place table of its RomFS
+ * (shared/live/ctrzones.mjs) for the place sign: { gen, ctr: { family, places } }.
+ */
+export function ctrData(file) {
+  let fd;
+  try {
+    fd = openSync(file, 'r');
+    const readAt = (o, n) => {
+      const b = Buffer.alloc(n);
+      const got = readSync(fd, b, 0, n, o);
+      return new Uint8Array(b.buffer, b.byteOffset, got);
+    };
+    const info = identifyCtr(readAt, extname(file).slice(1));
+    const z = info ? ctrZonePlaces(readAt, info) : null;
+    return { ...ROMDATA_NONE, data: z ? { gen: z.gen, ctr: { family: z.family, places: z.places } } : null };
+  } catch {
+    return { ...ROMDATA_NONE };
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+}
+
 export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, ownTypes: null, vanilla: null });
 /** A disk-cache entry back into romDataFor's result (every field of ROMDATA_NONE – a missing one would be lost on the
  * next start, as the own types of Too Many Types were). */
@@ -116,8 +142,12 @@ export function romDataFor({ file = null, bytes = null, key = null }, { sharedDi
   }
   let r = none;
   try {
+    // a 3DS game is never read whole
+    if (file && isCtrExt(extname(file).slice(1))) r = ctrData(file);
+    else {
     const rom = bytes || readFileSync(file);
     r = romData(new Uint8Array(rom.buffer, rom.byteOffset, rom.byteLength), sharedDir);
+    }
   } catch {
     r = none;
   }

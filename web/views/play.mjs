@@ -98,8 +98,8 @@ export function PlayView() {
     </div>`;
   }
   if (target.error) return html`<${PlayHome} />`;
-  // 3DS games have no built-in emulator: always Azahar (ExternalPlay offers to install it)
-  if (target.system === '3ds') return html`<${ExternalPlay} target=${target} emu="azahar" />`;
+  // 3DS: souldew's own player when its 3DS part is there (and Azahar isn't chosen in Settings), else Azahar on its own
+  if (target.system === '3ds' && (!status?.ctr?.ok || status?.config?.emulatorFor?.['3ds'] === 'azahar')) return html`<${ExternalPlay} target=${target} emu="azahar" />`;
   const choice = status?.config?.emulatorFor?.[target.system] || 'builtin';
   if (choice !== 'builtin' && status?.emulators?.[choice]?.installed) return html`<${ExternalPlay} target=${target} emu=${choice} />`;
   if (running) return html`<${SwitchGame} next=${target} />`;
@@ -239,7 +239,9 @@ export function GameSession({ session, mode }) {
   // "A communication error has occurred" in the melonDS core once a save exists (any save, DeSmuME's too – still so in
   // the bundled melonDS 0.9.3, checked 11/2026). DeSmuME runs them fine and is the faster core for them anyway: in town
   // ~10 ms per frame on an M1, the same as "DeSmuME 2015" and with any core option (lib/reach.mjs).
-  const core = isDs && /^(IPK|IPG|IRB|IRA|IRE|IRD)/.test(target.code || '') ? 'desmume' : '';
+  // (3DS: Azahar in the New 3DS mode – states of another core or mode can't be loaded, and a state of the other mode
+  // would stop the game)
+  const core = target.system === '3ds' ? 'azahar-n3ds' : isDs && /^(IPK|IPG|IRB|IRA|IRE|IRD)/.test(target.code || '') ? 'desmume' : '';
   // What fast-forward really reaches in this game on this computer (lib/reach.mjs), remembered per game and core: the
   // turbo steps it can't reach aren't offered – the highest one then plays as fast as the computer manages.
   const reachKey = `sl-reach-${target.system}-${target.code || target.key}-${core || 'default'}`;
@@ -347,10 +349,11 @@ export function GameSession({ session, mode }) {
       let ok = false;
       let shot = null;
       try {
-        const st = emu().getState();
+        // (a 3DS state comes from the native host – a promise; EmulatorJS hands it over at once)
+        const st = await emu().getState();
         shot = Promise.resolve(emu().snapshot?.(SHOT)).catch(() => null); // the picture for the card, taken with the state
-        const res = await fetch(stateUrl(slot), { method: 'PUT', headers: { 'x-soullink': '1' }, body: st });
-        ok = res.ok;
+        const res = st ? await fetch(stateUrl(slot), { method: 'PUT', headers: { 'x-soullink': '1' }, body: st }) : null;
+        ok = !!res?.ok;
       } catch {
         ok = false;
       }
@@ -376,6 +379,12 @@ export function GameSession({ session, mode }) {
       if (!bytes) {
         armLoad(null);
         return flash(r?.status === 404 ? t('play.noState', 'Slot {n} is empty', { n: slot }) : t('play.stateReadFailed', 'Couldn’t read slot {n}', { n: slot }));
+      }
+      // a state of another core (or 3DS mode) can't be loaded – as the states panel says (and a 3DS one would stop the game)
+      const info = await fetch(`/api/saves/states?id=${encodeURIComponent(target.stateId)}`).then((x) => x.json()).then((l) => l.find((x) => x.slot === slot)?.info).catch(() => null);
+      if (info && (info.core || '') !== (core || '')) {
+        armLoad(null);
+        return flash(t('states.otherCore', 'Made with another emulator core – can’t be loaded here'));
       }
       armLoad({ slot, bytes });
     },
@@ -622,7 +631,9 @@ export function GameSession({ session, mode }) {
       chain = chain.then(async () => {
         if (!loadedOk) return;
         try {
-          const res = await fetch(stateUrl(AUTO_SLOT), { method: 'PUT', headers: { 'x-soullink': '1' }, body: st });
+          const body = await st; // (3DS: a promise)
+          if (!body) return;
+          const res = await fetch(stateUrl(AUTO_SLOT), { method: 'PUT', headers: { 'x-soullink': '1' }, body });
           if (res.ok) {
             ls.set(autoKey, { at: Date.now(), save: lastSave, core });
             // its card picture: a fresh one, or the recent one once the frame is gone (closing)
@@ -664,6 +675,24 @@ export function GameSession({ session, mode }) {
     let offAudio = null; // the mixer's event feed (diagnostics)
     let inBattle = false; // the live battle reader sees a battle (the turbo mixer's 'battle' song key)
     (async () => {
+      // 3DS: the game's saves are files in the host's folder, not a battery save handed to the player – what changes
+      // when the game saves is their fingerprint (lib/ctrplayer.mjs saveStamp): it stands in for the save's hash.
+      if (target.system === '3ds') {
+        lastSave = (await emu()?.saveStamp?.()) ?? null;
+        if (lastSave) guard.loaded(lastSave);
+        loadedOk = true;
+        const stampLoop = async () => {
+          if (stopped) return;
+          const h = await emu()?.saveStamp?.();
+          if (h && h !== lastSave) {
+            lastSave = h;
+            guard.saved(h);
+            saveAuto(grabState()); // "where you left off" goes with the new save
+          }
+          if (!stopped) setTimeout(stampLoop, 4000);
+        };
+        setTimeout(stampLoop, 4000);
+      }
       // Read the save on disk first. A failed read must never be followed by uploads – the fresh
       // emulator SRAM would overwrite the real save.
       for (let attempt = 0; attempt < 3 && !loadedOk && !stopped; attempt++) {
@@ -1008,13 +1037,16 @@ export function GameSession({ session, mode }) {
 
   // The frame's URL is fixed for the whole session – changing it would reboot the game.
   const [src] = useState(() => {
+    // 3DS: souldew's own player page – the game runs in the native host (server/lib/ctr.mjs), its saves live in the
+    // host's folder for this game / run slot (target.key)
+    if (target.system === '3ds') return `/player3ds.html?rom=${encodeURIComponent(target.rom)}&key=${encodeURIComponent(target.key)}&name=${encodeURIComponent(target.name)}`;
     // EmulatorJS names the ROM (and its browser-side save) after the URL's last segment → make it unique per game.
     const romKey = `${hash(new TextEncoder().encode(target.key)).replace(/\D/g, '')}`;
     const romUrl = `/rom/g${romKey}.${target.system}?src=${encodeURIComponent(target.rom)}`;
     const lay = layout === 'lr' ? '&layout=Left%2FRight&dlayout=left%2Fright' : '';
     return `/player.html?system=${target.system}${core ? `&core=${core}` : ''}${lay}${fullTurbo ? '' : '&fullturbo=0'}&rom=${encodeURIComponent(romUrl)}&name=${encodeURIComponent(target.name)}&save=${encodeURIComponent(target.saveUrl)}&tap=${encodeURIComponent(t('play.tapToStart', 'Click to start'))}`;
   });
-  const arn = isDs ? (layout === 'lr' ? 512 / 192 : 256 / 384) : target.system === 'gba' ? 3 / 2 : 10 / 9;
+  const arn = target.system === '3ds' ? 400 / 480 : isDs ? (layout === 'lr' ? 512 / 192 : 256 / 384) : target.system === 'gba' ? 3 / 2 : 10 / 9;
   const names = isRun && doc && manifest ? getPlayers(doc, manifest) : null;
   const others = isRun && manifest ? othersOf(me, manifest) : [];
   const myLive = isRun && doc ? live(doc, me) : null;

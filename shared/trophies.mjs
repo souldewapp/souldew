@@ -19,8 +19,10 @@ export const GENERATIONS = [
   { gen: 9, region: 'Paldea', from: 906, to: 1025 },
 ];
 export const MAX_SPECIES = 1025;
-/** The newest species a game souldew supports can hold (Gen 1–5: GB, GBC, GBA, DS). */
-export const SUPPORTED_MAX = 649;
+/** The newest species a game souldew supports can hold (Gen 1–7: GB, GBC, GBA, DS, 3DS). */
+export const SUPPORTED_MAX = 809;
+/** The generations souldew's games cover. */
+export const PLAYABLE_GENS = GENERATIONS.filter((g) => g.to <= SUPPORTED_MAX).map((g) => g.gen);
 export const genOfSpecies = (id) => GENERATIONS.find((g) => id >= g.from && id <= g.to)?.gen || null;
 export const obtainable = (id) => id >= 1 && id <= SUPPORTED_MAX;
 
@@ -31,21 +33,24 @@ const LEGENDARY = new Set([144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251
   1010, 1014, 1015, 1016, 1017, 1024, 1025]);
 export const isLegendary = (id) => LEGENDARY.has(id);
 /**
- * Mythicals the Gen 1–5 games only hand out at events (Mew, Celebi, Jirachi, Deoxys, Phione, Manaphy, Darkrai,
- * Shaymin, Arceus, Victini, Keldeo, Meloetta, Genesect): a Nuzlocke can't catch them, so the "complete" goals and the
- * dex medals leave them out. Caught anyway (a randomizer drops them on routes), they still fill the Pokédex.
+ * Mythicals the Gen 1–7 games only hand out at events (Mew, Celebi, Jirachi, Deoxys, Phione, Manaphy, Darkrai,
+ * Shaymin, Arceus, Victini, Keldeo, Meloetta, Genesect, Diancie, Hoopa, Volcanion, Magearna, Marshadow, Zeraora) and
+ * Meltan/Melmetal (Pokémon GO only): a Nuzlocke can't catch them, so the "complete" goals and the dex medals leave
+ * them out. Caught anyway (a randomizer drops them on routes), they still fill the Pokédex.
  */
-export const EVENT_ONLY = new Set([151, 251, 385, 386, 489, 490, 491, 492, 493, 494, 647, 648, 649]);
+export const EVENT_ONLY = new Set([151, 251, 385, 386, 489, 490, 491, 492, 493, 494, 647, 648, 649, 719, 720, 721, 801, 802, 807, 808, 809]);
 /** How many species of from…to a run can really catch. */
 export const catchableIn = (from, to) => to - from + 1 - [...EVENT_ONLY].filter((id) => id >= from && id <= to).length;
 /** The three starters of each generation (first stage). */
-export const STARTERS = [[1, 4, 7], [152, 155, 158], [252, 255, 258], [387, 390, 393], [495, 498, 501]];
+export const STARTERS = [[1, 4, 7], [152, 155, 158], [252, 255, 258], [387, 390, 393], [495, 498, 501], [650, 653, 656], [722, 725, 728]];
 const STARTER_LINES = new Set(STARTERS.flat().flatMap((id) => [id, id + 1, id + 2]));
-const EEVEELUTIONS = [134, 135, 136, 196, 197, 470, 471];
-const FOSSILS = new Set([138, 139, 140, 141, 142, 345, 346, 347, 348, 408, 409, 410, 411, 564, 565, 566, 567]);
+const EEVEELUTIONS = [134, 135, 136, 196, 197, 470, 471, 700];
+const FOSSILS = new Set([138, 139, 140, 141, 142, 345, 346, 347, 348, 408, 409, 410, 411, 564, 565, 566, 567, 696, 697, 698, 699]);
 const BIDOOF = new Set([399, 400]);
 const EXPLODERS = new Set([74, 75, 100, 101]); // Geodude, Graveler, Voltorb, Electrode – Selfdestruct / Explosion
 const ROAMERS = new Set([243, 244, 245, 380, 381, 481, 488, 641, 642]); // they flee on turn one
+const ROAMERS_XY = new Set([144, 145, 146]); // X/Y's legendary bird roams – in the other games it waits in its cave
+const roams = (id, gen) => ROAMERS.has(id) || (gen === 6 && ROAMERS_XY.has(id));
 const HOENN = /ruby|sapphire|emerald/i;
 const CLASSIC_TYPES = ['normal', 'fire', 'water', 'grass', 'electric', 'ice', 'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel'];
 
@@ -306,9 +311,9 @@ export const ACHIEVEMENTS = [
   { id: 'winNuzlocke', cat: 'journey', rarity: 'rare', check: (c) => flag(firstBy(c.digests.filter((d) => won(d) && d.mode === 'nuzlocke').map((d) => d.status), () => true)) },
   { id: 'wins5', cat: 'journey', rarity: 'epic', target: 5, check: (c) => count(c.digests.filter(won).length, c.digests.filter(won).map((d) => d.status.at), 5) },
   { id: 'runs10', cat: 'journey', rarity: 'uncommon', target: 10, check: (c) => count(c.digests.length, c.digests.map((d) => d.createdAt), 10) },
-  { id: 'allGens', cat: 'journey', rarity: 'epic', target: 5, check: (c) => {
-    const gens = [1, 2, 3, 4, 5].map((g) => nth(c.digests.filter((d) => d.gen === g).map((d) => d.createdAt), 1) ?? (c.digests.some((d) => d.gen === g) ? 0 : null));
-    return count(gens.filter((x) => x !== null).length, gens.map((x) => x || null), 5);
+  { id: 'allGens', cat: 'journey', rarity: 'epic', target: PLAYABLE_GENS.length, check: (c) => {
+    const gens = PLAYABLE_GENS.map((g) => nth(c.digests.filter((d) => d.gen === g).map((d) => d.createdAt), 1) ?? (c.digests.some((d) => d.gen === g) ? 0 : null));
+    return count(gens.filter((x) => x !== null).length, gens.map((x) => x || null), PLAYABLE_GENS.length);
   } },
   { id: 'level100', cat: 'journey', rarity: 'epic', check: (c) => flag(firstBy(c.catches, (x) => (x.level || 0) >= 100) && { at: null }) },
   { id: 'firstEvolution', cat: 'journey', rarity: 'common', check: (c) => { const ev = c.digests.flatMap((d) => d.evolutions); return count(ev.length, ev.map((x) => x.at), 1); } },
@@ -326,6 +331,8 @@ export const ACHIEVEMENTS = [
   { id: 'dexHoenn', cat: 'collection', rarity: 'epic', target: catchableIn(252, 386), check: dexGoal(252, 386) },
   { id: 'dexSinnoh', cat: 'collection', rarity: 'epic', target: catchableIn(387, 493), check: dexGoal(387, 493) },
   { id: 'dexUnova', cat: 'collection', rarity: 'epic', target: catchableIn(494, 649), check: dexGoal(494, 649) },
+  { id: 'dexKalos', cat: 'collection', rarity: 'epic', target: catchableIn(650, 721), check: dexGoal(650, 721) },
+  { id: 'dexAlola', cat: 'collection', rarity: 'epic', target: catchableIn(722, 809), check: dexGoal(722, 809) },
   { id: 'dexNational', cat: 'collection', rarity: 'legendary', target: catchableIn(1, SUPPORTED_MAX), check: dexGoal(1, SUPPORTED_MAX) },
   { id: 'seen100', cat: 'collection', rarity: 'uncommon', target: 100, check: (c) => {
     const s = Object.values(c.dex).filter((e) => e.seenAt !== null || e.caught > 0);
@@ -449,7 +456,7 @@ export const ACHIEVEMENTS = [
   { id: 'garchomp', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(killedBy(c, (k) => k.kind === 'trainer' && k.species === 445), () => true)) },
   { id: 'kaboom', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(killedBy(c, (k) => k.kind === 'wild' && EXPLODERS.has(k.species)), () => true)) },
   { id: 'teleport', cat: 'fun', rarity: 'common', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.missed.filter((x) => x.species === 63)), () => true)) },
-  { id: 'roamer', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.missed.filter((x) => ROAMERS.has(x.species))), () => true)) },
+  { id: 'roamer', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.missed.filter((x) => roams(x.species, d.gen))), () => true)) },
   { id: 'shinyDown', cat: 'fun', rarity: 'rare', hidden: true, check: (c) => flag(firstBy(c.catches.filter((x) => x.dead && x.shiny).map((x) => ({ at: x.diedAt })), () => true)) },
   { id: 'gyarados', cat: 'collection', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.evolutions.filter((e) => e.from === 129 && e.to === 130)), () => true)) },
   { id: 'feebas', cat: 'collection', rarity: 'rare', check: (c) => flag(firstBy(c.catches.filter((x) => x.first === 349), () => true)) },

@@ -13,8 +13,8 @@ import { PLATFORM } from '../lib/platform.mjs';
 import { gpuBackends } from '/shared/gpu.mjs';
 
 const SYSTEMS = [['gb', 'Game Boy'], ['gbc', 'Game Boy Color'], ['gba', 'Game Boy Advance'], ['nds', 'Nintendo DS'], ['3ds', 'Nintendo 3DS']];
-/** Systems the built-in emulator doesn't run – only an external one. */
-const EXTERNAL_ONLY = ['3ds'];
+/** Systems the built-in player runs only with an extra part: 3DS needs souldew's 3DS host (status.ctr). */
+const externalOnly = (sys, status) => sys === '3ds' && !status?.ctr?.ok;
 const SYS_SHORT = { nds: 'DS', gba: 'GBA', gb: 'GB' };
 
 function shortcutAction(code) {
@@ -342,10 +342,10 @@ export function SettingsView() {
       <p class="small muted">${t('set.emuText', 'The built-in emulator works for every system up to the DS and has the best live sync. Nintendo 3DS games run in Azahar. External emulators are optional otherwise.')}</p>
       <table class="data"><thead><tr><th>${t('set.system', 'System')}</th><th>${t('set.useEmu', 'Play with')}</th></tr></thead><tbody>
         ${SYSTEMS.map(([sys, label]) => html`<tr><td>${label}</td><td>
-          <select value=${EXTERNAL_ONLY.includes(sys) ? Object.keys(status?.emulators || {}).find((id) => status.emulators[id].systems.includes(sys)) : cfg.emulatorFor?.[sys] || 'builtin'}
-            disabled=${EXTERNAL_ONLY.includes(sys)} onChange=${(e) => save({ emulatorFor: { ...(cfg.emulatorFor || {}), [sys]: e.target.value } })}>
-            ${!EXTERNAL_ONLY.includes(sys) && html`<option value="builtin">${t('set.builtin', 'Built-in (live)')}</option>`}
-            ${Object.entries(status?.emulators || {}).filter(([, e]) => e.systems.includes(sys)).map(([id, e]) => html`<option value=${id} disabled=${!e.installed && !EXTERNAL_ONLY.includes(sys)}>${e.name}${e.live === 'script' ? ` (${t('set.liveScript', 'live via script')})` : e.live === 'rpc' ? ` (${t('set.liveRpc', 'live via RPC')})` : ` (${t('set.liveSave', 'syncs on save')})`}${e.installed ? '' : ` – ${t('set.notInstalled', 'not installed')}`}</option>`)}
+          <select value=${externalOnly(sys, status) ? Object.keys(status?.emulators || {}).find((id) => status.emulators[id].systems.includes(sys)) : cfg.emulatorFor?.[sys] || 'builtin'}
+            disabled=${externalOnly(sys, status)} onChange=${(e) => save({ emulatorFor: { ...(cfg.emulatorFor || {}), [sys]: e.target.value } })}>
+            ${!externalOnly(sys, status) && html`<option value="builtin">${t('set.builtin', 'Built-in (live)')}</option>`}
+            ${Object.entries(status?.emulators || {}).filter(([, e]) => e.systems.includes(sys)).map(([id, e]) => html`<option value=${id} disabled=${!e.installed && !externalOnly(sys, status)}>${e.name}${e.live === 'script' ? ` (${t('set.liveScript', 'live via script')})` : e.live === 'rpc' ? ` (${t('set.liveRpc', 'live via RPC')})` : ` (${t('set.liveSave', 'syncs on save')})`}${e.installed ? '' : ` – ${t('set.notInstalled', 'not installed')}`}</option>`)}
           </select></td></tr>`)}
       </tbody></table>
       ${Object.entries(status?.emulators || {}).map(([id, e]) => html`<div class="check-item">
@@ -377,7 +377,7 @@ export function SettingsView() {
       <dl class="facts small">
         <dt>${t('set.randomizer', 'Randomizer')}</dt><dd>Universal Pokémon Randomizer ZX ${status?.upr?.version} · Java ${status?.java?.version || t('set.javaMissing', 'not found')}${status?.java?.bundled ? ` (${t('set.bundled', 'bundled')})` : ''}</dd>
         <dt>${t('set.data', 'Pokémon data')}</dt><dd>PokeAPI · ${t('set.covers', 'covers')}: libretro-thumbnails</dd>
-        <dt>${t('set.emuCore', 'Built-in emulator')}</dt><dd>EmulatorJS (melonDS, DeSmuME, mGBA, Gambatte) · 3DS: Azahar</dd>
+        <dt>${t('set.emuCore', 'Built-in emulator')}</dt><dd>EmulatorJS (melonDS, DeSmuME, mGBA, Gambatte) · 3DS: Azahar (libretro)</dd>
       </dl>
       <div class="row">
         <button class="btn small" onClick=${() => openExternal(LINKS.github)}><${Icon} name="external" size=${14} />${t('set.github', 'souldew on GitHub')}</button>

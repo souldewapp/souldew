@@ -116,9 +116,13 @@ test('buildDex: caught through evolutions, first catch, shiny, deaths; seen from
   assert.equal(totals.caught, 4); // 4, 5, 6, 16
   assert.equal(totals.seen, 8);
   assert.equal(totals.perGen[0].caught, 4);
-  assert.equal(totals.perGen.find((g) => g.gen === 6).supported, false);
-  assert.equal(T.obtainable(649), true);
-  assert.equal(T.obtainable(650), false);
+  assert.equal(totals.perGen.find((g) => g.gen === 7).supported, true, 'Gen 6/7: the 3DS games');
+  assert.equal(totals.perGen.find((g) => g.gen === 8).supported, false);
+  assert.equal(T.obtainable(809), true);
+  assert.equal(T.obtainable(810), false);
+  assert.deepEqual(T.PLAYABLE_GENS, [1, 2, 3, 4, 5, 6, 7]);
+  // Alola's goal leaves out its event mythicals and Meltan/Melmetal (Pokémon GO only)
+  assert.equal(totals.perGen.find((g) => g.gen === 7).goal, 809 - 722 + 1 - 5);
   assert.equal(T.genOfSpecies(1025), 9);
 });
 
@@ -299,7 +303,8 @@ test('medals: tiers per category, per regional dex and the champion’s medal', 
   assert.equal(m['cat-skill'].tier, -1);
   assert.equal(m['dex-1'].tier, 4, 'Kanto complete');
   assert.equal(m['dex-2'].tier, -1);
-  assert.ok(!m['dex-6'], 'no medal for a generation souldew doesn’t play');
+  assert.equal(m['dex-7'].tier, -1, 'Alola: a medal to earn');
+  assert.ok(!m['dex-8'], 'no medal for a generation souldew doesn’t play');
   assert.ok(m.champion.tier >= 0);
   assert.equal(T.TIERS.length, 5);
 });
@@ -396,4 +401,32 @@ test('rules: the classic memes – Miltank, Garchomp, Selfdestruct, Abra, roamer
   assert.equal(o.miltank.ok, false);
   assert.equal(o.kaboom.ok, false);
   assert.equal(evalOf([run]).tooMuchWater.n, 0, 'no type data – no progress');
+});
+
+test('rules: Gen 6/7 (the 3DS games) – Kalos/Alola dexes, their starters, Sylveon, Kalos fossils, X/Y\'s roaming bird, all seven generations', () => {
+  const xy = (id, extra = {}) => solo(id, { game: { id: 'pokemon-x', system: '3ds' }, ...extra });
+  const run = T.digestRun(xy('ffff0001'), docOf({
+    'enc:a1:p1': caught(650, T0 + 1),
+    'enc:a2:p1': caught(653, T0 + 2),
+    'enc:a3:p1': caught(656, T0 + 3),
+    'enc:a4:p1': caught(696, T0 + 4),
+    'enc:a5:p1': { outcome: 'missed', species: 144, at: T0 + 5 },
+  }), 'p1', { gen: 6 });
+  let s = evalOf([run]);
+  for (const id of ['starterTrio', 'fossil', 'roamer']) assert.equal(s[id].ok, true, id);
+  // Articuno in its cave (FireRed) doesn't roam: missing it isn't the meme
+  const fr = T.digestRun(solo('ffff0002'), docOf({ 'enc:a5:p1': { outcome: 'missed', species: 144, at: T0 + 5 } }), 'p1', { gen: 3 });
+  assert.equal(evalOf([fr]).roamer.ok, false);
+  // Sylveon is the eighth Eeveelution
+  const eevee = T.digestRun(xy('ffff0003'), docOf(Object.fromEntries([134, 135, 136, 196, 700].map((id, i) => [`enc:e${i}:p1`, caught(id, T0 + i)]))), 'p1', { gen: 6 });
+  assert.equal(evalOf([eevee]).eevee.ok, true);
+  // Kalos complete: every species from #650 to #721 but Diancie, Hoopa, Volcanion
+  const kalos = T.digestRun(xy('ffff0004'), docOf(Object.fromEntries(Array.from({ length: 69 }, (_, i) => [`enc:k${i}:p1`, caught(650 + i, T0 + i)]))), 'p1', { gen: 6 });
+  s = evalOf([kalos]);
+  assert.equal(s.dexKalos.ok, true);
+  assert.equal(s.dexAlola.ok, false);
+  // a run in each of the seven generations
+  const runs = [1, 2, 3, 4, 5, 6, 7].map((g) => T.digestRun(solo(`ffff01${g}0`), docOf({}), 'p1', { gen: g }));
+  assert.equal(evalOf(runs.slice(0, 6)).allGens.ok, false);
+  assert.equal(evalOf(runs).allGens.ok, true);
 });

@@ -56,10 +56,28 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 | **Too Many Types 1.6** (Emerald) | ✅ | ✅ | ✅ | **Checked (2.3.1, issue #3)** with the v1.6 BPS (source Emerald 1F1C08FB, result E91FEF2D – byte for byte the pre-patched ROM from the hack's site, which the library now recognises by that CRC32). pokeemerald-expansion like Run & Bun: species by name (1235, National Dex order), the team searched for in RAM (0x02023644), the place through SaveBlock1 (pointer 0x03005D9C). Starts in the bedroom: Fennekin from Birch's bag → "Starter", Littleroot Town / Route 101 / Route 103, the wild Poochyena L2 13 → 6 → 0 as on screen. **Fixed:** its battlers are 0x60 bytes, not Run & Bun's 0x5C – gBattleMons (0x020230F8) wasn't found, so the panel didn't know who was out; the size is now found with it. Checked: a switch to Poochyena (index 1, 16/16), May's Popplio L5 on Route 103 → trainer (20 → 11 as on screen, Fennekin 10/19). **Real catch:** Poochyena L3 → "Route 101" (Poké Balls written into the bag; TMT1 keeps the bag's key at the base game's 0xAC). **Types:** its own (57 besides "???", e.g. Fennekin is Fire + type 36) – shown as none, see below. The matrix plan plays the same route on its own (starter, the wild Poochyena, Route 101 and the catch, all ✅ with the BPS-patched ROM; the pre-patched one is the same file). It answers the battle menu with A only: in these hacks B (and START) jump to RUN, a second B flees, and an A while a text prints starts the text again. Plan: [too-many-types.json](../scripts/rom-matrix/plans/too-many-types.json). |
 | **Too Many Types 2 1.5.2** (Emerald) | ✅ | ✅ | ✅ | **Checked (2.3.1, issue #3)** with a pre-patched v1.5.2 ROM (D25FBCCC) and an older BPS patch ("1.1.1 mirror", result 69ECC373 – identified from its checksums, the library links it to the hack). **Fixed – it read as plain Emerald before:** a newer pokeemerald-expansion keeps the species names inside gSpeciesInfo (0x104 bytes per species, 1543 of them incl. its own Ligmiblin, Regisus …), so no species table was found; its team has no count byte in front and gEnemyParty sits before gPlayerParty (0x02032A3C / 0x02032C94, now named by the code: the pair 600 bytes apart it uses most); gMain moved to 0x03004084 (the battle flag at +0x439, found next to that literal in the code); the species field carries the Tera type in its top bits (Chimchar reads 0x5986). Now: Lilycove City (where the story starts), Chimchar L5 from Mom's package → "Starter", the rival's Froakie L5 at the west exit → trainer (19 → 11, Chimchar 17/20 as on screen), Route 121, a wild Sewaddle → wild, a switch (index 1). **Real catch:** Sewaddle L2 → "Route 121". The matrix plan plays this on its own – ✅ for party, place, battle and catch with v1.5.2 and with the 1.1.1 patch applied by souldew's patcher (Chimchar, the rival's Froakie, a catch on Route 121). The species picker offers everything up to #1024 plus the hack's own Pokémon (TMT1: up to #905). Plan: [too-many-types-2.json](../scripts/rom-matrix/plans/too-many-types-2.json). |
 
-### Nintendo 3DS (Azahar)
+### Nintendo 3DS
 
-Checked on macOS (Apple Silicon) with **Azahar 2126.2**, installed through souldew's one-click install, in its own portable
-profile. **No retail 3DS game was available**, so the run used free homebrew and stand-ins:
+**souldew's own player (macOS, Apple Silicon)** – Azahar 2126.2's libretro core with souldew's patch, Vulkan through
+MoltenVK, New 3DS mode, checked with the real US cartridge images (decrypted `.cci`) of **Omega Ruby (Rev 2), Y, Sun
+and Ultra Sun**, in the development app and in the packaged app (`electron-builder --mac dir`):
+
+| What | Result |
+|---|---|
+| Start from the library, in the play view like every other game | ✅ all four, 60 fps (turbo 130–240 fps), title ID reported by the core |
+| Picture (both screens), sound, keyboard and controller, touch screen with the mouse (the name entry's keyboard) | ✅ |
+| Circle Pad: the direction keys move it too (Gen 7 walks only with the Circle Pad) | ✅ Sun and Ultra Sun walk |
+| Savestates (15–23 MB), quick save/load, restart, fast-forward, screenshots | ✅; a state from another core mode is refused with a message instead of crashing the core |
+| "Saved in the game" indicator (follows the game's save files on the virtual SD card) | ✅ Omega Ruby: "before this session" → "12 seconds ago" after saving in the game |
+| **Omega Ruby live:** team, nickname, HP | ✅ Torchic L5 20/20 with its nickname, from boot (the game loads its save at start) |
+| **Omega Ruby battle panel** | ✅ wild Poochyena L3 with HP as on screen; gone after the battle |
+| **Omega Ruby place sign** (the zone in memory → the ROM's zone table → the place) | ✅ Littleroot Town ("Wurzelheim") → Route 101 |
+| Zone tables of all four ROMs (X/Y: last file of `a/0/1/2`, ORAS: second-to-last of `a/0/1/3`, Sun/Moon/USUM: `a/0/7/7` file 0, LZ11) | ✅ every zone has a named place |
+| Gen 7 team and battle | ⚠️ not seen yet: Sun and Ultra Sun were played to the house, before the starter. The party and battle addresses come from community research and are covered by unit tests with real PK7 files |
+| Gen 7 place sign | ❌ where the game keeps its zone isn't known yet: a heap scan (`__emu.watch`) needs a zone change, and Ultra Sun's story keeps the player in the house at first |
+
+**Azahar app** (the external route, Windows/Linux or by choice): checked on macOS with **Azahar 2126.2**, installed
+through souldew's one-click install, in its own portable profile, with free homebrew and stand-ins:
 
 | What | Result |
 |---|---|
@@ -71,8 +89,8 @@ profile. **No retail 3DS game was available**, so the run used free homebrew and
 | Stand-in Omega Ruby, party at the 1.4 update's address | ✅ version found by itself, party read |
 | Stand-ins Sun / Ultra Moon | ⚠️ title → entry ✅; the party addresses lie outside the small homebrew process, so only the unit tests (real PK7 files) cover the Gen 7 party |
 
-Not checked: a real X/Y/ORAS/SM/USUM ROM, Windows and Linux builds of Azahar, battle panel and place sign (not built
-for 3DS yet).
+Not checked: X/Alpha Sapphire/Moon/Ultra Moon (same code as their pairs), the built-in player on Windows and Linux
+(not built there yet – the host is POSIX C; those systems use the Azahar app), Azahar's Windows and Linux builds.
 
 ### Not in the test set
 

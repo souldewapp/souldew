@@ -1,0 +1,60 @@
+diff --git a/src/citra_libretro/citra_libretro.cpp b/src/citra_libretro/citra_libretro.cpp
+index 8a65f9d..47abee3 100644
+--- a/src/citra_libretro/citra_libretro.cpp
++++ b/src/citra_libretro/citra_libretro.cpp
+@@ -750,3 +750,45 @@ size_t retro_get_memory_size(unsigned id) {
+ void retro_cheat_reset() {}
+ 
+ void retro_cheat_set(unsigned index, bool enabled, const char* code) {}
++
++// ---- souldew: reading the running game's memory --------------------------------------------------------------
++// The memory map (RETRO_ENVIRONMENT_SET_MEMORY_MAPS) is set once, when the game loads – before the game allocates
++// its heaps, so the regions frontends need for live data (the party in the application / linear heap) aren't in it.
++// These two calls read through the process's page table instead: any mapped address, whatever VMAs it is split
++// into. Call them between two retro_run()s (the same thread), never from another thread.
++extern "C" {
++
++/// Copies `size` bytes at the game process's virtual address `addr` to `out`. false when any byte isn't mapped
++/// (nothing is copied then) or no game runs.
++bool souldew_read_memory(uint32_t addr, void* out, uint32_t size) {
++    if (!emu_instance || !emu_instance->game_loaded || !out || size == 0)
++        return false;
++    auto& system = Core::System::GetInstance();
++    if (!system.IsPoweredOn())
++        return false;
++    auto process = system.Kernel().GetCurrentProcess();
++    if (!process)
++        return false;
++    auto& memory = system.Memory();
++    // every page of the range must be mapped (ReadBlock would log and zero-fill unmapped ones)
++    for (uint64_t page = addr & ~0xFFFull; page < static_cast<uint64_t>(addr) + size; page += 0x1000) {
++        if (!memory.IsValidVirtualAddress(*process, static_cast<VAddr>(page)))
++            return false;
++    }
++    memory.ReadBlock(*process, addr, out, size);
++    return true;
++}
++
++/// The program (title) ID of the running process, 0 when none runs.
++uint64_t souldew_title_id(void) {
++    if (!emu_instance || !emu_instance->game_loaded)
++        return 0;
++    auto& system = Core::System::GetInstance();
++    if (!system.IsPoweredOn())
++        return 0;
++    auto process = system.Kernel().GetCurrentProcess();
++    return process && process->codeset ? process->codeset->program_id : 0;
++}
++
++} // extern "C"
++
+diff --git a/src/citra_libretro/libretro.osx.def b/src/citra_libretro/libretro.osx.def
+index 53a556a..34f20c9 100644
+--- a/src/citra_libretro/libretro.osx.def
++++ b/src/citra_libretro/libretro.osx.def
+@@ -25,3 +25,5 @@ _retro_unload_game
+ _retro_get_region
+ _retro_get_memory_data
+ _retro_get_memory_size
++_souldew_read_memory
++_souldew_title_id

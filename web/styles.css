@@ -688,6 +688,8 @@ details.group details.group { margin: 0 14px 8px; }
 .session .console-screen { width: min(100cqw, calc(100cqh * var(--arn))); height: min(100cqh, calc(100cqw / var(--arn))); aspect-ratio: auto; max-height: none; max-width: none; margin: 0; border-radius: 8px; }
 .session .console-screen iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; color-scheme: dark; }
 .session-bar { align-self: center; display: flex; align-items: center; gap: 2px; padding: 3px 6px; border-radius: 999px; background: #141318; box-shadow: inset 0 1px 2px #0008; flex-wrap: wrap; justify-content: center; }
+/* one row whenever it fits: the bar may reach into the grid's 16px gaps (a 1100px window leaves the stage a few px short) */
+.session-bar { width: max-content; max-width: calc(100% + 16px); }
 .session-bar .btn.icon { width: 28px; height: 28px; min-width: 28px; padding: 0; }
 .session-bar .sep { width: 1px; height: 16px; background: var(--edge-hi); margin: 0 5px; }
 .session-bar .spacer { flex: 0 0 10px; }

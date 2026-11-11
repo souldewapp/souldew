@@ -21,6 +21,12 @@ test('type chart: dual types multiply, immunities win, Gen 1 quirks', () => {
   assert.equal(single('bug', 'poison', 3), 0.5);
   assert.equal(single('ice', 'fire', 1), 1);
   assert.equal(single('dark', 'steel', 4), 0.5); // Steel still resists Dark before Gen 6
+  // Gen 6 on (the 3DS games): Steel takes Ghost and Dark normally, and every chart has Fairy
+  assert.equal(single('dark', 'steel', 6), 1);
+  assert.equal(single('ghost', 'steel', 7), 1);
+  assert.equal(effectiveness('dragon', ['fairy'], 6), 0);
+  assert.ok(defenseChart(['dragon'], 6)[2].includes('fairy'));
+  assert.ok(!defenseChart(['dragon'], 5)[2].includes('fairy'), 'Gen 5: no Fairy (unless a hack has it)');
   const c = defenseChart(['water', 'flying']);
   assert.deepEqual(c[4], ['electric']);
   assert.ok(c[0].includes('ground'));

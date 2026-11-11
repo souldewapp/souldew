@@ -91,7 +91,7 @@ function DexDetail({ id, e, navigate, runs }) {
     </div>
     <div class="dd-types">${st !== 'unknown' ? html`<${Types} types=${types} />` : html`<span class="faint tiny">${t('dex.typesUnknown', 'Types: ???')}</span>`}</div>
     <div class=${`dd-status ${st}`}><span class="dd-dot"></span>${status}</div>
-    ${st === 'locked' && html`<p class="dd-note">${t('dex.lockedText', 'Gen {gen} isn’t in any game souldew plays yet (it plays Gen 1–5). This Pokémon is listed for completeness – it becomes catchable once souldew supports its generation.', { gen: ROMAN[gen?.gen || 0] })}</p>`}
+    ${st === 'locked' && html`<p class="dd-note">${t('dex.lockedText', 'Gen {gen} isn’t in any game souldew plays yet (it plays Gen 1–7). This Pokémon is listed for completeness – it becomes catchable once souldew supports its generation.', { gen: ROMAN[gen?.gen || 0] })}</p>`}
     ${st === 'unknown' && html`<p class="dd-note">${t('dex.unknownText', 'Meet it in one of your runs – in battle, as a catch, or on your partner’s side – and it shows up here.')}</p>`}
     ${st === 'seen' && html`<p class="dd-note">${t('dex.seenText', 'You’ve met it, but it never joined your team.')}</p>`}
     ${first && html`<dl class="dd-facts">

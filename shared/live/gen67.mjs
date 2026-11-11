@@ -191,3 +191,83 @@ export function readGen67(entry, read, state = {}) {
   }
   return null;
 }
+
+// ---- battles ------------------------------------------------------------------------------------------------------
+// The battle keeps its Pokémon unencrypted (Pokémon Stream Tool, Readek: Raw Pokemon Battle.mjs / Battle Pokemon.mjs –
+// checked live in Omega Ruby: Torchic 17/20 and the wild Poochyena 10/15 at 0x08204200 / 0x08204444): blocks of 580
+// bytes (Gen 6) / 816 (Gen 7) from the battle's base address, in each { u32 exp, u16 species +4, u16 max HP +6,
+// u16 HP +8, u8 level +0x10, u8 battle slot +0x11 (0–5 the player's side, 12–17 the opponent's) }. Gen 6 has one base
+// per battle kind (wild / trainer) and clears it after the battle; Gen 7 uses one base for both and leaves the last
+// battle in memory, so two flags say whether a battle runs and whether it is a trainer's.
+const BATTLE_BLOCKS = 12;
+
+export function battleRegions(entry) {
+  const b = entry?.battle;
+  if (!b) return [];
+  const len = (b.stride || 580) * BATTLE_BLOCKS;
+  const bases = [b.wild, b.trainer].filter(Boolean).map(hex).filter((v, i, a) => a.indexOf(v) === i);
+  return [
+    ...bases.map((addr) => ({ addr, len, name: 'battle' })),
+    ...[b.inBattle, b.isTrainer].filter(Boolean).map((a) => ({ addr: hex(a), len: 1, name: 'battleFlag' })),
+  ];
+}
+
+function battleMons(bytes, stride, gen) {
+  const out = [];
+  if (!bytes) return out;
+  for (let i = 0; i < BATTLE_BLOCKS && (i + 1) * stride <= bytes.length; i++) {
+    const o = i * stride;
+    const species = u16(bytes, o + 4);
+    const maxHp = u16(bytes, o + 6);
+    const hp = u16(bytes, o + 8);
+    const level = bytes[o + 0x10];
+    const slot = bytes[o + 0x11];
+    if (!species || species > (gen >= 7 ? 807 : 721) || !maxHp || maxHp > 999 || hp > maxHp || level < 1 || level > 100) continue;
+    out.push({ species, maxHp, hp, level, slot, block: i });
+  }
+  return out;
+}
+
+/**
+ * The battle running now: { kind: 'wild' | 'trainer', enemy: { species, level, hp, maxHp }, active: { index, hp,
+ * maxHp } | null } (the shape of shared/live/parse.mjs readLiveBattle) – or null outside battle. `party` maps the
+ * player's battler to its party slot (species, level and max HP – the battle copy has no PID).
+ */
+export function readGen67Battle(entry, read, party = null) {
+  const b = entry?.battle;
+  if (!b) return null;
+  const stride = b.stride || 580;
+  let kind = null;
+  let mons = [];
+  if (b.inBattle) {
+    // Gen 7: the flags decide, the one base holds wild and trainer battles alike
+    const flag = read(hex(b.inBattle), 1);
+    if (!flag || !flag[0]) return null;
+    const trainer = b.isTrainer ? read(hex(b.isTrainer), 1) : null;
+    kind = trainer && trainer[0] ? 'trainer' : 'wild';
+    mons = battleMons(read(hex(b.wild || b.trainer), stride * BATTLE_BLOCKS), stride, entry.gen);
+  } else {
+    for (const [k, base] of [['wild', b.wild], ['trainer', b.trainer]]) {
+      if (!base) continue;
+      const m = battleMons(read(hex(base), stride * BATTLE_BLOCKS), stride, entry.gen);
+      // a battle needs both sides
+      if (m.some((x) => x.slot < 6) && m.some((x) => x.slot >= 12)) {
+        kind = k;
+        mons = m;
+        break;
+      }
+    }
+  }
+  const mine = mons.filter((x) => x.slot < 6);
+  const foes = mons.filter((x) => x.slot >= 12);
+  if (!kind || !mine.length || !foes.length) return null;
+  const me = mine[0];
+  const foe = foes.find((x) => x.hp > 0) || foes[0];
+  const index = party ? party.findIndex((p) => p.species === me.species && p.level === me.level && p.maxHp === me.maxHp) : -1;
+  return {
+    kind,
+    enemy: { species: foe.species, level: foe.level, hp: foe.hp, maxHp: foe.maxHp },
+    active: index >= 0 ? { index, hp: me.hp, maxHp: me.maxHp } : null,
+  };
+}
+

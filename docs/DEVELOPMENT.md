@@ -13,7 +13,8 @@ npm start              # server only, UI in the browser (data in the project fol
 npm test               # all tests (node --test "test/*.test.mjs")
 npm run lint           # ESLint (eslint.config.mjs)
 node scripts/extract-i18n.mjs   # sync UI strings, list missing/stale translations
-npm run dist           # macOS: build the DMG (fetches the Java runtime on first run)
+npm run ctr            # macOS: build the 3DS part (see "Nintendo 3DS" below)
+npm run dist           # macOS: build the DMG (fetches the Java runtime on first run; needs the 3DS part)
 npm run dist:win       # Windows: build the NSIS installer (fetches the Windows Java runtime on first run)
 npm run dist:linux     # Linux: build the AppImage and the .deb (fetches the Linux Java runtime on first run)
 ```
@@ -44,6 +45,33 @@ SOULDEW_CHROMIUM_FLAGS="use_angle=vulkan ignore-gpu-blocklist" npm run app -- --
 (PowerShell: `$env:SOULDEW_CHROMIUM_FLAGS="use_angle=vulkan"; npm run app -- --user-data-dir="$env:TEMP\souldew-gfx"`.)
 
 New visible text always goes through `t('area.key', 'English default', { vars })`; then translate it for de/fr/es/it – `node scripts/extract-i18n.mjs` must end with "0 missing, 0 stale" for every language. See [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+## Nintendo 3DS
+
+3DS games play in souldew's own player through a small native host (`native/ctr-host/ctrhost.c`) that runs Azahar's
+libretro core with Vulkan, and `web/player3ds.html` / `web/lib/ctrplayer.mjs`, which offer the play view the same
+`window.__emu` API as the EmulatorJS player. `server/lib/ctr.mjs` starts the host and passes its messages through
+(`/api/ctr/*`). The binaries live in `tools/ctr/<platform>-<arch>/` (not in the repository) and go into the DMG:
+
+```sh
+brew install cmake ninja spirv-tools vulkan-headers   # as Azahar's own CI
+npm run ctr                                           # host + Azahar 2126.2 core with the souldew patch + MoltenVK
+node scripts/build-ctr.mjs --host-only                # only the host (after changing ctrhost.c)
+node scripts/build-ctr.mjs --src ../azahar            # reuse an Azahar checkout (with submodules)
+```
+
+The core build takes a while (Azahar from source, `--target citra_libretro`). `native/azahar-patch/souldew-memory.patch`
+adds `souldew_read_memory` and `souldew_title_id` to the core: the libretro memory map only has what exists when the
+game loads, not the heaps where the Pokémon games keep their party, so without the patch the game runs but has no
+live data (the status says `liveMemory: false`). MoltenVK comes from Azahar's macOS release. `npm run dist` checks the
+folder (`build-ctr.mjs --check`) and stops when it's incomplete; `SLS_NO_3DS=1 npm run dist` builds without it – 3DS
+games then open in the Azahar app.
+
+Notes: New 3DS mode is on (the core's default; a savestate from Old 3DS mode would crash the core, so the play view
+stores states as core `azahar-n3ds` and refuses others). The host exits with `_exit` – the core's unload crashes.
+`CTRHOST_DEBUG=1` logs the input it reads; `ctrhost --bench N --dump` runs a game without souldew. Windows and Linux
+aren't built yet (the host uses dlopen/pthreads; the Vulkan loader is the system's) – there 3DS games use the Azahar
+app. Research notes: [research/azahar.md](../research/azahar.md).
 
 ## Releasing updates
 

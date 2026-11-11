@@ -5,7 +5,7 @@
 // doesn't care where the data came from.
 // Addresses/structs: research/live_ram.md (pret disassemblies + PKHeX), shared/data/addresses.json.
 import { decryptPK4 } from '../gen4save.mjs';
-import { readGen67, regions67 } from './gen67.mjs';
+import { readGen67, regions67, readGen67Battle, battleRegions } from './gen67.mjs';
 
 const hex = (v) => (typeof v === 'string' ? parseInt(v, 16) : Number(v));
 const u16le = (b, o) => b[o] | (b[o + 1] << 8);
@@ -58,7 +58,8 @@ export function regionsFor(entry) {
   if (entry.gen >= 6) {
     // every update's party address, and its badge byte (Gen 6)
     const badges = (entry.partyAddrs || []).filter((a) => a.badges).map((a) => ({ addr: hex(a.badges), len: 1, name: 'badges' }));
-    return [...regions67(entry).map((r) => ({ ...r, name: 'party' })), ...badges];
+    const zone = entry.zoneAddr ? [{ addr: hex(entry.zoneAddr), len: 2, name: 'zone' }] : [];
+    return [...regions67(entry).map((r) => ({ ...r, name: 'party' })), ...badges, ...battleRegions(entry), ...zone];
   }
   return [];
 }
@@ -1343,7 +1344,7 @@ export function readLiveBattle(entry, read, T, state = {}, party = null) {
   try {
     if (entry.gen <= 2) return holdEnemy(state, entry.battleEnemy && entry.inBattle ? battleGB(entry, read, T, state, party) : null);
     if (entry.gen === 3) return holdEnemy(state, entry.enemyPartyAddr && entry.inBattle ? battleGen3(entry, read, T, state) : null);
-    if (entry.gen >= 6) return null; // 3DS: no battle panel yet
+    if (entry.gen >= 6) return readGen67Battle(entry, read, party);
     return battleDS(entry, read, T, state, party);
   } catch {
     return null;

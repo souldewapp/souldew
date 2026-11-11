@@ -9,12 +9,12 @@ import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocati
 import { pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces, areaForPlace } from '../lib/run.mjs';
 
 let MAPS = null; // shared/data/maps.json once loaded
-let LOC = null; // { loc2, loc3 } for the names
+let LOC = null; // { loc2, loc3, loc6, loc7 } for the names
 const load = () => {
   const j = (f) => fetch(`/shared/data/${f}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  load.p ||= Promise.all([j('maps.json'), j('locations_gen2_crystal.json'), j('locations_gen3.json')]).then(([maps, loc2, loc3]) => {
+  load.p ||= Promise.all([j('maps.json'), j('locations_gen2_crystal.json'), j('locations_gen3.json'), j('locations_gen6.json'), j('locations_gen7.json')]).then(([maps, loc2, loc3, loc6, loc7]) => {
     MAPS = maps;
-    LOC = { loc2, loc3 };
+    LOC = { loc2, loc3, loc6, loc7 };
   });
   return load.p;
 };

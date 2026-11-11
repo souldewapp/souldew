@@ -18,6 +18,7 @@ this repository are linked; the others are available at the linked projects.
 | Universal Pokémon Randomizer ZX | 4.6.1 | GPL-3.0 | `tools/upr/PokeRandoZX.jar` | https://github.com/Ajarmar/universal-pokemon-randomizer-zx |
 | Pixelify Sans (font) | – | SIL OFL 1.1 ([text](web/assets/fonts/OFL-PixelifySans.txt)) | `web/assets/fonts/PixelifySans-*` | https://github.com/eifetx/Pixelify-Sans |
 | IBM Plex Sans / Plex Mono (fonts) | – | SIL OFL 1.1 ([text](web/assets/fonts/OFL-IBMPlex.txt)) | `web/assets/fonts/IBMPlex*` | https://github.com/IBM/plex |
+| libretro API headers (`libretro.h`, `libretro_vulkan.h`) | from libretro-common | MIT (in the files) | `native/ctr-host/` | https://github.com/libretro/libretro-common |
 
 `web/assets/fonts/PixelDigits-*.ttf` is made by this project (`scripts/build-pixel-digits.mjs`) and is under the
 project license.
@@ -40,6 +41,8 @@ Chromium's and Node.js's own notices), electron-builder (MIT), ESLint (MIT).
 | Component | License | Notes |
 |---|---|---|
 | Eclipse Temurin JRE 17 (macOS arm64, Windows x64) | GPL-2.0 with Classpath Exception | Downloaded by `scripts/fetch-jre.mjs` from the Adoptium API into `tools/jre/` (not in the repository) and bundled into the DMG / the Windows installer with its `legal/` folder. https://adoptium.net |
+| Azahar libretro core (Nintendo 3DS) | GPL-2.0-or-later | Built by `scripts/build-ctr.mjs` from Azahar's source (tag 2126.2) with souldew's patch `native/azahar-patch/souldew-memory.patch` (it lets the core read the game's memory for live data) into `tools/ctr/` and bundled into the DMG. The corresponding source is that Azahar tag plus the patch. https://github.com/azahar-emu/azahar |
+| MoltenVK (macOS) | Apache-2.0 | Vulkan on Metal for the 3DS core – taken from Azahar's macOS release by `scripts/build-ctr.mjs`. https://github.com/KhronosGroup/MoltenVK |
 
 ## Fetched at runtime
 

@@ -31,3 +31,32 @@ Researched 2026-11-11 against github.com/azahar-emu/azahar (release 2126.2 and m
   0x08C71DC4 – each update moves party and badges by the same distance.
 - **Wild opponent** (not used yet): X/Y 0x081FF744, ORAS 0x081FFA6C, SM 0x3002F7B8, USUM 0x3002F9A0 (PokeReader) – a
   start for a 3DS battle panel.
+
+## The libretro core in souldew's own player
+
+Checked 2026-11-11 with the real US images of Omega Ruby, Y, Sun and Ultra Sun (`native/ctr-host`, `server/lib/ctr.mjs`,
+`web/lib/ctrplayer.mjs`).
+
+- **Graphics**: the core wants OpenGL 4.3 or Vulkan; macOS has only GL 4.1, so the host uses Vulkan through MoltenVK
+  (the context negotiation interface, `create_device`). The software renderer manages ~20 fps. Frames come through
+  `set_image` (SHADER_READ_ONLY layout); the host copies them back and sends BGRA to the page (WebGL swizzles).
+- **Memory**: `RETRO_ENVIRONMENT_SET_MEMORY_MAPS` is sent once at load, before the game makes its heaps – the party
+  (0x08Cxxxxx in Gen 6, 0x33Fxxxxx/0x3419xxxx in Gen 7) is not in it. The patch exports `souldew_read_memory(addr, out,
+  size)` (the current process's memory, page by page through `IsValidVirtualAddress`) and `souldew_title_id()`. The
+  host reads up to 16 regions of 64 KB every 6 frames; `__emu.watch()` adds regions for research (heap scans).
+- **New 3DS mode** (`citra_is_new_3ds`, the default) – Old 3DS mode works too, but states don't cross: loading an
+  Old 3DS state in New 3DS mode hits a memory assertion and ends the core.
+- **Touch**: the pointer device in ±0x7fff over the whole picture (both screens); the core ignores taps shorter than
+  a few frames, so the host holds a touch for at least 8 frames. `citra_enable_touch_pointer_timeout` keeps the
+  cursor hidden.
+- **Gen 7 walks only with the Circle Pad** – the D-pad does nothing on the field, so the page feeds the direction keys
+  into the left stick too.
+- **Shutdown**: `retro_unload_game` / `retro_deinit` crash (threads still running) – the host ends with `_exit(0)`;
+  the games' saves are already on the virtual SD card (`saves/<run>/Azahar/sdmc/…/title/…/data/`), which is also what
+  the "saved in the game" indicator watches.
+- **Zones** (place sign): Gen 6 keeps the current zone at a fixed address (X/Y 0x081828EC, ORAS 0x08187BD4 –
+  PKMN-NTR's `mapidoff`); the ROM's zone table turns it into a met-location ID (pk3DS: XY/ORAS 56 bytes per zone, the
+  place at +0x1C, 9 bits; SM/USUM `a/0/7/7` file 0, LZ11, 0x54 bytes, u32 at +0x1C). Gen 7's zone in memory is still
+  unknown: the bytes before Ultra Sun's party in RAM are not the save file's layout (no Situation block 0x600 before
+  it), so it has to be found by scanning across a real zone change.
+- **Azahar 2127.0-rc2** for macOS doesn't start (libavdevice missing from the bundle) – 2126.2 is the tag to build.

@@ -1624,7 +1624,15 @@
      "badges": "0x08C6A6A0"
     }
    ],
-   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158"
+   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158",
+   "battle": {
+    "wild": "0x08203ED0",
+    "trainer": "0x082059E0",
+    "stride": 580,
+    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs; ORAS checked live (Omega Ruby 1.0)"
+   },
+   "zoneAddr": "0x081828EC",
+   "zoneSource": "PKMN-NTR (fa-dx) BreedingBot6.cs mapidoff; ORAS checked live (Littleroot Town 6, Route 101 23 – the zone table of the ROM agrees)"
   },
   {
    "id": "oras",
@@ -1662,7 +1670,15 @@
      "badges": "0x08C6DDD4"
     }
    ],
-   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158"
+   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158",
+   "battle": {
+    "wild": "0x082041FC",
+    "trainer": "0x08205D0C",
+    "stride": 580,
+    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs; ORAS checked live (Omega Ruby 1.0)"
+   },
+   "zoneAddr": "0x08187BD4",
+   "zoneSource": "PKMN-NTR (fa-dx) BreedingBot6.cs mapidoff; ORAS checked live (Littleroot Town 6, Route 101 23 – the zone table of the ROM agrees)"
   },
   {
    "id": "sm",
@@ -1692,7 +1708,14 @@
      "addr": "0x34195E10"
     }
    ],
-   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158"
+   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158",
+   "battle": {
+    "wild": "0x30002770",
+    "stride": 816,
+    "inBattle": "0x341C8CCD",
+    "isTrainer": "0x3421BD74",
+    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs; ORAS checked live (Omega Ruby 1.0)"
+   }
   },
   {
    "id": "usum",
@@ -1722,7 +1745,14 @@
      "addr": "0x33F7FA44"
     }
    ],
-   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158"
+   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158",
+   "battle": {
+    "wild": "0x30002770",
+    "stride": 816,
+    "inBattle": "0x33FC1F65",
+    "isTrainer": "0x340178B9",
+    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs; ORAS checked live (Omega Ruby 1.0)"
+   }
   }
  ]
 }

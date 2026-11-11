@@ -19,6 +19,7 @@ import { SaveWatcher } from './lib/savewatch.mjs';
 import { EMULATORS, detectEmulator, installEmulator, launchRom, revealInFileManager, emulatorRunning } from './lib/emulator.mjs';
 import { LiveBridge } from './lib/livebridge.mjs';
 import { AzaharBridge, enableRpc } from './lib/azahar.mjs';
+import { CtrSessions, ctrTools, saveStamp } from './lib/ctr.mjs';
 import { moveToGraveyard, parseHgssSave } from '../shared/gen4save.mjs';
 import { listPresets, savePreset, deletePreset } from './lib/presets.mjs';
 import { pageHeaders } from './lib/csp.mjs';
@@ -436,6 +437,30 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   };
   const watcher = new SaveWatcher(GEN4, emit);
   const live = new LiveBridge(emit);
+  // 3DS in souldew's own player (server/lib/ctr.mjs): one game at a time
+  const ctr = new CtrSessions();
+  const ctrToolsNow = () => ctrTools({ azaharApp: detectEmulator('azahar', loadConfig().emulatorPaths?.azahar).path || null });
+  /** The file behind a ROM URL the page has (/api/library/rom?id=… or a run's /api/runs/<id>/file?name=…). */
+  const romPathFromUrl = (src) => {
+    let u;
+    try {
+      u = new URL(String(src || ''), 'http://localhost');
+    } catch {
+      throw httpError(400, 'Ungültige ROM-Adresse', 'badRomUrl');
+    }
+    if (u.pathname === '/api/library/rom') {
+      const { abs, entry } = resolveId(u.searchParams.get('id'), loadConfig());
+      if (entry) throw httpError(400, '3DS-Spiele müssen entpackt in der Bibliothek liegen', 'ctrInArchive');
+      return abs;
+    }
+    const run = u.pathname.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
+    if (run) {
+      const f = safeJoin(runDir(run[1]), u.searchParams.get('name') || '');
+      if (!f || !existsSync(f)) throw httpError(404, 'ROM nicht gefunden', 'romNotFound');
+      return f;
+    }
+    throw httpError(400, 'Ungültige ROM-Adresse', 'badRomUrl');
+  };
   // Azahar (3DS): polled once someone plays a 3DS game – the play view asks for its status, a launch starts it too
   let azahar = null;
   const azaharBridge = () => {
@@ -676,6 +701,10 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       emulators: Object.fromEntries(Object.entries(EMULATORS).map(([id, e]) => [id, { name: e.name, systems: e.systems, live: e.live, ...detectEmulator(id, config.emulatorPaths?.[id]) }])),
       runs: listRuns().map((m) => ({ id: m.id, name: m.name, createdAt: m.createdAt, updatedAt: m.updatedAt, mode: runMode(m), players: m.players, outputs: m.outputs, imported: !!m.imported, game: m.game || null, randomized: m.randomizer?.enabled !== false, summary: runSummary(m.id, m) })),
       live: live.status(),
+      ctr: (() => {
+        const tl = ctrToolsNow();
+        return { ok: tl.ok, missing: tl.missing || null, liveMemory: !!tl.souldewCore };
+      })(),
       config: {
         lang: config.lang || null,
         onboarded: !!config.onboarded,
@@ -1170,6 +1199,23 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   // Azahar's RPC server: what it reports, and switching it on in Azahar's settings (only on request – it is reachable
   // from the local network while Azahar runs, see server/lib/azahar.mjs)
   route('GET', /^\/api\/live\/azahar$/, () => azaharBridge().status());
+  // ---- 3DS in the built-in player ------------------------------------------------------------------------------
+  route('GET', /^\/api\/ctr\/status$/, () => ({ tools: ctrToolsNow(), session: ctr.status() }));
+  route('POST', /^\/api\/ctr\/start$/, async (req) => {
+    const { rom, key, scale } = await readBody(req);
+    const tools = ctrToolsNow();
+    if (!tools.ok) throw httpError(409, 'Der 3DS-Teil von souldew fehlt', 'ctrMissing');
+    if (typeof key !== 'string' || !key || key.length > 600) throw httpError(400, 'Ungültiger Spielstand-Schlüssel', 'badKey');
+    const id = ctr.start({ rom: romPathFromUrl(rom), key, tools, scale: [1, 2, 3].includes(scale) ? scale : 1 });
+    return { id, liveMemory: tools.souldewCore };
+  });
+  // the game's own saves changed? (a fingerprint – see saveStamp)
+  route('GET', /^\/api\/ctr\/savestamp$/, (req, m, url) => ({ stamp: saveStamp(ctr.get(url.searchParams.get('id')).save) }));
+  route('POST', /^\/api\/ctr\/stop$/, async (req) => {
+    const { id } = await readBody(req);
+    if (ctr.current?.id === id) ctr.stop();
+    return { ok: true };
+  });
   route('POST', /^\/api\/live\/azahar\/enable$/, async (req) => {
     const body = await readBody(req);
     if (body?.confirm !== true) throw httpError(400, 'Bestätigung fehlt', 'confirmMissing');
@@ -1363,6 +1409,12 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
           return serveFile(res, f.path, { 'Content-Type': f.type, 'X-Content-Type-Options': 'nosniff',
             'Cache-Control': url.searchParams.get('v') ? 'private, max-age=31536000, immutable' : 'no-cache' });
         }
+        // 3DS: the host's messages to the player page, and the page's commands to the host (binary)
+        if (path === '/api/ctr/stream' && req.method === 'GET') return ctr.attach(url.searchParams.get('id'), res);
+        if (path === '/api/ctr/cmd' && req.method === 'POST') {
+          ctr.send(url.searchParams.get('id'), await readRaw(req, 300 * 1024 * 1024));
+          return send(res, 200, { ok: true });
+        }
         if (path === '/api/saves/solo' && req.method === 'GET') {
           const file = join(SOLO_SAVES, `${keyOf(url.searchParams.get('id'))}.sav`);
           return existsSync(file) ? send(res, 200, readFileSync(file)) : send(res, 404, { error: 'no save' });
@@ -1418,6 +1470,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
 
   server.on('close', () => {
+    ctr.stop();
     azahar?.stop();
     streamHub.close();
     pokelink.bridge?.close();

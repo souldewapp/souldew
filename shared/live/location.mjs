@@ -182,7 +182,23 @@ function readGen3x(m, read, maps, entry, ctx = {}) {
   return null;
 }
 
-const READERS = { gen1: readGen1, gen2: readGen2, gen3: readGen3, gen3x: readGen3x, gen4: readGen4, gen5: readGen5 };
+/**
+ * Nintendo 3DS (Gen 6/7): the zone the game is in (u16 at the addresses.json entry's zoneAddr – PKMN-NTR's mapidoff
+ * for X/Y and Omega Ruby/Alpha Sapphire) and its place from the game's own zone table (server/lib/romloc.mjs ctrData
+ * – shared/live/ctrzones.mjs). Only once the team is in memory: before that (title screen, intro) the zone is
+ * whatever the last scene left.
+ */
+function readCtr(_m, read, _maps, entry, ctx) {
+  const places = ctx.rom?.ctr?.places;
+  if (!places || !entry?.zoneAddr || !(ctx.state?.g67Len > 0)) return null;
+  const b = read(hex(entry.zoneAddr), 2);
+  if (!ok(b, 2)) return null;
+  const zone = u16le(b, 0);
+  const id = places[zone];
+  return Number.isInteger(id) && id > 0 ? { id, map: zone } : null;
+}
+
+const READERS = { gen1: readGen1, gen2: readGen2, gen3: readGen3, gen3x: readGen3x, gen4: readGen4, gen5: readGen5, ctr: readCtr };
 
 /**
  * Which reader serves this game: the maps.json entry's, else one the ROM's location data makes possible (a game or
@@ -190,6 +206,7 @@ const READERS = { gen1: readGen1, gen2: readGen2, gen3: readGen3, gen3x: readGen
  */
 function readerFor(maps, entry, rom) {
   if (rom?.gen === 3 && rom.maps3) return { m: null, kind: 'gen3x', gen: 3 };
+  if (rom?.ctr && entry?.zoneAddr) return { m: null, kind: 'ctr', gen: rom.gen };
   const m = mapEntryFor(maps, entry);
   if (m && READERS[m.kind]) return { m, kind: m.kind, gen: m.gen };
   if (rom?.gen === 4 && gen4Family(entry, rom)) return { m: null, kind: 'gen4', gen: 4 };
@@ -321,6 +338,8 @@ export function locationLabel(gen, id, tables = {}, lang = 'en') {
   if (gen === 2) return pick(tables.loc2?.map?.[String(id)]);
   if (gen === 3) return pick(tables.loc3?.map?.[String(id)]);
   if (gen === 4) return tables.gen4?.locations?.[id] || '';
+  if (gen === 6) return pick(tables.loc6?.map?.[String(id)]);
+  if (gen === 7) return pick(tables.loc7?.map?.[String(id)]);
   return '';
 }
 

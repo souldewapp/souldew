@@ -1,5 +1,6 @@
-// Type effectiveness for Gen 1–5 (no Fairy; Steel still resists Ghost and Dark). ROM hacks that add the Fairy type
+// Type effectiveness. Gen 1–5: no Fairy, Steel still resists Ghost and Dark – ROM hacks that add the Fairy type
 // (Renegade Platinum, Blaze Black 2 Redux – shared/live/romspecies.mjs romTypes) get its Gen 6 matchups on top.
+// Gen 6 on (X/Y to Ultra Sun/Ultra Moon): Fairy is there, and Steel takes Ghost and Dark normally.
 // Gen 1 differences: no Dark/Steel, Ghost → Psychic does nothing (the famous bug), Bug ↔ Poison
 // are super effective on each other, and Ice → Fire is neutral.
 
@@ -42,11 +43,12 @@ const GEN1 = {
 };
 
 /** The attacking types of a generation; `fairy` adds the type for a hack that has it. */
-export const typesOfGen = (gen, fairy = false) => (gen === 1 ? TYPES.filter((t) => t !== 'dark' && t !== 'steel') : fairy ? [...TYPES, 'fairy'] : TYPES);
+export const typesOfGen = (gen, fairy = false) => (gen === 1 ? TYPES.filter((t) => t !== 'dark' && t !== 'steel') : fairy || gen >= 6 ? [...TYPES, 'fairy'] : TYPES);
 
 /** Multiplier of one attacking type against one defending type. Unknown types ('???', Curse) are neutral. */
 export function single(atk, def, gen = 4) {
   if (gen === 1 && GEN1[atk]?.[def] !== undefined) return GEN1[atk][def];
+  if (gen >= 6 && def === 'steel' && (atk === 'ghost' || atk === 'dark')) return 1;
   return CHART[atk]?.[def] ?? 1;
 }
 

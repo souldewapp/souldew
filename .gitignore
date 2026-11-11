@@ -38,3 +38,6 @@ tools/jre/
 .vscode/
 .idea/
 *.log
+
+# souldew's 3DS part, built by scripts/build-ctr.mjs
+tools/ctr/

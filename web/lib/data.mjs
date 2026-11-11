@@ -37,7 +37,7 @@ export function setRomSpecies(sp) {
 }
 
 /** The last National Dex number of each generation's games. */
-export const GEN_MAX_ID = [0, 151, 251, 386, 493, 649];
+export const GEN_MAX_ID = [0, 151, 251, 386, 493, 649, 721, 809];
 
 // The running ROM's own Pokémon types where they differ from PokeAPI's (a ROM hack: Fairy in Renegade Platinum / Blaze
 // Black 2 Redux, retyped Pokémon, a Gen 3 hack's own ones – shared/live/romspecies.mjs romTypes). `fairy`: the hack

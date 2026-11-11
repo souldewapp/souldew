@@ -12,12 +12,11 @@ import {
 } from '../lib/run.mjs';
 import { statusOf, statusLabel, shownLevel } from './party.mjs';
 import { effectiveness, defenseChart, moveInfo, matchup } from '/shared/typechart.mjs';
+import { isLegendary } from '/shared/legendaries.mjs';
 import { RestartModal } from './restart.mjs';
 
-// PokeAPI pokemon_species.csv is_legendary / is_mythical (Gen 1–5)
-const LEGENDARY = new Set([144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
-  480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649]);
-export const isLegendary = (id) => LEGENDARY.has(id);
+// legendary or mythical, Gen 1–9 (PokeAPI's split)
+export { isLegendary };
 
 let MOVES = null;
 function useMoves() {

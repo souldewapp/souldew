@@ -80,7 +80,7 @@ Emulator, tracker, rules, randomizer and sync live in the same place – and the
 | **Board** | All teams as in the game menu – as linked pairs/groups or side-by-side team views (up to 4 players, each in their colour), with live HP. Route list with level caps (HeartGold/SoulSilver incl. Definitive HG), graveyard with cause of death, log with chat and ping, **stats** (catch rate, deaths per boss segment, deadliest opponents, longest survivor), rules, spoiler log. Runs can be ended (failed or won), resumed, and retried as a "new attempt" with the same settings and a new seed. |
 | **Live sync** | Teams travel to the others in real time while you play (up to 3 partners) – directly via WebRTC or through an encrypted relay. No server or account of your own needed. The partner's game shows as a small live video (direct connection) or a still image every 1.5 s (relay); sharing can be switched off. |
 | **Randomizer** | [Universal Pokémon Randomizer ZX](https://github.com/Ajarmar/universal-pokemon-randomizer-zx) for Gen 1–5 with a fixed seed. Every player builds a **byte-identical** game from their own ROM; the app compares the checksums. For Definitive HeartGold a helper works around the randomizer's crashes. A Java runtime is bundled. |
-| **External emulators** | melonDS and mGBA can be chosen per system and installed with one click. mGBA streams live data through a bundled Lua script; melonDS syncs after every in-game save. Nintendo 3DS games run in [Azahar](https://github.com/azahar-emu/azahar) (also one click), with live data through its RPC server. |
+| **External emulators** | melonDS and mGBA can be chosen per system and installed with one click. mGBA streams live data through a bundled Lua script; melonDS syncs after every in-game save. Nintendo 3DS games play in souldew itself on macOS – [Azahar](https://github.com/azahar-emu/azahar)'s core, in the same play view as every other game – or in the Azahar app (one click; Windows and Linux for now), with live data through its RPC server. |
 | **Stream** | A streamer-mode switch that covers invite codes, folders/file names, the Discord webhook and the spoiler tab on every page. OBS overlays as individual widgets with live preview, their own URL and "Drag into OBS". A Pokélink-compatible bridge so existing Pokélink themes can show souldew's data. See [docs/STREAMING.md](docs/STREAMING.md). |
 | **Cheats** | **Rare Candies** for level caps without grinding: "Add 99 Rare Candies" in the play screen's cheats menu writes them straight into the bag in game memory (Gen 1–5, randomized games too). Off until a run's rules allow cheats, and every use – and every change of that rule – shows up in the log for all players. |
 | **Extras** | Discord webhook for run events; graveyard box (moves dead Pokémon in the save to box 18, with a backup); "Save diagnostics" (Help › Questions and the volume menu) writes a file of what the app read and decided – for bug reports, without ROM, save or invite data. |
@@ -130,7 +130,7 @@ All widgets, options, the API and the Pokélink setup: **[docs/STREAMING.md](doc
 
 ## Supported games
 
-Every main-series game from Red to White 2 plays in souldew's built-in emulator, X/Y to Ultra Sun/Ultra Moon in Azahar. Live tracking reads these straight from memory:
+Every main-series game from Red to Ultra Moon plays in souldew's built-in emulator (the 3DS games on macOS; on Windows and Linux they open in the Azahar app). Live tracking reads these straight from memory:
 
 | Generation | Games | Team & HP | Battle panel | “You are here” |
 |---|---|:---:|:---:|:---:|
@@ -139,10 +139,10 @@ Every main-series game from Red to White 2 plays in souldew's built-in emulator,
 | Gen 3 | Ruby, Sapphire, Emerald, FireRed, LeafGreen | ✓ | ✓ | ✓ |
 | Gen 4 | Diamond, Pearl, Platinum, HeartGold, SoulSilver | ✓ | ✓ | ✓ |
 | Gen 5 | Black, White, Black 2, White 2 | ✓ | memory search | ✓ |
-| Gen 6 (3DS) | X, Y, Omega Ruby, Alpha Sapphire | ✓ (in Azahar) | – | – |
-| Gen 7 (3DS) | Sun, Moon, Ultra Sun, Ultra Moon | ✓ (in Azahar) | – | – |
+| Gen 6 (3DS) | X, Y, Omega Ruby, Alpha Sapphire | ✓ | ✓ | ✓ |
+| Gen 7 (3DS) | Sun, Moon, Ultra Sun, Ultra Moon | ✓ (not yet seen in a running game) | ✓ (not yet seen in a running game) | – |
 
-English and German versions are supported for the team. “You are here” reads the place names from the game itself (Gen 3–5) or from souldew's tables (Gen 1/2): a randomized game or a ROM hack shows its own names. ROM hacks on the same engine as their base game work too – also with other Pokémon in the game (Light Platinum) or a moved memory layout (Crystal Legacy); hacks on an expanded GBA engine are searched for in memory (Run & Bun: team, battle and place sign work; others like Unbound or Radical Red say so when their team can't be found) – you can always enter catches by hand. Gen 1 and Gold/Silver store no catch location: a catch right after a wild battle is filed under the place the sign shows, anything else lands in an inbox to assign. Hacks that add the Fairy type or retype Pokémon (Renegade Platinum, Blaze Black 2 Redux) show the hack's types. 3DS games (decrypted `.3ds`/`.cci`/`.cxi`, or a `.cia` installed in Azahar) can't be randomized here; for live data, switch on Azahar's RPC server from the play view – it answers on your local network too, souldew says so before switching it on. Which games were checked in the running game, and how: **[docs/TESTED_GAMES.md](docs/TESTED_GAMES.md)**.
+English and German versions are supported for the team. “You are here” reads the place names from the game itself (Gen 3–5) or from souldew's tables (Gen 1/2): a randomized game or a ROM hack shows its own names. ROM hacks on the same engine as their base game work too – also with other Pokémon in the game (Light Platinum) or a moved memory layout (Crystal Legacy); hacks on an expanded GBA engine are searched for in memory (Run & Bun: team, battle and place sign work; others like Unbound or Radical Red say so when their team can't be found) – you can always enter catches by hand. Gen 1 and Gold/Silver store no catch location: a catch right after a wild battle is filed under the place the sign shows, anything else lands in an inbox to assign. Hacks that add the Fairy type or retype Pokémon (Renegade Platinum, Blaze Black 2 Redux) show the hack's types. 3DS games (decrypted `.3ds`/`.cci`/`.cxi`, or a `.cia` installed in Azahar) can't be randomized here; any language works. In souldew's own player they run like every other game – savestates, fast-forward, screenshots, touch screen with the mouse, the in-game save indicator – and the place sign reads the game's own zone table (Gen 6; Gen 7's zone in memory isn't known yet). In the Azahar app, switch on its RPC server from the play view for live data – it answers on your local network too, souldew says so before switching it on. Which games were checked in the running game, and how: **[docs/TESTED_GAMES.md](docs/TESTED_GAMES.md)**.
 
 ## Your games stay yours
 
@@ -251,7 +251,7 @@ All three: Macs with Apple silicon (M1 or newer), Windows 10 and 11 (64-bit) and
 <details>
 <summary><b>Which emulators can I use?</b></summary>
 
-The built-in one (recommended), or melonDS/mGBA as external emulators (mGBA with live data through a Lua script, melonDS after every in-game save). Nintendo 3DS games always run in Azahar, with live data through its RPC server.
+The built-in one (recommended), or melonDS/mGBA as external emulators (mGBA with live data through a Lua script, melonDS after every in-game save). Nintendo 3DS games run built in on macOS (Azahar's core, with Vulkan through MoltenVK) or in the Azahar app (Windows and Linux, or by choice in Settings › Emulators), with live data through its RPC server.
 </details>
 
 <details>

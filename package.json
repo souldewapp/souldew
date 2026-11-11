@@ -22,7 +22,8 @@
     "jre": "node scripts/fetch-jre.mjs arm64",
     "jre:win": "node scripts/fetch-jre.mjs x64",
     "jre:linux": "node scripts/fetch-jre.mjs x64",
-    "dist": "node scripts/fetch-jre.mjs arm64 && CUSTOM_DMGBUILD_PATH=scripts/dmgbuild-wrapper.mjs electron-builder --mac dmg --arm64",
+    "ctr": "node scripts/build-ctr.mjs",
+    "dist": "node scripts/fetch-jre.mjs arm64 && node scripts/build-ctr.mjs --check && CUSTOM_DMGBUILD_PATH=scripts/dmgbuild-wrapper.mjs electron-builder --mac dmg --arm64",
     "dist:win": "node scripts/fetch-jre.mjs x64 && electron-builder --win nsis --x64",
     "dist:linux": "node scripts/fetch-jre.mjs x64 && electron-builder --linux AppImage deb --x64",
     "release": "node scripts/release.mjs"
@@ -112,6 +113,10 @@
         {
           "from": "tools/jre/darwin-arm64",
           "to": "tools/jre/darwin-arm64"
+        },
+        {
+          "from": "tools/ctr/darwin-arm64",
+          "to": "tools/ctr/darwin-arm64"
         }
       ]
     },

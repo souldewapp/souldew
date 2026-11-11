@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { decryptPK6, encryptPK6, pk6Mon, slotBytes, partyFromRegion, readGen67, SLOT_STRIDE, STATS_OFFSET, BOX_SIZE, PARTY_BYTES } from '../shared/live/gen67.mjs';
+import { decryptPK6, encryptPK6, pk6Mon, slotBytes, partyFromRegion, readGen67, readGen67Battle, SLOT_STRIDE, STATS_OFFSET, BOX_SIZE, PARTY_BYTES } from '../shared/live/gen67.mjs';
 import { findEntry, regionsFor, readLiveParty, regionReader, readLiveBattle } from '../shared/live/parse.mjs';
 import { areaLabel } from '../shared/overlay.mjs';
 
@@ -154,8 +154,11 @@ test('addresses: the four 3DS entries, found by title ID or game code, every upd
   const oras = ctr[1].partyAddrs;
   assert.equal(parseInt(oras[0].addr, 16) - parseInt(oras[1].addr, 16), parseInt(oras[0].badges, 16) - parseInt(oras[1].badges, 16));
   const regions = regionsFor(ctr[0]);
-  assert.deepEqual(regions.map((r) => [r.name, r.len]), [['party', PARTY_BYTES], ['party', PARTY_BYTES], ['badges', 1], ['badges', 1]]);
+  assert.deepEqual(regions.map((r) => [r.name, r.len]), [['party', PARTY_BYTES], ['party', PARTY_BYTES], ['badges', 1], ['badges', 1], ['battle', 580 * 12], ['battle', 580 * 12], ['zone', 2]]);
   assert.ok(regions.every((r) => r.len <= 32 * 1024), 'each region is one RPC request');
+  assert.ok(regions.length <= 16, 'the 3DS host watches at most 16 regions');
+  // Gen 7: one battle base and the two flags
+  assert.deepEqual(regionsFor(ctr[2]).filter((r) => r.name.startsWith('battle')).map((r) => r.len), [816 * 12, 1, 1]);
 });
 
 /** A memory reader over { address: bytes }. */
@@ -194,7 +197,7 @@ test('readGen67: the update the game runs is found and kept; badges; a shrinking
   assert.equal(readGen67(xy, memory({}), {}), null);
 });
 
-test('the page\'s path: Azahar regions → regionReader → readLiveParty; no battle panel for 3DS yet', () => {
+test('the page\'s path: Azahar regions → regionReader → readLiveParty; outside battle no battle panel', () => {
   const sm = findEntry(addresses, { platform: '3ds', titleId: '0004000000164800' });
   const party = ramParty([mon({ species: 722, nick: 'Rowlet', level: 5, hp: 20, maxHp: 20, met: 6 })]);
   const regions = regionsFor(sm).map((rg) => ({ ...rg, hex: Buffer.from(rg.addr === 0x34195e10 ? party : new Uint8Array(rg.len)).toString('hex') }));
@@ -225,4 +228,48 @@ test('stream overlay: Gen 6/7 catch areas by their met location, in the overlay\
   assert.equal(areaLabel('m6-12', { tables, lang: 'de' }), 'Route 2');
   assert.equal(areaLabel('m7-6', { tables, lang: 'en' }), 'Route 1');
   assert.equal(areaLabel('m6-99999', { tables }), 'm6-99999');
+});
+
+/** A battle block as Omega Ruby keeps it (unencrypted): species, max HP, HP, level, battle slot. */
+function battleBlock(b, at, { species, maxHp, hp, level, slot }) {
+  w16(b, at + 4, species);
+  w16(b, at + 6, maxHp);
+  w16(b, at + 8, hp);
+  b[at + 0x10] = level;
+  b[at + 0x11] = slot;
+}
+
+test('battles (Gen 6): the wild or trainer base with both sides – what Omega Ruby showed live (Torchic 17/20 vs Poochyena 10/15)', () => {
+  const oras = addresses.games.find((g) => g.id === 'oras');
+  const party = [{ species: 255, level: 5, maxHp: 20, hp: 20 }];
+  const wild = new Uint8Array(580 * 12);
+  battleBlock(wild, 0, { species: 255, maxHp: 20, hp: 17, level: 5, slot: 0 });
+  battleBlock(wild, 580, { species: 261, maxHp: 15, hp: 10, level: 3, slot: 12 });
+  const b = readGen67Battle(oras, memory({ 0x082041fc: wild }), party);
+  assert.deepEqual(b, { kind: 'wild', enemy: { species: 261, level: 3, hp: 10, maxHp: 15 }, active: { index: 0, hp: 17, maxHp: 20 } });
+  // a trainer battle lives at the other base
+  const t = readGen67Battle(oras, memory({ 0x08205d0c: wild }), party);
+  assert.equal(t.kind, 'trainer');
+  // after the battle the base is cleared: no battle; one side only is no battle either
+  assert.equal(readGen67Battle(oras, memory({ 0x082041fc: new Uint8Array(580 * 12) }), party), null);
+  const half = new Uint8Array(580 * 12);
+  battleBlock(half, 0, { species: 255, maxHp: 20, hp: 17, level: 5, slot: 0 });
+  assert.equal(readGen67Battle(oras, memory({ 0x082041fc: half }), party), null);
+  // a fainted lead foe: the next one standing is shown
+  battleBlock(wild, 1160, { species: 263, maxHp: 12, hp: 12, level: 2, slot: 13 });
+  w16(wild, 580 + 8, 0);
+  assert.equal(readGen67Battle(oras, memory({ 0x082041fc: wild }), party).enemy.species, 263);
+});
+
+test('battles (Gen 7): the in-battle and trainer flags decide, the battle memory stays after it', () => {
+  const sm = addresses.games.find((g) => g.id === 'sm');
+  const blocks = new Uint8Array(816 * 12);
+  battleBlock(blocks, 0, { species: 722, maxHp: 20, hp: 9, level: 5, slot: 0 });
+  battleBlock(blocks, 816, { species: 734, maxHp: 13, hp: 13, level: 2, slot: 12 });
+  const mem = { 0x30002770: blocks, 0x341c8ccd: Uint8Array.of(1), 0x3421bd74: Uint8Array.of(0) };
+  assert.deepEqual(readGen67Battle(sm, memory(mem), [{ species: 722, level: 5, maxHp: 20 }]).enemy, { species: 734, level: 2, hp: 13, maxHp: 13 });
+  mem[0x3421bd74] = Uint8Array.of(1);
+  assert.equal(readGen67Battle(sm, memory(mem), null).kind, 'trainer');
+  mem[0x341c8ccd] = Uint8Array.of(0); // over – the blocks are still there
+  assert.equal(readGen67Battle(sm, memory(mem), null), null);
 });
