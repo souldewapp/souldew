@@ -77,9 +77,9 @@
   - No more battles that aren't there: opening a Pokémon's summary (to look at or swap its moves) in Black 2 and
     White 2, and Bianca's catching demo in White 2, put the catching demo's Pokémon (Lillipup, in Black/White Patrat)
     on the battle panel.
-  - White: Professor Juniper's catching demo on Route 1 showed as a trainer battle against her Minccino, and its
-    Patrat then stayed on the panel until your next real battle. White's battle flag is now checked in the running
-    game, the demo stays off the panel – it's not your battle – and battles end on the panel the moment they end.
+  - White: after Professor Juniper's catching demo on Route 1, its Patrat stayed on the panel as a trainer battle until
+    your next real battle. White's battle flag is now checked in the running game, so every battle – the demo too –
+    leaves the panel the moment it ends. While the demo runs it still shows: the game flags it like a real battle.
   - Status conditions show what the game shows – poison, burn, paralysis, freeze or sleep. Before, every Pokémon with
     a status condition showed SLP: Gen 5 stores them differently from Gen 4.
   - Level caps: the board, the play view and the stream API now know the badges and show the cap – the ace of the

@@ -1462,11 +1462,9 @@
      "0xF841"
     ],
     "source": "NDS-Ironmon-Tracker (community)",
-    "verified": "runtime-checked on White (IRAO) 2026-11-11 by the ROM matrix: 0x2100 in both rival battles, a wild battle on Route 1 and Juniper's catching demo (an NPC's battle – see npcBattles), 0xF841 everywhere else (house, town, lab, Route 1, after the catch)",
+    "verified": "runtime-checked on White (IRAO) 2026-11-11 by the ROM matrix: 0x2100 in both rival battles, a wild battle on Route 1 and Juniper's catching demo (an NPC's battle), 0xF841 everywhere else (house, town, lab, Route 1, after the catch)",
     "othersNotInBattle": true,
-    "othersNote": "any value but the battle values is no battle (NDS-Ironmon-Tracker BattleHandlerBase.lua treats it the same way); left to the heap copies, the catching demo's Patrat stayed on the panel as a trainer battle until the next real one (#9)",
-    "npcBattles": true,
-    "npcNote": "Juniper's catching demo on Route 1 sets 0x2100 like a real battle (checked live): a battle with no copy of the player's party and none of their PIDs at battleActive isn't theirs (shared/live/parse.mjs battleDS)"
+    "othersNote": "any value but the battle values is no battle (NDS-Ironmon-Tracker BattleHandlerBase.lua treats it the same way); left to the heap copies, the catching demo's Patrat stayed on the panel as a trainer battle until the next real one (#9). Juniper's catching demo sets 0x2100 like a real battle, so it still shows while it runs"
    },
    "liveBattleParty": {
     "monsAddr": "0x0226A7B4",

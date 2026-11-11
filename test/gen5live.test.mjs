@@ -142,7 +142,7 @@ test('Black 2: the summary screen (flag 0x88C2) is no battle – the catching de
   assert.equal(poll(de, 0x88c2, st), null);
 });
 
-test('White: Juniper\'s catching demo is no battle of the player\'s – during it (flag 0x2100) and after it (#9)', () => {
+test('White: the battle flag ends Juniper\'s catching demo and every battle at once (#9)', () => {
   const e = findEntry(TABLE, { platform: 'nds', code: 'IRAO' });
   assert.equal(e.id, 'white_us');
   const me = pk5({ pid: 0x8efb4911, species: 498, level: 6, hp: 25, maxHp: 25 });
@@ -161,8 +161,10 @@ test('White: Juniper\'s catching demo is no battle of the player\'s – during i
   };
   // checked live in White: the flag is 0x2100 in the demo too
   assert.equal(poll(0xf841, 0, {}), null, 'overworld');
-  assert.equal(poll(0x2100, 0xd56bfdba, {}), null, 'the demo: a battle by the flag, but none of the player\'s Pokémon in it');
-  assert.equal(poll(0xf841, 0xd56bfdba, {}), null, 'after the demo: its leftover copy stays off the panel');
+  // the demo sets the battle value too, so it shows while it runs – and leaves the panel the moment it ends
+  const demo = {};
+  assert.equal(poll(0x2100, 0xd56bfdba, demo)?.enemy?.species, 572, 'the demo while it runs');
+  assert.equal(poll(0xf841, 0xd56bfdba, demo), null, 'after the demo: its leftover copy stays off the panel');
   // a real battle: a copy of the player's party in the heap (here the demo copy stands in for the opponent) …
   m.write(0x02310000, [6, 0, 0, 0, 1, 0, 0, 0, ...pk5({ pid: 0x8efb4911, species: 498, level: 6, hp: 19, maxHp: 25 })]);
   const fight = {};
@@ -170,7 +172,7 @@ test('White: Juniper\'s catching demo is no battle of the player\'s – during i
   assert.equal(poll(0x2100, 0xc44634a6, fight)?.active?.index, 0);
   // … and the flag (checked live: 0xF841 out of battle) ends it at once – the copies alone would keep it for up to 90 s
   assert.equal(poll(0xf841, 0xc44634a6, fight), null, 'the battle is over');
-  // the game's other languages (memory unchecked) keep the copies' verdict: the rule is off for them (scanOnly)
+  // the game's other languages (memory unchecked) only trust the flag once it showed both values (scanOnly)
   const de = findEntry(TABLE, { platform: 'nds', code: 'IRAD' });
   assert.equal(de.scanOnly, true);
 });

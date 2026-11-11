@@ -4,7 +4,7 @@
 "white_us"
 ],
 "core": "desmume",
-"note": "White (US/EU): as Black (its position sits 0x20 further on) \u2013 gift box (Tepig) \u2192 both rival battles in the room \u2192 Nuvema Town \u2192 Juniper's lab \u2192 Route 1, where a check every few steps watches Juniper's catching demo (her Minccino against a Patrat: an NPC's battle, never the player's) \u2192 a real wild catch (Pok\u00e9 Balls given into the bag). The probe records the battle flag, whose PID battleActive holds, held items, status conditions, badges and the level cap.",
+"note": "White (US/EU): as Black (its position sits 0x20 further on) \u2013 gift box (Tepig) \u2192 both rival battles in the room \u2192 Nuvema Town \u2192 Juniper's lab \u2192 Route 1, where a check every few steps watches Juniper's catching demo (her Minccino against a Patrat: the game flags it like a battle, so it shows while it runs and must be gone once it ends \u2013 the checks after it expect no battle) \u2192 a real wild catch (Pok\u00e9 Balls given into the bag). The probe records the battle flag, whose PID battleActive holds, held items, status conditions, badges and the level cap.",
 "pos": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]",
 "probe": "(()=>{const u=(a)=>{const b=read(a,2);return b?(b[0]|b[1]<<8).toString(16):null};const r=ctx.parse.readLiveParty(ctx.entry,read,ctx.T,ctx.state);const party=r?.party||[];const b0=read(0x022A7E34,4);const pid=b0?(b0[0]|b0[1]<<8|b0[2]<<16|b0[3]<<24)>>>0:0;let cap=null;try{const {R,doc,manifest}=ctx.run;doc.set('live:p1',{badges:r?.badges,at:Date.now()});cap=R.levelCap(doc,{...manifest,game:{...manifest.game,id:'pokemon-white'}},'p1').cap}catch(e){cap=String(e)}return {flag:u(0x021D07B8),atBattleActive:party.findIndex(m=>m.pid===pid),items:party.map(m=>m.item),status:party.map(m=>m.status),badges:r?.badges,cap}})()",
 "steps": [
@@ -1355,90 +1355,6 @@
 "catch": {
 "area": "Route 1"
 }
-},
-"demo01": {
-"battle": null
-},
-"demo02": {
-"battle": null
-},
-"demo03": {
-"battle": null
-},
-"demo04": {
-"battle": null
-},
-"demo05": {
-"battle": null
-},
-"demo06": {
-"battle": null
-},
-"demo07": {
-"battle": null
-},
-"demo08": {
-"battle": null
-},
-"demo09": {
-"battle": null
-},
-"demo10": {
-"battle": null
-},
-"demo11": {
-"battle": null
-},
-"demo12": {
-"battle": null
-},
-"demo13": {
-"battle": null
-},
-"demo14": {
-"battle": null
-},
-"demo15": {
-"battle": null
-},
-"demo16": {
-"battle": null
-},
-"demo17": {
-"battle": null
-},
-"demo18": {
-"battle": null
-},
-"demo19": {
-"battle": null
-},
-"demo20": {
-"battle": null
-},
-"demo21": {
-"battle": null
-},
-"demo22": {
-"battle": null
-},
-"demo23": {
-"battle": null
-},
-"demo24": {
-"battle": null
-},
-"demo25": {
-"battle": null
-},
-"demo26": {
-"battle": null
-},
-"demo27": {
-"battle": null
-},
-"demo28": {
-"battle": null
 },
 "wild": {
 "battle": {
