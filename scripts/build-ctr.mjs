@@ -65,7 +65,8 @@ function buildHost() {
   // (CTR_VULKAN_INCLUDE first – e.g. Azahar's externals/vulkan-headers/include; a cross build never takes the
   // system's /usr/include, it would bring the build machine's C headers along)
   const env = process.env;
-  const dirs = [env.CTR_VULKAN_INCLUDE, env.VULKAN_SDK && join(env.VULKAN_SDK, 'include'), env.VULKAN_SDK && join(env.VULKAN_SDK, 'Include'), ...(cross ? [] : ['/opt/homebrew/include', '/usr/local/include', '/usr/include'])];
+  const fromAzahar = azahar && join(azahar, 'externals', 'vulkan-headers', 'include'); // the checkout that builds the core
+  const dirs = [env.CTR_VULKAN_INCLUDE, env.VULKAN_SDK && join(env.VULKAN_SDK, 'include'), env.VULKAN_SDK && join(env.VULKAN_SDK, 'Include'), ...(cross ? [] : ['/opt/homebrew/include', '/usr/local/include', '/usr/include']), fromAzahar];
   for (const d of dirs.filter(Boolean)) {
     if (existsSync(join(d, 'vulkan', 'vulkan.h'))) {
       inc.push('-I', d);
@@ -85,11 +86,7 @@ function buildCore() {
   if (given) {
     copyFileSync(given, target);
   } else {
-    let src = opt('src');
-    if (!src) {
-      src = join(root, '_ref', `azahar-${TAG}`);
-      if (!existsSync(src)) run('git', ['clone', '--depth', '1', '--branch', TAG, '--recurse-submodules', '--shallow-submodules', 'https://github.com/azahar-emu/azahar.git', src]);
-    }
+    const src = azahar;
     // apply the patch once (a checkout that has it already is left as it is)
     const patch = join(root, 'native', 'azahar-patch', 'souldew-memory.patch');
     const check = spawnSync('git', ['apply', '--reverse', '--check', patch], { cwd: src });
@@ -139,6 +136,15 @@ function moltenVk() {
   }
 }
 
+// Azahar's source: the core is built from it, and its Vulkan headers serve the host where the system has none
+let azahar = null;
+if (!has('host-only') && !opt('core')) {
+  azahar = opt('src');
+  if (!azahar) {
+    azahar = join(root, '_ref', `azahar-${TAG}`);
+    if (!existsSync(azahar)) run('git', ['clone', '--depth', '1', '--branch', TAG, '--recurse-submodules', '--shallow-submodules', 'https://github.com/azahar-emu/azahar.git', azahar]);
+  }
+} else if (opt('src')) azahar = opt('src');
 buildHost();
 writeFileSync(join(out, 'LICENSES.txt'), `souldew's Nintendo 3DS part
 ctrhost – native/ctr-host/ctrhost.c, souldew (GPL-3.0); libretro headers MIT
