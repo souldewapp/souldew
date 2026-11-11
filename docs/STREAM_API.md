@@ -38,7 +38,7 @@ meaning. A breaking change would get `/api/v2`, with v1 kept alongside. Unknown 
 |---|---|
 | `GET /api/v1` | Index: API version, current run ID, whether a token is required, endpoint and event lists |
 | `GET /api/v1/runs` | All runs: `[{ id, name, mode, gen, current, players: [{ slot, name, color }], createdAt }]` |
-| `GET /api/v1/runs/current` | The run played last (its data changed last) – the whole state, see below |
+| `GET /api/v1/runs/current` | The current run – the one open in souldew, else the one played last (its data changed last) – the whole state, see below |
 | `GET /api/v1/runs/{id}` | One run's state (8-character run ID from `/runs`) |
 | `GET /api/v1/runs/{id}/players` · `/players/p1` | `players` of the state – all, or one |
 | `GET /api/v1/runs/{id}/links` · `/graveyard` · `/encounters` · `/feed` | That part of the state |
@@ -134,7 +134,9 @@ GET /api/v1/runs/current/events?lang=en
 The stream starts with `event: hello` (`{ api, run, lang, events }`) and `event: state` (the whole state, as above).
 After that, whenever the run changes (the app saves several times a second while you play), you get the events that
 happened and then one fresh `state`. Browsers reconnect by themselves (`retry: 2000`); a comment line (`: ping`)
-comes every 20 s. Every event's data has `type`, `run` and `at`, plus:
+comes every 20 s. A stream opened for `current` follows it: when another run becomes current (you open another run
+in souldew, start a new one or delete the open one), it sends `hello` and `state` again for that run – no reconnect
+needed; `hello` with `run: null` means there is no run any more. Every event's data has `type`, `run` and `at`, plus:
 
 | Event | Data |
 |---|---|
