@@ -614,8 +614,8 @@ test('p3 and p4 offline: their retained snapshots catch the others up', async ()
   d4.set('enc:route-2:p4', { species: 133 });
   c.stop();
   d.stop();
-  // (let the messages still in flight from the stopped links land first: on a busy machine a heartbeat sent just
-  // before stop() could otherwise reach p1 after it joined and pass for a live partner)
+  // (let the messages still in flight from the stopped links land first: on a busy machine their farewell ops – sent
+  // after the goodbye – could otherwise reach p1 after it joined)
   await sleep(200);
   const d1 = mkDoc('a');
   const a = mkLink(net, 'p1', d1, { slots: SLOTS4 });
@@ -623,6 +623,21 @@ test('p3 and p4 offline: their retained snapshots catch the others up', async ()
   await until(() => d1.get('enc:route-2:p3')?.species === 25 && d1.get('enc:route-2:p4')?.species === 133, 8000, 'p1 gets both');
   await sleep(100);
   assert.deepEqual(a.status.partners, {}, 'retained data and goodbyes are no sign of life');
+});
+
+test('a change right before leaving still reaches the partner – and the goodbye after it takes the player offline', async () => {
+  const net = fakeNet();
+  const da = mkDoc('a');
+  const db = mkDoc('b');
+  const a = mkLink(net, 'p1', da);
+  const b = mkLink(net, 'p2', db);
+  await Promise.all([a.start(), b.start()]);
+  await until(() => a.status.partners.p2 && b.status.partners.p1, 8000, 'both online');
+  db.set('enc:route-3:p2', { species: 41 }); // queued (the flush timer is still open) …
+  b.stop(); // … and sent as farewell ops after the goodbye
+  await until(() => da.get('enc:route-3:p2')?.species === 41, 8000, 'the last change arrives');
+  await until(() => !a.status.partners.p2, 4000, 'and p2 is offline right after it, not only after the partner timeout');
+  a.stop();
 });
 
 test('presence is judged per player: one leaving (last will or TTL) leaves the others online', async () => {

@@ -81,6 +81,9 @@
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged
   where the hack rewrote their scripts. Checked with every preset.
+- **Leaving right after a change no longer leaves you "online"**: a change made a moment before closing a SoulLink
+  (a death, a restart) was sent after the goodbye and made the partner see you online for up to 45 seconds. The
+  goodbye now follows it.
 - **"New attempt" keeps the players together** (#6): when a SoulLink was over and more than one player pressed "New
   attempt", each of them built a new run of their own – with its own connection, so the sync stopped working. Now the
   first one to press it builds the new run, and everybody else sees "… is already building the new attempt" and gets

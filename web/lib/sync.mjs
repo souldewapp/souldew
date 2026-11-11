@@ -349,6 +349,9 @@ export class SyncLink {
           if (client.connected && (hasPending || this.snapshotDue)) {
             if (hasPending) for (const part of await this._sealParts('ops', pending)) client.publish(`${this.topic}/ops/${this.slot}`, part);
             await this._publishSnapshot(client);
+            // the last ops arrive live and count as a sign of life: say goodbye once more after them, or the others
+            // would see us online until the partner timeout runs out
+            client.publish(`${this.topic}/presence/${this.slot}`, JSON.stringify({ online: false, at: Date.now(), bye: true }), { retain: true });
           }
           client.end(false); // graceful: queued packets go out first
         } catch {

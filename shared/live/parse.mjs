@@ -281,6 +281,7 @@ function pk3Run(ram, o, T, state = null) {
       }
       return { n: 0, empty: false, torn: true };
     }
+    if (state?.runBad) delete state.runBad[n]; // a good read: a Bad Egg there has to be seen three times anew
     pids.push(pid);
   }
   let empty = true;
@@ -390,6 +391,7 @@ function readGen3(entry, read, T, state = {}) {
     // Level, HP and stats (80-99) are neither encrypted nor checksummed: a slot the party menu is swapping reads as
     // one mon with the other's numbers – or the same mon twice. Stats over 999 or a duplicate: try again next poll.
     if (party.some((x) => x.pid === m.pid) || !gen3StatsOk(slot, m.isEgg)) return { torn: true };
+    if (state.bad3) delete state.bad3[i]; // a good read: a Bad Egg there has to be seen three times anew
     party.push(m);
   }
   return { party };
