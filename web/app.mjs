@@ -442,6 +442,17 @@ function App() {
     return runDoc.subscribe((keys) => keys.includes('run:restart') && check());
   }, [runDoc, me, status?.runs?.length]);
 
+  // "New attempt" pressed in a run another player already started over (views/restart.mjs): their offer, even when
+  // it was put off with "Later" before. offer.slot: our slot in that old run (it may not be the open one).
+  const offerRestart = useCallback((offer) => {
+    try {
+      sessionStorage.removeItem(`sl-restart-seen-${offer.id}`);
+    } catch {
+      // storage blocked
+    }
+    setRestartOffer(offer);
+  }, []);
+
   // ---- trophies: the slot played per run, live moments of the open run, unlock toasts ----
   const runCount = status?.runs?.length || 0;
   useEffect(() => {
@@ -583,7 +594,7 @@ function App() {
   const ctx = {
     status, reloadStatus, library, reloadLibrary, runId, setRunId, manifest, missingRun, reloadManifest, doc: runDoc, docVersion, runData, me, setMe,
     navigate, route, link: linkRef.current, linkStatus, partnerOnline, onlineSlots, connect, disconnect, inbox, setInbox, applySnap, toast, liveInfo,
-    session, startSession, endSession, closeSession,
+    session, startSession, endSession, closeSession, offerRestart,
   };
 
   if (!ready) {
