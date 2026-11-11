@@ -53,9 +53,8 @@ export function capsFrom(bosses, { expect = 8 } = {}) {
     const near = new Set(bosses.filter((b) => b.kind === 'leader' && plain(b.name) === plain(l.name) && b.ace >= l.ace && b.ace <= l.ace + 6).map((b) => b.ace));
     if ([...near].some((a) => a > l.ace + 1)) return { why: `${l.name}: teams of several difficulties` };
   }
-  const ordered = leaders.every((l) => Number.isInteger(l.badge)) && new Set(leaders.map((l) => l.badge)).size === expect
-    ? [...leaders].sort((a, b) => a.badge - b.badge)
-    : [...leaders].sort((a, b) => a.ace - b.ace || a.id - b.id);
+  const byBadge = leaders.every((l) => Number.isInteger(l.badge)) && new Set(leaders.map((l) => l.badge)).size === expect;
+  const ordered = byBadge ? [...leaders].sort((a, b) => a.badge - b.badge) : [...leaders].sort((a, b) => a.ace - b.ace || a.id - b.id);
   // aces rise with the badges (a leader a few levels below the one before is fine – FireRed's Koga 43, Sabrina 43)
   for (let i = 1; i < ordered.length; i++) if (ordered[i].ace < ordered[i - 1].ace - 3) return { why: `ace of leader ${i + 1} below leader ${i}` };
   const last = ordered.at(-1).ace;
@@ -64,7 +63,9 @@ export function capsFrom(bosses, { expect = 8 } = {}) {
   const top4 = elite.length ? Math.max(...elite.map((e) => e.ace)) : 0;
   const champ = champs.find((c) => c.ace >= top4 && c.ace >= last);
   const final = champ ? { name: 'Champion', cap: champ.ace } : top4 >= last ? { name: 'Elite Four', cap: top4 } : null;
-  return { caps: ordered.map((l) => l.ace), leaders: ordered.map((l) => l.name), final };
+  // (the leaders' names only where the game says who gives which badge – ordered by ace alone, two leaders with the
+  // same ace or a hack's late easy gym would get the wrong name: "Gym n" then)
+  return { caps: ordered.map((l) => l.ace), leaders: byBadge ? ordered.map((l) => l.name) : null, final };
 }
 
 // ---------------------------------------------------------------- Gen 3
@@ -292,6 +293,7 @@ export function gen3Caps(rom, opts = {}) {
  */
 export function dsCaps(rom, opts = {}) {
   const code = String.fromCharCode(...rom.subarray(0x0c, 0x10)).slice(0, 3);
+  if (!/^[A-Z0-9]{3}$/.test(code)) return { why: 'not a DS game' };
   const files = listNdsFiles(rom);
   const has = (p) => files.some((f) => f.path === p);
   let trd;

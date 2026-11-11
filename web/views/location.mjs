@@ -48,6 +48,16 @@ export function loadRomLocations(src) {
   return p;
 }
 
+/**
+ * The game session ended: its ROM's types and species names don't apply to whatever is shown next (another run's
+ * board, another game) – the next session loads its own again.
+ */
+export function resetRomData() {
+  Object.assign(ROMLOC, { src: null, data: null, species: null, wram: null, own: null, pending: false, p: null });
+  setRomTypes(null);
+  setRomSpecies(null);
+}
+
 /** The running ROM's species table (romSpecies(): { engine, map, unknown } – GBA only), null while unknown. */
 export const romSpeciesNow = () => ROMLOC.species;
 /**

@@ -2242,5 +2242,7 @@
   "reads.types": "types et efficacités",
   "reads.typesOnly": "types (sans efficacités)",
   "lib.liveNote.cfru": "L’équipe, le lieu, les combats et les captures sont lus en direct, les objets tenus avec les noms du jeu, les types et efficacités depuis la ROM. Aucun niveau maximum n’est affiché – les champions d’arène du hack ne peuvent pas être identifiés avec certitude – et la triche Super Bonbon est désactivée.",
-  "lib.liveNote.types": "L’équipe, le lieu, les combats et les captures sont lus en direct, les types propres au hack et leurs efficacités depuis la ROM. La triche Super Bonbon est désactivée."
+  "lib.liveNote.types": "L’équipe, le lieu, les combats et les captures sont lus en direct, les types propres au hack et leurs efficacités depuis la ROM. La triche Super Bonbon est désactivée.",
+  "reads.error": "Impossible de vérifier cette ROM – ce que souldew lit s’affiche dès que le jeu tourne.",
+  "reads.unknown": "Pas encore connu – ce que souldew lit s’affiche dès que le jeu tourne."
 }

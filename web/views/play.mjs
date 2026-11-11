@@ -16,7 +16,7 @@ import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
 import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer, useBattlePanelPrefs } from './session-info.mjs';
-import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now, romOwnNow, romDataNow } from './location.mjs';
+import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now, romOwnNow, romDataNow, resetRomData } from './location.mjs';
 import { FeatureCheck, romFeatures } from '/shared/live/features.mjs';
 import { gymCapsFamily } from '/shared/routes.mjs';
 import { shiftEntry } from '/shared/live/romwram.mjs';
@@ -852,6 +852,7 @@ export function GameSession({ session, mode }) {
     })();
     return () => {
       stopped = true;
+      resetRomData(); // (this game's types and species names end with its session)
       clearInterval(autoTimer);
       clearInterval(songTimer);
       offAudio?.();

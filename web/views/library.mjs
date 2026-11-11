@@ -523,22 +523,27 @@ function GameDetail({ id, onClose, openHack }) {
  */
 let ADDRESSES = null;
 export function ReadsLine({ src, gameId = null }) {
-  const [f, setF] = useState(null);
+  // 'checking' → 'ok' (features), 'unknown' (the ROM's data couldn't be worked out: a damaged file, a scan that took too
+  // long – nothing is said about it rather than "nothing"), 'error' (the request failed: a wrong base ROM for a patch …)
+  const [st, setSt] = useState({ state: 'checking', f: null });
   useEffect(() => {
     let on = true;
-    setF(null);
+    setSt({ state: 'checking', f: null });
     if (!src) return undefined;
     ADDRESSES ||= fetch('/shared/data/addresses.json').then((r) => r.json()).catch(() => null);
-    Promise.all([fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null), ADDRESSES]).then(([rd, addr]) => {
-      if (!on || !rd || !addr) return;
-      const curatedCaps = /^IP[KG]/.test(String(rd.header?.code || '')) || (!!rd.vanilla && !!gymCapsFamily(gameId || ''));
-      setF(romFeatures(rd, addr, { curatedCaps }));
-    });
+    const rd = fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))));
+    Promise.all([rd, ADDRESSES]).then(([d, addr]) => {
+      if (!on) return;
+      if (!d?.header || !addr) return setSt({ state: 'unknown', f: null });
+      const curatedCaps = /^IP[KG]/.test(String(d.header.code || '')) || (!!d.vanilla && !!gymCapsFamily(gameId || ''));
+      setSt({ state: 'ok', f: romFeatures(d, addr, { curatedCaps }) });
+    }, () => on && setSt({ state: 'error', f: null }));
     return () => {
       on = false;
     };
   }, [src, gameId]);
   if (!src) return null;
+  const f = st.f;
   const label = {
     party: t('reads.party', 'team'), items: t('reads.items', 'held items'), moves: t('reads.moves', 'moves'), location: t('reads.location', 'place'),
     battle: t('reads.battle', 'battles'), catch: t('reads.catch', 'catches'), types: t('reads.types', 'types and matchups'), caps: t('reads.caps', 'level caps'),
@@ -546,8 +551,11 @@ export function ReadsLine({ src, gameId = null }) {
   const yes = f ? FEATURES.filter((k) => f[k] === 'yes').map((k) => label[k]) : [];
   if (f?.types === 'partial') yes.push(t('reads.typesOnly', 'types (no matchups)'));
   const no = f ? FEATURES.filter((k) => f[k] === 'no').map((k) => label[k]) : [];
-  return html`<dt>${t('reads.title', 'souldew reads')}</dt><dd class="reads-line">${!f ? html`<span class="muted small">${t('reads.checking', 'Checking the ROM …')}</span>`
-    : yes.length ? yes.join(' · ') : html`<span class="muted">${t('reads.nothing', 'Nothing live – enter catches by hand')}</span>`}
+  const body = st.state === 'checking' ? html`<span class="muted small">${t('reads.checking', 'Checking the ROM …')}</span>`
+    : st.state === 'error' ? html`<span class="muted small">${t('reads.error', 'Couldn’t check this ROM – what souldew reads shows once the game runs.')}</span>`
+      : st.state === 'unknown' ? html`<span class="muted small">${t('reads.unknown', 'Not known yet – what souldew reads shows once the game runs.')}</span>`
+        : yes.length ? yes.join(' · ') : html`<span class="muted">${t('reads.nothing', 'Nothing live – enter catches by hand')}</span>`;
+  return html`<dt>${t('reads.title', 'souldew reads')}</dt><dd class="reads-line">${body}
     ${f && no.length > 0 && yes.length > 0 && html`<div class="small muted">${t('reads.not', 'Not for this game: {list} – hidden rather than guessed.', { list: no.join(', ') })}</div>`}</dd>`;
 }
 

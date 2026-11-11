@@ -144,6 +144,15 @@ function gbBaseStats(rom, gen) {
       if (rom[e] !== i + 1) break;
       out[i + 1] = [rom[e + t], rom[e + t + 1]];
     }
+    // Gen 1 keeps Mew's entry apart (MewBaseStats): dex 151 with 100 in every stat
+    if (gen === 1) {
+      for (let m = 0; m + 8 < rom.length; m++) {
+        if (rom[m] === 151 && [1, 2, 3, 4, 5].every((k) => rom[m + k] === 100)) {
+          out[151] = [rom[m + t], rom[m + t + 1]];
+          break;
+        }
+      }
+    }
     if (out.length > last * 0.9) return { offset: o, stride: size, types: out };
   }
   return null;

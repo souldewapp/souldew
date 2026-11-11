@@ -113,8 +113,9 @@ export const fromRomCache = (v) => Object.fromEntries(Object.keys(ROMDATA_NONE).
 
 // ---- computed in a worker thread (server/lib/romdata-worker.mjs): a big ROM takes seconds – the server, which shares
 // its thread with the app in Electron, keeps answering every other request meanwhile. One ROM at a time; a scan that
-// fails or takes too long gives "unknown" (ROMDATA_NONE) – not remembered, so the next request tries again.
-const TIMEOUT_MS = Number(process.env.SLS_ROMDATA_TIMEOUT_MS) || 180000;
+// fails or takes too long gives "unknown" (ROMDATA_NONE) – remembered in memory until the file changes, never on disk.
+// (SLS_ROMDATA_TIMEOUT_MS only under node --test)
+const TIMEOUT_MS = (process.env.NODE_TEST_CONTEXT && Number(process.env.SLS_ROMDATA_TIMEOUT_MS)) || 180000;
 let worker = null;
 let seq = 0;
 const jobs = new Map(); // job id → { w (its worker), resolve, reject, timer }
@@ -133,7 +134,8 @@ function failAll(w, err) {
 
 function getWorker() {
   if (worker) return worker;
-  const w = new Worker(new URL('./romdata-worker.mjs', import.meta.url));
+  // (a damaged ROM must not take the app down with it: the worker's heap is capped – the ROM's bytes sit outside it)
+  const w = new Worker(new URL('./romdata-worker.mjs', import.meta.url), { resourceLimits: { maxOldGenerationSizeMb: 1024, maxYoungGenerationSizeMb: 64 } });
   w.on('message', ({ id, result, error }) => {
     const j = jobs.get(id);
     if (!j) return;
@@ -164,7 +166,13 @@ function runJob(msg, timeoutMs) {
       w.terminate().catch(() => {});
     }, timeoutMs);
     jobs.set(id, { w, resolve, reject, timer });
-    w.postMessage({ ...msg, id }, msg.bytes ? [msg.bytes] : []);
+    try {
+      w.postMessage({ ...msg, id }, msg.bytes ? [msg.bytes] : []);
+    } catch (e) {
+      clearTimeout(timer);
+      jobs.delete(id);
+      reject(e);
+    }
   });
   const p = chain.then(run, run);
   chain = p.catch(() => {});
@@ -173,7 +181,7 @@ function runJob(msg, timeoutMs) {
 
 /**
  * The ROM's data (see romData) for `src` – { file } (a path), { lib: { id, config } } (a library entry, maybe inside a
- * .zip: read in the worker) or { bytes, key } – with the memory and disk cache in front (CACHE_DIR/romloc, per file:
+ * .zip: read in the worker), { patched: { romId, patchId, config } } (patched in the worker) or { bytes, key } – with the memory and disk cache in front (CACHE_DIR/romloc, per file:
  * path, size, time). Resolves to ROMDATA_NONE's shape, never rejects; `env.timeoutMs` overrides the time limit.
  */
 export async function romDataFor(src, { sharedDir, cacheDir, timeoutMs = TIMEOUT_MS }) {
@@ -190,6 +198,15 @@ export async function romDataFor(src, { sharedDir, cacheDir, timeoutMs = TIMEOUT
       const st = statSync(abs);
       id = `${abs}::${entry || ''}|${st.size}|${st.mtimeMs}`;
       msg = { lib: { id: src.lib.id, config: src.lib.config } };
+    } else if (src.patched) {
+      // a library ROM with a patch: patched (or taken from the patched-ROM cache) in the worker as well
+      const { romId, patchId, config } = src.patched;
+      const a = resolveId(romId, config);
+      const b = resolveId(patchId, config);
+      const sa = statSync(a.abs);
+      const sb = statSync(b.abs);
+      id = `patched|${a.abs}::${a.entry || ''}|${sa.size}|${sa.mtimeMs}|${b.abs}::${b.entry || ''}|${sb.size}|${sb.mtimeMs}`;
+      msg = { patched: { romId, patchId, config } };
     } else if (src.bytes) {
       id = `bytes|${src.key}|${src.bytes.length}`;
       const copy = new Uint8Array(src.bytes); // (handed over to the worker)
@@ -226,7 +243,12 @@ export async function romDataFor(src, { sharedDir, cacheDir, timeoutMs = TIMEOUT
       }
     }
     return r;
-  }, () => none).finally(() => pending.delete(id));
+  }, () => {
+    // (remembered in memory only: the same damaged file isn't scanned again on every click until it changes or the app
+    // restarts – and nothing about it lands in the disk cache)
+    memo.set(id, none);
+    return none;
+  }).finally(() => pending.delete(id));
   pending.set(id, p);
   return p;
 }

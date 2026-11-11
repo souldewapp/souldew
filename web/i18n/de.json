@@ -2242,5 +2242,7 @@
   "reads.types": "Typen und Effektivität",
   "reads.typesOnly": "Typen (ohne Effektivität)",
   "lib.liveNote.cfru": "Team, Ort, Kämpfe und Fänge werden live gelesen, getragene Items mit den Namen aus dem Spiel, Typen und Effektivität aus der ROM. Ein Level-Cap wird nicht angezeigt – die Arenaleiter des Hacks lassen sich nicht sicher zuordnen –, und der Sonderbonbon-Cheat ist aus.",
-  "lib.liveNote.types": "Team, Ort, Kämpfe und Fänge werden live gelesen, die eigenen Typen des Hacks samt Effektivität aus der ROM. Der Sonderbonbon-Cheat ist aus."
+  "lib.liveNote.types": "Team, Ort, Kämpfe und Fänge werden live gelesen, die eigenen Typen des Hacks samt Effektivität aus der ROM. Der Sonderbonbon-Cheat ist aus.",
+  "reads.error": "Diese ROM ließ sich nicht prüfen – was souldew liest, zeigt sich, sobald das Spiel läuft.",
+  "reads.unknown": "Noch nicht bekannt – was souldew liest, zeigt sich, sobald das Spiel läuft."
 }

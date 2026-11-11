@@ -176,18 +176,20 @@ export class RunData {
   types(id, slot) {
     const p = this.byId[slot]?.get(id) || Object.keys(this.byId).sort().map((s) => this.byId[s]?.get(id)).find(Boolean);
     if (p) return p.types.filter(Boolean).map((t) => t.toLowerCase());
-    // the game's own types (read from the ROM: loaded with the run, or from the game running right now)
+    // the game's own types (read from the ROM: loaded with the run, or from the game running right now); a Pokémon
+    // its table doesn't list (Gen 1's Mew where that entry wasn't found, a type the game doesn't name) has the official
+    // ones – unless the game has types of its own, where those would be wrong
     const rt = this.romTypes || ROM_TYPES;
-    if (rt) return rt.species[id] || [];
-    // a modified ROM whose types couldn't be read: none rather than the official ones, which may be wrong there
-    if (this.romVanilla === false) return [];
+    if (rt) return rt.species[id] || (rt.own ? [] : baseTypes(id, this.gen));
+    // no types read from the ROM (a modified one whose tables weren't found too): the official ones – the battle
+    // helper then shows no matchups for a modified ROM (matchupsKnown), as they may be wrong there
     return baseTypes(id, this.gen);
   }
 
   /** Can the battle helper tell matchups? The game's own chart, or the official one where the game has only those types. */
   get matchupsKnown() {
     const rt = this.romTypes || ROM_TYPES;
-    if (!rt) return this.romVanilla !== false; // (a modified ROM whose types couldn't be read: no types to go by)
+    if (!rt) return this.romVanilla !== false; // (a modified ROM whose types couldn't be read: official types, no matchups)
     return !!rt.chart || !rt.own;
   }
 

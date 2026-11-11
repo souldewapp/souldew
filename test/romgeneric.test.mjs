@@ -222,6 +222,61 @@ test('Game Boy types from the ROM: base data (dex number, stats, types) and Type
   assert.deepEqual(t.species[35], ['normal'], 'Clefairy is Normal in Gen 2');
   assert.equal(t.chart.normal.ghost, 0, 'the entries after the Foresight marker count');
   assert.equal(t.chart.ghost.steel, 0.5);
+  // Gen 1: 28-byte entries for #1–150, Mew's apart
+  const g1 = new Uint8Array(0x40000);
+  g1[0x104] = 0xce;
+  g1[0x105] = 0xed;
+  for (let i = 1; i <= 150; i++) {
+    const ty = baseTypes(i, 1);
+    g1.set([i, 50, 50, 50, 50, 50, GB[ty[0]], GB[ty[1] || ty[0]]], 0x8000 + (i - 1) * 28);
+  }
+  g1.set([1, 45, 49, 49, 45, 65, GB.grass, GB.poison], 0x8000);
+  g1.set([151, 100, 100, 100, 100, 100, GB.psychic, GB.psychic], 0x12000);
+  const t1 = romTypes(g1, {});
+  assert.equal(t1.gen, 1);
+  assert.deepEqual(t1.species[151], ['psychic'], 'Mew');
+});
+
+test('damaged DS files: random bytes and a cut-off ROM end in "nothing found", fast – no endless walk, no huge tables', async () => {
+  const { listNdsFiles, parseNarc } = await import('../shared/nds.mjs');
+  const { romCaps } = await import('../shared/live/romcaps.mjs');
+  const { romLocations } = await import('../shared/live/romloc.mjs');
+  let seed = 12345;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) >>> 16) & 0xff;
+  const t0 = Date.now();
+  for (let k = 0; k < 6; k++) {
+    const rom = new Uint8Array(k < 3 ? 0x800000 : 0x20000).map(rnd);
+    assert.doesNotThrow(() => romTypes(rom, {}));
+    assert.ok(!romCaps(rom, {}).caps);
+    assert.equal(romLocations(rom, {}), null);
+    try {
+      listNdsFiles(rom);
+    } catch {
+      // a damaged one throws – it never hangs
+    }
+  }
+  // a DS header whose name table lies past the end (a cut-off download), and one whose name table never ends
+  const cut = new Uint8Array(0x4000);
+  cut.set([...'POKEMON PL'].map((c) => c.charCodeAt(0)), 0);
+  cut.set([...'CPUE'].map((c) => c.charCodeAt(0)), 0x0c);
+  put32(cut, 0x40, 0x3000000); // FNT far past the end
+  put32(cut, 0x44, 0x1000);
+  put32(cut, 0x48, 0x1000);
+  put32(cut, 0x4c, 0x80);
+  assert.throws(() => listNdsFiles(cut));
+  assert.equal(romTypes(cut, {}), null);
+  const loop = cut.slice();
+  put32(loop, 0x40, 0x2000);
+  put32(loop, 0x44, 0x1000);
+  loop.fill(0x41, 0x2008, 0x3000); // names, names, never a 0
+  put32(loop, 0x2000, 8);
+  assert.ok(Array.isArray(listNdsFiles(loop)));
+  // a NARC with a zero block size: no endless loop
+  const narc = new Uint8Array(0x40);
+  put32(narc, 0, 0x4352414e);
+  put16(narc, 0x0c, 0x10);
+  assert.throws(() => parseNarc(narc));
+  assert.ok(Date.now() - t0 < 20000, `took ${Date.now() - t0} ms`);
 });
 
 // ---------------------------------------------------------------- level caps
@@ -320,7 +375,9 @@ test('level caps from a GBA ROM\'s trainers: the trainers a script battles; with
   assert.deepEqual(gen3Caps(capsRom(extra), { gen3Charset: cs3 }).caps, [14, 21, 24, 29, 43, 43, 47, 50]);
   // no trainerbattle scripts at all (Unbound starts its battles another way): sorted by ace
   const noFlags = FR.map(({ badge, ...b }) => b);
-  assert.deepEqual(gen3Caps(capsRom(noFlags, { scripts: false }), { gen3Charset: cs3 }).caps, [14, 21, 24, 29, 43, 43, 47, 50]);
+  const byAce = gen3Caps(capsRom(noFlags, { scripts: false }), { gen3Charset: cs3 });
+  assert.deepEqual(byAce.caps, [14, 21, 24, 29, 43, 43, 47, 50]);
+  assert.equal(byAce.leaders, null, 'ordered by ace alone: no names ("Gym n") – two leaders with the same ace could swap');
   // a leader with teams of a few levels apart (difficulty settings): which one the player meets isn't known
   const diff = [...noFlags, { cls: 'leader', name: 'BROCK', levels: [15, 17] }];
   assert.match(gen3Caps(capsRom(diff, { scripts: false }), { gen3Charset: cs3 }).why, /BROCK: teams of several difficulties/);
@@ -434,15 +491,29 @@ test('Gen 3 badges: SaveBlock1\'s badge flags, trusted only while "has a Pokémo
   put(parseInt(fr.partyCountAddr, 16), [1]);
   put(parseInt(fr.partyAddr, 16), [...pk3({ internal: 4, level: 14, hp: 30, maxHp: 39 })]);
   const SB1 = 0x0202552c;
-  const p = new Uint8Array(4);
+  const SB2 = 0x02024588;
+  const p = new Uint8Array(8);
   put32(p, 0, SB1);
-  put(0x03005008, [...p]); // gSaveBlock1Ptr
+  put32(p, 4, SB2);
+  put(0x03005008, [...p]); // gSaveBlock1Ptr, gSaveBlock2Ptr
+  const tid = (v) => {
+    const b = new Uint8Array(4);
+    put32(b, 0, v);
+    put(SB2 + 0x0a, [...b]); // SaveBlock2.playerTrainerId
+  };
+  tid(0x0a0b0c0d); // the team's OT
   const flag = (f) => mem.set(SB1 + 0xee0 + (f >> 3), (mem.get(SB1 + 0xee0 + (f >> 3)) || 0) | (1 << (f & 7)));
   const T = new LiveTables({ charsetGen3: cs3, gen3Index: idx3 });
   for (const f of [0x820, 0x821, 0x822]) flag(f); // Boulder, Cascade, Thunder Badge
   assert.equal(readLiveParty(fr, read, T, {}).badges, undefined, 'no FLAG_SYS_POKEMON_GET (0x828): not the flag array');
   flag(0x828);
   assert.equal(readLiveParty(fr, read, T, {}).badges, 3);
+  tid(0x11112222);
+  assert.equal(readLiveParty(fr, read, T, {}).badges, undefined, 'SaveBlock2 of another trainer: not this game\'s save blocks');
+  tid(0x0a0b0c0d);
+  // German Ruby/Sapphire keep their RAM elsewhere (unchecked): no badges
+  const rde = findEntry(addresses, { platform: 'gba', code: 'AXVD' });
+  assert.equal(readLiveParty({ ...rde, partyAddr: fr.partyAddr, partyCountAddr: fr.partyCountAddr }, read, T, {}).badges, undefined);
   // a hack whose leaders' scripts set other flags (romcaps.mjs badgeFlags)
   for (const f of [0x900, 0x901]) flag(f);
   flag(0x908);

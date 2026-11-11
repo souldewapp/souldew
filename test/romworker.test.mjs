@@ -3,7 +3,7 @@
 // fails or takes too long is "unknown" and is tried again next time; a finished one comes from the disk cache after.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readdirSync, existsSync, utimesSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -60,7 +60,7 @@ test('a request is answered while a ROM is being scanned; the scan\'s result arr
   }
 });
 
-test('a scan that takes too long gives "unknown" – not cached, tried again next time; two requests share one scan', async () => {
+test('a scan that takes too long gives "unknown" – remembered in memory only, scanned again once the file changes; two requests share one scan', async () => {
   const dir = join(DATA, 'roms');
   const file = writeRom(dir, 'slow.gba', 1);
   const before = existsSync(join(CACHE_DIR, 'romloc')) ? readdirSync(join(CACHE_DIR, 'romloc')).length : 0;
@@ -68,7 +68,12 @@ test('a scan that takes too long gives "unknown" – not cached, tried again nex
   assert.deepEqual(r, { ...ROMDATA_NONE });
   const after = existsSync(join(CACHE_DIR, 'romloc')) ? readdirSync(join(CACHE_DIR, 'romloc')).length : 0;
   assert.equal(after, before, 'nothing written for a scan that didn\'t finish');
-  // the worker was ended – the next request starts a new one and gets the real result
+  // the same file again: "unknown" at once (a damaged file isn't scanned on every click)
+  const t0 = Date.now();
+  assert.deepEqual(await romDataFor({ file }, { sharedDir: SHARED_DIR, cacheDir: CACHE_DIR }), { ...ROMDATA_NONE });
+  assert.ok(Date.now() - t0 < 300);
+  // the file changed: the worker (ended after the timeout) is started anew and gives the real result
+  utimesSync(file, new Date(), new Date(Date.now() + 5000));
   const [a, b] = await Promise.all([romDataFor({ file }, { sharedDir: SHARED_DIR, cacheDir: CACHE_DIR }), romDataFor({ file }, { sharedDir: SHARED_DIR, cacheDir: CACHE_DIR })]);
   assert.equal(a.header.system, 'gba');
   assert.equal(a, b, 'one scan for both');

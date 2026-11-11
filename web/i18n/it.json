@@ -2242,5 +2242,7 @@
   "reads.types": "tipi ed efficacia",
   "reads.typesOnly": "tipi (senza efficacia)",
   "lib.liveNote.cfru": "Squadra, luogo, lotte e catture vengono letti dal vivo, gli strumenti tenuti con i nomi del gioco, tipi ed efficacia dalla ROM. Nessun limite di livello viene mostrato (i capipalestra dell’hack non si possono riconoscere con certezza) e il trucco delle Caramelle Rare non c’è.",
-  "lib.liveNote.types": "Squadra, luogo, lotte e catture vengono letti dal vivo, i tipi propri dell’hack e la loro efficacia dalla ROM. Il trucco delle Caramelle Rare non c’è."
+  "lib.liveNote.types": "Squadra, luogo, lotte e catture vengono letti dal vivo, i tipi propri dell’hack e la loro efficacia dalla ROM. Il trucco delle Caramelle Rare non c’è.",
+  "reads.error": "Impossibile controllare questa ROM: ciò che souldew legge si vedrà appena il gioco è avviato.",
+  "reads.unknown": "Non ancora noto: ciò che souldew legge si vedrà appena il gioco è avviato."
 }

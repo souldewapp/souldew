@@ -456,7 +456,7 @@ function readGen3(entry, read, T, state = {}) {
     if (state.bad3) delete state.bad3[i]; // a good read: a Bad Egg there has to be seen three times anew
     party.push(m);
   }
-  const badges = party.length ? gen3Badges(entry, read, T, state) : undefined;
+  const badges = party.length ? gen3Badges(entry, read, T, state, party) : undefined;
   return badges === undefined ? { party } : { party, badges };
 }
 
@@ -464,28 +464,41 @@ function readGen3(entry, read, T, state = {}) {
  * Gen 3 badges: the badge flags in SaveBlock1's flag array (Ruby/Sapphire keep SaveBlock1 at a fixed place, Emerald
  * and FireRed/LeafGreen behind a pointer in IWRAM – the other-language FireRed/LeafGreen's in addresses.json). The
  * badge flags are the base game's, or the ones the ROM's own leader scripts set (romcaps.mjs, LiveTables.withRom); an
- * expanded engine only with those, its SaveBlock1 pointer as the place reader found it. Trusted only while "has a
- * Pokémon" (FLAG_SYS_POKEMON_GET, 7 before the badges in Ruby/Sapphire/Emerald, 8 after them in FireRed/LeafGreen) is
- * set there – the team is read, so it must be.
+ * expanded engine only with those, its save block pointers as the place reader found them. Trusted only while
+ * SaveBlock2's trainer ID is the one of a Pokémon in the team and "has a Pokémon" (FLAG_SYS_POKEMON_GET, 7 before the
+ * badges in Ruby/Sapphire/Emerald, 8 after them in FireRed/LeafGreen) is set. German Ruby/Sapphire keep their RAM
+ * elsewhere (their team 0x10 further on) and weren't checked: no badges there.
  */
 const GBA_FLAGS = {
-  rs: { sb1: 0x02025734, flags: 0x1220, badge: 0x807, sys: -7 },
-  e: { sb1Ptr: 0x03005d8c, flags: 0x1270, badge: 0x867, sys: -7 },
-  frlg: { sb1Ptr: 0x03005008, flags: 0xee0, badge: 0x820, sys: 8 },
+  rs: { sb1: 0x02025734, sb2: 0x02024ea4, flags: 0x1220, badge: 0x807, sys: -7 },
+  e: { sb1Ptr: 0x03005d8c, sb2Ptr: 0x03005d90, flags: 0x1270, badge: 0x867, sys: -7 },
+  frlg: { sb1Ptr: 0x03005008, sb2Ptr: 0x0300500c, flags: 0xee0, badge: 0x820, sys: 8 },
 };
-function gen3Badges(entry, read, T, state) {
+function gen3Badges(entry, read, T, state, party) {
   const id = String(entry.id || '');
+  if (/^(ruby|sapphire)_(?!us)/.test(id)) return undefined;
   const L = GBA_FLAGS[/^(ruby|sapphire)_/.test(id) ? 'rs' : /^emerald_/.test(id) ? 'e' : /^(firered|leafgreen)_/.test(id) ? 'frlg' : ''];
   if (!L) return undefined;
   const badge = T.badges3 ?? (entry.scan3 ? null : L.badge);
   if (badge === null || badge === undefined) return undefined;
+  const ptr = (a) => {
+    const p = read(a, 4);
+    return p ? u32le(p, 0) : 0;
+  };
   let sb1 = L.sb1;
+  let sb2 = L.sb2;
   if (!sb1) {
     const at = entry.saveBlockPtrs?.sb1 ? hex(entry.saveBlockPtrs.sb1) : entry.scan3 && state.sb1PtrAddr ? state.sb1PtrAddr : L.sb1Ptr;
-    const p = read(at, 4);
-    sb1 = p ? u32le(p, 0) : 0;
+    const at2 = entry.saveBlockPtrs?.sb2 ? hex(entry.saveBlockPtrs.sb2) : entry.scan3 && state.sb1PtrAddr ? state.sb1PtrAddr + 4 : L.sb2Ptr;
+    sb1 = ptr(at);
+    sb2 = ptr(at2);
   }
-  if (sb1 < 0x02000000 || sb1 >= 0x02040000) return undefined;
+  const ram = (a) => a >= 0x02000000 && a < 0x02040000;
+  if (!ram(sb1) || !ram(sb2)) return undefined;
+  // SaveBlock2.playerTrainerId (+0x0A): one of the team's own Pokémon has it as its OT ID
+  const tid = read(sb2 + 0x0a, 4);
+  const ot = tid ? u32le(tid, 0).toString(16) : null;
+  if (!ot || !party.some((m) => m.key?.split('-')[2] === ot)) return undefined;
   const flag = (f) => {
     const b = read(sb1 + L.flags + (f >> 3), 1);
     return b ? (b[0] >> (f & 7)) & 1 : null;

@@ -830,8 +830,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       return entry ? romDataFor({ lib: { id, config } }, env) : romDataFor({ file: abs }, env);
     }
     if (src.pathname === '/api/library/patched') {
-      const r = preparePatchedRom(src.searchParams.get('romId'), src.searchParams.get('patchId'), () => {}, loadConfig());
-      return romDataFor({ file: r.path }, env);
+      // (patched in the worker too – a hack's detail view never patches or hashes a ROM on this thread)
+      return romDataFor({ patched: { romId: src.searchParams.get('romId'), patchId: src.searchParams.get('patchId'), config: loadConfig() } }, env);
     }
     throw httpError(400, 'bad src');
   });

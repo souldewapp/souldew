@@ -16,37 +16,49 @@ export function ndsHeader(rom) {
   };
 }
 
-/** List all files: [{ id, path, start, end }]. Overlay files get "overlay9/<n>". */
+/**
+ * List all files: [{ id, path, start, end }]. Overlay files get "overlay9/<n>". A damaged or cut-off ROM throws (or
+ * lists fewer names) instead of reading past its end: the tables must lie inside the file, the directory walk stops at
+ * the name table's end, at 32 levels and 65536 entries (a retail game has a few thousand).
+ */
 export function listNdsFiles(rom) {
   const h = ndsHeader(rom);
-  const fatCount = h.fat.size / 8;
+  const inside = (o, n) => Number.isInteger(o) && Number.isInteger(n) && o >= 0x200 && n >= 0 && o + n <= rom.length;
+  if (!inside(h.fat.offset, h.fat.size) || !inside(h.fnt.offset, h.fnt.size) || h.fnt.size < 8) throw new Error('not a DS file system');
+  const fatCount = Math.min(Math.floor(h.fat.size / 8), 65536);
   const files = new Array(fatCount);
   for (let i = 0; i < fatCount; i++) {
     files[i] = { id: i, path: null, start: u32(rom, h.fat.offset + i * 8), end: u32(rom, h.fat.offset + i * 8 + 4) };
   }
   const fnt = h.fnt.offset;
-  const walk = (dirId, prefix) => {
+  const fntEnd = fnt + h.fnt.size;
+  let entries = 0;
+  const walk = (dirId, prefix, depth, seen) => {
     const entry = fnt + (dirId & 0xfff) * 8;
+    if (depth > 32 || seen.has(dirId) || entry + 8 > fntEnd) return;
+    seen.add(dirId);
     let p = fnt + u32(rom, entry);
     let fileId = u16(rom, entry + 4);
-    for (;;) {
+    while (p < fntEnd && entries++ < 65536) {
       const len = rom[p++];
-      if (len === 0) break;
+      if (!len) break;
       const isDir = len & 0x80;
-      const name = String.fromCharCode(...rom.subarray(p, p + (len & 0x7f)));
-      p += len & 0x7f;
+      const n = len & 0x7f;
+      if (p + n + (isDir ? 2 : 0) > fntEnd) break;
+      const name = String.fromCharCode(...rom.subarray(p, p + n));
+      p += n;
       if (isDir) {
         const sub = u16(rom, p);
         p += 2;
-        walk(sub, `${prefix}${name}/`);
+        walk(sub, `${prefix}${name}/`, depth + 1, seen);
       } else {
         if (files[fileId]) files[fileId].path = prefix + name;
         fileId++;
       }
     }
   };
-  walk(0xf000, '');
-  const ovCount = h.ovt9.size / 32;
+  walk(0xf000, '', 0, new Set());
+  const ovCount = inside(h.ovt9.offset, h.ovt9.size) ? Math.min(Math.floor(h.ovt9.size / 32), 4096) : 0;
   for (let i = 0; i < ovCount; i++) {
     const fid = u32(rom, h.ovt9.offset + i * 32 + 24);
     if (files[fid] && !files[fid].path) files[fid].path = `overlay9/${u32(rom, h.ovt9.offset + i * 32)}`;
@@ -61,14 +73,16 @@ export function parseNarc(narc) {
   let p = u16(narc, 0x0c);
   let fatb = -1;
   let fimg = -1;
-  while (p < narc.length) {
+  while (p + 8 <= narc.length) {
     const magic = u32(narc, p);
     const size = u32(narc, p + 4);
     if (magic === 0x46415442) fatb = p; // 'BTAF'
     if (magic === 0x46494d47) fimg = p; // 'GMIF'
+    if (size < 8) break; // (a damaged block size would loop for ever)
     p += size;
   }
-  const count = u32(narc, fatb + 8);
+  if (fatb < 0 || fimg < 0) throw new Error('damaged NARC');
+  const count = Math.min(u32(narc, fatb + 8), Math.floor((narc.length - fatb) / 8));
   const base = fimg + 8;
   const out = [];
   for (let i = 0; i < count; i++) {
@@ -134,7 +148,7 @@ export function blzDecompress(data) {
   if (!inc) return data;
   const hdr = data[len - 5];
   const enc = u32(data, len - 8) & 0xffffff;
-  if (enc > len || hdr < 8 || hdr > enc) throw new Error('bad BLZ footer');
+  if (enc > len || hdr < 8 || hdr > enc || inc > 0x4000000) throw new Error('bad BLZ footer');
   const keep = len - enc;
   const raw = new Uint8Array(len + inc);
   raw.set(data.subarray(0, keep));

@@ -2242,5 +2242,7 @@
   "reads.types": "tipos y efectividades",
   "reads.typesOnly": "tipos (sin efectividades)",
   "lib.liveNote.cfru": "El equipo, el lugar, los combates y las capturas se leen en directo, los objetos equipados con los nombres del juego, los tipos y efectividades desde la ROM. No se muestra ningún límite de nivel (los líderes del hack no se pueden identificar con seguridad) y el truco de los Caramelos Raros no está disponible.",
-  "lib.liveNote.types": "El equipo, el lugar, los combates y las capturas se leen en directo, los tipos propios del hack y sus efectividades desde la ROM. El truco de los Caramelos Raros no está disponible."
+  "lib.liveNote.types": "El equipo, el lugar, los combates y las capturas se leen en directo, los tipos propios del hack y sus efectividades desde la ROM. El truco de los Caramelos Raros no está disponible.",
+  "reads.error": "No se pudo comprobar esta ROM: lo que lee souldew se mostrará en cuanto el juego esté en marcha.",
+  "reads.unknown": "Aún no se sabe: lo que lee souldew se mostrará en cuanto el juego esté en marcha."
 }

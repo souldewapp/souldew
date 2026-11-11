@@ -4,41 +4,29 @@
 
 ## Unreleased
 
-- **Pokémon Unbound and Radical Red are read live** (a player's report: neither synced anything – souldew never found
-  their team). Both run on the Complete FireRed Upgrade engine, which souldew didn't understand: its species table
-  starts differently from FireRed's (Radical Red even keeps a renamed copy of FireRed's next to its own), its place
-  names are written in mixed case, and it stores the Pokémon data without FireRed's encryption. Now the team (species
-  under the game's own names, level, HP, status condition, held items by the names the game gives them), the place
-  sign (the game's own place names – Unbound's Borrius region too) and the battle panel (wild or trainer, the opponent
-  with its HP and moves, who is out after a switch; in a double battle the left Pokémon of each side, and its partner
-  once the left one is down) work. Checked in the games: Radical Red 4.1 from a new game – Charmander holding an Oran
-  Berry under "Starter", the rival's Squirtle as a trainer battle with the HP going down, a wild Pokémon on Route 1;
-  Unbound with a save – a team of six with their held items, the place sign in the Battle Frontier, the Battle Tower
-  and Icy Hole, a wild Golbat and a Battle Tower trainer, HP as on screen, a switch.
-- **The battle helper shows the moves these two hacks really have**: they number the moves after the original 354
-  their own way (in Unbound #355 is a different move than everywhere else). Moves souldew has no data for are left out
-  instead of showing another move's name.
-- **A pre-patched Radical Red 4.1 ROM shows up as Radical Red** – in the library, when you play it and in a new run –
-  instead of as FireRed, and the official Unbound patch is linked to Unbound whatever its file is called (the library
-  listed it as a BPS patch; it is a UPS patch).
-- **Catches in these hacks are filed too**: a new Pokémon in the team goes under the place it was met, as in every other
-  game – checked with a real catch on Radical Red's Route 1 and a Pokémon joining an Unbound team.
-- **Types come from the game itself** – for every game, not only these two: each Pokémon's types, the type chart and,
-  where the game has them, the moves' types. Hacks that added Fairy (Unbound, Radical Red, Run & Bun, Renegade
-  Platinum, Blaze Black 2 Redux) or retyped Pokémon now show the types the game really uses, with its matchups.
-  **Too Many Types** shows its own types under the game's names, with their matchups, instead of none. In a GBA battle
-  the helper uses the types both sides have right now, so a type change during the battle shows at once.
-- **Level caps for more games**, read from the game's own trainers: the gym leaders' aces, then the champion's after the
-  last badge – Ruby, Sapphire, Emerald, FireRed and LeafGreen (also German), Diamond, Pearl, Platinum and Renegade Platinum. Badges are
-  now read live in Ruby, Sapphire, Emerald, FireRed and LeafGreen (and hacks on their engine), and in Diamond, Pearl
-  and Platinum. Where the caps can't be told apart with confidence
-  (Unbound's difficulty settings, Radical Red's and Light Platinum's second set of leaders, Blaze Black 2 Redux's
-  Challenge Mode) no cap is shown rather than a wrong one, and "Level cap: unknown for this game" is gone – the cap
-  only shows when it's known and the run uses caps.
-- **The library says what souldew can read for each game** – team, held items, place, battles, catches, types and level
-  caps – worked out from your ROM, and what it can't (hidden rather than guessed). In the game, held items and moves
-  that can't be named are left out instead of showing wrong ones, and "Save diagnostics" records what was confirmed.
-- Not for these hacks yet: the Rare Candy cheat.
+- **Pokémon Unbound and Radical Red are read live** (a player's report: neither synced anything). Your team with its
+  held items, the place sign with the games' own place names, the battle panel and new catches now work in both.
+  Checked in the games: Radical Red from a new game (starter, the rival, Route 1, a real catch), Unbound with a save
+  (a team of six, the Battle Frontier, the Battle Tower, Icy Hole, wild and trainer battles, a new team member filed).
+- **Types come from the game itself**, for every game: each Pokémon's types, the type chart and, where the game has
+  them, the moves' types. Hacks that added Fairy (Unbound, Radical Red, Run & Bun, Renegade Platinum, Blaze Black 2
+  Redux) or retyped Pokémon show what the game really uses, with its matchups. **Too Many Types** shows its own types
+  under the game's names, with their matchups, instead of none. In a GBA battle the helper follows a type change during
+  the battle.
+- **Level caps for more games**, worked out from the game's own trainers: Ruby, Sapphire, Emerald, FireRed and LeafGreen
+  (also German), Diamond, Pearl, Platinum and Renegade Platinum – with badges now read live in those games. Where the
+  caps can't be told with confidence (Unbound's difficulty settings, Radical Red's and Light Platinum's second set of
+  leaders, Blaze Black 2 Redux's Challenge Mode, Run & Bun, Too Many Types) no cap is shown rather than a wrong one, and
+  "Level cap: unknown for this game" is gone – the cap only shows when it's known and the run uses caps.
+- **The app stays responsive the first time you open a big game**: reading the ROM (place names, types, caps) runs in
+  the background, so nothing else waits for it, and a damaged ROM file can no longer hang souldew.
+- **The library says what souldew can read for each game** – team, held items, place, battles, catches, types and
+  level caps – worked out from your ROM. In the game, held items and moves that can't be named are left out instead of
+  showing wrong ones, and "Save diagnostics" records what was confirmed.
+- The battle helper shows the moves Unbound and Radical Red really have (they number newer moves their own way), and a
+  pre-patched Radical Red ROM or the official Unbound patch is recognised as that hack in the library, when you play it
+  and in a new run.
+- Not for Unbound / Radical Red yet: the Rare Candy cheat.
 
 ## 2.3.1
 
