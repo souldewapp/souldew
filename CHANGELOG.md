@@ -14,6 +14,18 @@
   the counters a place for the badges, "You are here" one plate per player, and long names are shortened – so the
   overlay keeps its size and position in your scene from the first catch to a full team. A run with more players
   than the source was made for, or a browser source set smaller, scales the widget down instead of cutting it off.
+- **When a game runs too slowly on your computer, the play view now says so and what helps** (#4 – Platinum lagged
+  and crackled in the built-in emulator while the melonDS app ran it fine): the built-in emulator runs the whole DS on
+  one processor core, without the tricks the melonDS app uses, and Platinum's overworld needs ~12–14 ms per frame
+  even on an M1 – of the 16.7 ms a frame may take. A slower PC then plays at half speed, and the sound crackles
+  because only half of it gets made. If a game stays clearly below full speed for about ten seconds, a note under the
+  game shows how fast it really runs and what helps: the melonDS app for DS games (one click in Settings ›
+  Emulators, the run syncs on every in-game save), another graphics backend on Windows and Linux, and power settings.
+- **A USB microphone or headset no longer takes the controller's place** (#2): on Windows some of them show up as a
+  game controller, and when one was listed first, souldew used it and the real controller (a PS5 controller in the
+  report) pressed nothing in the game. souldew now picks the controller itself – a real one, skipping microphones,
+  headsets and devices with hardly any buttons – and Settings › Controller has a new "Controller to use" choice
+  that lists every connected device; the one you pick is remembered and used whenever it is connected.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged

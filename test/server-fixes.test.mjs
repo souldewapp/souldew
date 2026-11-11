@@ -175,6 +175,16 @@ test('config: theme and controller settings are stored only in a valid shape', a
     assert.equal(c.fullTurbo, false);
     c = await post({ pads: { map: { a: 'BUTTON_2', 'x-y': 'BUTTON_1' } } });
     assert.deepEqual(c.pads, { map: { a: 'BUTTON_2' } }, 'odd button names are dropped');
+    // the controller chosen in Settings › Controller (issue #2) is remembered by the id the browser reports
+    const ps5 = 'DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)';
+    c = await post({ pads: { preset: 'xbox', device: ps5 } });
+    assert.deepEqual(c.pads, { preset: 'xbox', device: ps5 });
+    c = await post({ pads: { preset: 'xbox', device: 'x'.repeat(201) } });
+    assert.deepEqual(c.pads, { preset: 'xbox', device: ps5 }, 'an overlong device id is refused');
+    c = await post({ pads: { device: 'Pad\nwith a line break' } });
+    assert.deepEqual(c.pads, { preset: 'xbox', device: ps5 }, 'control characters are refused');
+    c = await post({ pads: { preset: 'xbox' } });
+    assert.deepEqual(c.pads, { preset: 'xbox' }, '"Automatic" forgets the device');
   } finally {
     server.closeAllConnections(); // fetch keeps the connection alive – close() alone would wait for it
     server.close();
