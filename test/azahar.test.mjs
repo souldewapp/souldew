@@ -242,7 +242,7 @@ test('where Azahar keeps its settings, per system – and in its portable folder
   assert.equal(readRpcSetting({ emuPath, platform: 'darwin' }).enabled, true);
   assert.match(readFileSync(join(dir, 'user', 'config', 'qt-config.ini'), 'utf8'), /^\[UI\]\ntheme=dark\n\n\[Debugging\]\n/);
   // the bridge reports the setting of the Azahar it was given
-  const bridge = new AzaharBridge(() => {}, { rpc: new AzaharRpc({ port: 9, timeout: 50 }), emuPath: () => emuPath });
+  const bridge = new AzaharBridge(() => {}, { rpc: new AzaharRpc({ port: 9, timeout: 50 }), emuPath: () => emuPath, platform: 'darwin' });
   assert.equal(bridge.status().setting.path, join(dir, 'user', 'config', 'qt-config.ini'));
   assert.equal(bridge.status().setting.enabled, true);
 });

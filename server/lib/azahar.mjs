@@ -129,7 +129,8 @@ export class AzaharRpc {
         this.pending.delete(id);
         resolve(null);
       }, this.timeout);
-      timer.unref?.();
+      // (not unref'd: a request someone awaits keeps the process until its answer or the timeout – an unref'd timer
+      // left the promise pending forever when nothing else ran, e.g. Azahar closed and no other work)
       this.pending.set(id, { type, resolve, timer });
       this.socket.send(packet(id, type, data), this.port, this.host, (err) => {
         if (!err) return;
@@ -299,8 +300,9 @@ const POLL_OFF = 3000; // no answer
 
 export class AzaharBridge {
   /** emit(event, data) – 'live' frames like the mGBA bridge's; `table` = addresses.json */
-  constructor(emit, { rpc = new AzaharRpc(), table = { games: [] }, now = () => Date.now(), emuPath = () => null } = {}) {
+  constructor(emit, { rpc = new AzaharRpc(), table = { games: [] }, now = () => Date.now(), emuPath = () => null, platform = process.platform } = {}) {
     this.emit = emit;
+    this.platform = platform; // whose rules find Azahar's settings (tests check another system's)
     this.emuPath = emuPath; // where Azahar is installed – its portable folder has the settings
     this.rpc = rpc;
     this.table = table;
@@ -312,7 +314,7 @@ export class AzaharBridge {
   }
 
   status() {
-    return { ...this.state, setting: readRpcSetting({ emuPath: this.emuPath() }) };
+    return { ...this.state, setting: readRpcSetting({ emuPath: this.emuPath(), platform: this.platform }) };
   }
 
   start() {
