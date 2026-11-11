@@ -76,8 +76,11 @@ test('type matchup help: the battle helper hides the matchups when it is off, th
   for (const block of ['outs.map((m) => html`<${OutHelp}', 'html`<${TeamCheck}', 'foeData.map(({ f, types }) => types.length > 0 && html`<${TypeChart}', 'outs.map((m) => typesOf(m.species).length > 0 && html`<${TypeChart}']) {
     const at = panel.indexOf(block);
     assert.ok(at > 0, block);
-    assert.match(panel.slice(at - 12, at), /help && /, `${block} is behind the help switch`);
+    // (and behind a hack's own types, which souldew doesn't know – Too Many Types)
+    assert.match(panel.slice(at - 25, at), /help && !ownTypes && $/, `${block} is behind the help switch and the own-types check`);
   }
+  assert.match(panel, /const ownTypes = runData \? runData\.typesUnknown : !!romOwnTypesNow\(\)/);
+  assert.match(panel, /help && ownTypes && html`<p class="tiny faint bt-nohelp">\$\{t\('battle\.ownTypes'/);
   // only the panel renders them (no second way in that would skip the switch)
   assert.equal(panel.split('<${OutHelp}').length - 1, 1);
   assert.equal(panel.split('<${TeamCheck}').length - 1, 1);

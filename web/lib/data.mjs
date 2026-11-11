@@ -47,6 +47,12 @@ export function setRomTypes(t) {
   ROM_TYPES = t?.types ? t : null;
 }
 export const romTypesNow = () => ROM_TYPES;
+// The running ROM has types of its own (romloc.mjs ownTypes – Too Many Types): no Pokémon's types are known then.
+let ROM_OWN_TYPES = null;
+export function setRomOwnTypes(t) {
+  ROM_OWN_TYPES = t?.count ? t : null;
+}
+export const romOwnTypesNow = () => ROM_OWN_TYPES;
 
 export function speciesName(id, lang = nameLang()) {
   if (!id) return '';
@@ -128,12 +134,14 @@ export class RunData {
     // patched before it was added, so any GBA game is asked)
     this.romTypes = null;
     this.romSpecies = null;
+    this.ownTypes = null;
     const out = (manifest?.patch || this.gen === 3) && Object.entries(manifest.outputs || {}).find(([s, o]) => !this.byId[s] && o?.rom);
     if (out) {
       const src = `/api/runs/${manifest.id}/file?inline=1&name=${encodeURIComponent(out[1].rom)}`;
       const j = await fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       this.romTypes = j?.types || null;
       this.romSpecies = j?.species || null;
+      this.ownTypes = j?.ownTypes || null;
       // a hack's own Pokémon are named as the game names them – on the board too, not only while the game runs
       if (this.romSpecies?.unknown && Object.keys(this.romSpecies.unknown).length) setRomSpecies(this.romSpecies);
     }
@@ -169,10 +177,17 @@ export class RunData {
   types(id, slot) {
     const p = this.byId[slot]?.get(id) || Object.keys(this.byId).sort().map((s) => this.byId[s]?.get(id)).find(Boolean);
     if (p) return p.types.filter(Boolean).map((t) => t.toLowerCase());
+    // a hack with types of its own (Too Many Types): none known – no type, no matchup, no type rule, rather than wrong ones
+    if (this.typesUnknown) return [];
     // a ROM hack's own types (loaded with the run, or from the game running right now)
     const own = (this.romTypes || ROM_TYPES)?.types?.[id];
     if (own) return own;
     return baseTypes(id, this.gen);
+  }
+
+  /** Does the game have types of its own that souldew doesn't know (romloc.mjs ownTypes)? */
+  get typesUnknown() {
+    return !!(this.ownTypes || ROM_OWN_TYPES);
   }
 
   /** Does the game have the Fairy type (a hack that added it)? */

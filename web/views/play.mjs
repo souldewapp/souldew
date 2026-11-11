@@ -6,9 +6,9 @@ import { diag } from '../lib/diag.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, ago } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
-import { gameById, gameTitle, speciesName } from '../lib/data.mjs';
+import { gameById, gameTitle, speciesName, hackById } from '../lib/data.mjs';
 import { players as getPlayers, live, othersOf, runMode, missedQuestion, openAreas, markMissed, locationChoices, areaForCatch, genOfRun, profileOf, rules as getRules, logCheat } from '../lib/run.mjs';
-import { findEntry, readLiveParty, readLiveBattle, withBattleHp, inBattleFlag, LiveTables } from '/shared/live/parse.mjs';
+import { findEntry, readLiveParty, readLiveBattle, withBattleHp, inBattleFlag, LiveTables, expandedEntry } from '/shared/live/parse.mjs';
 import { addRareCandies, cheatSupported } from '/shared/live/cheats.mjs';
 import { MusicKeyTracker } from '/shared/live/location.mjs';
 import { PlayHome } from './playhome.mjs';
@@ -16,7 +16,7 @@ import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
 import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer, useBattlePanelPrefs } from './session-info.mjs';
-import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow } from './location.mjs';
+import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now } from './location.mjs';
 import { shiftEntry } from '/shared/live/romwram.mjs';
 import { RulesTab } from './board.mjs';
 import { CartInsert } from './cartinsert.mjs';
@@ -72,7 +72,8 @@ function useTarget() {
       kind: 'solo', key: id, system: r.system, code: r.code, title: r.title, gameId: r.gameId,
       rom: p.patch ? `/api/library/patched?romId=${encodeURIComponent(p.rom)}&patchId=${encodeURIComponent(p.patch)}` : `/api/library/rom?id=${encodeURIComponent(p.rom)}`,
       name: r.name.replace(/\.\w+$/, ''), saveUrl: `/api/saves/solo?id=${encodeURIComponent(id)}`, stateId: id,
-      label: p.patch ? library.patches.find((x) => x.id === p.patch)?.name : gameById(r.gameId) ? gameTitle(gameById(r.gameId)) : r.title,
+      // (a ROM patched before it was added is named after its hack – server/lib/library.mjs describeRom)
+      label: p.patch ? library.patches.find((x) => x.id === p.patch)?.name : r.hackId && hackById(r.hackId) ? hackById(r.hackId).name : gameById(r.gameId) ? gameTitle(gameById(r.gameId)) : r.title,
       params: { rom: p.rom, patch: p.patch || undefined },
     };
   }
@@ -748,6 +749,8 @@ export function GameSession({ session, mode }) {
       // live loop
       let lastLocate = 0;
       let wramEntry = null;
+      let x3 = null; // (one entry object for the session: liveRef and the cheats compare it)
+      const scan3Entry = (en) => (x3?.from === en ? x3.entry : (x3 = { from: en, entry: expandedEntry(en, romMaps3Now()) }).entry);
       let expandedMisses = 0; // reads in a battle without a team in an expanded engine (after ~15 s: "not supported")
       const tick = () => {
         if (stopped) return;
@@ -778,7 +781,7 @@ export function GameSession({ session, mode }) {
             // an expanded GBA engine (Run & Bun): the team is searched for, the place read through SaveBlock1
             const expanded = sp?.engine === 'expanded';
             if (expanded) setCheatGame(false);
-            const ent = wram ? wramEntry.entry : expanded ? { ...entry, scan3: true } : entry;
+            const ent = wram ? wramEntry.entry : expanded ? scan3Entry(entry) : entry;
             if (liveRef.current?.entry !== ent) liveRef.current = { ...liveRef.current, entry: ent }; // (the cheats use it)
             const hereNow = readHere(ent, e.read, state);
             setHere((p) => nextHere(p, hereNow));

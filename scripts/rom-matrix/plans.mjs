@@ -7,7 +7,8 @@
 // Step reference (page.mjs): wait {frames} · press {keys, hold, gap, times} · walk {dir, steps} · go {x, y, order, map,
 // leave, patience, required} (walks with `pos`, an expression → [map, x, y]) · mash {keys, every, max, until, required}
 // · until {until, max} · tap {x, y} (DS bottom screen) · check {name} · shot {name} · log {name, expr}.
-// Conditions: 'party', 'party>=N', 'battle', 'nobattle', 'overworld' or { expr } (read, place, team, ctx).
+// Conditions: 'party', 'party>=N', 'battle', 'nobattle', 'overworld' or { expr } (read, place, team, ctx). Any step may
+// have `while`: a condition it needs, else it is skipped (the throws of a catch loop once the Pokémon is caught).
 
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';

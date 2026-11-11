@@ -1,0 +1,542 @@
+{
+"id": "too-many-types",
+"hacks": [
+"too-many-types"
+],
+"note": "Too Many Types 1.6 (pokeemerald-expansion, built like Run & Bun: species by name, team searched for, place through SaveBlock1, 0x60-byte battlers): starts in the bedroom (no truck), Fennekin from Birch's bag against a wild Poochyena, then a real catch on Route 101 (Pok\u00e9 Balls written into the bag \u2013 Pok\u00e9 Ball is item 1, the encryption key at the base game's SaveBlock2 + 0xAC); its save-block pointer is at 0x03005D9C",
+"pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4))))",
+"steps": [
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"START"
+],
+[
+"A"
+]
+],
+"max": 1200
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"A"
+],
+[
+"START"
+]
+],
+"max": 2500,
+"note": "intro, name \"A\u2026\""
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 30,
+"max": 600,
+"note": "close the start menu / bag the START presses may have opened"
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4)))))[0]===257"
+},
+"max": 900,
+"note": "the bedroom (map 1.1)"
+},
+{
+"do": "go",
+"x": 7,
+"y": 1,
+"order": "yx"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 16,
+"note": "stairs"
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"x": 8,
+"y": 9,
+"order": "yx",
+"map": 256,
+"leave": true,
+"note": "out of the house"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "check",
+"name": "littleroot"
+},
+{
+"do": "go",
+"x": 10,
+"y": 1,
+"order": "xy",
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 12
+},
+{
+"do": "go",
+"x": 11,
+"y": -2,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 12,
+"note": "a girl walks around the exit"
+},
+{
+"do": "go",
+"x": 9,
+"y": -2,
+"order": "xy",
+"map": 9,
+"leave": true,
+"patience": 12
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 90,
+"max": 1000,
+"note": "Birch is chased"
+},
+{
+"do": "go",
+"x": 7,
+"y": 15,
+"order": "yx"
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 4
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000,
+"until": "party",
+"note": "the bag: the first Pok\u00e9 Ball (Fennekin) \u2013 slowly: an A while TMT1 prints a text starts it again",
+"every": 90
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "battle"
+},
+{
+"do": "shot",
+"name": "battle"
+},
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+],
+[
+"UP"
+],
+[
+"A"
+],
+[
+"A"
+]
+],
+"every": 90,
+"max": 15000,
+"until": "nobattle",
+"note": "FIGHT \u2192 the first move until it is over (B would move the cursor to RUN here; a fast A restarts the text)"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "check",
+"name": "afterbattle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 3000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 1500
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4)))))[0]===260"
+},
+"max": 600,
+"note": "in the lab"
+},
+{
+"do": "go",
+"x": 6,
+"y": 30,
+"order": "xy",
+"leave": true,
+"map": 260,
+"patience": 6
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 400
+},
+{
+"do": "give",
+"item": 1,
+"count": 20,
+"pocket": "items",
+"saveBlockPtrs": {
+"sb1": "0x03005D9C",
+"sb2": "0x03005DA0",
+"keyOff": "0xAC"
+},
+"note": "TMT1: Pok\u00e9 Ball is item 1; the bag's key at the base game's offset 0xAC (Run & Bun: 0xA4)"
+},
+{
+"do": "go",
+"x": 10,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"patience": 6
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "check",
+"name": "r101"
+},
+{
+"do": "go",
+"y": 15,
+"order": "y",
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"x": 4,
+"y": 15,
+"order": "xy",
+"required": false,
+"patience": 6
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 4,
+"every": 16,
+"max": 10000,
+"until": "battle",
+"note": "tall grass"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 300
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 6
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 6,
+"note": "cursor to the first entry"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG"
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "Pok\u00e9 Ball \u2192 USE"
+},
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"A"
+],
+[
+"A"
+],
+[
+"A"
+],
+[
+"A"
+],
+[
+"START"
+]
+],
+"every": 60,
+"max": 30000,
+"until": "party>=2",
+"while": "battle",
+"note": "A only: the cursor stays on BAG, so after a miss A throws the next ball; after a catch it says yes to a nickname, START + A keep the name. (B or START in the battle menu jump to RUN in these hacks \u2013 a second B flees.)"
+},
+{
+"do": "check",
+"name": "caught0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "caught"
+},
+{
+"do": "shot",
+"name": "caught"
+}
+],
+"expect": {
+"littleroot": {
+"place": "Littleroot Town"
+},
+"starter": {
+"party": {
+"level": 5,
+"species": [
+653
+]
+},
+"place": "Route 101"
+},
+"battle": {
+"battle": {
+"kind": "wild",
+"level": 2,
+"species": [
+261
+]
+}
+},
+"afterbattle": {
+"battle": null
+},
+"r101": {
+"place": "Route 101"
+},
+"wild": {
+"battle": {
+"kind": "wild",
+"level": [
+2,
+3,
+4
+]
+}
+},
+"caught": {
+"catch": {
+"area": "Route 101"
+}
+}
+}
+}

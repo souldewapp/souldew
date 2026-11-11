@@ -54,6 +54,9 @@ for h in H:
     if h.get("liveNote"): out["liveNote"]=h["liveNote"]
     if h.get("notes"): out["notes"]=h["notes"]
     if h.get("uncertainFields"): out["uncertain"]=True; out["uncertainFields"]=h["uncertainFields"]
+    # checksums the library recognises the hack by: its patched ROMs (also what a BPS/UPS patch says it makes) and the patch
+    if h.get("romCrc32"): out["romCrc32"]=h["romCrc32"]
+    if h.get("patchSha1"): out["patchSha1"]=h["patchSha1"]
     # sanity: baseCrc32 must be a dump of base game
     if out["baseCrc32"]:
         bg=[g for g in games if g["id"]==h["baseGameId"]][0]

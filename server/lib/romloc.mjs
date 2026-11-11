@@ -9,13 +9,13 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
 import { romLocations, gen3MapTable } from '../../shared/live/romloc.mjs';
-import { romSpecies, romTypes } from '../../shared/live/romspecies.mjs';
+import { romSpecies, romTypes, gen3TypeNames, OWN_TYPES_ABOVE } from '../../shared/live/romspecies.mjs';
 import { gbWramShift } from '../../shared/live/romwram.mjs';
 import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 8; // bump when romLocations() / romSpecies() change what they find
+const VERSION = 11; // bump when romLocations() / romSpecies() change what they find (both 2.3.1 branches bumped it)
 const memo = new Map();
 let tables = null;
 
@@ -60,7 +60,11 @@ export function romData(u8, sharedDir) {
   if (data && species?.engine === 'expanded') data.maps3 = gen3MapTable(u8);
   // a modified ROM's own types where they differ from the app's (Fairy hacks, retyped or new Pokémon)
   const types = vanilla || species?.engine === 'expanded' ? null : romTypes(u8, { baseTypes: o.baseTypes, speciesMap: species?.map ? species : null, vanillaIndex: o.gen3Index });
-  return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, vanilla };
+  // a GBA hack with types of its own (Too Many Types: 58 / 81 type names): souldew knows neither them nor their
+  // matchups – the app shows no types for its Pokémon rather than the official ones (web/lib/data.mjs)
+  const names = !vanilla && species ? gen3TypeNames(u8, o.gen3Charset) : null;
+  const ownTypes = names && names.count > OWN_TYPES_ABOVE ? { count: names.names.filter((n) => n !== '???').length, names: names.names } : null;
+  return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, ownTypes, vanilla };
 }
 
 /** Game Boy hacks: where the code says the party, the battle and the map variables are (shared/live/romwram.mjs). */

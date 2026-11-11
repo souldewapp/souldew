@@ -90,7 +90,10 @@ function headOf(path, len = 0x200) {
 
 function describeRom(info, cat) {
   const m = matchCatalog(info, cat);
-  return { ...info, gameId: m?.game?.id || null, exact: !!m?.exact };
+  // a ROM that was patched before it was added (Too Many Types from a download site): its CRC32 is a known version
+  // of a hack – the run gets the hack, not only the base game it shares its header with
+  const hack = info.crc ? (cat.hacks || []).find((h) => (h.romCrc32 || []).includes(info.crc)) : null;
+  return { ...info, gameId: m?.game?.id || null, exact: !!m?.exact, hackId: hack?.id || null };
 }
 
 /** Scan all library folders. Fast after the first run thanks to the index cache. */
@@ -141,7 +144,7 @@ export function scanLibrary(config = {}) {
         roms.push(describeRom({ id: makeId(path), name, file: path, size: st.size, container: null, ...info }, cat));
       } else if (PATCH_EXTENSIONS.includes(ext)) {
         let info = index[cacheKey];
-        if (!info) {
+        if (!info || !('resultCrc' in info)) { // (indexes before 2.3.1 lack the result's checksum)
           let buf;
           try {
             buf = new Uint8Array(readFileSync(path));
@@ -154,7 +157,7 @@ export function scanLibrary(config = {}) {
         patches.push({ id: makeId(path), name, file: path, size: st.size, container: null, ...info });
       } else if (ext === 'zip') {
         let cached = index[cacheKey];
-        if (!cached) {
+        if (!cached || cached.patches?.some((x) => !('resultCrc' in x))) {
           cached = { roms: [], patches: [], notes: [] };
           let entries = [];
           try {
@@ -199,7 +202,10 @@ export function scanLibrary(config = {}) {
   for (const p of patches) {
     // (the longest name that fits wins: "Too Many Types 2" over "Too Many Types")
     const byName = [...(cat.hacks || [])].sort((a, b) => String(b.name).length - String(a.name).length);
-    const hack = byName.find((h) => (p.sha1 && h.patchSha1 === p.sha1) || (h.baseCrc32 && p.expectedCrc && String(h.baseCrc32).toUpperCase() === p.expectedCrc && nameLike(p.name, h.name)))
+    // by checksum first – the patch file's own SHA-1, or what a BPS/UPS patch says its result is (a known version of
+    // the hack: "1.1.1 mirror.bps" is Too Many Types 2) –, then by name
+    const hack = byName.find((h) => (p.sha1 && h.patchSha1 === p.sha1) || (p.resultCrc && (h.romCrc32 || []).includes(p.resultCrc)))
+      || byName.find((h) => h.baseCrc32 && p.expectedCrc && String(h.baseCrc32).toUpperCase() === p.expectedCrc && nameLike(p.name, h.name))
       || byName.find((h) => nameLike(p.name, h.name));
     p.hackId = hack?.id || null;
     if (!p.expectedCrc && hack?.baseCrc32) p.expectedCrc = String(hack.baseCrc32).toUpperCase();
@@ -396,11 +402,12 @@ function nameLike(file, hackName) {
 }
 
 function patchInfo(buf) {
-  const info = { format: detectPatchFormat(buf), sha1: sha1(buf) };
+  const info = { format: detectPatchFormat(buf), sha1: sha1(buf), resultCrc: null };
   try {
     const d = describePatch(buf);
     info.targetName = d.targetName || null;
     if (d.sourceCrc !== undefined) info.expectedCrc = d.sourceCrc.toString(16).toUpperCase().padStart(8, '0');
+    info.resultCrc = d.targetCrc !== undefined ? d.targetCrc.toString(16).toUpperCase().padStart(8, '0') : null;
   } catch (e) {
     info.error = e.message;
   }

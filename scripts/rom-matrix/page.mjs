@@ -20,7 +20,7 @@ function helper() {
     const wram = found?.gen <= 2 ? romloc?.wram || null : null;
     // an expanded GBA engine: the team searched for, the place through SaveBlock1 (as web/views/play.mjs does)
     const expanded = found?.gen === 3 && romloc?.species?.engine === 'expanded';
-    const entry = wram ? { ...romwram.shiftEntry(found, wram), wram } : expanded ? { ...found, scan3: true } : found;
+    const entry = wram ? { ...romwram.shiftEntry(found, wram), wram } : expanded ? parse.expandedEntry(found, romloc?.data?.maps3) : found;
     const species = romloc?.species || null;
     // what the play view does (web/views/play.mjs): a GBA ROM's own species table; an expanded engine isn't read
     const T = entry?.gen === 3 && species ? T0.withSpecies(species) : T0;
@@ -171,6 +171,8 @@ function helper() {
       const x = team();
       return x?.hack ? x.raw : x;
     };
+    // (an expanded engine's team is searched for at most every 3 s – real time, and the plans run far faster)
+    if (ctx.entry?.scan3 && !ctx.state.party3) ctx.state.lastScan3 = 0;
     if (c === 'overworld') return !!place();
     if (c === 'party') return (tm()?.party?.length || 0) >= 1;
     if (c === 'battle') return !!tm()?.battle;
@@ -192,6 +194,11 @@ function helper() {
         break;
       }
       const at = e.frames();
+      // s.while: only while the condition holds (a throw after the catch would walk around in the overworld)
+      if (s.while && !cond(s.while)) {
+        log.push({ do: s.do, skipped: true, note: s.note });
+        continue;
+      }
       if (s.do === 'wait') await frames(s.frames);
       else if (s.do === 'press') for (let i = 0; i < (s.times || 1); i++) await press([].concat(s.keys), s.hold, s.gap);
       else if (s.do === 'go') {

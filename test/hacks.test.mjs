@@ -69,3 +69,25 @@ test('the species picker of a run offers every Pokémon its game holds (Run & Bu
   rd4.byId = { p1: new Map([[1, {}], [600, {}]]) };
   assert.equal(rd4.maxSpecies(), 600);
 });
+
+test('library: the TMT patch and pre-patched ROMs are recognised by checksum, whatever the file is called', () => {
+  const tmt = catalog.hacks.find((h) => h.id === 'too-many-types');
+  const tmt2 = catalog.hacks.find((h) => h.id === 'too-many-types-2');
+  assert.ok(tmt.romCrc32.includes('E91FEF2D'), 'v1.6 (the BPS result = the pre-patched ROM)');
+  assert.ok(tmt2.romCrc32.includes('D25FBCCC') && tmt2.romCrc32.includes('69ECC373'), 'v1.5.2 and the "1.1.1 mirror" patch');
+  const dir = join(DATA, 'Lib');
+  mkdirSync(dir, { recursive: true });
+  // a BPS patch with no hack name in its file name: source = Emerald (US), target = TMT2's "1.1.1 mirror" result
+  const put32 = (b, o, v) => {
+    for (let i = 0; i < 4; i++) b[o + i] = (v >>> (i * 8)) & 0xff;
+  };
+  const bps = new Uint8Array(4 + 3 + 12);
+  bps.set([0x42, 0x50, 0x53, 0x31, 0x80, 0x80, 0x80], 0);
+  put32(bps, 7, 0x1f1c08fb);
+  put32(bps, 11, 0x69ecc373);
+  writeFileSync(join(dir, '1.1.1 mirror.bps'), bps);
+  const res = scanLibrary({ libraryFolders: [dir] });
+  const p = res.patches.find((x) => x.name.startsWith('1.1.1 mirror'));
+  assert.equal(p.hackId, 'too-many-types-2');
+  assert.equal(p.resultCrc, '69ECC373');
+});

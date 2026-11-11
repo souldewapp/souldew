@@ -123,7 +123,9 @@ function identify(r) {
   const id = identifyRom(bytes.subarray(0, 0x200), extname(r.file).slice(1));
   const crc = crc32Hex(bytes);
   const m = id ? matchCatalog({ ...id, crc }, catalog) : null;
-  return Object.assign(r, { system: id?.system || null, code: id?.code || '', title: id?.title || '', crc, gameId: m?.game?.id || null, exactMatch: !!m?.exact, generation: m?.game?.generation || null });
+  // a ROM that was patched before (Too Many Types from a download site): a known version of a hack by its CRC32
+  const hack = r.hack || catalog.hacks.find((h) => (h.romCrc32 || []).includes(crc))?.id || null;
+  return Object.assign(r, { system: id?.system || null, code: id?.code || '', title: id?.title || '', crc, gameId: m?.game?.id || null, exactMatch: !!m?.exact, generation: m?.game?.generation || null, hack });
 }
 roms.forEach(identify);
 const bases = roms.filter((r) => r.exactMatch);

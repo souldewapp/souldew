@@ -323,7 +323,7 @@ export function LibraryView() {
   }).sort((a, b) => (ownedBy.has(b.id) - ownedBy.has(a.id)) || (a.generation - b.generation) || (a.releaseYear || 0) - (b.releaseYear || 0));
   const hacks = (cat.hacks || []).filter((h) => (filter === 'all' || filter === 'hacks' || h.system === filter)
     && (!q || h.name.toLowerCase().includes(q.toLowerCase()))
-    && (!mine || patches.some((p) => p.hackId === h.id)));
+    && (!mine || patches.some((p) => p.hackId === h.id) || roms.some((r) => r.hackId === h.id)));
 
   // ROMs the catalog doesn't know (hacks, other regions) – shown with the matching system filter or search.
   const shownUnknown = filter === 'hacks' ? [] : unknownRoms.filter((r) => (filter === 'all' || r.system === filter)
@@ -387,7 +387,7 @@ export function LibraryView() {
       <div class="shelf">
         ${hacks.map((h) => {
           const base = cat.games.find((g) => g.id === h.baseGameId);
-          const hasPatch = patches.some((p) => p.hackId === h.id);
+          const hasPatch = patches.some((p) => p.hackId === h.id) || roms.some((r) => r.hackId === h.id); // (or the patched ROM)
           return html`<${Cart} key=${h.id} hack title=${h.name} sub=${base ? t('lib.basedOn', 'based on {game}', { game: gameTitle(base) }) : h.author}
             cover=${coverOf(library, { hackId: h.id })} color=${h.color || base?.color} system=${h.system} owned=${hasPatch} missing=${!hasPatch}
             onClick=${() => setOpen({ kind: 'hack', id: h.id })} onPickCover=${() => pickCover(coverIdOf({ hackId: h.id }), { reloadLibrary, toast })} />`;
@@ -501,7 +501,7 @@ function GameDetail({ id, onClose, openHack }) {
     ${hacks.length > 0 && html`<div class="stack">
       <h3>${t('lib.hacksFor', 'ROM hacks for this game')}</h3>
       ${hacks.map((h) => {
-        const has = (library?.patches || []).some((p) => p.hackId === h.id);
+        const has = (library?.patches || []).some((p) => p.hackId === h.id) || (library?.roms || []).some((r) => r.hackId === h.id);
         return html`<button type="button" class=${`hack-card ${has ? '' : 'missing'}`} onClick=${() => openHack(h.id)}>
         <div><b>${h.name}</b> <span class="faint small">${h.author}</span><div class="small muted">${currentLang() === 'de' ? h.descriptionDe : h.descriptionEn}</div></div>
         <div class="hack-chips"><span class=${`chip ${has ? 'ok' : ''}`}>${has ? t('lib.hackInstalled', 'installed') : t('lib.hackMissing', 'not installed')}</span><span class="chip">${difficultyLabel(h.difficulty)}</span></div>
@@ -520,7 +520,7 @@ const liveLabel = (v) => ({
 }[v] || '–');
 const liveNote = (k) => ({
   rnb: t('lib.liveNote.rnb', 'Team, place, battles and catches are read live. The Rare Candy cheat is off and held items aren’t named – the hack numbers its items its own way.'),
-  types: t('lib.liveNote.types', 'souldew doesn’t know this hack’s own types: the board and the type rules use the official ones.'),
+  types: t('lib.liveNote.types', 'Team, place, battles and catches are read live. souldew doesn’t know the hack’s own types: it shows no types, matchups or type rule for its Pokémon rather than the official ones. The Rare Candy cheat is off.'),
 }[k] || '');
 
 function HackDetail({ id, onClose, openGame }) {
@@ -528,6 +528,8 @@ function HackDetail({ id, onClose, openGame }) {
   const cat = catalog();
   const h = cat.hacks.find((x) => x.id === id);
   const patch = library?.patches?.find((p) => p.hackId === id);
+  // a ROM that was patched before it was added (its CRC32 is a known version of the hack): played as it is
+  const ready = !patch ? library?.roms?.find((r) => r.hackId === id) : null;
   const baseRom = patch?.baseRomId ? library.roms.find((r) => r.id === patch.baseRomId) : library?.roms?.find((r) => r.gameId === h?.baseGameId);
   // Only offer the patched game when the base ROM is the one the patch expects (otherwise patching fails).
   const canPatch = !!(patch && baseRom && (!patch.expectedCrc || baseRom.crc === patch.expectedCrc));
@@ -537,7 +539,7 @@ function HackDetail({ id, onClose, openGame }) {
   return html`<${Modal} open=${true} wide onClose=${onClose} title=${h.name}>
     <div class="detail">
       <div class="cover-col">
-        <${Cart} big hack title=${h.name} cover=${coverOf(library, { hackId: h.id })} color=${h.color || base?.color} system=${h.system} owned=${!!patch} missing=${!patch} />
+        <${Cart} big hack title=${h.name} cover=${coverOf(library, { hackId: h.id })} color=${h.color || base?.color} system=${h.system} owned=${!!(patch || ready)} missing=${!(patch || ready)} />
         <${CoverActions} coverId=${coverIdOf({ hackId: h.id })} own=${!!library?.customCovers?.[coverIdOf({ hackId: h.id })]} offer />
       </div>
       <div class="stack">
@@ -549,10 +551,15 @@ function HackDetail({ id, onClose, openGame }) {
           <dt>${t('lib.difficulty', 'Difficulty')}</dt><dd>${difficultyLabel(h.difficulty)}${h.nuzlockeFriendly ? ` · ${t('lib.nuzlocke', 'Nuzlocke-friendly')}` : ''}</dd>
           <dt>${t('lib.randomizer', 'Randomizer')}</dt><dd>${{ yes: t('lib.yes', 'Supported'), no: t('lib.no', 'Not supported'), unknown: t('lib.unknown', 'Unknown') }[h.uprCompatible] || '–'}</dd>
           ${h.live && html`<dt>${t('lib.live', 'Live tracking')}</dt><dd>${liveLabel(h.live)}${h.liveNote && html`<div class="small muted">${liveNote(h.liveNote)}</div>`}</dd>`}
+          ${ready ? html`<dt>${t('lib.patchedRom', 'Your ROM')}</dt><dd><span class="mono small">${ready.name}</span><div class="small muted">${t('lib.patchedRomHint', 'Already patched – recognised by its checksum.')}</div></dd>` : html`
           <dt>${t('lib.patch', 'Patch')}</dt><dd>${patch ? html`<span class="mono small">${patch.name}</span>` : html`<span class="muted">${t('lib.noPatch', 'Not added yet')}</span>`}</dd>
-          <dt>${t('lib.baseRom', 'Your base ROM')}</dt><dd>${baseRom ? html`<span class="mono small">${baseRom.name}</span>` : html`<span class="muted">${t('lib.notOwned', 'Not in your library')}</span>`}</dd>
+          <dt>${t('lib.baseRom', 'Your base ROM')}</dt><dd>${baseRom ? html`<span class="mono small">${baseRom.name}</span>` : html`<span class="muted">${t('lib.notOwned', 'Not in your library')}</span>`}</dd>`}
         </dl>
-        ${!patch && html`<div class="row">
+        ${ready && html`<div class="row">
+          <${PlayButtons} romId=${ready.id} system=${h.system} close=${onClose} />
+        </div>
+        <${NewRunButtons} gameId=${h.baseGameId} hackId=${h.id} close=${onClose} />`}
+        ${!patch && !ready && html`<div class="row">
           <button class="btn ghost" onClick=${() => addGamesFlow({ reloadLibrary, toast })}><${Icon} name="plus" size=${16} />${t('lib.addPatch', 'Add patch file')}</button>
         </div>`}
         ${patch && baseRom && html`<div class="row">

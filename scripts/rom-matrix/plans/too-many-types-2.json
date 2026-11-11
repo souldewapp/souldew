@@ -1,0 +1,724 @@
+{
+"id": "too-many-types-2",
+"hacks": [
+"too-many-types-2"
+],
+"note": "Too Many Types 2 (a newer pokeemerald-expansion: species names inside gSpeciesInfo, no party count in front of gPlayerParty, gEnemyParty in front of it, gMain at 0x03004084): the story starts in Lilycove \u2013 the neighbours, the rival upstairs, Mom's package (Chimchar), the rival's battle at the west exit, then a real catch on Route 121 with the Pok\u00e9 Balls Mom gives (their pocket is the fourth). Its save-block pointer is at 0x030057D8",
+"pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4))))",
+"steps": [
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"START"
+],
+[
+"A"
+]
+],
+"max": 1200
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 2500,
+"note": "intro, name \"A\u2026\""
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"RIGHT"
+],
+[
+"B"
+]
+],
+"hold": 20,
+"every": 4,
+"max": 6000,
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]!==6440 && (((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]!==0"
+},
+"note": "out of the truck"
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "check",
+"name": "lilycove"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 40,
+"max": 4000,
+"note": "Mom: Lilycove, the Pok\u00e9Nav and the Running Shoes"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 400
+},
+{
+"do": "go",
+"x": 42,
+"y": 7,
+"order": "x"
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 16
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]===3340"
+},
+"max": 300,
+"note": "the neighbours (map 13.12)"
+},
+{
+"do": "go",
+"x": 6,
+"y": 4,
+"order": "xy",
+"patience": 6
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 3
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 50,
+"max": 2000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 400
+},
+{
+"do": "go",
+"x": 6,
+"y": 2,
+"order": "yx",
+"patience": 6
+},
+{
+"do": "go",
+"x": 5,
+"order": "x"
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 16
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]===3351"
+},
+"max": 300,
+"note": "upstairs: the rival"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 50,
+"max": 6000
+},
+{
+"do": "go",
+"x": 1,
+"y": 2,
+"order": "xy",
+"patience": 6
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 16
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]===3340"
+},
+"max": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 200
+},
+{
+"do": "go",
+"x": 6,
+"y": 8,
+"order": "xy",
+"patience": 6
+},
+{
+"do": "go",
+"x": 3,
+"order": "x",
+"patience": 6
+},
+{
+"do": "press",
+"keys": "DOWN",
+"hold": 16
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]===5"
+},
+"max": 300
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]===5"
+},
+"max": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 200
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "go",
+"x": 36,
+"y": 7,
+"order": "x",
+"patience": 6
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 16
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]===3339"
+},
+"max": 300,
+"note": "home: Mom has Birch's package"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 50,
+"max": 8000,
+"until": "party",
+"note": "Pok\u00e9dex, DexNav, Pok\u00e9 Balls \u2013 and the starter (Chimchar)"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 60,
+"max": 4000,
+"note": "the rest of Mom's talk (the DexNav)"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 800
+},
+{
+"do": "go",
+"x": 3,
+"y": 8,
+"order": "yx",
+"map": 3339,
+"leave": true,
+"patience": 10
+},
+{
+"do": "press",
+"keys": "DOWN",
+"hold": 16
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]===5"
+},
+"max": 300
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x030057D8,4)))))[0]===5"
+},
+"max": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 200
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "go",
+"x": 36,
+"y": 9,
+"order": "y",
+"patience": 6
+},
+{
+"do": "go",
+"x": 33,
+"y": 9,
+"order": "x",
+"patience": 6
+},
+{
+"do": "go",
+"x": 33,
+"y": 10,
+"order": "y",
+"patience": 6
+},
+{
+"do": "go",
+"x": 32,
+"y": 10,
+"order": "x",
+"patience": 6
+},
+{
+"do": "go",
+"x": 32,
+"y": 18,
+"order": "y",
+"patience": 6
+},
+{
+"do": "go",
+"x": 9,
+"y": 18,
+"order": "x",
+"patience": 6
+},
+{
+"do": "go",
+"x": 9,
+"y": 24,
+"order": "y",
+"patience": 6
+},
+{
+"do": "go",
+"x": 2,
+"y": 24,
+"order": "x",
+"patience": 6
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 50,
+"max": 5000,
+"until": "battle",
+"note": "the rival waits at the town's west exit"
+},
+{
+"do": "wait",
+"frames": 500
+},
+{
+"do": "check",
+"name": "rival"
+},
+{
+"do": "shot",
+"name": "rival"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"every": 50,
+"max": 8000,
+"until": "nobattle"
+},
+{
+"do": "wait",
+"frames": 200
+},
+{
+"do": "check",
+"name": "afterrival"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 40,
+"max": 1500
+},
+{
+"do": "go",
+"x": -2,
+"y": 24,
+"order": "x",
+"map": 5,
+"leave": true,
+"patience": 6
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "check",
+"name": "r121"
+},
+{
+"do": "go",
+"x": 76,
+"y": 13,
+"order": "y",
+"patience": 6
+},
+{
+"do": "go",
+"x": 75,
+"y": 13,
+"order": "x",
+"patience": 6
+},
+{
+"do": "go",
+"x": 75,
+"y": 8,
+"order": "y",
+"patience": 6
+},
+{
+"do": "go",
+"x": 72,
+"y": 8,
+"order": "x",
+"patience": 6
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 4,
+"every": 16,
+"max": 10000,
+"until": "battle",
+"note": "tall grass"
+},
+{
+"do": "wait",
+"frames": 300
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "press",
+"keys": "A"
+},
+{
+"do": "wait",
+"frames": 300
+},
+{
+"do": "press",
+"keys": "UP",
+"hold": 6
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 6,
+"note": "cursor to the first entry"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG"
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "Pok\u00e9 Ball \u2192 USE"
+},
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"A"
+],
+[
+"A"
+],
+[
+"A"
+],
+[
+"A"
+],
+[
+"START"
+]
+],
+"every": 60,
+"max": 30000,
+"until": "party>=2",
+"while": "battle",
+"note": "A only: the cursor stays on BAG, so after a miss A throws the next ball; after a catch it says yes to a nickname, START + A keep the name. (B or START in the battle menu jump to RUN in these hacks \u2013 a second B flees.)"
+},
+{
+"do": "check",
+"name": "caught0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "caught"
+},
+{
+"do": "shot",
+"name": "caught"
+}
+],
+"expect": {
+"lilycove": {
+"place": "Lilycove City"
+},
+"starter": {
+"party": {
+"level": 5
+}
+},
+"rival": {
+"battle": {
+"kind": "trainer",
+"level": 5
+}
+},
+"afterrival": {
+"battle": null
+},
+"r121": {
+"place": "Route 121"
+},
+"wild": {
+"battle": {
+"kind": "wild"
+}
+},
+"caught": {
+"catch": {
+"area": "Route 121"
+}
+}
+}
+}

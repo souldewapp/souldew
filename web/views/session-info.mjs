@@ -5,7 +5,7 @@ import { html, useState, useEffect, useRef } from '/vendor/htm-preact.mjs';
 import { useApp, Sprite, Types, HpBar, Modal, useFocusTrap } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t } from '../lib/i18n.mjs';
-import { speciesName, typeLabel, moveName } from '../lib/data.mjs';
+import { speciesName, typeLabel, moveName, romOwnTypesNow } from '../lib/data.mjs';
 import {
   party as partyAreas, live, pairState, encounter, levelCap, rules as getRules, dupeOf, players as getPlayers,
   areaName, causeText, slotsOf, othersOf, openAreas, isNuzlocke, pairTypeClash, typeHelpOn,
@@ -303,6 +303,8 @@ export function BattlePanel({ battle, mine, gen, isRun, side = 'left', collapsed
   const solo = isRun && isNuzlocke(manifest);
   // the host can switch the matchup help off for the whole run: then only who's out there and the catch rules stay
   const help = !isRun || typeHelpOn(doc, manifest);
+  // a hack with types of its own (Too Many Types): souldew knows neither them nor their matchups – it says so instead
+  const ownTypes = runData ? runData.typesUnknown : !!romOwnTypesNow();
   let rule = null;
   const notes = [];
   if (battle.kind === 'wild' && r) {
@@ -372,10 +374,11 @@ export function BattlePanel({ battle, mine, gen, isRun, side = 'left', collapsed
     ${ruleLine}
     ${notes.length > 0 && html`<div class="bt-notes">${notes.map((x) => html`<span class="rs-chip honour" title=${t('nz.honourHint', 'The app can’t check this – it only reminds you. Keep it yourself.')}>${x}</span>`)}</div>`}
     ${!help && html`<p class="tiny faint bt-nohelp">${t('battle.helpOff', 'Type matchup help is off in this run.')}</p>`}
-    ${help && outs.map((m) => html`<${OutHelp} key=${m.key || m.species} mon=${m} foes=${foeData} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`)}
-    ${help && html`<${TeamCheck} team=${team} out=${new Set(outs)} foe=${foeData.find(({ f }) => !(f.maxHp > 0 && f.hp === 0)) || foeData[0]} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`}
-    ${help && foeData.map(({ f, types }) => types.length > 0 && html`<${TypeChart} key=${`c${f.species}`} title=${t('battle.chart', '{mon} against types', { mon: speciesName(f.species) })} chart=${defenseChart(types, gen, { fairy })} />`)}
-    ${help && outs.map((m) => typesOf(m.species).length > 0 && html`<${TypeChart} key=${`m${m.key || m.species}`} title=${t('battle.myChart', 'Your {mon} against types', { mon: monName(m) })} chart=${defenseChart(typesOf(m.species), gen, { fairy })} mine />`)}
+    ${help && ownTypes && html`<p class="tiny faint bt-nohelp">${t('battle.ownTypes', 'This ROM hack has types of its own that souldew doesn’t know – so it shows no types, matchups or type rule here rather than wrong ones.')}</p>`}
+    ${help && !ownTypes && outs.map((m) => html`<${OutHelp} key=${m.key || m.species} mon=${m} foes=${foeData} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`)}
+    ${help && !ownTypes && html`<${TeamCheck} team=${team} out=${new Set(outs)} foe=${foeData.find(({ f }) => !(f.maxHp > 0 && f.hp === 0)) || foeData[0]} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`}
+    ${help && !ownTypes && foeData.map(({ f, types }) => types.length > 0 && html`<${TypeChart} key=${`c${f.species}`} title=${t('battle.chart', '{mon} against types', { mon: speciesName(f.species) })} chart=${defenseChart(types, gen, { fairy })} />`)}
+    ${help && !ownTypes && outs.map((m) => typesOf(m.species).length > 0 && html`<${TypeChart} key=${`m${m.key || m.species}`} title=${t('battle.myChart', 'Your {mon} against types', { mon: monName(m) })} chart=${defenseChart(typesOf(m.species), gen, { fairy })} mine />`)}
   </section>`;
 }
 
