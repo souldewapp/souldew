@@ -16,7 +16,7 @@ import { BootScreen } from './views/boot.mjs';
 import { Onboarding } from './views/onboarding.mjs';
 import { LibraryView } from './views/library.mjs';
 import { SoulLinkView, NuzlockeView } from './views/soullink.mjs';
-import { PlayView, GameSession } from './views/play.mjs';
+import { PlayView, GameSession, ExternalFeed } from './views/play.mjs';
 import { unsavedProgress, unsavedTexts } from './views/savestates.mjs';
 import { LinkView } from './views/link.mjs';
 import { SettingsView, gpuFallbackText } from './views/settings.mjs';
@@ -180,6 +180,8 @@ function App() {
   const [linkStatus, setLinkStatus] = useState(null);
   const [inbox, setInboxState] = useState(NO_INBOX);
   const [liveInfo, setLiveInfo] = useState(null);
+  // the run an external emulator (mGBA, Azahar) was started for from its play view: its frames go there (ExternalFeed)
+  const [externalRun, setExternalRun] = useState(null);
   const [toasts, setToasts] = useState([]);
   const [trophyToasts, setTrophyToasts] = useState([]);
   const [deathAlert, setDeathAlert] = useState(null);
@@ -594,6 +596,7 @@ function App() {
   const ctx = {
     status, reloadStatus, library, reloadLibrary, runId, setRunId, manifest, missingRun, reloadManifest, doc: runDoc, docVersion, runData, me, setMe,
     navigate, route, link: linkRef.current, linkStatus, partnerOnline, onlineSlots, connect, disconnect, inbox, setInbox, applySnap, toast, liveInfo,
+    externalRun, setExternalRun,
     session, startSession, endSession, closeSession, offerRestart,
   };
 
@@ -708,6 +711,7 @@ function App() {
       <main class="main">
         <div class=${`main-inner ${session && showsSession ? 'under-session' : ''}`}><${Boundary} route=${route.route}><${View} /><//></div>
         ${session && html`<${Boundary} route="session"><${GameSession} key=${session.target.key + session.at} session=${session} mode=${showsSession ? 'full' : 'mini'} /><//>`}
+        ${externalRun && html`<${Boundary} route="external"><${ExternalFeed} /><//>`}
       </main>
     </div>
     ${showOnboarding && !boot && html`<${Onboarding} onDone=${() => navigate('library')} />`}

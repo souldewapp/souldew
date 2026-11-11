@@ -1,9 +1,11 @@
-// Live party readers for Gen 1–5. Works on any memory source that can read system bus addresses:
-// the integrated emulator (WASM heap), the mGBA Lua bridge (streamed regions) or a RAM dump.
+// Live party readers for Gen 1–7. Works on any memory source that can read system bus addresses:
+// the integrated emulator (WASM heap), the mGBA Lua bridge or Azahar's RPC server (streamed regions) or a RAM dump.
+// Gen 6/7 (3DS) lives in ./gen67.mjs.
 // Output is the same normalized mon shape the save parser produces, so the SoulLink logic
 // doesn't care where the data came from.
 // Addresses/structs: research/live_ram.md (pret disassemblies + PKHeX), shared/data/addresses.json.
 import { decryptPK4 } from '../gen4save.mjs';
+import { readGen67, regions67 } from './gen67.mjs';
 
 const hex = (v) => (typeof v === 'string' ? parseInt(v, 16) : Number(v));
 const u16le = (b, o) => b[o] | (b[o + 1] << 8);
@@ -20,6 +22,12 @@ export function findEntry(table, header) {
     const m = g.match || {};
     const codes = [].concat(m.gameCode || [], m.manufacturerCode || []).map((c) => String(c).toUpperCase());
     if (code && codes.includes(code)) return g;
+  }
+  // 3DS: the running title ID (Azahar's process list) – a game started from its installed .cia has no file to read
+  const titleId = String(header.titleId || '').toUpperCase();
+  if (titleId) {
+    const g = games.find((x) => (x.match?.titleIds || []).some((t) => String(t).toUpperCase() === titleId));
+    if (g) return g;
   }
   for (const g of games) {
     const m = g.match || {};
@@ -46,6 +54,11 @@ export function regionsFor(entry) {
       { addr: hex(entry.partyCountAddr), len: 1, name: 'count' },
       { addr: hex(entry.partyAddr), len: entry.structSize * 6, name: 'party' },
     ];
+  }
+  if (entry.gen >= 6) {
+    // every update's party address, and its badge byte (Gen 6)
+    const badges = (entry.partyAddrs || []).filter((a) => a.badges).map((a) => ({ addr: hex(a.badges), len: 1, name: 'badges' }));
+    return [...regions67(entry).map((r) => ({ ...r, name: 'party' })), ...badges];
   }
   return [];
 }
@@ -656,7 +669,7 @@ function readBoxesGen4(entry, read, T, state) {
 export function readLiveParty(entry, read, T, state = {}) {
   if (!entry) return null;
   if (entry.gen <= 2) return readGB(entry, read, T, state);
-  const res = entry.gen === 3 ? readGen3(entry, read, T, state) : readDS(entry, read, T, state);
+  const res = entry.gen >= 6 ? readGen67(entry, read, state) : entry.gen === 3 ? readGen3(entry, read, T, state) : readDS(entry, read, T, state);
   return res?.party && !settled(res.party, state) ? { torn: true } : res;
 }
 
@@ -1330,6 +1343,7 @@ export function readLiveBattle(entry, read, T, state = {}, party = null) {
   try {
     if (entry.gen <= 2) return holdEnemy(state, entry.battleEnemy && entry.inBattle ? battleGB(entry, read, T, state, party) : null);
     if (entry.gen === 3) return holdEnemy(state, entry.enemyPartyAddr && entry.inBattle ? battleGen3(entry, read, T, state) : null);
+    if (entry.gen >= 6) return null; // 3DS: no battle panel yet
     return battleDS(entry, read, T, state, party);
   } catch {
     return null;

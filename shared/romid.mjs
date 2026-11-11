@@ -1,4 +1,8 @@
-// Identify a Game Boy / Game Boy Color / Game Boy Advance / Nintendo DS ROM from its header.
+// Identify a Game Boy / Game Boy Color / Game Boy Advance / Nintendo DS ROM from its header. Nintendo 3DS files are
+// identified by shared/ctr.mjs (they are read in pieces, never whole).
+import { CTR_EXTENSIONS } from './ctr.mjs';
+
+export { CTR_EXTENSIONS };
 
 const ascii = (u8, a, b) => {
   let s = '';
@@ -15,9 +19,13 @@ export const SYSTEMS = {
   gbc: { name: 'Game Boy Color', ext: ['gbc'] },
   gba: { name: 'Game Boy Advance', ext: ['gba'] },
   nds: { name: 'Nintendo DS', ext: ['nds'] },
+  '3ds': { name: 'Nintendo 3DS', ext: CTR_EXTENSIONS },
 };
 
+/** ROMs the library reads whole (CRC32, inside .zip files too) – 3DS files are CTR_EXTENSIONS. */
 export const ROM_EXTENSIONS = ['gb', 'gbc', 'gba', 'nds'];
+/** Is this file extension (lower case, no dot) a 3DS game file? */
+export const isCtrExt = (ext) => CTR_EXTENSIONS.includes(String(ext || '').toLowerCase());
 export const PATCH_EXTENSIONS = ['xdelta', 'vcdiff', 'xdelta3', 'bps', 'ips', 'ups'];
 
 const NINTENDO_LOGO_START = [0xce, 0xed, 0x66, 0x66, 0xcc, 0x0d, 0x00, 0x0b];
@@ -59,8 +67,14 @@ export function matchCatalog(rom, catalog) {
   const code = (rom.code || '').toUpperCase();
   const title = (rom.title || '').toUpperCase();
   const codes = (g) => [g.gameCode, g.serial, g.productCode].filter(Boolean).map((c) => String(c).toUpperCase());
-  const bySerial = (rom.system === 'gba' || rom.system === 'nds') && code && catalog.games.find((g) => g.system === rom.system && codes(g).includes(code));
+  const bySerial = (rom.system === 'gba' || rom.system === 'nds' || rom.system === '3ds') && code && catalog.games.find((g) => g.system === rom.system && codes(g).includes(code));
   if (bySerial) return { game: bySerial, exact: false };
+  // 3DS: the title ID (an update or a .cia whose content is encrypted carries no product code)
+  const tid = String(rom.titleId || '').toUpperCase();
+  if (rom.system === '3ds' && tid) {
+    const byTid = catalog.games.find((g) => g.system === '3ds' && (g.titleIds || []).map((x) => String(x).toUpperCase()).includes(tid));
+    if (byTid) return { game: byTid, exact: false };
+  }
   const byTitle = catalog.games.find((g) => (g.system === rom.system || (g.system === 'gbc' && rom.system === 'gb')) && g.headerTitle && String(g.headerTitle).toUpperCase() === title);
   if (byTitle) return { game: byTitle, exact: false };
   return null;

@@ -95,6 +95,8 @@ export function itemName(id, gen, lang = currentLang()) {
 /** Sprite in the art style of the game's generation (served + cached by the local server). */
 export function spriteUrl(id, { gen = 4, shiny = false } = {}) {
   if (!id || id > FAKEMON) return ''; // (a ROM hack's own Pokémon has no sprite here)
+  // Gen 6/7 (3DS games have 3D models, no sprite set of their own): the current artwork-style sprites
+  if (gen >= 6) return `/sprites/${shiny ? 'shiny' : 'default'}/${id}.png`;
   const g = Math.min(Math.max(gen || 4, 1), 5);
   if (id > GEN_MAX_ID[g]) return `/sprites/${shiny ? 'shiny' : 'default'}/${id}.png`;
   const set = { 1: 'gen1', 2: shiny ? 'gen2shiny' : 'gen2', 3: shiny ? 'gen3shiny' : 'gen3', 4: shiny ? 'gen4shiny' : 'gen4', 5: shiny ? 'gen5shiny' : 'gen5' }[g];
@@ -192,7 +194,8 @@ export class RunData {
 
   /** Does the game have the Fairy type (a hack that added it)? */
   get fairy() {
-    return !!(this.romTypes || ROM_TYPES)?.fairy;
+    // Gen 6 brought the Fairy type; before that only a hack that added it
+    return this.gen >= 6 || !!(this.romTypes || ROM_TYPES)?.fairy;
   }
 
   familyRoot(id, slot) {
@@ -240,5 +243,5 @@ export class RunData {
 
 export function genFromSystem(game) {
   if (!game) return null;
-  return { gb: 1, gbc: 2, gba: 3, nds: 4 }[game.system] || null;
+  return { gb: 1, gbc: 2, gba: 3, nds: 4 }[game.system] || (game.system === '3ds' ? game.generation || 6 : null);
 }

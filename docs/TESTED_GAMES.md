@@ -56,6 +56,24 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 | **Too Many Types 1.6** (Emerald) | ✅ | ✅ | ✅ | **Checked (2.3.1, issue #3)** with the v1.6 BPS (source Emerald 1F1C08FB, result E91FEF2D – byte for byte the pre-patched ROM from the hack's site, which the library now recognises by that CRC32). pokeemerald-expansion like Run & Bun: species by name (1235, National Dex order), the team searched for in RAM (0x02023644), the place through SaveBlock1 (pointer 0x03005D9C). Starts in the bedroom: Fennekin from Birch's bag → "Starter", Littleroot Town / Route 101 / Route 103, the wild Poochyena L2 13 → 6 → 0 as on screen. **Fixed:** its battlers are 0x60 bytes, not Run & Bun's 0x5C – gBattleMons (0x020230F8) wasn't found, so the panel didn't know who was out; the size is now found with it. Checked: a switch to Poochyena (index 1, 16/16), May's Popplio L5 on Route 103 → trainer (20 → 11 as on screen, Fennekin 10/19). **Real catch:** Poochyena L3 → "Route 101" (Poké Balls written into the bag; TMT1 keeps the bag's key at the base game's 0xAC). **Types:** its own (57 besides "???", e.g. Fennekin is Fire + type 36) – shown as none, see below. The matrix plan plays the same route on its own (starter, the wild Poochyena, Route 101 and the catch, all ✅ with the BPS-patched ROM; the pre-patched one is the same file). It answers the battle menu with A only: in these hacks B (and START) jump to RUN, a second B flees, and an A while a text prints starts the text again. Plan: [too-many-types.json](../scripts/rom-matrix/plans/too-many-types.json). |
 | **Too Many Types 2 1.5.2** (Emerald) | ✅ | ✅ | ✅ | **Checked (2.3.1, issue #3)** with a pre-patched v1.5.2 ROM (D25FBCCC) and an older BPS patch ("1.1.1 mirror", result 69ECC373 – identified from its checksums, the library links it to the hack). **Fixed – it read as plain Emerald before:** a newer pokeemerald-expansion keeps the species names inside gSpeciesInfo (0x104 bytes per species, 1543 of them incl. its own Ligmiblin, Regisus …), so no species table was found; its team has no count byte in front and gEnemyParty sits before gPlayerParty (0x02032A3C / 0x02032C94, now named by the code: the pair 600 bytes apart it uses most); gMain moved to 0x03004084 (the battle flag at +0x439, found next to that literal in the code); the species field carries the Tera type in its top bits (Chimchar reads 0x5986). Now: Lilycove City (where the story starts), Chimchar L5 from Mom's package → "Starter", the rival's Froakie L5 at the west exit → trainer (19 → 11, Chimchar 17/20 as on screen), Route 121, a wild Sewaddle → wild, a switch (index 1). **Real catch:** Sewaddle L2 → "Route 121". The matrix plan plays this on its own – ✅ for party, place, battle and catch with v1.5.2 and with the 1.1.1 patch applied by souldew's patcher (Chimchar, the rival's Froakie, a catch on Route 121). The species picker offers everything up to #1024 plus the hack's own Pokémon (TMT1: up to #905). Plan: [too-many-types-2.json](../scripts/rom-matrix/plans/too-many-types-2.json). |
 
+### Nintendo 3DS (Azahar)
+
+Checked on macOS (Apple Silicon) with **Azahar 2126.2**, installed through souldew's one-click install, in its own portable
+profile. **No retail 3DS game was available**, so the run used free homebrew and stand-ins:
+
+| What | Result |
+|---|---|
+| Library: Checkpoint `.3dsx`, ftpd `.3dsx`, FBI `.cxi`, Anemone3DS `.cia`, 3DShell `.cia` | ✅ recognised (title from the SMDH, title ID from the NCCH / the CIA's TMD), no file read whole |
+| Launch from souldew (`.3dsx`, `.cxi`), `.cia` opens Azahar empty with the install hint | ✅ (screenshots through Azahar's RPC server) |
+| RPC server switched on from the play view, connection, running title from the process list | ✅ – homebrew reported as "no live data for …" |
+| A second start while Azahar is open | ✅ refused with a message (macOS `open -a` would not hand over the game) |
+| **Stand-in Pokémon X** (FBI with X's title ID), an encrypted Gen 6 party written to X/Y 1.0's party address over RPC | ✅ Nuzlocke built (game hard-linked, no randomizer), starter, a catch filed under "Route 2", level-ups, a faint (death notice, graveyard), the first badge, trophies – with the board open instead of the play view |
+| Stand-in Omega Ruby, party at the 1.4 update's address | ✅ version found by itself, party read |
+| Stand-ins Sun / Ultra Moon | ⚠️ title → entry ✅; the party addresses lie outside the small homebrew process, so only the unit tests (real PK7 files) cover the Gen 7 party |
+
+Not checked: a real X/Y/ORAS/SM/USUM ROM, Windows and Linux builds of Azahar, battle panel and place sign (not built
+for 3DS yet).
+
 ### Not in the test set
 
 Blue, Yellow, Gold, the English FireRed and LeafGreen, Diamond, HeartGold, SoulSilver and all non-English ROMs except

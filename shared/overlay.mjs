@@ -62,7 +62,7 @@ function liteFeed(v) {
 
 /**
  * Display name of an area key: the doc's own area entry, the curated route list, a met-location key
- * (`m<gen>-<id>`) through the location tables { gen4, loc2, loc3 }, else the key itself.
+ * (`m<gen>-<id>`) through the location tables { gen4, loc2, loc3, loc6, loc7 }, else the key itself.
  */
 export function areaLabel(key, { doc = {}, tables = {}, lang = 'en' } = {}) {
   if (!key) return '';
@@ -77,7 +77,8 @@ export function areaLabel(key, { doc = {}, tables = {}, lang = 'en' } = {}) {
     const [g, id] = [Number(m[1]), Number(m[2])];
     const pick = (e) => (e ? (lang === 'de' && e.de) || e.en || '' : '');
     const name = g === 4 ? (id >= 2000 ? tables.gen4?.locationsSpecial?.[String(id)] : tables.gen4?.locations?.[id])
-      : g === 3 ? pick(tables.loc3?.map?.[String(id)]) : g === 2 ? pick(tables.loc2?.map?.[String(id)]) : '';
+      : g === 3 ? pick(tables.loc3?.map?.[String(id)]) : g === 2 ? pick(tables.loc2?.map?.[String(id)])
+        : g === 6 || g === 7 ? pick(tables[`loc${g}`]?.map?.[String(id)]) : '';
     if (name) return name;
   }
   return key;

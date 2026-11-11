@@ -98,6 +98,8 @@ export function PlayView() {
     </div>`;
   }
   if (target.error) return html`<${PlayHome} />`;
+  // 3DS games have no built-in emulator: always Azahar (ExternalPlay offers to install it)
+  if (target.system === '3ds') return html`<${ExternalPlay} target=${target} emu="azahar" />`;
   const choice = status?.config?.emulatorFor?.[target.system] || 'builtin';
   if (choice !== 'builtin' && status?.emulators?.[choice]?.installed) return html`<${ExternalPlay} target=${target} emu=${choice} />`;
   if (running) return html`<${SwitchGame} next=${target} />`;
@@ -1300,8 +1302,122 @@ function ScriptBridge({ fresh }) {
   </div>`;
 }
 
+/** An external emulator that isn't installed yet (3DS: Azahar, the only way to play them). */
+function InstallEmulator({ target, emu }) {
+  const { status, reloadStatus, toast } = useApp();
+  const e = status.emulators[emu];
+  const [busy, setBusy] = useState(false);
+  const install = async () => {
+    setBusy(true);
+    try {
+      await api.post(`/api/emulators/${emu}/install`);
+      await reloadStatus();
+      toast({ kind: 'ok', title: e.name, text: t('set.installed', 'Installed') });
+    } catch (err) {
+      toast({ kind: 'death', title: e.name, text: err.message });
+    }
+    setBusy(false);
+  };
+  return html`<div class="stack-l">
+    <div class="topbar"><h1>${target.label}</h1></div>
+    <section class="panel stack">
+      <h2>${t('ext.needEmu', '{emu} is needed for this game', { emu: e.name })}</h2>
+      <p class="small muted">${t('ext.needEmuText', 'Nintendo 3DS games run in {emu}, a free emulator. souldew downloads its latest release from GitHub and keeps it in its own folder.', { emu: e.name })}</p>
+      <div><button class="btn primary big" disabled=${busy} onClick=${install}><${Icon} name="plus" size=${16} />${busy ? t('set.installing', 'Installing …') : t('ext.installEmu', 'Install {emu}', { emu: e.name })}</button></div>
+    </section>
+  </div>`;
+}
+
+/**
+ * Azahar's RPC server: off by default; souldew switches it on only after saying what it means (it answers on the
+ * local network too). Then: connected or not, which game runs, whether souldew reads it.
+ */
+function AzaharBridge({ fresh, isRun }) {
+  const { toast } = useApp();
+  const [st, setSt] = useState(null);
+  const [asking, setAsking] = useState(false);
+  useEffect(() => {
+    let stop = false;
+    const poll = () => api.get('/api/live/azahar').then((s) => !stop && setSt(s)).catch(() => {});
+    poll();
+    const id = setInterval(poll, 2000);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, []);
+  const enable = async () => {
+    try {
+      setSt(await api.post('/api/live/azahar/enable', { confirm: true }));
+      setAsking(false);
+      toast({ kind: 'ok', title: 'Azahar', text: t('ext.rpcEnabledToast', 'Switched on – restart Azahar if it is open.') });
+    } catch (err) {
+      toast({ kind: 'death', title: 'Azahar', text: err.message });
+    }
+  };
+  if (!st) return null;
+  const game = st.game;
+  const name = game ? [game.title, game.titleId && !/^0+$/.test(game.titleId) && `(${game.titleId})`].filter(Boolean).join(' ') : '';
+  const key = fresh && st.supported ? 'live' : st.connected ? (game ? (st.supported ? 'reading' : 'unsupported') : 'noGame') : st.setting?.enabled ? 'waiting' : 'off';
+  const text = {
+    live: () => t('ext.liveOn', 'Live data is coming in'),
+    reading: () => t('ext.azaharReading', 'Connected to Azahar – looking for your team in {game} …', { game: name }),
+    unsupported: () => t('ext.azaharUnsupported', 'Connected to Azahar, but souldew has no live data for {game}.', { game: name || '?' }),
+    noGame: () => t('ext.azaharNoGame', 'Connected to Azahar – start a game there.'),
+    waiting: () => t('ext.azaharWaiting', 'No connection yet – start Azahar (after switching it on, restart it once).'),
+    off: () => t('ext.azaharOff', 'Live data is off in Azahar.'),
+  }[key]();
+  const color = key === 'live' || key === 'reading' || key === 'noGame' ? 'green' : 'amber';
+  return html`<div class="stack-s">
+    ${!st.setting?.enabled && !st.connected && html`<div class="note stack-s">
+      <p class="small">${t('ext.rpcWhy', 'For live data (team, catches, deaths) Azahar has to share the running game’s memory with souldew: its “RPC server” (Settings › Debug).')}</p>
+      <p class="small"><b>${t('ext.rpcWarnTitle', 'Good to know:')}</b> ${t('ext.rpcWarn', 'Azahar answers on your local network too, not only on this computer (UDP port 45987). While Azahar runs, other devices in the same network could read and change the game’s memory. Only use it on networks you trust.')}</p>
+      ${asking
+        ? html`<div class="row"><button class="btn small primary" onClick=${enable}>${t('ext.rpcConfirm', 'Yes, switch it on')}</button><button class="btn small ghost" onClick=${() => setAsking(false)}>${t('common.cancel', 'Cancel')}</button></div>`
+        : html`<div><button class="btn small" onClick=${() => setAsking(true)}>${t('ext.rpcEnable', 'Switch on live data in Azahar')}</button></div>`}
+      <p class="tiny faint">${t('ext.rpcFile', 'souldew changes this one setting in {file}.', { file: st.setting?.path || 'qt-config.ini' })}</p>
+    </div>`}
+    <div class="row nowrap" role="status" aria-live="polite"><${Led} on=${key !== 'off' && key !== 'waiting'} color=${color} blink=${key === 'reading'} /><span class="small grow">${text}</span></div>
+    ${!isRun && key === 'live' && html`<p class="tiny faint">${t('ext.azaharSolo', 'Your team shows up in a SoulLink or Nuzlocke run with this game.')}</p>`}
+  </div>`;
+}
+
+/**
+ * Frames of an external emulator (the mGBA script, Azahar's RPC server) into the run they were opened for – rendered by
+ * the app shell, so the team, catches and deaths keep coming in while the board or another section is open. Only the
+ * run whose play view started the emulator (externalRun) gets them, never just whichever run is open. The reader state
+ * lives across frames like in the built-in loop: Gen 3 tells a Bad Egg from a torn read, Gen 1/2 a finished party
+ * rewrite from one in progress, Gen 6/7 a deposited Pokémon from a slot being rewritten – only by comparing reads.
+ */
+export function ExternalFeed() {
+  const { liveInfo, applySnap, manifest, externalRun } = useApp();
+  const readState = useRef({});
+  useEffect(() => {
+    if (!liveInfo?.regions || !manifest || externalRun?.runId !== manifest.id) return;
+    (async () => {
+      const { T, addresses } = await liveTables();
+      const { regionReader } = await import('/shared/live/parse.mjs');
+      const entry = findEntry(addresses, liveInfo.game);
+      // the emulator runs another game than this run's (another generation): nothing to file
+      const runGen = gameById(manifest.game?.id)?.generation;
+      if (!entry || (runGen && entry.gen !== runGen)) return;
+      if (readState.current.game !== entry.id) readState.current = { game: entry.id };
+      // GBA: the ROM's own species table – a hack's other Pokémon; an expanded engine isn't read at all (see the loop above)
+      let sp = null;
+      if (entry.gen === 3 && externalRun.rom) {
+        await loadRomLocations(externalRun.rom);
+        sp = romSpeciesNow();
+        if (sp?.engine === 'expanded') return;
+      }
+      const res = readLiveParty(entry, regionReader(liveInfo.regions), sp ? T.withSpecies(sp) : T, readState.current);
+      if (res?.party) applySnap({ source: 'live', party: res.party, game: entry.id, ...(res.badges !== undefined ? { badges: res.badges } : {}) });
+    })().catch((err) => console.warn('live frame', err));
+  }, [liveInfo?.at]);
+  return null;
+}
+
 function ExternalPlay({ target, emu }) {
-  const { status, toast, liveInfo, applySnap, manifest, me, route } = useApp();
+  const { status, toast, liveInfo, manifest, me, route, setExternalRun } = useApp();
   const e = status.emulators[emu];
   const isRun = target.kind === 'run';
   const fresh = !!(liveInfo?.at && Date.now() - liveInfo.at < 5000);
@@ -1325,36 +1441,25 @@ function ExternalPlay({ target, emu }) {
       setLaunching(false);
     }
   };
-  // Feed mGBA bridge frames into the run. The reader state lives across frames like in the built-in loop: Gen 3
-  // tells a Bad Egg from a torn read, Gen 1/2 a finished party rewrite from one in progress, only by comparing reads.
-  const readState = useRef({});
+  // Frames of this run from now on go into it – also while another section is open (ExternalFeed in the app shell)
   useEffect(() => {
-    if (!liveInfo?.regions || !isRun) return;
-    (async () => {
-      const { T, addresses } = await liveTables();
-      const { regionReader } = await import('/shared/live/parse.mjs');
-      const entry = findEntry(addresses, liveInfo.game);
-      if (readState.current.game !== entry?.id) readState.current = { game: entry?.id };
-      // GBA: the ROM's own species table – a hack's other Pokémon; an expanded engine isn't read at all (see the loop above)
-      let sp = null;
-      if (entry?.gen === 3 && target.rom) {
-        await loadRomLocations(target.rom);
-        sp = romSpeciesNow();
-        if (sp?.engine === 'expanded') return;
-      }
-      const res = entry && readLiveParty(entry, regionReader(liveInfo.regions), sp ? T.withSpecies(sp) : T, readState.current);
-      if (res?.party) applySnap({ source: 'live', party: res.party, game: entry.id });
-    })().catch((err) => console.warn('live frame', err));
-  }, [liveInfo?.at]);
+    if (isRun && manifest?.id) setExternalRun({ runId: manifest.id, rom: target.rom || null });
+  }, [isRun, manifest?.id]);
+  if (!e) return null;
+  if (!e.installed) return html`<${InstallEmulator} target=${target} emu=${emu} />`;
+  const cia = /\.z?cia(?:$|&)/i.test(decodeURIComponent(target.rom || '')); // installed in Azahar, not started from the file
   return html`<div class="stack-l">
     <div class="topbar"><h1>${target.label}</h1></div>
     <section class="panel stack">
       <h2>${t('ext.title', 'Playing with {emu}', { emu: e.name })}</h2>
       <div><button class="btn primary big" disabled=${launching} onClick=${launch}><${Icon} name="play" size=${16} />${t('ext.launch', 'Launch {emu}', { emu: e.name })}</button></div>
+      ${cia && html`<p class="small muted">${t('ext.ciaText', 'A .cia file is installed, not started: in Azahar choose File › Install CIA… and pick it, then start the game from Azahar’s list. Live data works the same.')}</p>`}
       ${e.live === 'script'
         ? html`<${ScriptBridge} fresh=${fresh} />`
-        : html`<p class="small muted">${t('ext.saveText', '{emu} can’t share live data. Save in the game regularly – souldew reads the save file next to the ROM after every in-game save.', { emu: e.name })}</p>`}
-      <p class="tiny faint">${t('ext.switch', 'You can switch back to the built-in emulator in the settings.')}</p>
+        : e.live === 'rpc'
+          ? html`<${AzaharBridge} fresh=${fresh} isRun=${isRun} />`
+          : html`<p class="small muted">${t('ext.saveText', '{emu} can’t share live data. Save in the game regularly – souldew reads the save file next to the ROM after every in-game save.', { emu: e.name })}</p>`}
+      ${target.system !== '3ds' && html`<p class="tiny faint">${t('ext.switch', 'You can switch back to the built-in emulator in the settings.')}</p>`}
     </section>
   </div>`;
 }

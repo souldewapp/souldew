@@ -1,0 +1,838 @@
+{
+ "_doc": "Gen 7 met / egg location (PK7 0xDA / 0xD8) -> name. Sun/Moon and Ultra Sun/Ultra Moon share the list: even ids are places, odd lines are subtitles of the place before (skipped here). 30000s: link trades and transfers, 40000s: event places, 60000s: eggs.",
+ "_source": "PKHeX PKHeX.Core/Resources/text/locations/gen7/text_sm_{00000,30000,40000,60000}_{en,de}.txt (line index = id offset)",
+ "map": {
+  "2": {
+   "en": "Mystery Zone",
+   "de": "Mysteriöser Ort"
+  },
+  "4": {
+   "en": "Faraway Place",
+   "de": "Ferner Ort"
+  },
+  "6": {
+   "en": "Route 1"
+  },
+  "8": {
+   "en": "Route 1"
+  },
+  "10": {
+   "en": "Route 3"
+  },
+  "12": {
+   "en": "Route 2"
+  },
+  "14": {
+   "en": "Kala’e Bay",
+   "de": "Kala’e-Bucht"
+  },
+  "16": {
+   "en": "Melemele Sea",
+   "de": "Meer von Mele-Mele"
+  },
+  "18": {
+   "en": "Hau’oli City",
+   "de": "Hauholi City"
+  },
+  "20": {
+   "en": "Hau’oli City",
+   "de": "Hauholi City"
+  },
+  "22": {
+   "en": "Hau’oli City",
+   "de": "Hauholi City"
+  },
+  "24": {
+   "en": "Iki Town",
+   "de": "Lili’i"
+  },
+  "26": {
+   "en": "Mahalo Trail",
+   "de": "Mahalo-Bergpfad"
+  },
+  "28": {
+   "en": "Mahalo Trail",
+   "de": "Mahalo-Bergpfad"
+  },
+  "30": {
+   "en": "Ruins of Conflict",
+   "de": "Ruinen des Krieges"
+  },
+  "32": {
+   "en": "Ruins of Conflict",
+   "de": "Ruinen des Krieges"
+  },
+  "34": {
+   "en": "Ten Carat Hill",
+   "de": "Tenkarat-Hügel"
+  },
+  "36": {
+   "en": "Ten Carat Hill",
+   "de": "Tenkarat-Hügel"
+  },
+  "38": {
+   "en": "Hau’oli Cemetery",
+   "de": "Hauholi-Friedhof"
+  },
+  "40": {
+   "en": "Melemele Meadow",
+   "de": "Mele-Mele-Blumenmeer"
+  },
+  "42": {
+   "en": "Seaward Cave",
+   "de": "Meereshöhle"
+  },
+  "44": {
+   "en": "Berry Fields",
+   "de": "Beerenfelder"
+  },
+  "46": {
+   "en": "Verdant Cavern",
+   "de": "Vegetationshöhle"
+  },
+  "48": {
+   "en": "Verdant Cavern",
+   "de": "Vegetationshöhle"
+  },
+  "50": {
+   "en": "Route 4"
+  },
+  "52": {
+   "en": "Route 5"
+  },
+  "54": {
+   "en": "Route 6"
+  },
+  "56": {
+   "en": "Route 7"
+  },
+  "58": {
+   "en": "Route 8"
+  },
+  "60": {
+   "en": "Route 9"
+  },
+  "62": {
+   "en": "Hano Grand Resort",
+   "de": "Hanohano-Resort"
+  },
+  "64": {
+   "en": "Hano Beach",
+   "de": "Hanohano-Strand"
+  },
+  "66": {
+   "en": "Akala Meadow",
+   "de": "Akala-Blumenmeer"
+  },
+  "68": {
+   "en": "Paniola Town",
+   "de": "Ohana"
+  },
+  "70": {
+   "en": "Heahea City",
+   "de": "Kantai City"
+  },
+  "72": {
+   "en": "Konikoni City"
+  },
+  "74": {
+   "en": "Royal Avenue",
+   "de": "Avenue Royale"
+  },
+  "76": {
+   "en": "Memorial Hill",
+   "de": "Hügel des Gedenkens"
+  },
+  "78": {
+   "en": "Paniola Ranch",
+   "de": "Ohana-Farm"
+  },
+  "82": {
+   "en": "Wela Volcano Park",
+   "de": "Wela-Vulkanpark"
+  },
+  "84": {
+   "en": "Wela Volcano Park",
+   "de": "Wela-Vulkanpark"
+  },
+  "86": {
+   "en": "Brooklet Hill",
+   "de": "Plätscherhügel"
+  },
+  "88": {
+   "en": "Brooklet Hill",
+   "de": "Plätscherhügel"
+  },
+  "90": {
+   "en": "Lush Jungle",
+   "de": "Schattendschungel"
+  },
+  "92": {
+   "en": "Ruins of Life",
+   "de": "Ruinen des Lebens"
+  },
+  "94": {
+   "en": "Akala Outskirts",
+   "de": "Akala-Küstenstreifen"
+  },
+  "100": {
+   "en": "Diglett’s Tunnel",
+   "de": "Digda-Tunnel"
+  },
+  "102": {
+   "en": "Hano Grand Resort",
+   "de": "Hanohano-Resort"
+  },
+  "104": {
+   "en": "Battle Royal Dome",
+   "de": "Dome Royale"
+  },
+  "106": {
+   "en": "Route 10"
+  },
+  "108": {
+   "en": "Route 11"
+  },
+  "110": {
+   "en": "Ula’ula Beach",
+   "de": "Strand von Ula-Ula"
+  },
+  "112": {
+   "en": "Route 13"
+  },
+  "114": {
+   "en": "Tapu Village",
+   "de": "Dorf der Kapu"
+  },
+  "116": {
+   "en": "Route 15",
+   "de": "Route 15 (Wasserweg)"
+  },
+  "118": {
+   "en": "Route 16"
+  },
+  "120": {
+   "en": "Route 17"
+  },
+  "122": {
+   "en": "Route 12"
+  },
+  "124": {
+   "en": "Haina Desert",
+   "de": "Haina-Wüste"
+  },
+  "126": {
+   "en": "Route 14"
+  },
+  "128": {
+   "en": "Ula’ula Meadow",
+   "de": "Ula-Ula-Blumenmeer"
+  },
+  "130": {
+   "en": "Po Town",
+   "de": "Po’u"
+  },
+  "132": {
+   "en": "Malie City",
+   "de": "Malihe City"
+  },
+  "134": {
+   "en": "Malie Garden",
+   "de": "Malihe-Ziergarten"
+  },
+  "136": {
+   "en": "Mount Hokulani",
+   "de": "Hokulani-Berg"
+  },
+  "138": {
+   "en": "Blush Mountain",
+   "de": "Glühberg"
+  },
+  "140": {
+   "en": "Ruins of Abundance",
+   "de": "Ruinen des Gedeihens"
+  },
+  "142": {
+   "en": "Lake of the Sunne",
+   "de": "Sonnenkreis-See"
+  },
+  "144": {
+   "en": "Lake of the Moone",
+   "de": "Mondscheiben-See"
+  },
+  "146": {
+   "en": "Mount Lanakila"
+  },
+  "148": {
+   "en": "Shady House",
+   "de": "Lottervilla"
+  },
+  "150": {
+   "en": "Thrifty Megamart",
+   "de": "Schnäppchenparadies"
+  },
+  "152": {
+   "en": "Hokulani Observatory",
+   "de": "Hokulani-Sternwarte"
+  },
+  "154": {
+   "en": "Pokémon League",
+   "de": "Pokémon-Liga"
+  },
+  "156": {
+   "en": "Poni Meadow",
+   "de": "Poni-Blumenmeer"
+  },
+  "158": {
+   "en": "Poni Wilds",
+   "de": "Wildnis von Poni"
+  },
+  "160": {
+   "en": "Ancient Poni Path",
+   "de": "Alter Pfad von Poni"
+  },
+  "162": {
+   "en": "Poni Breaker Coast",
+   "de": "Felsenküste von Poni"
+  },
+  "164": {
+   "en": "Poni Grove",
+   "de": "Wald von Poni"
+  },
+  "166": {
+   "en": "Poni Plains",
+   "de": "Ebene von Poni"
+  },
+  "168": {
+   "en": "Poni Coast",
+   "de": "Küste von Poni"
+  },
+  "170": {
+   "en": "Poni Gauntlet",
+   "de": "Beschwerlicher Pfad"
+  },
+  "172": {
+   "en": "Seafolk Village",
+   "de": "Dorf des Seevolkes"
+  },
+  "174": {
+   "en": "Vast Poni Canyon",
+   "de": "Canyon von Poni"
+  },
+  "176": {
+   "en": "Altar of the Sunne",
+   "de": "Sonnenkreis-Podium"
+  },
+  "178": {
+   "en": "Altar of the Moone",
+   "de": "Mondscheiben-Podium"
+  },
+  "180": {
+   "en": "Ruins of Hope",
+   "de": "Ruinen der Heimkehr"
+  },
+  "182": {
+   "en": "Resolution Cave",
+   "de": "Finalhöhle"
+  },
+  "184": {
+   "en": "Exeggutor Island",
+   "de": "Kokowei-Eiland"
+  },
+  "186": {
+   "en": "Battle Tree",
+   "de": "Kampfbaum"
+  },
+  "188": {
+   "en": "Aether Paradise",
+   "de": "Æther-Paradies"
+  },
+  "190": {
+   "en": "Ultra Deep Sea",
+   "de": "Ultratiefsee"
+  },
+  "192": {
+   "en": "Malie City",
+   "de": "Malihe City"
+  },
+  "194": {
+   "en": "Melemele",
+   "de": "Mele-Mele"
+  },
+  "196": {
+   "en": "Ula’ula",
+   "de": "Ula-Ula"
+  },
+  "198": {
+   "en": "Big Wave Beach"
+  },
+  "200": {
+   "en": "Sandy Cave",
+   "de": "Strandhöhle"
+  },
+  "202": {
+   "en": "Heahea Beach",
+   "de": "Kantai-Strand"
+  },
+  "204": {
+   "en": "Poni Beach",
+   "de": "Strand von Poni"
+  },
+  "206": {
+   "en": "Ultra Megalopolis",
+   "de": "Ultrametropolis"
+  },
+  "208": {
+   "en": "Megalo Tower",
+   "de": "Metropo Tower"
+  },
+  "210": {
+   "en": "Ultra Plant",
+   "de": "Ultrakraftwerk"
+  },
+  "212": {
+   "en": "Ultra Crater",
+   "de": "Ultratal"
+  },
+  "214": {
+   "en": "Ultra Desert",
+   "de": "Ultrawüste"
+  },
+  "216": {
+   "en": "Ultra Forest",
+   "de": "Ultrawald"
+  },
+  "218": {
+   "en": "Ultra Jungle",
+   "de": "Ultradschungel"
+  },
+  "220": {
+   "en": "Ultra Ruin",
+   "de": "Ultrawolkenkratzer"
+  },
+  "222": {
+   "en": "Ultra Space Wilds",
+   "de": "Ultradimension Zero"
+  },
+  "224": {
+   "en": "Team Rocket’s Castle",
+   "de": "Rocket-Schloss"
+  },
+  "226": {
+   "en": "Plains Grotto",
+   "de": "Tunnel in der Ebene"
+  },
+  "228": {
+   "en": "Pikachu Valley",
+   "de": "Pikachu-Tal"
+  },
+  "230": {
+   "en": "Route 1"
+  },
+  "232": {
+   "en": "Dividing Peak Tunnel",
+   "de": "Spaltberg-Tunnel"
+  },
+  "30001": {
+   "en": "a Link Trade",
+   "de": "Link-Tausch"
+  },
+  "30002": {
+   "en": "a Link Trade",
+   "de": "Link-Tausch"
+  },
+  "30003": {
+   "en": "the Kanto region",
+   "de": "Kanto-Region"
+  },
+  "30004": {
+   "en": "the Johto region",
+   "de": "Johto-Region"
+  },
+  "30005": {
+   "en": "the Hoenn region",
+   "de": "Hoenn-Region"
+  },
+  "30006": {
+   "en": "the Sinnoh region",
+   "de": "Sinnoh-Region"
+  },
+  "30007": {
+   "en": "a distant land",
+   "de": "Fernes Land"
+  },
+  "30008": {
+   "en": "——————",
+   "de": "－－－－－－－－－－"
+  },
+  "30009": {
+   "en": "the Unova region",
+   "de": "Einall-Region"
+  },
+  "30010": {
+   "en": "the Kalos region",
+   "de": "Kalos-Region"
+  },
+  "30011": {
+   "en": "Pokémon Link",
+   "de": "Pokémon-Link"
+  },
+  "30012": {
+   "en": "Pokémon GO"
+  },
+  "30013": {
+   "en": "the Kanto region",
+   "de": "Kanto-Region"
+  },
+  "30014": {
+   "en": "the Hoenn region",
+   "de": "Hoenn-Region"
+  },
+  "30015": {
+   "en": "the Alola region",
+   "de": "Alola-Region"
+  },
+  "30016": {
+   "en": "Poké Pelago",
+   "de": "Pokémon-Resort"
+  },
+  "30017": {
+   "en": "the Johto region",
+   "de": "Johto-Region"
+  },
+  "40001": {
+   "en": "a lovely place",
+   "de": "Netter Ort"
+  },
+  "40002": {
+   "en": "a faraway place",
+   "de": "Ferner Ort"
+  },
+  "40003": {
+   "en": "a Pokémon movie",
+   "de": "Pokémon-Film"
+  },
+  "40004": {
+   "en": "2016 Pokémon Movie",
+   "de": "Pokémon-Film 2016"
+  },
+  "40005": {
+   "en": "2017 Pokémon Movie",
+   "de": "Pokémon-Film 2017"
+  },
+  "40006": {
+   "en": "2018 Pokémon Movie",
+   "de": "Pokémon-Film 2018"
+  },
+  "40007": {
+   "en": "2019 Pokémon Movie",
+   "de": "Pokémon-Film 2019"
+  },
+  "40008": {
+   "en": "2020 Pokémon Movie",
+   "de": "Pokémon-Film 2020"
+  },
+  "40009": {
+   "en": "2021 Pokémon Movie",
+   "de": "Pokémon-Film 2021"
+  },
+  "40010": {
+   "en": "a Pokémon Center",
+   "de": "Pokémon Center"
+  },
+  "40011": {
+   "en": "the Pokémon animated show",
+   "de": "Pokémon-Zeichentrickserie"
+  },
+  "40012": {
+   "en": "Pokémon Ctr. MEGA TOKYO",
+   "de": "Pokémon Center MEGA TOKYO"
+  },
+  "40013": {
+   "en": "Pokémon Center Osaka"
+  },
+  "40014": {
+   "en": "Pokémon Center Fukuoka"
+  },
+  "40015": {
+   "en": "Pokémon Center Nagoya"
+  },
+  "40016": {
+   "en": "Pokémon Center Sapporo"
+  },
+  "40017": {
+   "en": "Pokémon Center Yokohama"
+  },
+  "40018": {
+   "en": "Pokémon Center Tohoku"
+  },
+  "40019": {
+   "en": "Pokémon Center TOKYO-BAY"
+  },
+  "40020": {
+   "en": "Pokémon Center Hiroshima"
+  },
+  "40021": {
+   "en": "Pokémon Center Kyoto"
+  },
+  "40022": {
+   "en": "Pokémon Ctr. SKYTREE TOWN"
+  },
+  "40023": {
+   "en": "a Pokémon Store",
+   "de": "Pokémon Store"
+  },
+  "40024": {
+   "en": "a WCS",
+   "de": "WCS"
+  },
+  "40025": {
+   "en": "WCS 2016"
+  },
+  "40026": {
+   "en": "WCS 2017"
+  },
+  "40027": {
+   "en": "WCS 2018"
+  },
+  "40028": {
+   "en": "WCS 2019"
+  },
+  "40029": {
+   "en": "WCS 2020"
+  },
+  "40030": {
+   "en": "WCS 2021"
+  },
+  "40031": {
+   "en": "Worlds"
+  },
+  "40032": {
+   "en": "2016 Worlds",
+   "de": "Worlds 2016"
+  },
+  "40033": {
+   "en": "2017 Worlds",
+   "de": "Worlds 2017"
+  },
+  "40034": {
+   "en": "2018 Worlds",
+   "de": "Worlds 2018"
+  },
+  "40035": {
+   "en": "2019 Worlds",
+   "de": "Worlds 2019"
+  },
+  "40036": {
+   "en": "2020 Worlds",
+   "de": "Worlds 2020"
+  },
+  "40037": {
+   "en": "2021 Worlds",
+   "de": "Worlds 2021"
+  },
+  "40038": {
+   "en": "a VGE",
+   "de": "VGE"
+  },
+  "40039": {
+   "en": "VGE 2016"
+  },
+  "40040": {
+   "en": "VGE 2017"
+  },
+  "40041": {
+   "en": "VGE 2018"
+  },
+  "40042": {
+   "en": "VGE 2019"
+  },
+  "40043": {
+   "en": "VGE 2020"
+  },
+  "40044": {
+   "en": "VGE 2021"
+  },
+  "40045": {
+   "en": "a Pokémon event",
+   "de": "Pokémon-Veranstaltung"
+  },
+  "40046": {
+   "en": "a Battle Competition",
+   "de": "Kampfturnier"
+  },
+  "40047": {
+   "en": "a game event",
+   "de": "Videospiel-Veranstaltung"
+  },
+  "40048": {
+   "en": "the Pokémon Daisuki Club",
+   "de": "Pokémon Daisuki Club"
+  },
+  "40049": {
+   "en": "a Pokémon TV program",
+   "de": "Pokémon-TV-Programm"
+  },
+  "40050": {
+   "en": "a concert",
+   "de": "Konzert"
+  },
+  "40051": {
+   "en": "an online present",
+   "de": "Online-Geschenk"
+  },
+  "40052": {
+   "en": "the PGL",
+   "de": "PGL"
+  },
+  "40053": {
+   "en": "a 2016 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2016"
+  },
+  "40054": {
+   "en": "a 2017 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2017"
+  },
+  "40055": {
+   "en": "a 2018 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2018"
+  },
+  "40056": {
+   "en": "a 2019 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2019"
+  },
+  "40057": {
+   "en": "a 2020 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2020"
+  },
+  "40058": {
+   "en": "a 2021 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2021"
+  },
+  "40059": {
+   "en": "a Pokémon event",
+   "de": "Pokémon-Veranstaltung"
+  },
+  "40060": {
+   "en": "a 2016 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2016"
+  },
+  "40061": {
+   "en": "a 2017 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2017"
+  },
+  "40062": {
+   "en": "a 2018 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2018"
+  },
+  "40063": {
+   "en": "a 2019 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2019"
+  },
+  "40064": {
+   "en": "a 2020 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2020"
+  },
+  "40065": {
+   "en": "a 2021 Pokémon event",
+   "de": "Pokémon-Veranstaltung 2021"
+  },
+  "40066": {
+   "en": "PokéPark"
+  },
+  "40067": {
+   "en": "PokéPark 2016"
+  },
+  "40068": {
+   "en": "PokéPark 2017"
+  },
+  "40069": {
+   "en": "PokéPark 2018"
+  },
+  "40070": {
+   "en": "PokéPark 2019"
+  },
+  "40071": {
+   "en": "PokéPark 2020"
+  },
+  "40072": {
+   "en": "PokéPark 2021"
+  },
+  "40073": {
+   "en": "an event site",
+   "de": "Veranstaltung"
+  },
+  "40074": {
+   "en": "GAME FREAK"
+  },
+  "40075": {
+   "en": "a stadium",
+   "de": "Stadion"
+  },
+  "40076": {
+   "en": "VGC"
+  },
+  "40077": {
+   "en": "the VGC 2016",
+   "de": "VGC 2016"
+  },
+  "40078": {
+   "en": "the VGC 2017",
+   "de": "VGC 2017"
+  },
+  "40079": {
+   "en": "the VGC 2018",
+   "de": "VGC 2018"
+  },
+  "40080": {
+   "en": "the VGC 2019",
+   "de": "VGC 2019"
+  },
+  "40081": {
+   "en": "the VGC 2020",
+   "de": "VGC 2020"
+  },
+  "40082": {
+   "en": "the VGC 2021",
+   "de": "VGC 2021"
+  },
+  "40083": {
+   "en": "a Virtual Console game",
+   "de": "Virtual Console"
+  },
+  "40084": {
+   "en": "Pokémon GO"
+  },
+  "40085": {
+   "en": "Pokémon Bank"
+  },
+  "40086": {
+   "en": "a Pokémon shop",
+   "de": "Pokémon-Geschäft"
+  },
+  "40087": {
+   "en": "a demo version",
+   "de": "Demo-Version"
+  },
+  "40088": {
+   "en": "the Pokémon Trainer Club",
+   "de": "Pokémon Trainer Club"
+  },
+  "60001": {
+   "en": "a stranger",
+   "de": "Ferne Person"
+  },
+  "60002": {
+   "en": "Nursery helpers",
+   "de": "Hortleiterinnen"
+  },
+  "60003": {
+   "en": "a treasure hunter",
+   "de": "Schatzsucher"
+  },
+  "60004": {
+   "en": "an old hot-springs visitor",
+   "de": "Dame der Heißen Quellen"
+  }
+ }
+}

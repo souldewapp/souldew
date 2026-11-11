@@ -8,7 +8,7 @@ import { catalog, gameTitle } from '../lib/data.mjs';
 import { FirstSteps } from './firststeps.mjs';
 import { IS_MAC, IS_WIN, shortPath } from '../lib/platform.mjs';
 
-const SYS = { gb: 'GB', gbc: 'GBC', gba: 'GBA', nds: 'DS' };
+const SYS = { gb: 'GB', gbc: 'GBC', gba: 'GBA', nds: 'DS', '3ds': '3DS' };
 
 /** "Search my Mac" / "Search my PC" – the button's label on this computer (PC: Windows and Linux). */
 export const discoverLabel = () => (IS_MAC ? t('disc.button', 'Search my Mac') : t('disc.buttonPc', 'Search my PC'));
@@ -89,7 +89,7 @@ export async function addGamesFlow({ reloadLibrary, folder = false, toast } = {}
       const input = document.createElement('input');
       input.type = 'file';
       input.multiple = true;
-      input.accept = '.gb,.gbc,.gba,.nds,.zip,.xdelta,.vcdiff,.bps,.ups,.ips';
+      input.accept = '.gb,.gbc,.gba,.nds,.3ds,.cci,.cxi,.cia,.3dsx,.zcci,.zcxi,.z3dsx,.zip,.xdelta,.vcdiff,.bps,.ups,.ips';
       const files = await new Promise((resolve) => {
         input.onchange = () => resolve([...input.files]);
         input.addEventListener('cancel', () => resolve([]));
@@ -163,11 +163,11 @@ export function DropZone({ onAdded }) {
     }}>
     <${Icon} name="library" size=${36} />
     <p class="px" style="font-size:16px;margin-top:6px">${busy ? t('lib.importing', 'Importing …') : t('lib.drop', 'Drop ROMs, zips or patches here')}</p>
-    <p class="small faint">.gb · .gbc · .gba · .nds · .zip · .xdelta · .bps · .ups · .ips</p>
+    <p class="small faint">.gb · .gbc · .gba · .nds · .3ds · .cci · .cxi · .cia · .3dsx · .zip · .xdelta · .bps · .ups · .ips</p>
   </div>`;
 }
 
-const CART_KIND = { gb: 'gb', gbc: 'gb', gba: 'gba', nds: 'nds' };
+const CART_KIND = { gb: 'gb', gbc: 'gb', gba: 'gba', nds: 'nds', '3ds': 'nds' }; // a 3DS card has the DS card's shape
 
 // ---- covers: the catalog's, or the player's own picture (server/lib/covers.mjs) ---------------------------------
 // Own pictures are keyed game:<catalog id> · hack:<catalog id> · rom:<CRC32> (a ROM the catalog doesn't know).
@@ -361,7 +361,7 @@ export function LibraryView() {
 
     <div class="lib-head">
       <div class="seg" role="tablist" aria-label=${t('lib.filterSystem', 'Filter by system')}>
-        ${[['all', t('lib.all', 'All')], ['gb', 'Game Boy'], ['gbc', 'Game Boy Color'], ['gba', 'GBA'], ['nds', 'DS'], ['hacks', t('lib.hacks', 'ROM hacks')]]
+        ${[['all', t('lib.all', 'All')], ['gb', 'Game Boy'], ['gbc', 'Game Boy Color'], ['gba', 'GBA'], ['nds', 'DS'], ['3ds', '3DS'], ['hacks', t('lib.hacks', 'ROM hacks')]]
           .map(([k, l]) => html`<button role="tab" aria-selected=${filter === k} class=${filter === k ? 'on' : ''} onClick=${() => setFilter(k)}>${l}</button>`)}
       </div>
       <label class="check"><input type="checkbox" checked=${mine} onChange=${(e) => setMine(e.target.checked)} /><span>${t('lib.onlyMine', 'Only my games')}</span></label>
@@ -482,7 +482,7 @@ function GameDetail({ id, onClose, openHack }) {
       </div>
       <div class="stack">
         <dl class="facts">
-          <dt>${t('lib.system', 'System')}</dt><dd>${SYS[g.system] ? { gb: 'Game Boy', gbc: 'Game Boy Color', gba: 'Game Boy Advance', nds: 'Nintendo DS' }[g.system] : g.system}</dd>
+          <dt>${t('lib.system', 'System')}</dt><dd>${SYS[g.system] ? { gb: 'Game Boy', gbc: 'Game Boy Color', gba: 'Game Boy Advance', nds: 'Nintendo DS', '3ds': 'Nintendo 3DS' }[g.system] : g.system}</dd>
           <dt>${t('lib.generation', 'Generation')}</dt><dd>${g.generation}</dd>
           ${g.releaseYear && html`<dt>${t('lib.year', 'Released')}</dt><dd>${g.releaseYear}</dd>`}
           <dt>${t('lib.randomizer', 'Randomizer')}</dt><dd>${g.uprSupported ? t('lib.yes', 'Supported') : t('lib.no', 'Not supported')}</dd>
@@ -598,7 +598,9 @@ function RomDetail({ id, onClose }) {
           <dt>${t('lib.file', 'File')}</dt><dd class="mono small">${r.name}</dd>
           <dt>${t('lib.system', 'System')}</dt><dd>${SYS[r.system] || r.system}</dd>
           <dt>${t('lib.code', 'Game code')}</dt><dd class="mono">${r.code || '–'}</dd>
-          <dt>CRC32</dt><dd class="mono">${r.crc}</dd>
+          ${r.system === '3ds'
+            ? html`<dt>${t('lib.titleId', 'Title ID')}</dt><dd class="mono">${r.titleId || '–'}</dd>`
+            : html`<dt>CRC32</dt><dd class="mono">${r.crc}</dd>`}
         </dl>
         <p class="small muted">${t('lib.unknownRom', 'This ROM is not in the catalog (maybe a hack or another region). You can still play it.')}</p>
         <${PlayButtons} romId=${r.id} system=${r.system} close=${onClose} />
@@ -618,6 +620,9 @@ export function liveSupportText(g) {
     3: t('lib.liveGen3', 'Party live incl. catch location'),
     4: t('lib.liveGen45', 'Party + PC boxes live incl. catch location'),
     5: t('lib.liveGen45', 'Party + PC boxes live incl. catch location'),
+    // 3DS: through Azahar's RPC server – the party (no PC boxes, no place sign or battle panel yet)
+    6: t('lib.liveGen67', 'Party live incl. catch location (in Azahar)'),
+    7: t('lib.liveGen67', 'Party live incl. catch location (in Azahar)'),
   };
   return map[g.generation] || '–';
 }

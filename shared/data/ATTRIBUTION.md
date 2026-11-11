@@ -16,4 +16,9 @@ URL patterns point to https://github.com/PokeAPI/sprites. The repository is dist
 CC0 1.0, but all image contents are © The Pokémon Company. Sprites are fetched at
 runtime or cached locally and are not redistributed.
 
+`locations_gen6.json` / `locations_gen7.json` (Gen 6/7 met location names, English and German) come from PKHeX
+(https://github.com/kwsch/PKHeX, GPL-3.0), `PKHeX.Core/Resources/text/locations/gen6|gen7`. The 3DS party addresses in
+`addresses.json` (platform `3ds`) follow Citra-Tracker v2, Pokémon Stream Tool and PokeReader (see `research/azahar.md`).
+The 3DS covers in `web/assets/covers/` come from libretro-thumbnails like the others.
+
 This project is not affiliated with or endorsed by Nintendo, Game Freak, The Pokémon Company or PokéAPI.

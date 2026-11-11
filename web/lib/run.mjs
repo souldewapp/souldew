@@ -21,11 +21,11 @@ export const liveFresh = (doc, slot, now = Date.now()) => {
 
 let LOC3 = null;
 let LOC2 = null;
+let LOC6 = null;
+let LOC7 = null;
 export async function loadLocationTables() {
-  [LOC3, LOC2] = await Promise.all([
-    fetch('/shared/data/locations_gen3.json').then((r) => r.json()).catch(() => null),
-    fetch('/shared/data/locations_gen2_crystal.json').then((r) => r.json()).catch(() => null),
-  ]);
+  const j = (f) => fetch(`/shared/data/${f}`).then((r) => r.json()).catch(() => null);
+  [LOC3, LOC2, LOC6, LOC7] = await Promise.all([j('locations_gen3.json'), j('locations_gen2_crystal.json'), j('locations_gen6.json'), j('locations_gen7.json')]);
 }
 
 // The running game's own place names (shared/live/romloc.mjs – web/views/location.mjs hands them over when the ROM's
@@ -46,6 +46,10 @@ export function locationName(gen, id) {
     table = id >= 2000 ? g?.locationsSpecial?.[String(id)] : g?.locations?.[id];
   } else if (gen === 3) table = LOC3?.map?.[id]?.[lang] || LOC3?.map?.[id]?.en;
   else if (gen === 2) table = LOC2?.map?.[id]?.[lang] || LOC2?.map?.[id]?.en;
+  else if (gen === 6 || gen === 7) {
+    const L = gen === 6 ? LOC6 : LOC7;
+    table = L?.map?.[id]?.[lang] || L?.map?.[id]?.en;
+  }
   const own = ROM_PLACES?.gen === gen ? ROM_PLACES.names[id] || '' : '';
   return placeName({ romName: own }, { rom: ROM_PLACES, table: table || '', lang: currentLang() }) || `#${id}`;
 }
@@ -60,7 +64,7 @@ export function profileOf(manifest) {
 }
 
 export function genOfRun(manifest, runData) {
-  return runData?.gen || { gb: 1, gbc: 2, gba: 3, nds: 4 }[manifest?.game?.system] || 4;
+  return runData?.gen || { gb: 1, gbc: 2, gba: 3, nds: 4, '3ds': 6 }[manifest?.game?.system] || 4;
 }
 
 /** 'classic' | 'hardcore' | 'custom' – which preset a set of rules matches (caps `true` count as 'strict'). */
@@ -191,6 +195,13 @@ export function locationChoices(manifest, gen) {
   }
   if (gen === 2) return rows(LOC2?.map, (id) => id > 0); // Johto + Kanto landmarks, the same in Gold/Silver
   if (gen === 4) return (gen4data()?.locations || []).map((name, id) => ({ id, name })).filter((r) => r.id > 0 && r.id < 126 && r.name);
+  // Gen 6: X/Y's Kalos is 2–168, Omega Ruby/Alpha Sapphire's Hoenn 170 on; Gen 7: Alola (Sun/Moon and Ultra Sun/Moon).
+  // Places only: the 30000s+ are link trades, events and eggs; id 2/4 Mystery Zone / Faraway Place.
+  if (gen === 6) {
+    const oras = /^EC[RL]/.test(code);
+    return rows(LOC6?.map, (id) => id > 4 && id < 30000 && (oras ? id >= 170 : id < 170));
+  }
+  if (gen === 7) return rows(LOC7?.map, (id) => id > 4 && id < 30000);
   return [];
 }
 

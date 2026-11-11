@@ -47,7 +47,7 @@ export function CartInsert({ target, color, sound = true, onDone }) {
       removeEventListener('keydown', skip);
     };
   }, []);
-  const kind = { gb: 'gb', gbc: 'gb', gba: 'gba', nds: 'nds' }[target.system] || 'gb';
+  const kind = { gb: 'gb', gbc: 'gb', gba: 'gba', nds: 'nds', '3ds': 'nds' }[target.system] || 'gb';
   return html`<div class=${`cart-insert ci-${kind}`} onClick=${() => skipRef.current?.()} aria-hidden="true">
     <div class="ci-stage">
       <div class="ci-cart"><${Cart} big title=${target.label} cover=${insertCover(library, target, manifest)} color=${color} system=${target.system} /></div>

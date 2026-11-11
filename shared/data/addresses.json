@@ -1588,6 +1588,141 @@
     "source": "NDS-Ironmon-Tracker playerBattleBase (community, unverified)"
    },
    "verified": "community only; no decomp/symbols for Gen 5"
+  },
+  {
+   "id": "xy",
+   "name": "Pokémon X / Y",
+   "gen": 6,
+   "platform": "3ds",
+   "language": "all",
+   "match": {
+    "gameCode": [
+     "EKJA",
+     "EK2A"
+    ],
+    "titleIds": [
+     "0004000000055D00",
+     "0004000000055E00"
+    ],
+    "note": "3DS: the running title ID from Azahar’s process list; the game code from the file"
+   },
+   "memory": {
+    "region": "game process (Azahar RPC)",
+    "note": "virtual addresses of the game process, read through Azahar’s RPC server"
+   },
+   "structSize": 260,
+   "maxParty": 6,
+   "partyAddrs": [
+    {
+     "version": "1.5",
+     "addr": "0x08CE1CF8",
+     "badges": "0x08C6A6B0"
+    },
+    {
+     "version": "1.0",
+     "addr": "0x08CE1CE8",
+     "badges": "0x08C6A6A0"
+    }
+   ],
+   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158"
+  },
+  {
+   "id": "oras",
+   "name": "Pokémon Omega Ruby / Alpha Sapphire",
+   "gen": 6,
+   "platform": "3ds",
+   "language": "all",
+   "match": {
+    "gameCode": [
+     "ECRA",
+     "ECRP",
+     "ECLA"
+    ],
+    "titleIds": [
+     "000400000011C400",
+     "000400000011C500"
+    ],
+    "note": "3DS: the running title ID from Azahar’s process list; the game code from the file"
+   },
+   "memory": {
+    "region": "game process (Azahar RPC)",
+    "note": "virtual addresses of the game process, read through Azahar’s RPC server"
+   },
+   "structSize": 260,
+   "maxParty": 6,
+   "partyAddrs": [
+    {
+     "version": "1.4",
+     "addr": "0x08CFB26C",
+     "badges": "0x08C71DC4"
+    },
+    {
+     "version": "1.0",
+     "addr": "0x08CF727C",
+     "badges": "0x08C6DDD4"
+    }
+   ],
+   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158"
+  },
+  {
+   "id": "sm",
+   "name": "Pokémon Sun / Moon",
+   "gen": 7,
+   "platform": "3ds",
+   "language": "all",
+   "match": {
+    "gameCode": [
+     "BNDA",
+     "BNEA"
+    ],
+    "titleIds": [
+     "0004000000164800",
+     "0004000000175E00"
+    ],
+    "note": "3DS: the running title ID from Azahar’s process list; the game code from the file"
+   },
+   "memory": {
+    "region": "game process (Azahar RPC)",
+    "note": "virtual addresses of the game process, read through Azahar’s RPC server"
+   },
+   "structSize": 260,
+   "maxParty": 6,
+   "partyAddrs": [
+    {
+     "addr": "0x34195E10"
+    }
+   ],
+   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158"
+  },
+  {
+   "id": "usum",
+   "name": "Pokémon Ultra Sun / Ultra Moon",
+   "gen": 7,
+   "platform": "3ds",
+   "language": "all",
+   "match": {
+    "gameCode": [
+     "A2AA",
+     "A2BA"
+    ],
+    "titleIds": [
+     "00040000001B5000",
+     "00040000001B5100"
+    ],
+    "note": "3DS: the running title ID from Azahar’s process list; the game code from the file"
+   },
+   "memory": {
+    "region": "game process (Azahar RPC)",
+    "note": "virtual addresses of the game process, read through Azahar’s RPC server"
+   },
+   "structSize": 260,
+   "maxParty": 6,
+   "partyAddrs": [
+    {
+     "addr": "0x33F7FA44"
+    }
+   ],
+   "source": "Citra-Tracker v2 (kcblack42) and Pokemon Stream Tool (Readek): party at the 1.0 address, XY 1.5 / ORAS 1.4 (and SM/USUM) also PokeReader (zaksabeast, reader_core/src/gen6|gen7/reader.rs); slots 0x1E4 apart, the PK6/PK7 party stats at +0x158"
   }
  ]
 }

@@ -1,13 +1,13 @@
 // Verifying and patching base ROMs (cached on disk by patch hash + base CRC).
-import { readFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { CACHE_DIR } from './paths.mjs';
-import { loadFile } from './library.mjs';
-import { writeFileAtomic } from './fsutil.mjs';
+import { loadFile, resolveId, ctrInfo } from './library.mjs';
 import { crc32Hex } from '../../shared/checksum.mjs';
 import { applyPatch, detectPatchFormat } from '../../shared/patchers.mjs';
-import { identifyRom } from '../../shared/romid.mjs';
+import { identifyRom, isCtrExt } from '../../shared/romid.mjs';
+import { writeFileAtomic, httpError } from './fsutil.mjs';
 
 /** Known patches, keyed by SHA-1 of the patch file (exact expected results). */
 export const KNOWN_PATCHES = {
@@ -36,6 +36,8 @@ function extFor(id, rom) {
  * Returns { path, crc, sha1, size, baseCrc, header, fromCache, patchName, system }.
  */
 export function preparePatchedRom(romId, patchId, onLog = () => {}, config = {}) {
+  const idExt = extname(String(romId).split('::').pop()).slice(1).toLowerCase();
+  if (isCtrExt(idExt)) return prepareCtr(romId, patchId, onLog, config, idExt);
   const rom = loadFile(romId, config);
   const baseCrc = crc32Hex(rom);
   const ext = extFor(romId, rom);
@@ -75,4 +77,19 @@ export function preparePatchedRom(romId, patchId, onLog = () => {}, config = {})
 
 export function fileSha1(path) {
   return sha1(readFileSync(path));
+}
+
+/**
+ * A 3DS game is played from the library file itself: 1–4 GB, never read whole (no CRC32 / SHA-1, no patch, no
+ * randomizer). Returns the same shape as preparePatchedRom with the checksums null and `ext` the file's own extension.
+ */
+function prepareCtr(romId, patchId, onLog, config, ext) {
+  if (patchId) throw httpError(400, '3DS-Spiele lassen sich hier nicht patchen', 'ctrNoPatch');
+  const { abs, entry } = resolveId(romId, config);
+  if (entry) throw httpError(400, '3DS-Spiele müssen entpackt in der Bibliothek liegen', 'ctrInArchive');
+  const header = ctrInfo(abs, ext);
+  if (!header) throw httpError(400, 'Kein 3DS-Spiel', 'notCtr');
+  const size = statSync(abs).size;
+  onLog(`3DS-Spiel ${header.productCode || header.titleId || ''} (${(size / 1048576).toFixed(0)} MB)`);
+  return { path: abs, crc: null, sha1: null, size, baseCrc: null, header, fromCache: false, patchName: null, system: '3ds', ext };
 }

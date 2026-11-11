@@ -31,6 +31,16 @@ export const EMULATORS = {
     app: /^mGBA\.app$/i,
     exe: /^(?:mGBA(?:\.exe)?|mgba-qt|mGBA[\w.+-]*\.AppImage|io\.mgba\.mGBA)$/i,
   },
+  // Nintendo 3DS. Live data through its RPC server (server/lib/azahar.mjs) – switched on from the play view.
+  azahar: {
+    name: 'Azahar',
+    systems: ['3ds'],
+    repo: 'azahar-emu/azahar',
+    live: 'rpc',
+    assets: { darwin: /^azahar-macos-universal-[\w.]+\.zip$/i, win32: { x64: /^azahar-windows-msvc-[\w.]+\.zip$/i }, linux: { x64: /^azahar\.AppImage$/i } },
+    app: /^Azahar\.app$/i,
+    exe: /^(?:azahar(?:\.exe)?|azahar[\w.+-]*\.AppImage|org\.azahar_emu\.Azahar)$/i,
+  },
 };
 
 /**
@@ -57,7 +67,7 @@ export function pickAsset(assets, id, platform = process.platform, arch = proces
 /** Where the official Windows installers put the emulators (mGBA's installer; melonDS only ships a zip). */
 export function windowsSystemPaths(id, env = process.env) {
   const bases = [env.ProgramFiles, env['ProgramFiles(x86)'], env.LOCALAPPDATA && join(env.LOCALAPPDATA, 'Programs')].filter(Boolean);
-  const exe = id === 'mgba' ? ['mGBA', 'mGBA.exe'] : id === 'melonds' ? ['melonDS', 'melonDS.exe'] : null;
+  const exe = id === 'mgba' ? ['mGBA', 'mGBA.exe'] : id === 'melonds' ? ['melonDS', 'melonDS.exe'] : id === 'azahar' ? ['Azahar', 'azahar.exe'] : null;
   return exe ? bases.map((b) => join(b, ...exe)) : [];
 }
 
@@ -69,6 +79,7 @@ export function linuxSystemPaths(id, home = process.env.HOME || '') {
   const names = {
     melonds: { appimage: ['melonDS.AppImage', 'melonDS-x86_64.AppImage'], bin: ['melonDS'], flatpak: 'net.kuribo64.melonDS' },
     mgba: { appimage: ['mGBA.AppImage', 'mgba.AppImage'], bin: ['mgba-qt'], flatpak: 'io.mgba.mGBA' },
+    azahar: { appimage: ['azahar.AppImage', 'Azahar.AppImage'], bin: ['azahar'], flatpak: 'org.azahar_emu.Azahar' },
   }[id];
   if (!names) return [];
   const h = (...p) => (home && posix.isAbsolute(home) ? [posix.join(home, ...p)] : []);
@@ -133,7 +144,7 @@ export function detectEmulator(id, customPath) {
     if (legacy) candidates.push({ path: legacy, source: 'app' });
   }
   if (process.platform === 'darwin') {
-    const appName = id === 'mgba' ? 'mGBA.app' : 'melonDS.app';
+    const appName = { mgba: 'mGBA.app', melonds: 'melonDS.app', azahar: 'Azahar.app' }[id];
     candidates.push({ path: `/Applications/${appName}`, source: 'system' }, { path: join(process.env.HOME || '', 'Applications', appName), source: 'system' });
   }
   if (process.platform === 'win32') {
@@ -202,9 +213,15 @@ export async function installEmulator(id) {
 export async function launchRom(id, romPath, { customPath, script } = {}) {
   const emu = detectEmulator(id, customPath);
   if (!emu.installed) throw new Error(`${EMULATORS[id]?.name || id} ist nicht installiert`);
-  const args = [romPath];
+  // A .cia isn't started from the file – Azahar installs it (File › Install CIA) and lists the game; open it empty.
+  const args = romPath && !(id === 'azahar' && /\.z?cia$/i.test(romPath)) ? [romPath] : [];
   let child;
   const exeName = basename(emu.path.replace(/[\\/]+$/, ''));
+  if (id === 'azahar') {
+    // One Azahar at a time: a second one would find its RPC port taken (no live data), and on macOS `open -a` only
+    // brings an open Azahar to the front without handing it the game.
+    if (emulatorRunning(/(?:^|[\\/"])azahar(?:\.exe)?(?:"|$)/im)) throw httpError(409, 'Azahar läuft schon – starte das Spiel dort oder schließe Azahar zuerst', 'emulatorOpen', { emu: 'Azahar' });
+  }
   if (process.platform === 'darwin' && /\.app$/i.test(exeName)) {
     if (!EMULATORS[id].app.test(exeName)) throw httpError(400, 'Ungültiger Emulator-Pfad', 'badEmulatorPath');
     child = spawn('open', ['-a', emu.path, '--args', ...args], { detached: true, stdio: 'ignore' });
@@ -248,9 +265,11 @@ export function revealInFileManager(path) {
   child.unref();
 }
 
-/** Is an external emulator process running? (It would overwrite edits to the .sav.) */
-export function emulatorRunning() {
-  const names = /melonDS|NooDS|DeSmuME|desmume|mGBA/i;
+/**
+ * Is an external emulator process running? (It would overwrite edits to the .sav.) `names`: which program names
+ * count (default: every emulator souldew knows).
+ */
+export function emulatorRunning(names = /melonDS|NooDS|DeSmuME|desmume|mGBA|azahar/i) {
   try {
     if (process.platform === 'win32') {
       return names.test(spawnSync('tasklist', ['/FO', 'CSV', '/NH'], { encoding: 'utf8', windowsHide: true }).stdout || '');

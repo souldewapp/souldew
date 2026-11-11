@@ -1,0 +1,1003 @@
+{
+ "_doc": "Gen 6 met / egg location (PK6 0xDA / 0xD8) -> name. X/Y and Omega Ruby/Alpha Sapphire share the list: even ids are places, odd lines are subtitles of the place before (skipped here). 30000s: link trades and transfers, 40000s: event places, 60000s: eggs.",
+ "_source": "PKHeX PKHeX.Core/Resources/text/locations/gen6/text_xy_{00000,30000,40000,60000}_{en,de}.txt (line index = id offset)",
+ "map": {
+  "2": {
+   "en": "Mystery Zone",
+   "de": "Mysteriöser Ort"
+  },
+  "4": {
+   "en": "Faraway Place",
+   "de": "Entfernter Ort"
+  },
+  "6": {
+   "en": "Vaniville Town",
+   "de": "Escissia"
+  },
+  "8": {
+   "en": "Route 1"
+  },
+  "10": {
+   "en": "Aquacorde Town",
+   "de": "Aquarellia"
+  },
+  "12": {
+   "en": "Route 2"
+  },
+  "14": {
+   "en": "Santalune Forest",
+   "de": "Nouvaria-Wald"
+  },
+  "16": {
+   "en": "Route 3"
+  },
+  "18": {
+   "en": "Santalune City",
+   "de": "Nouvaria City"
+  },
+  "20": {
+   "en": "Route 4"
+  },
+  "22": {
+   "en": "Lumiose City",
+   "de": "Illumina City"
+  },
+  "24": {
+   "en": "Prism Tower",
+   "de": "Prismaturm"
+  },
+  "26": {
+   "en": "Lysandre Labs",
+   "de": "Labor von Flordelis"
+  },
+  "28": {
+   "en": "Route 5"
+  },
+  "30": {
+   "en": "Camphrier Town",
+   "de": "Vanitéa"
+  },
+  "32": {
+   "en": "Shabboneau Castle",
+   "de": "Château Tristesse"
+  },
+  "34": {
+   "en": "Route 6"
+  },
+  "36": {
+   "en": "Parfum Palace",
+   "de": "Magnum-Opus-Palast"
+  },
+  "38": {
+   "en": "Route 7"
+  },
+  "40": {
+   "en": "Cyllage City",
+   "de": "Relievera City"
+  },
+  "42": {
+   "en": "Route 8"
+  },
+  "44": {
+   "en": "Ambrette Town",
+   "de": "Petrophia"
+  },
+  "46": {
+   "en": "Route 9"
+  },
+  "48": {
+   "en": "Battle Chateau",
+   "de": "Kampfschloss"
+  },
+  "50": {
+   "en": "Route 10"
+  },
+  "52": {
+   "en": "Geosenge Town",
+   "de": "Cromlexia"
+  },
+  "54": {
+   "en": "Route 11"
+  },
+  "56": {
+   "en": "Reflection Cave",
+   "de": "Spiegelhöhle"
+  },
+  "58": {
+   "en": "Shalour City",
+   "de": "Yantara City"
+  },
+  "60": {
+   "en": "Tower of Mastery",
+   "de": "Turm der Erkenntnis"
+  },
+  "62": {
+   "en": "Route 12"
+  },
+  "64": {
+   "en": "Coumarine City",
+   "de": "Tempera City"
+  },
+  "66": {
+   "en": "Route 13"
+  },
+  "68": {
+   "en": "Route 14"
+  },
+  "70": {
+   "en": "Laverre City",
+   "de": "Romantia City"
+  },
+  "72": {
+   "en": "Poké Ball Factory",
+   "de": "Pokéball-Fabrik"
+  },
+  "74": {
+   "en": "Route 15"
+  },
+  "76": {
+   "en": "Dendemille Town",
+   "de": "Frescora"
+  },
+  "78": {
+   "en": "Route 16"
+  },
+  "80": {
+   "en": "[~ 80]"
+  },
+  "82": {
+   "en": "Frost Cavern",
+   "de": "Frosthöhle"
+  },
+  "84": {
+   "en": "Route 17"
+  },
+  "86": {
+   "en": "Anistar City",
+   "de": "Fluxia City"
+  },
+  "88": {
+   "en": "Route 18"
+  },
+  "90": {
+   "en": "Couriway Town",
+   "de": "Mosaia"
+  },
+  "92": {
+   "en": "Route 19"
+  },
+  "94": {
+   "en": "Snowbelle City",
+   "de": "Fractalia City"
+  },
+  "96": {
+   "en": "Route 20"
+  },
+  "98": {
+   "en": "Pokémon Village",
+   "de": "Pokémon-Dorf"
+  },
+  "100": {
+   "en": "Route 21"
+  },
+  "102": {
+   "en": "Route 22"
+  },
+  "104": {
+   "en": "Victory Road",
+   "de": "Siegesstraße"
+  },
+  "106": {
+   "en": "Pokémon League",
+   "de": "Pokémon Liga"
+  },
+  "108": {
+   "en": "Kiloude City",
+   "de": "Batika City"
+  },
+  "110": {
+   "en": "Battle Maison",
+   "de": "Kampfhaus"
+  },
+  "112": {
+   "en": "Azure Bay",
+   "de": "Azurbucht"
+  },
+  "114": {
+   "en": "Dendemille Gate",
+   "de": "Frescora-Tor"
+  },
+  "116": {
+   "en": "Couriway Gate",
+   "de": "Mosaia-Tor"
+  },
+  "118": {
+   "en": "Ambrette Gate",
+   "de": "Petrophia-Tor"
+  },
+  "120": {
+   "en": "Lumiose Gate",
+   "de": "Illumina-Tor"
+  },
+  "122": {
+   "en": "Shalour Gate",
+   "de": "Yantara-Tor"
+  },
+  "124": {
+   "en": "Coumarine Gate",
+   "de": "Tempera-Tor"
+  },
+  "126": {
+   "en": "Laverre Gate",
+   "de": "Romantia-Tor"
+  },
+  "128": {
+   "en": "Anistar Gate",
+   "de": "Fluxia-Tor"
+  },
+  "130": {
+   "en": "Snowbelle Gate",
+   "de": "Fractalia-Tor"
+  },
+  "132": {
+   "en": "Glittering Cave",
+   "de": "Leuchthöhle"
+  },
+  "134": {
+   "en": "Connecting Cave",
+   "de": "Geolinkhöhle"
+  },
+  "136": {
+   "en": "Kalos Power Plant",
+   "de": "Kalos-Kraftwerk"
+  },
+  "138": {
+   "en": "Team Flare Secret HQ",
+   "de": "Flare-Geheimbasis"
+  },
+  "140": {
+   "en": "Terminus Cave",
+   "de": "Omega-Höhle"
+  },
+  "142": {
+   "en": "Lost Hotel",
+   "de": "Hotelruine"
+  },
+  "144": {
+   "en": "Chamber of Emptiness",
+   "de": "Kammer der Leere"
+  },
+  "146": {
+   "en": "Sea Spirit’s Den",
+   "de": "Meerestitanenhöhle"
+  },
+  "148": {
+   "en": "Friend Safari",
+   "de": "Kontaktsafari"
+  },
+  "150": {
+   "en": "Blazing Chamber",
+   "de": "Flammen-Saal"
+  },
+  "152": {
+   "en": "Flood Chamber",
+   "de": "Schleusen-Saal"
+  },
+  "154": {
+   "en": "Ironworks Chamber",
+   "de": "Rüstungs-Saal"
+  },
+  "156": {
+   "en": "Dragonmark Chamber",
+   "de": "Draco-Saal"
+  },
+  "158": {
+   "en": "Radiant Chamber",
+   "de": "Licht-Saal"
+  },
+  "160": {
+   "en": "Pokémon League Gate",
+   "de": "Tor zur Pokémon Liga"
+  },
+  "162": {
+   "en": "Lumiose Station",
+   "de": "Bahnhof von Illumina"
+  },
+  "164": {
+   "en": "Kiloude Station",
+   "de": "Bahnhof von Batika"
+  },
+  "166": {
+   "en": "Ambrette Aquarium",
+   "de": "Petrophia-Aquarium"
+  },
+  "168": {
+   "en": "Unknown Dungeon",
+   "de": "Geheimdungeon"
+  },
+  "170": {
+   "en": "Littleroot Town",
+   "de": "Wurzelheim"
+  },
+  "172": {
+   "en": "Oldale Town",
+   "de": "Rosaltstadt"
+  },
+  "174": {
+   "en": "Dewford Town",
+   "de": "Faustauhaven"
+  },
+  "176": {
+   "en": "Lavaridge Town",
+   "de": "Bad Lavastadt"
+  },
+  "178": {
+   "en": "Fallarbor Town",
+   "de": "Laubwechselfeld"
+  },
+  "180": {
+   "en": "Verdanturf Town",
+   "de": "Wiesenflur"
+  },
+  "182": {
+   "en": "Pacifidlog Town",
+   "de": "Floßbrunn"
+  },
+  "184": {
+   "en": "Petalburg City",
+   "de": "Blütenburg City"
+  },
+  "186": {
+   "en": "Slateport City",
+   "de": "Graphitport City"
+  },
+  "188": {
+   "en": "Mauville City",
+   "de": "Malvenfroh City"
+  },
+  "190": {
+   "en": "Rustboro City",
+   "de": "Metarost City"
+  },
+  "192": {
+   "en": "Fortree City",
+   "de": "Baumhausen City"
+  },
+  "194": {
+   "en": "Lilycove City",
+   "de": "Seegrasulb City"
+  },
+  "196": {
+   "en": "Mossdeep City",
+   "de": "Moosbach City"
+  },
+  "198": {
+   "en": "Sootopolis City",
+   "de": "Xeneroville"
+  },
+  "200": {
+   "en": "Ever Grande City",
+   "de": "Prachtpolis City"
+  },
+  "202": {
+   "en": "Pokémon League",
+   "de": "Pokémon Liga"
+  },
+  "204": {
+   "en": "Route 101"
+  },
+  "206": {
+   "en": "Route 102"
+  },
+  "208": {
+   "en": "Route 103"
+  },
+  "210": {
+   "en": "Route 104"
+  },
+  "212": {
+   "en": "Route 105"
+  },
+  "214": {
+   "en": "Route 106"
+  },
+  "216": {
+   "en": "Route 107"
+  },
+  "218": {
+   "en": "Route 108"
+  },
+  "220": {
+   "en": "Route 109"
+  },
+  "222": {
+   "en": "Route 110"
+  },
+  "224": {
+   "en": "Route 111"
+  },
+  "226": {
+   "en": "Route 112"
+  },
+  "228": {
+   "en": "Route 113"
+  },
+  "230": {
+   "en": "Route 114"
+  },
+  "232": {
+   "en": "Route 115"
+  },
+  "234": {
+   "en": "Route 116"
+  },
+  "236": {
+   "en": "Route 117"
+  },
+  "238": {
+   "en": "Route 118"
+  },
+  "240": {
+   "en": "Route 119"
+  },
+  "242": {
+   "en": "Route 120"
+  },
+  "244": {
+   "en": "Route 121"
+  },
+  "246": {
+   "en": "Route 122"
+  },
+  "248": {
+   "en": "Route 123"
+  },
+  "250": {
+   "en": "Route 124"
+  },
+  "252": {
+   "en": "Route 125"
+  },
+  "254": {
+   "en": "Route 126"
+  },
+  "256": {
+   "en": "Route 127"
+  },
+  "258": {
+   "en": "Route 128"
+  },
+  "260": {
+   "en": "Route 129"
+  },
+  "262": {
+   "en": "Route 130"
+  },
+  "264": {
+   "en": "Route 131"
+  },
+  "266": {
+   "en": "Route 132"
+  },
+  "268": {
+   "en": "Route 133"
+  },
+  "270": {
+   "en": "Route 134"
+  },
+  "272": {
+   "en": "Meteor Falls",
+   "de": "Meteorfälle"
+  },
+  "274": {
+   "en": "Rusturf Tunnel",
+   "de": "Metaflurtunnel"
+  },
+  "276": {
+   "en": "???"
+  },
+  "278": {
+   "en": "Desert Ruins",
+   "de": "Wüstenruine"
+  },
+  "280": {
+   "en": "Granite Cave",
+   "de": "Granithöhle"
+  },
+  "282": {
+   "en": "Petalburg Woods",
+   "de": "Blütenburgwald"
+  },
+  "284": {
+   "en": "Mt. Chimney",
+   "de": "Schlotberg"
+  },
+  "286": {
+   "en": "Jagged Pass",
+   "de": "Steilpass"
+  },
+  "288": {
+   "en": "Fiery Path",
+   "de": "Feuriger Pfad"
+  },
+  "290": {
+   "en": "Mt. Pyre",
+   "de": "Pyroberg"
+  },
+  "292": {
+   "en": "Team Aqua Hideout",
+   "de": "Team Aquas Versteck"
+  },
+  "294": {
+   "en": "Seafloor Cavern",
+   "de": "Tiefseehöhle"
+  },
+  "296": {
+   "en": "Cave of Origin",
+   "de": "Urzeithöhle"
+  },
+  "298": {
+   "en": "Victory Road",
+   "de": "Siegesstraße"
+  },
+  "300": {
+   "en": "Shoal Cave",
+   "de": "Küstenhöhle"
+  },
+  "302": {
+   "en": "New Mauville",
+   "de": "Neu Malvenfroh"
+  },
+  "304": {
+   "en": "Sea Mauville",
+   "de": "Seewoge Malvenfroh"
+  },
+  "306": {
+   "en": "Island Cave",
+   "de": "Inselhöhle"
+  },
+  "308": {
+   "en": "Ancient Tomb",
+   "de": "Grabmal"
+  },
+  "310": {
+   "en": "Sealed Chamber",
+   "de": "Siegelkammer"
+  },
+  "312": {
+   "en": "Scorched Slab",
+   "de": "Sonnengrotte"
+  },
+  "314": {
+   "en": "Team Magma Hideout",
+   "de": "Team Magmas Versteck"
+  },
+  "316": {
+   "en": "Sky Pillar",
+   "de": "Himmelturm"
+  },
+  "318": {
+   "en": "Battle Resort",
+   "de": "Kampfresort"
+  },
+  "320": {
+   "en": "Southern Island",
+   "de": "Insel im Süden"
+  },
+  "322": {
+   "en": "S.S. Tidal",
+   "de": "MS Tide"
+  },
+  "324": {
+   "en": "Safari Zone",
+   "de": "Safari-Zone"
+  },
+  "326": {
+   "en": "Mirage Forest",
+   "de": "Wunderwald"
+  },
+  "328": {
+   "en": "Mirage Cave",
+   "de": "Wunderhöhle"
+  },
+  "330": {
+   "en": "Mirage Island",
+   "de": "Wundereiland"
+  },
+  "332": {
+   "en": "Mirage Mountain",
+   "de": "Wunderberg"
+  },
+  "334": {
+   "en": "Trackless Forest",
+   "de": "Wilder Wald"
+  },
+  "336": {
+   "en": "Pathless Plain",
+   "de": "Namenlose Ebene"
+  },
+  "338": {
+   "en": "Nameless Cavern",
+   "de": "Unerforschte Höhle"
+  },
+  "340": {
+   "en": "Fabled Cave",
+   "de": "Rätselhafte Höhle"
+  },
+  "342": {
+   "en": "Gnarled Den",
+   "de": "Höhle der Spaltung"
+  },
+  "344": {
+   "en": "Crescent Isle",
+   "de": "Sichelinsel"
+  },
+  "346": {
+   "en": "Secret Islet",
+   "de": "Geheiminsel"
+  },
+  "348": {
+   "en": "Soaring in the sky",
+   "de": "Luftraum"
+  },
+  "350": {
+   "en": "Secret Shore",
+   "de": "Geheime Küste"
+  },
+  "352": {
+   "en": "Secret Meadow",
+   "de": "Geheime Blumenwiese"
+  },
+  "354": {
+   "en": "Secret Base",
+   "de": "Geheimbasis"
+  },
+  "30001": {
+   "en": "a Link Trade",
+   "de": "Linktausch"
+  },
+  "30002": {
+   "en": "a Link Trade",
+   "de": "Linktausch"
+  },
+  "30003": {
+   "en": "the Kanto region",
+   "de": "Kanto-Region"
+  },
+  "30004": {
+   "en": "the Johto region",
+   "de": "Johto-Region"
+  },
+  "30005": {
+   "en": "the Hoenn region",
+   "de": "Hoenn-Region"
+  },
+  "30006": {
+   "en": "the Sinnoh region",
+   "de": "Sinnoh-Region"
+  },
+  "30007": {
+   "en": "a distant land",
+   "de": "Entferntes Land"
+  },
+  "30008": {
+   "en": "----------",
+   "de": "－－－－－－－－－－"
+  },
+  "30009": {
+   "en": "the Unova region",
+   "de": "Einall-Region"
+  },
+  "30010": {
+   "en": "the Kalos region",
+   "de": "Kalos-Region"
+  },
+  "30011": {
+   "en": "Pokémon Link",
+   "de": "Pokémon-Link"
+  },
+  "40001": {
+   "en": "a lovely place",
+   "de": "Netter Ort"
+  },
+  "40002": {
+   "en": "a faraway place",
+   "de": "Entfernter Ort"
+  },
+  "40003": {
+   "en": "a Pokémon movie",
+   "de": "Pokémon-Film"
+  },
+  "40004": {
+   "en": "Pokémon Movie 13",
+   "de": "Pokémon-Film 2013"
+  },
+  "40005": {
+   "en": "Pokémon Movie 14",
+   "de": "Pokémon-Film 2014"
+  },
+  "40006": {
+   "en": "Pokémon Movie 15",
+   "de": "Pokémon-Film 2015"
+  },
+  "40007": {
+   "en": "Pokémon Movie 16",
+   "de": "Pokémon-Film 2016"
+  },
+  "40008": {
+   "en": "Pokémon Movie 17",
+   "de": "Pokémon-Film 2017"
+  },
+  "40009": {
+   "en": "Pokémon Movie 18",
+   "de": "Pokémon-Film 2018"
+  },
+  "40010": {
+   "en": "a Pokémon Center",
+   "de": "Pokémon-Center"
+  },
+  "40011": {
+   "en": "the Pokémon cartoon",
+   "de": "Pokémon-Zeichentrickserie"
+  },
+  "40012": {
+   "en": "PC Tokyo"
+  },
+  "40013": {
+   "en": "PC Osaka"
+  },
+  "40014": {
+   "en": "PC Fukuoka"
+  },
+  "40015": {
+   "en": "PC Nagoya"
+  },
+  "40016": {
+   "en": "PC Sapporo"
+  },
+  "40017": {
+   "en": "PC Yokohama"
+  },
+  "40018": {
+   "en": "PC Tohoku"
+  },
+  "40019": {
+   "en": "PC Tokyo Bay"
+  },
+  "40020": {
+   "en": "a Pokémon Store",
+   "de": "Pokémon Store"
+  },
+  "40021": {
+   "en": "a WCS",
+   "de": "WCS"
+  },
+  "40022": {
+   "en": "WCS 2013"
+  },
+  "40023": {
+   "en": "WCS 2014"
+  },
+  "40024": {
+   "en": "WCS 2015"
+  },
+  "40025": {
+   "en": "WCS 2016"
+  },
+  "40026": {
+   "en": "WCS 2017"
+  },
+  "40027": {
+   "en": "WCS 2018"
+  },
+  "40028": {
+   "en": "Worlds"
+  },
+  "40029": {
+   "en": "Worlds 2013"
+  },
+  "40030": {
+   "en": "Worlds 2014"
+  },
+  "40031": {
+   "en": "Worlds 2015"
+  },
+  "40032": {
+   "en": "Worlds 2016"
+  },
+  "40033": {
+   "en": "Worlds 2017"
+  },
+  "40034": {
+   "en": "Worlds 2018"
+  },
+  "40035": {
+   "en": "a VGE",
+   "de": "VGE"
+  },
+  "40036": {
+   "en": "VGE 2013"
+  },
+  "40037": {
+   "en": "VGE 2014"
+  },
+  "40038": {
+   "en": "VGE 2015"
+  },
+  "40039": {
+   "en": "VGE 2016"
+  },
+  "40040": {
+   "en": "VGE 2017"
+  },
+  "40041": {
+   "en": "VGE 2018"
+  },
+  "40042": {
+   "en": "a Pokémon event",
+   "de": "Pokémon Event"
+  },
+  "40043": {
+   "en": "a Battle Competition",
+   "de": "Kampfturnier"
+  },
+  "40044": {
+   "en": "a game event",
+   "de": "Videospiel-Veranstaltung"
+  },
+  "40045": {
+   "en": "the Pokémon Fan Club",
+   "de": "Pokémon Fan Club"
+  },
+  "40046": {
+   "en": "a Pokémon TV program",
+   "de": "Pokémon-TV-Programm"
+  },
+  "40047": {
+   "en": "a concert",
+   "de": "Konzert"
+  },
+  "40048": {
+   "en": "an online Present",
+   "de": "Online-Geschenk"
+  },
+  "40049": {
+   "en": "the PGL",
+   "de": "PGL"
+  },
+  "40050": {
+   "en": "Pokémon Event 13",
+   "de": "Pokémon Event 2013"
+  },
+  "40051": {
+   "en": "Pokémon Event 14",
+   "de": "Pokémon Event 2014"
+  },
+  "40052": {
+   "en": "Pokémon Event 15",
+   "de": "Pokémon Event 2015"
+  },
+  "40053": {
+   "en": "Pokémon Event 16",
+   "de": "Pokémon Event 2016"
+  },
+  "40054": {
+   "en": "Pokémon Event 17",
+   "de": "Pokémon Event 2017"
+  },
+  "40055": {
+   "en": "Pokémon Event 18",
+   "de": "Pokémon Event 2018"
+  },
+  "40056": {
+   "en": "Pokémon Festa"
+  },
+  "40057": {
+   "en": "Pokémon Festa 13",
+   "de": "Pokémon Festa 2013"
+  },
+  "40058": {
+   "en": "Pokémon Festa 14",
+   "de": "Pokémon Festa 2014"
+  },
+  "40059": {
+   "en": "Pokémon Festa 15",
+   "de": "Pokémon Festa 2015"
+  },
+  "40060": {
+   "en": "Pokémon Festa 16",
+   "de": "Pokémon Festa 2016"
+  },
+  "40061": {
+   "en": "Pokémon Festa 17",
+   "de": "Pokémon Festa 2017"
+  },
+  "40062": {
+   "en": "Pokémon Festa 18",
+   "de": "Pokémon Festa 2018"
+  },
+  "40063": {
+   "en": "POKÉPARK",
+   "de": "PokéPark"
+  },
+  "40064": {
+   "en": "POKÉPARK",
+   "de": "PokéPark 2013"
+  },
+  "40065": {
+   "en": "POKÉPARK",
+   "de": "PokéPark 2014"
+  },
+  "40066": {
+   "en": "POKÉPARK",
+   "de": "PokéPark 2015"
+  },
+  "40067": {
+   "en": "POKÉPARK",
+   "de": "PokéPark 2016"
+  },
+  "40068": {
+   "en": "POKÉPARK",
+   "de": "PokéPark 2017"
+  },
+  "40069": {
+   "en": "POKÉPARK",
+   "de": "PokéPark 2018"
+  },
+  "40070": {
+   "en": "an event site",
+   "de": "Veranstaltung"
+  },
+  "40071": {
+   "en": "GAME FREAK"
+  },
+  "40072": {
+   "en": "a stadium",
+   "de": "Stadion"
+  },
+  "40073": {
+   "en": "a VGC",
+   "de": "VGC"
+  },
+  "40074": {
+   "en": "the VGC 2013",
+   "de": "VGC 2013"
+  },
+  "40075": {
+   "en": "the VGC 2014",
+   "de": "VGC 2014"
+  },
+  "40076": {
+   "en": "the VGC 2015",
+   "de": "VGC 2015"
+  },
+  "40077": {
+   "en": "the VGC 2016",
+   "de": "VGC 2016"
+  },
+  "40078": {
+   "en": "the VGC 2017",
+   "de": "VGC 2017"
+  },
+  "40079": {
+   "en": "the VGC 2018",
+   "de": "VGC 2018"
+  },
+  "60001": {
+   "en": "a stranger",
+   "de": "Ferne Person"
+  },
+  "60002": {
+   "en": "Day Care helpers",
+   "de": "Pensionsleiter"
+  },
+  "60003": {
+   "en": "a treasure hunter",
+   "de": "Schatzsucher"
+  },
+  "60004": {
+   "en": "an old hot-springs visitor",
+   "de": "Dame der Heißen Quellen"
+  }
+ }
+}

@@ -12,8 +12,8 @@ export const COVER_LIMIT = 4 * 1024 * 1024;
 export const COVER_TYPES = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' };
 
 // game:<catalog id> · hack:<catalog id> · rom:<CRC32> (a ROM the catalog doesn't know – by content, so the picture
-// stays when the file is renamed or moved)
-const ID = /^(?:(?:game|hack):[a-z0-9][a-z0-9-]{0,79}|rom:[0-9A-F]{8})$/;
+// stays when the file is renamed or moved) · ctr:<title ID> (a 3DS file the catalog doesn't know – no CRC32 there)
+const ID = /^(?:(?:game|hack):[a-z0-9][a-z0-9-]{0,79}|rom:[0-9A-F]{8}|ctr:[0-9A-F]{16})$/;
 
 export function checkCoverId(id) {
   if (typeof id !== 'string' || !ID.test(id)) throw httpError(400, 'Ungültige Bild-ID', 'badCoverId');

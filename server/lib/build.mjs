@@ -1,5 +1,6 @@
 // Run creation: patch once, randomize per player with fixed seeds, write manifest + run pack.
-import { mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync, copyFileSync, rmSync, statSync, renameSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync, copyFileSync, rmSync, statSync, renameSync, linkSync, constants as fsConstants } from 'node:fs';
+import { copyFile } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { RUNS_DIR } from './paths.mjs';
@@ -331,6 +332,22 @@ export function runPack(m) {
  *         seeds: {p1, …, pN}, players: {p1:{name}, …, pN:{name}}, buildFor: ['p1', …], identity?: {id, room, secret}, rules }
  * A Nuzlocke has p1 only, a SoulLink 2–4 players; buildFor defaults to every slot of the run.
  */
+/**
+ * A 3DS game file into the run folder without reading it: a hard link (same drive – instant, no extra space), else a
+ * copy-on-write clone (APFS, Btrfs) or, failing both, a plain copy off the main thread.
+ */
+async function placeLargeRom(src, dest, onLog) {
+  rmSync(dest, { force: true });
+  try {
+    linkSync(src, dest);
+    return;
+  } catch {
+    // another drive, or a file system without hard links
+  }
+  onLog('Kopiere das 3DS-Spiel in den Run-Ordner …');
+  await copyFile(src, dest, fsConstants.COPYFILE_FICLONE);
+}
+
 export async function buildRun(opts, onLog = () => {}) {
   const identity = opts.identity || newRunIdentity();
   const isNew = !existsSync(join(runDir(identity.id), 'run.json'));
@@ -354,6 +371,7 @@ async function buildInto(opts, onLog) {
   const now = new Date().toISOString();
 
   const patched = preparePatchedRom(opts.romId, opts.patchId || null, onLog, opts.config || {});
+  const ctr = patched.system === '3ds'; // 3DS: no randomizer, the game file linked/copied as it is (1–4 GB)
   const manifest = {
     ...(existing || {}),
     id: identity.id,
@@ -369,7 +387,7 @@ async function buildInto(opts, onLog) {
     game: { id: opts.gameId || existing?.game?.id || null, system: patched.system, code: patched.header?.code || '', title: patched.header?.title || '', hackId: opts.hackId || null },
     patchedSha1: patched.sha1,
     randomizer: {
-      enabled: opts.randomize !== false,
+      enabled: opts.randomize !== false && !ctr,
       tool: 'UPR ZX 4.6.1 + SoulLinkBridge',
       values: opts.values || {},
       seeds: seedsFor(slots, opts.seeds || existing?.randomizer?.seeds, !!opts.sharedSeed),
@@ -383,7 +401,7 @@ async function buildInto(opts, onLog) {
 
   const gameLabel = (patched.patchName || opts.gameTitle || patched.header?.title || 'Pokemon').replace(/^Pokémon\s*/i, '').replace(/\.(xdelta|vcdiff|xdelta3|bps|ups|ips)$/i, '')
     .replace(/[\\/:*?"<>|\u0000-\u001f\u007f]+/g, '').trim() || 'Pokemon'; // becomes part of a file name
-  const ext = patched.system || 'nds';
+  const ext = patched.ext || patched.system || 'nds';
   // Equal player names would make those players share (and overwrite) one ROM file.
   const labels = outputLabels(players);
   for (const slot of buildFor) {
@@ -404,12 +422,16 @@ async function buildInto(opts, onLog) {
       for (const w of res.warnings) if (!manifest.warnings.includes(w)) manifest.warnings.push(w);
       manifest.randomizer.settingsString = res.settingsString;
       onLog(`Fertig in ${((Date.now() - t) / 1000).toFixed(1)} s`);
+    } else if (ctr) {
+      await placeLargeRom(patched.path, romOut, onLog);
+      rmSync(dataOut, { force: true });
+      rmSync(logOut, { force: true });
     } else {
       copyFileSync(patched.path, romOut);
       rmSync(dataOut, { force: true });
       rmSync(logOut, { force: true });
     }
-    const sha1 = fileSha1(romOut);
+    const sha1 = ctr ? null : fileSha1(romOut);
     manifest.outputs[slot] = {
       rom: basename(romOut),
       log: manifest.randomizer.enabled ? basename(logOut) : null,

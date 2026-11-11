@@ -5,7 +5,8 @@
   "titleList": "community popularity list (titles only, no links)",
   "dats": "libretro-database metadat/no-intro (2026-10-07)",
   "covers": "libretro-thumbnails",
-  "upr": "Universal Pokemon Randomizer ZX gen1-5 offsets INI"
+  "upr": "Universal Pokemon Randomizer ZX gen1-5 offsets INI",
+  "dats3ds": "libretro-database metadat/no-intro Nintendo 3DS (serials); title IDs of the cartridges"
  },
  "games": [
   {
@@ -1443,6 +1444,159 @@
    "coverLocal": "assets/covers/pokemon-white-2-de.png",
    "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_DS/master/Named_Titles/Pokemon%20-%20Weisse%20Edition%202%20%28Germany%29%20%28NDSi%20Enhanced%29.png",
    "variantOf": "pokemon-white-2"
+  },
+  {
+   "id": "pokemon-x",
+   "title": "Pokémon X",
+   "titleDe": "Pokémon X",
+   "system": "3ds",
+   "generation": 6,
+   "region": "World",
+   "noIntroName": "Pokemon X (USA) (En,Ja,Fr,De,Es,It,Ko)",
+   "serial": "EKJA",
+   "titleIds": [
+    "0004000000055D00"
+   ],
+   "releaseYear": 2013,
+   "color": "#1F5DA8",
+   "uprSupported": false,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Boxarts/Pokemon%20X%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CKo%29.png",
+   "coverLocal": "assets/covers/pokemon-x.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Titles/Pokemon%20X%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CKo%29.png"
+  },
+  {
+   "id": "pokemon-y",
+   "title": "Pokémon Y",
+   "titleDe": "Pokémon Y",
+   "system": "3ds",
+   "generation": 6,
+   "region": "World",
+   "noIntroName": "Pokemon Y (USA) (En,Ja,Fr,De,Es,It,Ko)",
+   "serial": "EK2A",
+   "titleIds": [
+    "0004000000055E00"
+   ],
+   "releaseYear": 2013,
+   "color": "#B5122B",
+   "uprSupported": false,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Boxarts/Pokemon%20Y%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CKo%29.png",
+   "coverLocal": "assets/covers/pokemon-y.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Titles/Pokemon%20Y%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CKo%29.png"
+  },
+  {
+   "id": "pokemon-omega-ruby",
+   "title": "Pokémon Omega Ruby",
+   "titleDe": "Pokémon Omega Rubin",
+   "system": "3ds",
+   "generation": 6,
+   "region": "World",
+   "noIntroName": "Pokemon Omega Ruby (USA) (En,Ja,Fr,De,Es,It,Ko)",
+   "serial": "ECRA",
+   "productCode": "ECRP",
+   "titleIds": [
+    "000400000011C400"
+   ],
+   "releaseYear": 2014,
+   "color": "#A3172B",
+   "uprSupported": false,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Boxarts/Pokemon%20Omega%20Ruby%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CKo%29.png",
+   "coverLocal": "assets/covers/pokemon-omega-ruby.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Titles/Pokemon%20Omega%20Ruby%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CKo%29.png"
+  },
+  {
+   "id": "pokemon-alpha-sapphire",
+   "title": "Pokémon Alpha Sapphire",
+   "titleDe": "Pokémon Alpha Saphir",
+   "system": "3ds",
+   "generation": 6,
+   "region": "World",
+   "noIntroName": "Pokemon Alpha Sapphire (USA) (En,Ja,Fr,De,Es,It,Ko)",
+   "serial": "ECLA",
+   "titleIds": [
+    "000400000011C500"
+   ],
+   "releaseYear": 2014,
+   "color": "#1D4E9E",
+   "uprSupported": false,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Boxarts/Pokemon%20Alpha%20Sapphire%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CKo%29.png",
+   "coverLocal": "assets/covers/pokemon-alpha-sapphire.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Titles/Pokemon%20Alpha%20Sapphire%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CKo%29.png"
+  },
+  {
+   "id": "pokemon-sun",
+   "title": "Pokémon Sun",
+   "titleDe": "Pokémon Sonne",
+   "system": "3ds",
+   "generation": 7,
+   "region": "World",
+   "noIntroName": "Pokemon Sun (USA) (En,Ja,Fr,De,Es,It,Zh,Ko)",
+   "serial": "BNDA",
+   "titleIds": [
+    "0004000000164800"
+   ],
+   "releaseYear": 2016,
+   "color": "#E8901B",
+   "uprSupported": false,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Boxarts/Pokemon%20Sun%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CZh%2CKo%29.png",
+   "coverLocal": "assets/covers/pokemon-sun.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Titles/Pokemon%20Sun%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CZh%2CKo%29.png"
+  },
+  {
+   "id": "pokemon-moon",
+   "title": "Pokémon Moon",
+   "titleDe": "Pokémon Mond",
+   "system": "3ds",
+   "generation": 7,
+   "region": "World",
+   "noIntroName": "Pokemon Moon (USA) (En,Ja,Fr,De,Es,It,Zh,Ko)",
+   "serial": "BNEA",
+   "titleIds": [
+    "0004000000175E00"
+   ],
+   "releaseYear": 2016,
+   "color": "#4A3B8F",
+   "uprSupported": false,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Boxarts/Pokemon%20Moon%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CZh%2CKo%29.png",
+   "coverLocal": "assets/covers/pokemon-moon.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Titles/Pokemon%20Moon%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CZh%2CKo%29.png"
+  },
+  {
+   "id": "pokemon-ultra-sun",
+   "title": "Pokémon Ultra Sun",
+   "titleDe": "Pokémon Ultrasonne",
+   "system": "3ds",
+   "generation": 7,
+   "region": "World",
+   "noIntroName": "Pokemon Ultra Sun (USA) (En,Ja,Fr,De,Es,It,Zh,Ko)",
+   "serial": "A2AA",
+   "titleIds": [
+    "00040000001B5000"
+   ],
+   "releaseYear": 2017,
+   "color": "#DD6418",
+   "uprSupported": false,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Boxarts/Pokemon%20Ultra%20Sun%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CZh%2CKo%29.png",
+   "coverLocal": "assets/covers/pokemon-ultra-sun.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Titles/Pokemon%20Ultra%20Sun%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CZh%2CKo%29.png"
+  },
+  {
+   "id": "pokemon-ultra-moon",
+   "title": "Pokémon Ultra Moon",
+   "titleDe": "Pokémon Ultramond",
+   "system": "3ds",
+   "generation": 7,
+   "region": "World",
+   "noIntroName": "Pokemon Ultra Moon (USA) (En,Ja,Fr,De,Es,It,Zh,Ko)",
+   "serial": "A2BA",
+   "titleIds": [
+    "00040000001B5100"
+   ],
+   "releaseYear": 2017,
+   "color": "#5E2A8C",
+   "uprSupported": false,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Boxarts/Pokemon%20Ultra%20Moon%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CZh%2CKo%29.png",
+   "coverLocal": "assets/covers/pokemon-ultra-moon.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Nintendo_3DS/master/Named_Titles/Pokemon%20Ultra%20Moon%20%28USA%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%2CZh%2CKo%29.png"
   }
  ],
  "hacks": [

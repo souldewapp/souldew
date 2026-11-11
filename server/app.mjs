@@ -18,6 +18,7 @@ import { buildRun, listRuns, readManifest, writeManifest, runDir, runPack, runSu
 import { SaveWatcher } from './lib/savewatch.mjs';
 import { EMULATORS, detectEmulator, installEmulator, launchRom, revealInFileManager, emulatorRunning } from './lib/emulator.mjs';
 import { LiveBridge } from './lib/livebridge.mjs';
+import { AzaharBridge, enableRpc } from './lib/azahar.mjs';
 import { moveToGraveyard, parseHgssSave } from '../shared/gen4save.mjs';
 import { listPresets, savePreset, deletePreset } from './lib/presets.mjs';
 import { pageHeaders } from './lib/csp.mjs';
@@ -333,7 +334,7 @@ function sendDownload(req, res, name, source) {
  */
 function withCustomCovers(lib) {
   const cat = catalog();
-  const idOf = (r) => (r.gameId ? `game:${r.gameId}` : r.crc ? `rom:${r.crc}` : null);
+  const idOf = (r) => (r.gameId ? `game:${r.gameId}` : r.crc ? `rom:${r.crc}` : /^[0-9A-F]{16}$/.test(r.titleId || '') ? `ctr:${r.titleId}` : null);
   const covers = customCovers([
     ...(cat.games || []).map((g) => `game:${g.id}`), ...(cat.hacks || []).map((h) => `hack:${h.id}`),
     ...lib.roms.map(idOf).filter(Boolean),
@@ -435,6 +436,21 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   };
   const watcher = new SaveWatcher(GEN4, emit);
   const live = new LiveBridge(emit);
+  // Azahar (3DS): polled once someone plays a 3DS game – the play view asks for its status, a launch starts it too
+  let azahar = null;
+  const azaharBridge = () => {
+    if (!azahar) {
+      let table = { games: [] };
+      try {
+        table = JSON.parse(readFileSync(join(SHARED_DIR, 'data', 'addresses.json'), 'utf8'));
+      } catch {
+        // no live data without the table
+      }
+      azahar = new AzaharBridge(emit, { table, emuPath: () => detectEmulator('azahar', loadConfig().emulatorPaths?.azahar).path || null });
+      azahar.start();
+    }
+    return azahar;
+  };
   // Stream overlays (web/overlay.html in OBS): per run, the open event streams with their language. A doc
   // upload or a renamed run pushes a fresh snapshot (shared/overlay.mjs) – only what an overlay may show.
   // An overlay that follows the current run (`/overlay?run=current`) sits in the map under the run it shows right now,
@@ -451,7 +467,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         }
       };
       const api = read('pokeapi.json');
-      overlayNames = { names: api?.names || {}, items: api?.items || {}, tables: { gen4: GEN4, loc2: read('locations_gen2_crystal.json'), loc3: read('locations_gen3.json') } };
+      overlayNames = { names: api?.names || {}, items: api?.items || {}, tables: { gen4: GEN4, loc2: read('locations_gen2_crystal.json'), loc3: read('locations_gen3.json'), loc6: read('locations_gen6.json'), loc7: read('locations_gen7.json') } };
     }
     const list = overlayNames.names[lang] || overlayNames.names.en || [];
     const items = overlayNames.items;
@@ -838,6 +854,11 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const log = [];
     const patched = preparePatchedRom(romId, patchId || null, (l) => log.push(l), loadConfig());
     let info = null;
+    if (patched.system === '3ds') {
+      // the bundled randomizer doesn't build 3DS games; the generation for the rest of the form comes from the catalog
+      const game = (catalog().games || []).find((g) => g.system === '3ds' && (g.serial === patched.header?.code || g.productCode === patched.header?.code || (g.titleIds || []).includes(patched.header?.titleId)));
+      return { patched: { crc: null, baseCrc: null, size: patched.size, header: patched.header, patchName: null, system: '3ds' }, info: { unsupported: true, reason: 'ctr', generation: game?.generation || null }, log };
+    }
     try {
       info = (await runBridge(['info', patched.path])).json;
     } catch (e) {
@@ -1133,6 +1154,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       } else romPath = abs;
     }
     const script = m[1] === 'mgba' ? live.luaScriptPath() : null;
+    if (m[1] === 'azahar') azaharBridge();
     return launchRom(m[1], romPath, { customPath: loadConfig().emulatorPaths?.[m[1]], script });
   });
 
@@ -1145,6 +1167,15 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
 
   route('GET', /^\/api\/live$/, () => live.status());
+  // Azahar's RPC server: what it reports, and switching it on in Azahar's settings (only on request – it is reachable
+  // from the local network while Azahar runs, see server/lib/azahar.mjs)
+  route('GET', /^\/api\/live\/azahar$/, () => azaharBridge().status());
+  route('POST', /^\/api\/live\/azahar\/enable$/, async (req) => {
+    const body = await readBody(req);
+    if (body?.confirm !== true) throw httpError(400, 'Bestätigung fehlt', 'confirmMissing');
+    enableRpc({ emuPath: detectEmulator('azahar', loadConfig().emulatorPaths?.azahar).path || null });
+    return azaharBridge().status();
+  });
   // The mGBA script lives in a hidden folder on Windows (%APPDATA%) – show it instead of making people type the path.
   route('POST', /^\/api\/live\/reveal$/, () => {
     if (!existsSync(live.luaScriptPath())) throw httpError(404, 'Skript fehlt', 'scriptMissing');
@@ -1387,6 +1418,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
 
   server.on('close', () => {
+    azahar?.stop();
     streamHub.close();
     pokelink.bridge?.close();
     pokelink.bridge = null;

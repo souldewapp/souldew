@@ -8,7 +8,8 @@ import { listZip, readZipEntry } from './zip.mjs';
 import { APP_ROOT, DATA_DIR, DEV, LIBRARY_DIR, SHARED_DIR } from './paths.mjs';
 import { crc32Hex } from '../../shared/checksum.mjs';
 import { writeFileAtomic, httpError, safeFileName, isInside, samePath } from './fsutil.mjs';
-import { identifyRom, matchCatalog, ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../../shared/romid.mjs';
+import { identifyRom, matchCatalog, ROM_EXTENSIONS, PATCH_EXTENSIONS, CTR_EXTENSIONS, isCtrExt } from '../../shared/romid.mjs';
+import { identifyCtr } from '../../shared/ctr.mjs';
 import { describePatch, detectPatchFormat } from '../../shared/patchers.mjs';
 
 const INDEX_PATH = join(DATA_DIR, DEV ? 'runs/library-index.json' : 'library-index.json');
@@ -88,6 +89,30 @@ function headOf(path, len = 0x200) {
   }
 }
 
+/**
+ * A 3DS file: identified from a few header reads (shared/ctr.mjs) – no CRC32, these files are 1–4 GB. null for
+ * anything that isn't a playable 3DS game file: no 3DS header, or an update / DLC / system title (those are installed
+ * in Azahar, not played from the library).
+ */
+export function ctrInfo(path, ext) {
+  let fd;
+  try {
+    fd = openSync(path, 'r');
+    const readAt = (o, n) => {
+      const b = Buffer.alloc(n);
+      const got = readSync(fd, b, 0, n, o);
+      return new Uint8Array(b.buffer, b.byteOffset, got);
+    };
+    const info = identifyCtr(readAt, ext);
+    if (!info || ['update', 'dlc', 'system'].includes(info.kind)) return null;
+    return { ...info, crc: null };
+  } catch {
+    return null;
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+}
+
 function describeRom(info, cat) {
   const m = matchCatalog(info, cat);
   // a ROM that was patched before it was added (Too Many Types from a download site): its CRC32 is a known version
@@ -129,7 +154,11 @@ export function scanLibrary(config = {}) {
       }
       const ext = extname(name).slice(1).toLowerCase();
       const cacheKey = `${path}|${st.size}|${st.mtimeMs}`;
-      if (ROM_EXTENSIONS.includes(ext)) {
+      if (isCtrExt(ext)) {
+        const info = index[cacheKey] !== undefined ? index[cacheKey] : ctrInfo(path, ext);
+        nextIndex[cacheKey] = info;
+        if (info) roms.push(describeRom({ id: makeId(path), name, file: path, size: st.size, container: null, ...info }, cat));
+      } else if (ROM_EXTENSIONS.includes(ext)) {
         let info = index[cacheKey];
         if (!info) {
           let buf;
@@ -220,6 +249,8 @@ export function scanLibrary(config = {}) {
 // bounded in depth, files and time, and system folders, app bundles and photo libraries are never entered.
 const DISCOVER_SKIP = /^(node_modules|Library|Applications|Pictures|Music|Movies|Videos|AppData|\$Recycle\.Bin|System Volume Information|WindowsApps|\.Trash|Caches?|DerivedData|Pods|venv|site-packages|__pycache__|target|vendor)$|\.(app|photoslibrary|bundle|framework|xcodeproj|xcworkspace|git|lproj)$/i;
 const MAX_ROM_BYTES = 600 * 1024 * 1024;
+/** 3DS cartridges are up to 4 GB (8 GB images exist for a handful of games). */
+const MAX_CTR_BYTES = 8 * 1024 * 1024 * 1024;
 
 /**
  * The real folders behind the Downloads / Desktop / Documents shortcuts – the desktop app passes them in
@@ -367,10 +398,13 @@ export function discoverRoms({ roots = discoverRoots(), known = [], maxDepth = 4
     }
   };
   const look = (path, name, st) => {
-    if (!st.isFile() || st.size > MAX_ROM_BYTES || onlineOnly(st)) return;
     const ext = extname(name).slice(1).toLowerCase();
+    if (!st.isFile() || st.size > (isCtrExt(ext) ? MAX_CTR_BYTES : MAX_ROM_BYTES) || onlineOnly(st)) return;
     try {
-      if (ROM_EXTENSIONS.includes(ext)) {
+      if (isCtrExt(ext)) {
+        const info = ctrInfo(path, ext);
+        if (info) add({ path, name, size: st.size, ...info });
+      } else if (ROM_EXTENSIONS.includes(ext)) {
         add({ path, name, size: st.size, ...identifyRom(headOf(path), ext) });
       } else if (ext === 'zip') {
         for (const e of listZip(path)) {
@@ -425,7 +459,7 @@ export function importFiles(paths) {
   const added = [];
   for (const p of paths) {
     const ext = extname(p).slice(1).toLowerCase();
-    if (![...ROM_EXTENSIONS, ...PATCH_EXTENSIONS, 'zip'].includes(ext)) continue;
+    if (![...ROM_EXTENSIONS, ...CTR_EXTENSIONS, ...PATCH_EXTENSIONS, 'zip'].includes(ext)) continue;
     const target = join(LIBRARY_DIR, basename(p));
     if (resolve(p) !== resolve(target)) copyFileSync(p, target);
     added.push(target);
@@ -441,7 +475,7 @@ export function importFiles(paths) {
 export function uploadTarget(name) {
   let safe = safeFileName(name, { fallback: '', maxBytes: 200 }); // file systems allow 255 bytes per name
   const ext = extname(safe).slice(1).toLowerCase();
-  if (![...ROM_EXTENSIONS, ...PATCH_EXTENSIONS, 'zip'].includes(ext)) throw httpError(400, 'Nur ROMs (.gb/.gbc/.gba/.nds), Patches oder .zip', 'uploadType');
+  if (![...ROM_EXTENSIONS, ...CTR_EXTENSIONS, ...PATCH_EXTENSIONS, 'zip'].includes(ext)) throw httpError(400, 'Nur ROMs (.gb/.gbc/.gba/.nds/.3ds/.cci/.cxi/.cia/.3dsx), Patches oder .zip', 'uploadType');
   if (safe.startsWith('.')) safe = `_${safe.slice(1)}`; // hidden files are skipped by the library scan
   mkdirSync(LIBRARY_DIR, { recursive: true });
   return join(LIBRARY_DIR, safe);
