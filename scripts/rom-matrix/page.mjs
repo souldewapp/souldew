@@ -274,7 +274,7 @@ function helper() {
         if (p) shots.push(p);
       } else if (s.do === 'check') {
         await ensureRam();
-        ctx.state.lastScan3 = 0; // (the app reads every 0.7 s and searches every 3 s; a check reads now)
+        ctx.state.lastScan3 = ctx.state.lastBmScan3 = 0; // (the app reads every 0.7 s and searches every few seconds; a check reads now)
         const tm = team();
         // plan.probe: an expression recorded at every check (an address being checked, e.g. a battle flag)
         let probe;

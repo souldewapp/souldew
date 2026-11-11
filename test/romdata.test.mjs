@@ -467,6 +467,100 @@ test('expanded GBA engines (Run & Bun): the team is searched for in EWRAM, the p
   assert.equal(readLocation(maps, emerald, read, { rom, state: {} }), null, 'and no other pointer is taken for it');
 });
 
+test('expanded GBA engines (Run & Bun): who is out comes from gBattleMons, searched for; wild or trainer from the OT ID', async () => {
+  const { readLiveParty, readLiveBattle, withBattleHp, findEntry, LiveTables } = await import('../shared/live/parse.mjs');
+  const emerald = findEntry(json('addresses.json'), { platform: 'gba', code: 'BPEE' });
+  const entry = { ...emerald, scan3: true };
+  const T = new LiveTables({ charsetGen3: cs3, gen3Index: idx3 }).withSpecies({ map: Object.assign([], { 390: 390, 261: 261, 300: 300, 258: 258, 263: 263 }) });
+  const mem = new Map();
+  const put = (a, bytes) => bytes.forEach((b, i) => mem.set(a + i, b));
+  const read = (a, n) => Uint8Array.from({ length: n }, (_, i) => mem.get(a + i) ?? 0);
+  const ME = 0x1bcd2d7b; // the player's trainer ID (what Run & Bun showed live)
+  const chimchar = { pid: 0x88b6562d, otId: ME, internal: 390, level: 6, hp: 23, maxHp: 23 };
+  const poochyena = { pid: 0x518d5dfd, otId: ME, internal: 261, level: 2, hp: 13, maxHp: 13 };
+  const party = (mons) => {
+    put(0x02023a95, [mons.length]);
+    mons.forEach((m, i) => put(0x02023a98 + i * 100, [...pk3(m)]));
+  };
+  const enemies = (mons) => {
+    for (let i = 0; i < 6; i++) put(0x02023a98 + 600 + i * 100, new Array(100).fill(0));
+    mons.forEach((m, i) => put(0x02023a98 + 600 + i * 100, [...pk3(m)]));
+  };
+  // a BattlePokemon of pokeemerald-expansion (0x5C bytes) – measured in Run & Bun 1.07
+  const BM = 0x020233fc;
+  const battler = (i, m, hp = m.hp, status = 0) => {
+    const d = new Uint8Array(0x5c);
+    const dv = new DataView(d.buffer);
+    dv.setUint16(0x00, m.internal, true);
+    dv.setUint16(0x2a, hp, true);
+    d[0x2c] = m.level;
+    dv.setUint16(0x2e, m.maxHp, true);
+    dv.setUint32(0x4c, m.pid, true);
+    dv.setUint32(0x50, status, true);
+    dv.setUint32(0x58, m.otId, true);
+    put(BM + i * 0x5c, [...d]);
+  };
+  put(0x030026f9, [0x02]); // gMain.inBattle
+  const poll = (state) => {
+    state.lastScan3 = state.lastBmScan3 = 0; // (the app searches again a moment later)
+    const r = readLiveParty(entry, read, T, state);
+    const f = readLiveBattle(entry, read, T, state, r.party);
+    return { f, party: withBattleHp(r.party, f) };
+  };
+
+  // a wild Skitty: it carries the player's trainer ID (CreateWildMon); battler 0 Chimchar, hit down to 11
+  party([chimchar, poochyena]);
+  const skitty = { pid: 0x3612bf47, otId: ME, internal: 300, level: 3, hp: 16, maxHp: 16 };
+  enemies([skitty]);
+  battler(0, chimchar, 11);
+  battler(1, skitty);
+  const state = {};
+  let { f, party: p } = poll(state);
+  assert.equal(state.bmons3, BM, 'found where the code keeps it, not assumed');
+  assert.equal(f.kind, 'wild');
+  assert.deepEqual(f.active, { index: 0, hp: 11, maxHp: 23, status: 0 });
+  assert.equal(p[0].hp, 11);
+  // switched to Poochyena: the panel follows (before, it kept showing the lead's moves and untouched HP)
+  battler(0, poochyena, 4, 0x08);
+  ({ f, party: p } = poll(state));
+  assert.deepEqual(f.active, { index: 1, hp: 4, maxHp: 13, status: 0x08 });
+  assert.deepEqual(p.map((m) => m.hp), [23, 4]);
+  // the in-battle party menu puts the team in battle order: the index follows the struct's PID, not a slot number
+  party([poochyena, chimchar]);
+  ({ f } = poll(state));
+  assert.equal(f.active.index, 0);
+
+  // the rival's single Mudkip is a trainer battle (a random OT ID) – one opponent used to read as wild
+  party([chimchar, poochyena]);
+  const mudkip = { pid: 0x4e5f6071, otId: 0x9a8b7c6d, internal: 258, level: 5, hp: 21, maxHp: 21 };
+  enemies([mudkip]);
+  battler(0, chimchar);
+  battler(1, mudkip, 17);
+  ({ f } = poll(state));
+  assert.deepEqual([f.kind, f.enemy.species, f.enemy.hp], ['trainer', 258, 17]);
+  // a trainer who switched: battler 1 is the second one, although the first can still fight
+  const zigzagoon = { pid: 0x11223344, otId: 0x9a8b7c6d, internal: 263, level: 4, hp: 15, maxHp: 15 };
+  enemies([mudkip, zigzagoon]);
+  battler(1, zigzagoon, 9);
+  ({ f } = poll(state));
+  assert.deepEqual([f.kind, f.enemy.species, f.enemy.hp], ['trainer', 263, 9]);
+
+  // a new battle before its mons are sent out: the array still holds the last one's opponent – not this battle's
+  enemies([skitty]);
+  ({ f } = poll(state));
+  assert.equal(f.active, null, 'no struct read for a battle that isn\'t set up yet');
+  assert.deepEqual([f.kind, f.enemy.species], ['wild', 300], 'the opponent from gEnemyParty, the kind from its OT ID');
+
+  // nothing that looks like gBattleMons in RAM: the parties alone, as before
+  const bare = new Map([...mem].filter(([a]) => a < BM || a >= BM + 4 * 0x5c));
+  const readBare = (a, n) => Uint8Array.from({ length: n }, (_, i) => bare.get(a + i) ?? 0);
+  const s2 = {};
+  const r2 = readLiveParty(entry, readBare, T, s2);
+  const f2 = readLiveBattle(entry, readBare, T, s2, r2.party);
+  assert.equal(s2.bmons3, undefined);
+  assert.deepEqual([f2.kind, f2.enemy.species, f2.active], ['wild', 300, null]);
+});
+
 test('Platinum and Pearl: the battle flag (checked live) ends a battle at once, also one that left no HP change', async () => {
   const { readLiveParty, readLiveBattle, findEntry, LiveTables } = await import('../shared/live/parse.mjs');
   const { encryptPK4 } = await import('../shared/gen4save.mjs');
