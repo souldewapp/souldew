@@ -91,8 +91,11 @@ const newClaim = () => Math.random().toString(36).slice(2, 12) + Date.now().toSt
  * runs: the runs on this computer ({ id }) · now: for the claim's age.
  */
 export function restartPlan(entry, { me, runs = [], now = Date.now() } = {}) {
-  if (!isEntry(entry) || entry.by === me) return { action: 'build' };
-  if (typeof entry.id === 'string' && entry.id && isEntry(entry.pack)) {
+  if (!isEntry(entry)) return { action: 'build' };
+  const built = typeof entry.id === 'string' && entry.id && isEntry(entry.pack);
+  // our own finished new attempt: open it again rather than building yet another one (unless it was deleted here)
+  if (entry.by === me) return built && (runs || []).some((r) => r?.id === entry.id) ? { action: 'open', id: entry.id, name: entry.name || '', by: entry.by } : { action: 'build' };
+  if (built) {
     return (runs || []).some((r) => r?.id === entry.id) ? { action: 'open', id: entry.id, name: entry.name || '', by: entry.by } : { action: 'join', offer: entry };
   }
   const at = Number(entry.at);

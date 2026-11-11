@@ -111,6 +111,12 @@ test('Black 2: the summary screen (flag 0x88C2) is no battle – the catching de
   assert.equal(poll(e, 0x2800, {}), null, 'overworld');
   assert.equal(poll(e, 0x88c2, {}), null, 'summary screen: no battle');
   assert.equal(poll(e, 0x2100, {})?.enemy?.species, 504, 'a real battle still shows (here the copy stands in for its opponent)');
+  // one odd read in the middle of a battle doesn't end it for good – a few in a row do
+  const fight = {};
+  assert.equal(poll(e, 0x2100, fight)?.enemy?.species, 504);
+  assert.equal(poll(e, 0x88c2, fight, 1)?.enemy?.species, 504, 'a single odd value: still the battle');
+  assert.equal(poll(e, 0x2100, fight)?.enemy?.species, 504, 'and the panel keeps its opponent afterwards');
+  assert.equal(poll(e, 0x88c2, fight, 4), null, 'several odd values in a row: the battle is over');
   // another language of the game (its memory may lie elsewhere): an unknown value is left to the copies as before …
   const de = findEntry(TABLE, { platform: 'nds', code: 'IRED' });
   assert.equal(de.scanOnly, true);
@@ -139,8 +145,12 @@ test('Gen 5 level caps: the gym aces of Black/White and Black 2/White 2, then th
   assert.deepEqual(R.levelCap(d, B2, 'p1'), { cap: 30, boss: { key: 'gym4', badge: 3, name: 'Gym 4' }, vanilla: true });
   d.set('live:p1', { badges: 8, at: Date.now() });
   assert.equal(R.levelCap(d, B2, 'p1').boss.name, 'Elite Four');
+  assert.deepEqual(R.levelCap(d, { ...B2, game: { ...B2.game, hackId: 'blaze-black-2-redux' } }, 'p1'), { cap: null, boss: null }, 'a ROM hack: no retail cap');
   // the stream API says the same
   assert.equal(levelCapOf(B2, { levelCaps: 'warn' }, {}, 1).cap, 18);
+  // a ROM hack (Blaze Black 2 Redux) has trainers of other levels: no retail cap rather than a wrong one
+  assert.equal(levelCapOf({ ...B2, game: { ...B2.game, hackId: 'blaze-black-2-redux' } }, { levelCaps: 'warn' }, {}, 1), null);
+  assert.equal(levelCapOf({ ...B2, patch: { name: 'x.xdelta' } }, { levelCaps: 'warn' }, {}, 1), null);
 });
 
 test('catches filed under a place number get the place name once it is known (#14)', () => {

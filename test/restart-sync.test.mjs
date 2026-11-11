@@ -249,6 +249,9 @@ test('restartPlan: claims, invites, stale claims, own entries – and 2.3.0 igno
   const invite = { id: 'bbbb0002', name: 'Lou & Noa #2', by: 'p1', at: now, pack: { id: 'bbbb0002' } };
   assert.deepEqual(restartPlan(invite, { me: 'p2', runs, now }), { action: 'join', offer: invite });
   assert.equal(restartPlan(invite, { me: 'p2', runs: [...runs, { id: 'bbbb0002' }], now }).action, 'open');
+  // our own finished new attempt: pressing "New attempt" in the old run again opens it instead of building another
+  assert.equal(restartPlan(invite, { me: invite.by, runs: [...runs, { id: invite.id }], now }).action, 'open');
+  assert.equal(restartPlan(invite, { me: invite.by, runs, now }).action, 'build', 'unless it was deleted here');
   assert.equal(restartPlan('garbage', { me: 'p2', runs, now }).action, 'build');
   // app.mjs in 2.3.0 offers a join only for an entry with id and pack – a claim never looks like an invite there
   const v230offers = (r, me) => !!(r?.id && r.pack && r.by !== me);

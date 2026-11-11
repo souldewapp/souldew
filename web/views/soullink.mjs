@@ -109,7 +109,15 @@ function RunCaption({ r }) {
 
 /** Cartridge + status caption + a small menu (restart / delete); actions: buttons under the caption. */
 export function RunCard({ r, sub, onOpen, actions }) {
-  const { library } = useApp();
+  const { library, setRunId, navigate } = useApp();
+  // a SoulLink with partners restarts from its own page: only there is its live document open, which tells the
+  // others that a new attempt is being built (otherwise two players could each build one – issue #6)
+  const restartHere = () => {
+    if (runMode(r) === 'soullink' && slotsOf(r).length > 1) {
+      setRunId(r.id);
+      navigate('soullink', { run: r.id, restart: '1' });
+    } else setRestart(true);
+  };
   const [menu, setMenu] = useState(false);
   const [del, setDel] = useState(false);
   const [restart, setRestart] = useState(false);
@@ -123,7 +131,7 @@ export function RunCard({ r, sub, onOpen, actions }) {
       color=${h?.color || g?.color} system=${r.game?.system} hack=${!!h} missing=${st !== 'active'} owned=${st === 'active'} onClick=${onOpen} />
     <button class="run-menu-btn" aria-haspopup="menu" aria-expanded=${menu} aria-label=${t('runs.menu', 'Run options')} onClick=${() => setMenu(!menu)}>⋯</button>
     ${menu && html`<div class="run-menu" role="menu">
-      ${st !== 'active' && html`<button role="menuitem" onClick=${() => { setMenu(false); setRestart(true); }}><${Icon} name="reset" size=${14} />${t('runs.restart', 'New attempt …')}</button>`}
+      ${st !== 'active' && html`<button role="menuitem" onClick=${() => { setMenu(false); restartHere(); }}><${Icon} name="reset" size=${14} />${t('runs.restart', 'New attempt …')}</button>`}
       <button role="menuitem" class="danger" onClick=${() => { setMenu(false); setDel(true); }}><${Icon} name="close" size=${14} />${t('runs.delete', 'Delete run')}</button>
     </div>`}
     <${RunCaption} r=${r} />

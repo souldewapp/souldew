@@ -108,6 +108,7 @@ export function levelCapOf(manifest, rules, raw, badges) {
     const r = levelCapFor(badges, defeated, !manifest?.patch);
     return { cap: r.cap, boss: r.boss ? { key: r.boss.key, name: BOSS_NAMES[r.boss.key] || r.boss.key } : null };
   }
+  if (manifest?.game?.hackId || manifest?.patch) return null; // a ROM hack's trainers have other levels
   const v = vanillaCapFor(gymCapsFamily(manifest?.game?.id || manifest?.base?.gameId || ''), badges);
   return v ? { cap: v.cap, boss: { key: v.boss.key, name: v.boss.name || (v.boss.badge !== undefined ? `Gym ${v.boss.badge + 1}` : v.boss.key) } } : null;
 }
@@ -155,7 +156,7 @@ export function buildState(manifest, doc, opts = {}) {
     const status = statusKey(hpOk ? m : { status: m.status });
     const fainted = hp === 0;
     const dead = deadArea(m.area);
-    const item = Number.isInteger(m.item) && m.item > 0 ? { id: m.item, name: itemName(m.item, gen) || null } : null;
+    const item = Number.isInteger(m.item) && m.item > 0 ? { id: m.item, name: (!m.itemOwn && itemName(m.item, gen)) || null } : null;
     return {
       slot, key: str(m.key) || null, area: m.area ? str(m.area, 60) : null, areaName: label(m.area),
       species, name: sp(species), nickname: str(m.nick ?? m.nickname, 24), level: lv,

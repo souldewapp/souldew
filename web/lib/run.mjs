@@ -484,7 +484,8 @@ export function counts(doc, manifest) {
 export function levelCap(doc, manifest, slot) {
   const profile = profileOf(manifest);
   if (!profile.curated) {
-    // Gen 1/2 and 5: vanilla gym aces by live badge count
+    // Gen 1/2 and 5: vanilla gym aces by live badge count – not for a ROM hack, whose trainers have other levels
+    if (manifest?.game?.hackId || manifest?.patch) return { cap: null, boss: null };
     const v = vanillaCapFor(gymCapsFamily(manifest?.game?.id || manifest?.base?.gameId), live(doc, slot)?.badges);
     if (!v) return { cap: null, boss: null };
     const name = v.boss.badge !== undefined ? t('cap.gym', 'Gym {n}', { n: v.boss.badge + 1 })

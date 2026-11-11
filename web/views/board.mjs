@@ -165,6 +165,12 @@ function BoardHead({ counts: c }) {
   const g = gameById(manifest.game?.id);
   const h = manifest.game?.hackId ? hackById(manifest.game.hackId) : null;
   const st = doc.get('run:status', null);
+  // "New attempt …" from the run list lands here (?restart=1): the dialog opens once this run's document is live
+  useEffect(() => {
+    if (app.route?.params?.restart === undefined || !st || st.state === 'won') return;
+    setModal('restart');
+    app.navigate(app.route.route, { run: manifest.id });
+  }, [app.route?.params?.restart, manifest.id, !!st]);
   const names = getPlayers(doc, manifest);
   const slots = slotsOf(manifest);
   const solo = isNuzlocke(manifest);

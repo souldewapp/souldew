@@ -4,12 +4,12 @@
 
 ## 2.3.1
 
-- **OBS overlays keep working from run to run** ([#8](https://github.com/souldewapp/souldew/issues/8)): the links on
+- **OBS overlays keep working from run to run** (#8): the links on
   the Stream page now follow the current run – the one open in souldew – so a new run, a joined SoulLink or another
   game no longer means adding every overlay to OBS again. They switch live, without OBS reloading them. The Stream
   page's Run menu can still pin the links to one run, and links from earlier versions keep showing their run. The
   Pokélink bridge and the stream API's `current` streams follow along too.
-- **OBS overlays no longer grow while the team fills up** ([#7](https://github.com/souldewapp/souldew/issues/7)):
+- **OBS overlays no longer grow while the team fills up** (#7):
   every widget now fills exactly the size of its browser source – the team strip and the team card keep six places,
   the counters a place for the badges, "You are here" one plate per player, and long names are shortened – so the
   overlay keeps its size and position in your scene from the first catch to a full team. A run with more players
@@ -32,17 +32,18 @@
 - **Battle helper for your whole team** (#11): a new "Your team against …" list shows every team member's best hit
   on the opponent and the opponent's worst for it – who to send in at a glance. Black 2: the panel
   now follows a switch – it showed your lead's moves, matchups and HP for the whole battle – shows the HP of every
-  team member during the fight, and shows a trainer's next Pokémon once the first one fainted (it stayed on the
+  team member during the fight, and shows a trainer's next Pokémon once the first one is down (it stayed on the
   first one at 0 HP). HeartGold/SoulSilver double battles show both opponents and both of your Pokémon.
 - **The battle helper no longer disappears in a long battle** (#12): in 2.2.0 it vanished after about 90 seconds in
   Black 2 (fixed in 2.3.0, which reads the game's battle flag – checked again: two minutes in the battle menu, the
-  panel stays); now it also keeps the opponent through a moment where the game rewrites its data.
+  panel stays); now it also keeps the opponent through a moment where the game rewrites its data, and in
+  Black/White and Black 2/White 2 a single odd reading of the battle flag no longer ends the battle on the panel.
 - **German, French, Italian and Spanish FireRed/LeafGreen are read live** (Feuerrote/Blattgrüne, Rouge Feu/Vert
-  Feuille, Rosso Fuoco/Verde Foglia, Rojo Fuego/Verde Hoja – also randomized): they showed "No live data for this
+  Feuille, Rosso Fuoco/Verde Foglia, Rojo Fuego/Verde Hoja – also randomized, #16): they showed "No live data for this
   game". Their memory layout is now in the table – the team, battles, the place sign and the Rare Candy cheat. The
   addresses come from two trackers that run on these versions and agree; no such ROM was at hand to check them in a
   running game, so please report it if something looks off.
-- **Run & Bun: the starter and your catches are filed** (also in other expanded-engine hacks, issue #3):
+- **Run & Bun: the starter and your catches are filed** (#3, also in other expanded-engine hacks):
   about every second Pokémon was read as an egg – Run & Bun stores the IVs one bit further on than the original
   games – and never reached the run, and the search for the team gave up after half a minute without one, long
   before the starter. Checked in the game: Chimchar lands under "Starter", a Zigzagoon caught on Route 101 under
@@ -59,23 +60,26 @@
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged
   where the hack rewrote their scripts. Checked with every preset.
-- **"New attempt" keeps the players together**: when a SoulLink was over and more than one player pressed "New
+- **"New attempt" keeps the players together** (#6): when a SoulLink was over and more than one player pressed "New
   attempt", each of them built a new run of their own – with its own connection, so the sync stopped working. Now the
   first one to press it builds the new run, and everybody else sees "… is already building the new attempt" and gets
-  the invite to join it; if the new run is already there, "New attempt" opens the invite instead of building a second
-  one. Works with 3 and 4 players too.
-- **Black/White and Black 2/White 2** (thanks to a player's reports, #5, #9, #13, #14, #15):
+  the invite to join it; if the new run is already there, "New attempt" opens the invite – or the new run itself, for
+  whoever built it – instead of building a second one. "New attempt …" in the run list opens the SoulLink first, so
+  the others see it too. Works with 3 and 4 players.
+- **Black/White and Black 2/White 2** (thanks to a player's reports, #5, #9, #13, #14):
   - No more battles that aren't there: opening a Pokémon's summary (to look at or swap its moves) in Black 2 and
     White 2, and Bianca's catching demo in White 2, put the catching demo's Pokémon (Lillipup, in Black/White Patrat)
     on the battle panel.
   - Status conditions show what the game shows – poison, burn, paralysis, freeze or sleep. Before, every Pokémon with
     a status condition showed SLP: Gen 5 stores them differently from Gen 4.
   - Level caps: the board, the play view and the stream API now know the badges and show the cap – the ace of the
-    next gym leader, after the eighth badge the Elite Four (unmodified game, Normal mode).
+    next gym leader, after the eighth badge the Elite Four (unmodified game, Normal mode – not for ROM hacks, whose
+    trainers have other levels).
   - Catches an older souldew filed under a number ("#6") get their place name once you play the game again, for
     every player of the run.
-- Held items are shown by name on the board and in the play view (Gen 3–5), in your app's language – before it only
-  said "Holds an item".
+- Held items are shown by name on the board and in the play view (Gen 3–5), in your app's language (#15) – before it
+  only said "Holds an item". Hacks on an expanded engine (Run & Bun) number their items their own way and keep "Holds
+  an item".
 
 ## 2.3.0
 

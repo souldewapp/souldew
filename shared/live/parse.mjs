@@ -228,6 +228,8 @@ export function parsePk3(d, T) {
     // in every engine
     metLocation: M[1], metLevel: origins & 0x7f, isEgg: T.expanded3 ? !!(d[0x13] & 4) : !!(ivs & 0x40000000), shiny,
     status: u32le(d, 80) & 0xff, level: d[84], hp: u16le(d, 86), maxHp: u16le(d, 88),
+    // an expanded engine numbers its items its own way: the retail item names would be wrong ones
+    ...(T.expanded3 ? { itemOwn: true } : {}),
   };
 }
 
@@ -716,6 +718,9 @@ function scanStep(read, size, gen, T, state) {
   state.scan = null;
 }
 
+/** Odd battle-flag reads in a row (Gen 5) after a battle value before the battle counts as over. */
+const OTHER_STREAK = 3;
+
 function battleFlag(entry, read, state = {}) {
   // only flags checked in a running game (addresses.json `verified`: HeartGold, Platinum, Pearl) – the community
   // addresses of the others haven't been, and a wrong flag would hide every battle
@@ -728,6 +733,8 @@ function battleFlag(entry, read, state = {}) {
   if (on || off) {
     const seen = state.flagSeen || (state.flagSeen = new Set());
     seen.add(on);
+    state.flagOn = on;
+    state.otherStreak = 0;
     return on;
   }
   // Black/White, Black 2/White 2: the flag has its battle values in every battle and any other value means none
@@ -735,7 +742,14 @@ function battleFlag(entry, read, state = {}) {
   // copies, a freed copy of the catching demo's party read as a battle against its Patrat / Lillipup there (#9).
   // The game's other languages (scanOnly) may keep the flag elsewhere: there only once this session has seen both its
   // battle and its overworld value at that address.
-  if (entry.inBattle.othersNotInBattle && (!entry.scanOnly || state.flagSeen?.size === 2)) return false;
+  if (entry.inBattle.othersNotInBattle && (!entry.scanOnly || state.flagSeen?.size === 2)) {
+    // straight out of a battle value, one odd read isn't the end of the battle yet (that would retire the battle's
+    // copies for good): only a few in a row are – from the overworld, an odd value means "no battle" at once
+    state.otherStreak = (state.otherStreak || 0) + 1;
+    if (state.flagOn && state.otherStreak < OTHER_STREAK) return null;
+    state.flagOn = false;
+    return false;
+  }
   return null; // some other screen – decide by the copies
 }
 
