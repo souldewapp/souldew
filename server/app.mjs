@@ -23,7 +23,7 @@ import { listPresets, savePreset, deletePreset } from './lib/presets.mjs';
 import { pageHeaders } from './lib/csp.mjs';
 import { gpuBackends, validBackend, fallbackNotice } from '../shared/gpu.mjs';
 import { hostAllowed, apiRequestError } from './lib/guard.mjs';
-import { overlaySnapshot, TEST_SPECIES } from '../shared/overlay.mjs';
+import { overlaySnapshot, TEST_SPECIES, currentRunId } from '../shared/overlay.mjs';
 import { startPokelinkBridge, pokelinkPlayers, POKELINK_PORT } from './lib/pokelink.mjs';
 import { romDataFor } from './lib/romloc.mjs';
 import { createStreamHub, streamSettings } from './lib/streamapi.mjs';
@@ -437,7 +437,9 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   const live = new LiveBridge(emit);
   // Stream overlays (web/overlay.html in OBS): per run, the open event streams with their language. A doc
   // upload or a renamed run pushes a fresh snapshot (shared/overlay.mjs) – only what an overlay may show.
-  const overlayClients = new Map(); // runId → Map(res → { lang, w, preview, alerts })
+  // An overlay that follows the current run (`/overlay?run=current`) sits in the map under the run it shows right now,
+  // marked `follow`; followCheck() moves it along when another run becomes current ('' = no run at all).
+  const overlayClients = new Map(); // runId → Map(res → { lang, w, preview, alerts, follow })
   let overlayNames = null;
   const overlayLookups = (lang) => {
     if (!overlayNames) {
@@ -485,22 +487,23 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     }
     return pokelinkLookup;
   };
-  /** The run played last: its doc changed last. */
-  const latestRun = () => {
-    let best = null;
-    for (const m of listRuns()) {
-      let t = 0;
+  /** The run "current" means (overlays that follow it, the stream API, Pokélink): the one open in the app, else the one
+   *  played last – its doc changed last (shared/overlay.mjs currentRunId). */
+  const currentRun = () => {
+    const lastRun = loadConfig().lastRun;
+    if (lastRun && /^[a-f0-9]{8}$/.test(lastRun) && readManifest(lastRun)) return lastRun;
+    return currentRunId({ runs: listRuns().map((m) => {
+      let playedAt = 0;
       try {
-        t = statSync(join(runDir(m.id), 'doc.json')).mtimeMs;
+        playedAt = statSync(join(runDir(m.id), 'doc.json')).mtimeMs;
       } catch {}
-      if (!best || t > best.t) best = { id: m.id, t };
-    }
-    return best?.id || null;
+      return { id: m.id, playedAt };
+    }) });
   };
   const pokelinkRun = () => {
     const want = loadConfig().pokelink?.run;
     if (want && readManifest(want)) return want;
-    return latestRun();
+    return currentRun();
   };
   const pokelinkList = () => {
     const id = (pokelink.run = pokelinkRun());
@@ -526,7 +529,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   const pokelinkState = () => {
     const c = loadConfig().pokelink || {};
     return { enabled: !!c.enabled, port: pokelink.bridge?.port || c.port || POKELINK_PORT, running: !!pokelink.bridge, error: pokelink.error,
-      run: pokelink.bridge ? pokelink.run : c.run || null, clients: pokelink.bridge?.clients() || 0 };
+      run: pokelink.bridge ? pokelink.run : c.run || null, pinned: c.run || null, clients: pokelink.bridge?.clients() || 0 };
   };
   const overlayLang = (v) => (['en', 'de', 'fr', 'es', 'it'].includes(String(v || '').slice(0, 2)) ? String(v).slice(0, 2) : 'en');
   const overlayData = (runId, lang) => {
@@ -574,9 +577,48 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       }
     }, 150));
   };
+  // ---- overlays that follow the current run ----
+  let followRun; // the run they show (undefined until someone follows; '' = none)
+  const overlayAdd = (runId, res, c) => {
+    if (!overlayClients.has(runId)) overlayClients.set(runId, new Map());
+    overlayClients.get(runId).set(res, c);
+  };
+  const overlayFollowers = () => {
+    for (const set of overlayClients.values()) for (const c of set.values()) if (c.follow) return true;
+    return false;
+  };
+  const overlayNoRun = 'event: norun\ndata: {}\n\n';
+  /** Has another run become current (a run opened in the app, a new one built or joined, the open one deleted)? Then
+   *  every overlay that follows it switches at once – OBS keeps the same browser source – and so do the stream API's
+   *  streams for `current` and the Pokélink bridge. */
+  const followCheck = () => {
+    const id = currentRun() || '';
+    if (id === followRun) return id;
+    followRun = id;
+    const moving = [];
+    for (const [runId, set] of overlayClients) {
+      if (runId === id) continue;
+      for (const [res, c] of set) if (c.follow) { set.delete(res); moving.push([res, c]); }
+    }
+    const byLang = new Map();
+    for (const [res, c] of moving) {
+      overlayAdd(id, res, c);
+      try {
+        if (!byLang.has(c.lang)) byLang.set(c.lang, id ? `event: snapshot\ndata: ${JSON.stringify(overlayData(id, c.lang))}\n\n` : overlayNoRun);
+        res.write(byLang.get(c.lang));
+      } catch {
+        res.write(overlayNoRun);
+      }
+    }
+    if (id) streamHub?.prime(id);
+    streamHub?.follow(id || null); // streams already on this run stay as they are
+    pokelink.bridge?.push();
+    return id;
+  };
+
   // The open stream API (/api/v1, docs/STREAM_API.md) and the coffee pop-up on legendary encounters
   streamHub = createStreamHub({
-    readManifest, readDoc, listRuns, activeRun: latestRun, lookups: overlayLookups, loadConfig, saveConfig, docs: LINKS.streamApiDocs,
+    readManifest, readDoc, listRuns, activeRun: currentRun, lookups: overlayLookups, loadConfig, saveConfig, docs: LINKS.streamApiDocs,
     overlayListening,
     serveSprite: (res, src, headers) => serveCached(res, join(CACHE_DIR, 'sprites', src.set, basename(src.path)),
       `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${src.path}`, headers),
@@ -590,6 +632,10 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     for (const res of sseClients) res.write(': ping\n\n');
     for (const set of overlayClients.values()) for (const res of set.keys()) res.write(': ping\n\n');
   }, 20000).unref();
+  // the run played last can change without anything calling followCheck (no run open in the app): look now and then
+  setInterval(() => {
+    if (overlayFollowers() || streamHub.followers() || pokelink.bridge) followCheck();
+  }, 2000).unref();
 
   for (const [runId, path] of Object.entries(loadConfig().watches || {})) {
     try {
@@ -676,7 +722,9 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       if (!ok) delete allowed.pads;
       else if (p) allowed.pads = { ...(p.preset ? { preset: p.preset } : {}), ...(p.map ? { map: Object.fromEntries(Object.entries(p.map).filter(([k]) => /^[a-z]{1,8}$/.test(k))) } : {}) };
     }
-    return saveConfig(allowed);
+    const saved = saveConfig(allowed);
+    if ('lastRun' in allowed) followCheck(); // another run opened in the app: the overlays that follow it switch
+    return saved;
   });
 
   // ---- randomizer presets (user-saved, built-ins live in shared/randomizer-options.mjs) ----
@@ -814,6 +862,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       const manifest = await buildRun({ ...body, identity, config: loadConfig() }, (l) => log.push(l));
       adoptLegacyWebhook(manifest.id, body.rules?.discordWebhook); // older clients still send it inside the rules
       saveConfig({ lastRun: manifest.id });
+      followCheck();
       return { manifest, log };
     } finally {
       if (identity) building.delete(identity.id);
@@ -837,6 +886,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     };
     writeManifest(manifest);
     saveConfig({ lastRun: manifest.id });
+    followCheck();
     return manifest;
   });
 
@@ -858,6 +908,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const watches = { ...(cfg.watches || {}) };
     delete watches[m[1]];
     saveConfig({ watches, ...(cfg.lastRun === m[1] ? { lastRun: null } : {}) });
+    followCheck();
     return { ok: true, trash };
   });
 
@@ -888,17 +939,20 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/doc$/, (req, m) => readDoc(m[1]));
   // what a stream overlay shows of the run (no keys, paths or spoilers) – the event stream below pushes it live
-  route('GET', /^\/api\/runs\/([a-f0-9]{8})\/overlay$/, (req, m, url) => {
+  // `current` instead of an ID: the run being played (a link that keeps working across runs)
+  route('GET', /^\/api\/runs\/(current|[a-f0-9]{8})\/overlay$/, (req, m, url) => {
+    const runId = m[1] === 'current' ? followCheck() : m[1];
+    if (!runId) throw httpError(404, 'Run nicht gefunden', 'runNotFound');
     if (url.searchParams.get('preview') !== '1') {
-      overlayPolls.set(`${m[1]}|${String(url.searchParams.get('w') || 'team').slice(0, 12)}`, Date.now());
-      streamHub.prime(m[1]);
+      overlayPolls.set(`${runId}|${String(url.searchParams.get('w') || 'team').slice(0, 12)}`, Date.now());
+      streamHub.prime(runId);
     }
-    return overlayData(m[1], overlayLang(url.searchParams.get('lang')));
+    return overlayData(runId, overlayLang(url.searchParams.get('lang')));
   });
   // Stream page: the open API's address and token, the coffee pop-up's switch and corner
   const streamState = (port) => {
     const s = streamSettings(loadConfig());
-    return { ...s, base: `http://127.0.0.1:${port}/api/v1`, docs: LINKS.streamApiDocs, clients: streamHub.clients() };
+    return { ...s, base: `http://127.0.0.1:${port}/api/v1`, docs: LINKS.streamApiDocs, clients: streamHub.clients(), current: currentRun() };
   };
   route('GET', /^\/api\/stream$/, () => streamState(server.address()?.port));
   route('POST', /^\/api\/stream$/, async (req) => {
@@ -1212,17 +1266,20 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         const denied = apiRequestError(req, server.address()?.port);
         if (denied) return send(res, 403, { error: denied });
       }
-      const overlayEvents = path.match(/^\/api\/runs\/([a-f0-9]{8})\/overlay\/events$/);
+      const overlayEvents = path.match(/^\/api\/runs\/(current|[a-f0-9]{8})\/overlay\/events$/);
       if (overlayEvents && req.method === 'GET') {
         const lang = overlayLang(url.searchParams.get('lang'));
-        const first = overlayData(overlayEvents[1], lang); // unknown run → 404 before the stream opens
+        // `current` follows the run being played: no run yet → the stream opens anyway and says so (event: norun)
+        const follow = overlayEvents[1] === 'current';
+        const runId = follow ? followCheck() : overlayEvents[1];
+        const first = runId ? overlayData(runId, lang) : null; // unknown run → 404 before the stream opens
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
-        res.write(`retry: 2000\n\nevent: snapshot\ndata: ${JSON.stringify(first)}\n\n`);
-        if (!overlayClients.has(overlayEvents[1])) overlayClients.set(overlayEvents[1], new Map());
+        res.write(`retry: 2000\n\n${first ? `event: snapshot\ndata: ${JSON.stringify(first)}\n\n` : overlayNoRun}`);
         const w = String(url.searchParams.get('w') || 'team').slice(0, 12);
-        overlayClients.get(overlayEvents[1]).set(res, { lang, w, preview: url.searchParams.get('preview') === '1', alerts: w === 'alerts' || url.searchParams.get('alerts') === '1' });
-        res.on('close', () => overlayClients.get(overlayEvents[1])?.delete(res));
-        streamHub.prime(overlayEvents[1]);
+        overlayAdd(runId, res, { lang, w, preview: url.searchParams.get('preview') === '1', alerts: w === 'alerts' || url.searchParams.get('alerts') === '1', follow });
+        // a follower may have moved to another run's list since
+        res.on('close', () => { for (const set of overlayClients.values()) set.delete(res); });
+        if (runId) streamHub.prime(runId);
         return;
       }
       if (path === '/api/events') {

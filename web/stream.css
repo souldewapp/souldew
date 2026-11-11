@@ -39,6 +39,11 @@ html.streamer .sm-secret:focus { filter: blur(7px); }
 /* ---- overlay builder ---- */
 .stream-page .steps { margin: 0; padding-left: 20px; display: grid; gap: 3px; }
 .ov-global { gap: 10px 14px; }
+/* which run the links show: following the current run (default) or pinned to one */
+.ov-follow { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 9px 12px; border-radius: 10px; color: var(--ink-2);
+  background: var(--shell-3); border: 1px solid var(--edge); }
+.ov-follow svg { flex: none; margin-top: 1px; color: var(--warn); }
+.ov-follow.on svg { color: var(--tri); }
 .ov-global select, .stream-page select { background: var(--shell-3); color: var(--ink); border: 1px solid var(--edge); border-radius: 8px; padding: 5px 8px; font: inherit; }
 .ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: 16px; }
 .ov-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; }

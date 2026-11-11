@@ -278,6 +278,50 @@
     @keyframes cf-qr { 0% { transform: perspective(300px) rotateY(80deg) scale(.7); opacity: 0; } 100% { transform: none; opacity: 1; } }
     @keyframes cf-bar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
+    /* ---- the fixed box: every widget fills the size of its browser source (shared/overlay.mjs overlaySize), whatever
+       the data – a team of one takes the same space as a full one, so nothing grows or moves in OBS ---- */
+    #root.fixed { display: flex; flex-direction: column; overflow: visible; }
+    #root.fixed > .wrap { flex: 1 1 0; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+    #root.fixed > .wrap > * { flex: 1 1 0; min-height: 0; min-width: 0; }
+    .fixed .team-box { display: flex; }
+    .fixed .team { flex: 1; min-width: 0; }
+    .fixed .team:not(.v) .names { flex: none; width: 150px; }
+    .fixed .team:not(.v) .who b { max-width: 100%; }
+    .fixed .team .grp { flex: 1 1 0; } /* never narrower than a Pokémon: a team that doesn't fit shrinks as a whole */
+    .fixed .team .grp > *, .fixed .team .who { flex-shrink: 0; }
+    /* spread like space-around, but a team too big for the box overflows at the end only – where layoutBox() sees it */
+    .fixed .team .grp, .fixed .team:not(.v) .names { justify-content: flex-start; }
+    .fixed .team .grp { align-items: center; } /* a column wider than its Pokémon keeps them in the middle */
+    .fixed .team:not(.v) .grp > *, .fixed .team:not(.v) .names > * { margin-block: auto; }
+    .fixed .team.v .grp > * { margin-inline: auto; }
+    .grp.void { background: #ffffff05; box-shadow: inset 0 0 0 1px #ffffff0a; }
+    .lk.off::before { display: none; }
+    .grp.void .mon.empty .sw { border-color: #ffffff1c; }
+    .t-minimal .grp.void .mon.empty .sw { border-color: #ffffff38; }
+    .fixed .card-box { display: flex; flex-direction: column; }
+    .fixed .slots { flex: 1; min-height: 0; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .fixed .slots.v { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, 1fr); }
+    .fixed .slot .nm { max-width: 100%; }
+    .fixed .slot .info { width: 100%; }
+    .fixed .slots:not(.v) .slot .row { justify-content: center; width: 100%; }
+    .fixed .slot .hpb { width: auto; flex: 1 1 auto; max-width: 76px; min-width: 24px; }
+    .fixed .slot .hpt { flex: none; }
+    .fixed .slots.v .slot .info { flex: 1; }
+    .fixed .counters { display: grid; grid-template-columns: var(--cols); }
+    .fixed .counters.v { grid-template-columns: none; grid-template-rows: repeat(4, 1fr); }
+    .fixed .tile { min-width: 0; }
+    .fixed .tile .l { white-space: normal; line-height: 1.15; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .fixed .counters.v .tile .per { max-width: none; min-width: 0; }
+    .fixed .where { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+    .fixed .where.v { grid-template-columns: none; grid-template-rows: repeat(var(--n), 1fr); }
+    .fixed .plate, .fixed .where.v .plate { min-width: 0; max-width: none; }
+    .plate.idle { visibility: hidden; } /* no location yet: the plate keeps its place */
+    .fixed .stats { min-width: 0; }
+    .fixed .stats.v { align-items: stretch; }
+    .fixed .stats.v > * { min-width: 0; }
+    .fixed .stats:not(.v) .run { flex: 1 1 auto; }
+    .fixed .stats .run b { max-width: none; min-width: 0; text-overflow: ellipsis; overflow: hidden; }
+
     body:has(#alerts .alert) #root .msg { visibility: hidden; } /* the preview's hint gives way to a real alert */
     /* status lines (loading, no run, the preview's hint) sit on a dark pill: readable on a bright game, too */
     .msg { display: inline-block; margin: 10px; font-size: 14px; color: var(--ink-2, #c9c5d3); padding: 8px 12px; border-radius: 10px; background: #141318d9; }
@@ -295,7 +339,7 @@
   <div id="popups" class="popups" aria-live="polite"></div>
   <div id="net" class="net" hidden></div>
   <script type="module">
-    import { teamOf, groupsOf, countersOf, alertsBetween, pickSlots, playTimeText, WIDGETS } from '/shared/overlay.mjs';
+    import { teamOf, groupsOf, countersOf, alertsBetween, pickSlots, playTimeText, overlayRun, overlayBox, TEAM_SLOTS, WIDGETS } from '/shared/overlay.mjs';
     import { coffeeTexts, COFFEE_URL, COFFEE_CORNERS, DEFAULT_CORNER } from '/shared/coffee.mjs';
     import { qrMatrix, qrPath } from '/shared/qr.mjs';
 
@@ -336,7 +380,9 @@
     const MAX = [0, 151, 251, 386, 493];
 
     const params = new URLSearchParams(location.search);
-    const run = params.get('run');
+    // a run's ID (the link stays on that run) or 'current' – also without ?run=: follows the run being played
+    const run = overlayRun(params.get('run'));
+    const follow = run === 'current';
     const flag = (k, def) => (params.has(k) ? !['0', 'false', 'no', 'off'].includes(params.get(k)) : def);
     const opt = {
       w: WIDGETS.includes(params.get('w')) ? params.get('w') : 'team',
@@ -450,7 +496,7 @@
       if (!el) {
         root.innerHTML = '';
         el = document.createElement('div');
-        el.className = `${cls.split(' ')[0]}-wrap`;
+        el.className = `${cls.split(' ')[0]}-wrap wrap`;
         root.append(el);
       }
       return el;
@@ -474,14 +520,19 @@
         return `<div class="who" style="--acc:${acc(s)}"><b>${esc(nameOf(s))}</b>${Number.isInteger(b) ? `<span>★ <span class="num">${b}</span></span>` : ''}</div>`;
       }).join('');
       const cols = box.querySelector('.cols');
-      if (!groups.length) {
+      if (!groups.length && !fixed) {
         cols.innerHTML = `<div class="empty-team">${esc(L.noTeam)}</div>`;
         return;
       }
       if (cols.querySelector('.empty-team')) cols.innerHTML = '';
       // the lead: the first group whose members are all still standing
       const lead = groups.findIndex((g) => !g.dead && slots.every((s) => g.members[s] && g.members[s].status !== 'fnt' && !g.members[s].box));
-      patch(cols, groups.map((g, i) => {
+      // room for a full team from the start: the free places wait as faint empty columns
+      const voids = Array.from({ length: Math.max(0, TEAM_SLOTS - groups.length) }, (_, i) => ({
+        key: `void:${i}`, sig: 'void',
+        html: `<div class="grp void${slots.length > 1 ? ' multi' : ''}">${slots.map((s, j) => (j ? '<i class="lk off"></i>' : '') + monCell(null, { slot: s, showNick })).join('')}${opt.area && !solo ? '<span class="area">&nbsp;</span>' : ''}</div>`,
+      }));
+      patch(cols, [...groups.map((g, i) => {
         const key = g.area || `x:${slots.find((s) => g.members[s])}:${g.members[slots.find((s) => g.members[s])]?.key}`;
         const sig = [g.dead, opt.area && g.label, i === lead, ...slots.map((s) => monSig(g.members[s]))].join('#');
         const multi = slots.length > 1;
@@ -503,7 +554,7 @@
             slots.forEach((s) => lastMons.set(`${key}:${s}`, g.members[s]));
           },
         };
-      }));
+      }), ...voids]);
     }
 
     function renderCard(wrap, slot) {
@@ -549,9 +600,12 @@
       const tiles = [
         ['alive', '♥', c.alive, aliveL], ['dead', CROSS, c.dead, L.dead], ['caught', '◓', c.caught, L.caught],
       ];
-      wrap.innerHTML = `<div class="counters ${opt.layout}">${tiles.map(([k, ic, n, l]) => shell(`tile ${k}`, `<span class="ic">${ic}</span><span class="n num${lastCounts[k] !== undefined && lastCounts[k] !== n ? ' bump' : ''}">${n}</span><span class="l">${esc(l)}</span>`)).join('')}
+      // four places from the start – the badges tile turns up in its own once the game reports badges; with
+      // several players it is wider (a number per player)
+      const cols = `repeat(3, minmax(0, 1fr)) minmax(0, ${slots.length > 1 && opt.layout !== 'v' ? 0.7 + 0.45 * slots.length : 1}fr)`;
+      wrap.innerHTML = `<div class="counters ${opt.layout}" style="--cols:${cols}">${tiles.map(([k, ic, n, l]) => shell(`tile ${k}`, `<span class="ic">${ic}</span><span class="n num${lastCounts[k] !== undefined && lastCounts[k] !== n ? ' bump' : ''}">${n}</span><span class="l">${esc(l)}</span>`)).join('')}
         ${badgeSlots.length ? shell('tile badges', `<span class="ic">★</span>${badgeSlots.length === 1 ? `<span class="n num">${c.badges[badgeSlots[0]]}</span>`
-          : `<span class="per">${badgeSlots.map((s) => `<span style="--acc:${acc(s)}"><i>${esc(nameOf(s))}</i> <span class="num">${c.badges[s]}</span></span>`).join('')}</span>`}<span class="l">${esc(L.badges)}</span>`) : ''}</div>`;
+          : `<span class="per">${badgeSlots.map((s) => `<span style="--acc:${acc(s)}"><i>${esc(nameOf(s))}</i> <span class="num">${c.badges[s]}</span></span>`).join('')}</span>`}<span class="l">${esc(L.badges)}</span>`) : fixed ? '<span></span>' : ''}</div>`;
       lastCounts = { alive: c.alive, dead: c.dead, caught: c.caught };
     }
 
@@ -564,13 +618,16 @@
         box = wrap.querySelector('.where');
       }
       box.className = `where ${opt.layout}`;
-      const items = slots.map((s) => [s, S.doc[`where:${s}`]]).filter(([, w]) => w?.name || opt.preview);
+      box.style.setProperty('--n', String(slots.length));
+      // every player keeps a place – a plate without a location yet stays invisible instead of moving the others
+      const items = slots.map((s) => [s, S.doc[`where:${s}`]]).filter(([, w]) => w?.name || opt.preview || fixed);
       const one = slots.length === 1;
       patch(box, items.map(([s, w]) => {
         const f = w?.fight;
+        const idle = !w?.name && !opt.preview;
         return {
-          key: s, sig: [w?.gen, w?.id, w?.name, f?.kind, f?.species, f?.level].join('|'),
-          html: `<div class="box plate" style="--acc:${acc(s)}"><i class="shine"></i>
+          key: s, sig: [w?.gen, w?.id, w?.name, f?.kind, f?.species, f?.level, idle].join('|'),
+          html: `<div class="box plate${idle ? ' idle' : ''}" style="--acc:${acc(s)}"><i class="shine"></i>
             <span class="k">${POST}${one ? esc(L.here) : `<b>${esc(nameOf(s))}</b>`}</span>
             <span class="place${!w?.name ? ' none' : w.name.length > 16 ? ' long' : ''}">${esc(w?.name || L.nowhere)}</span>
             ${f ? `<span class="fight">${f.species ? `<img src="${spriteSrc(f.species)}" alt="" />` : '⚔'}${esc(f.kind === 'trainer' ? L.trainer : L.wild)}${f.species ? ` · ${esc(species(f.species))}${f.level ? ` <span class="num">${esc(L.lv)} ${f.level}</span>` : ''}` : ''}</span>` : ''}</div>`,
@@ -597,9 +654,46 @@
         <span class="it"><span class="num">${c.caught}</span> ${esc(L.caught)}</span>`);
     }
 
+    // ---- the fixed box (issue: overlays grew with the team) ----
+    // Every widget but the full-screen layers fills the size of its browser source: the size in the URL (OBS's
+    // layer-width/-height), else the one the Stream page announces for the players shown. Content that would not fit
+    // (a run with more players than the source was made for) shrinks as a whole – it never spills out or moves.
+    const fixed = !opt.legacy && opt.w !== 'alerts' && opt.w !== 'popup';
+    function layoutBox() {
+      if (!fixed || !S || !root.querySelector(':scope > .wrap')) {
+        root.classList.remove('fixed');
+        root.style.width = root.style.height = '';
+        root.style.zoom = String(opt.scale);
+        return;
+      }
+      const slots = pickSlots(S, opt.p);
+      const [bw, bh] = overlayBox(params, opt.w, slots.length, { layout: opt.layout, nick: opt.w === 'team' && (opt.nick ?? slots.length <= 2), hp: opt.hp });
+      // a browser source smaller than the box (OBS's default 800 × 600): the whole widget shrinks into it
+      const vw = innerWidth > 40 && innerHeight > 20 ? Math.min(1, innerWidth / (bw * opt.scale), innerHeight / (bh * opt.scale)) : 1;
+      root.classList.add('fixed');
+      let z = 1;
+      for (let i = 0; i < 4; i++) {
+        root.style.width = `${bw / z}px`;
+        root.style.height = `${bh / z}px`;
+        root.style.zoom = String(opt.scale * vw * z);
+        let f = 1;
+        for (const el of [root, ...root.querySelectorAll(':scope > .wrap > *')]) {
+          f = Math.min(f, el.clientWidth / Math.max(1, el.scrollWidth), el.clientHeight / Math.max(1, el.scrollHeight));
+        }
+        if (f > 0.995) break;
+        z *= f;
+      }
+    }
+    addEventListener('resize', layoutBox);
+    document.fonts?.ready.then(layoutBox);
+
     let painted = false;
     function render() {
       if (!S) return;
+      draw();
+      layoutBox();
+    }
+    function draw() {
       const slots = pickSlots(S, opt.p);
       if (opt.w === 'alerts') {
         // nothing on screen between alerts – in the app's preview a hint where they will appear
@@ -787,8 +881,25 @@
     // ---- live data: pushed over SSE, polled when that isn't possible ----
     const seen = new Set();
     let prev = null;
+    // following the current run: another run took over – start afresh (its old news are no alerts)
+    function resetRun() {
+      S = null;
+      prev = null;
+      painted = false;
+      seen.clear();
+      lastMons.clear();
+      lastCounts = {};
+      queue.length = 0;
+      root.innerHTML = '';
+    }
+    function noRun() {
+      resetRun();
+      root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
+      layoutBox();
+    }
     function apply(snap) {
       if (!snap?.doc) return;
+      if (S && snap.id !== S.id) resetRun();
       const fresh = alertsBetween(prev, snap, seen);
       S = snap;
       prev = snap;
@@ -798,6 +909,7 @@
     }
     if (!run) root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
     else {
+      const runPath = `/api/runs/${encodeURIComponent(run)}`;
       root.innerHTML = `<div class="msg">${esc(L.loading)}</div>`;
       const q = `lang=${lang}&w=${opt.legacy ? 'team' : opt.w}${showsAlerts && opt.w !== 'alerts' ? '&alerts=1' : ''}${opt.preview ? '&preview=1' : ''}`;
       let downSince = 0;
@@ -810,10 +922,19 @@
       const startPolling = () => {
         if (poll) return;
         const tick = async () => {
-          const snap = await getJson(`/api/runs/${encodeURIComponent(run)}/overlay?${q}`);
+          let r = null;
+          try {
+            r = await fetch(`${runPath}/overlay?${q}`, { cache: 'no-store' });
+          } catch {
+            // the app is away
+          }
+          const snap = r?.ok ? await r.json().catch(() => null) : null;
           if (snap) {
             downSince = 0;
             apply(snap);
+          } else if (r?.status === 404 && follow) {
+            downSince = 0; // the app is there, it just has no run yet
+            noRun();
           } else downSince ||= Date.now();
           showNet();
         };
@@ -824,7 +945,7 @@
       // per server open, and the app and OBS need theirs.
       if (typeof EventSource === 'undefined' || opt.preview) startPolling();
       else {
-        const es = new EventSource(`/api/runs/${encodeURIComponent(run)}/overlay/events?${q}`);
+        const es = new EventSource(`${runPath}/overlay/events?${q}`);
         es.addEventListener('snapshot', (e) => {
           opened = true;
           fails = 0;
@@ -847,6 +968,14 @@
         });
         es.addEventListener('gone', () => {
           root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
+        });
+        // following the current run, and there is none (yet): the next snapshot brings it
+        es.addEventListener('norun', () => {
+          opened = true;
+          fails = 0;
+          downSince = 0;
+          showNet();
+          noRun();
         });
         // a stream that never answers (all of the browser's connections to the app are taken – many overlays in one
         // OBS): ask every few seconds instead

@@ -284,12 +284,76 @@ export function playTimeText(pt) {
   return `${pt.h}:${String(pt.m ?? 0).padStart(2, '0')}`;
 }
 
+// ---- which run an overlay shows ----------------------------------------------------------------------------
+
+/** The run an overlay URL asks for: a run ID (a link pinned to that run), 'current' (follows the run being played – also
+ *  when `run` is missing), or null for something that is neither. */
+export function overlayRun(param) {
+  const v = String(param ?? '').trim().toLowerCase();
+  if (!v || v === 'current') return 'current';
+  return /^[a-f0-9]{8}$/.test(v) ? v : null;
+}
+
 /**
- * The OBS browser-source URL of a widget. `opts` are the overlay's query options (w, p, layout, theme, scale,
- * bg, lang, sound, hp …); `size` [w, h] adds OBS's layer-width/-height so a link dropped into OBS gets that size.
+ * The run "current" means – for the overlays that follow it and the stream API: the run open in the app
+ * (`lastRun`, as long as it still exists), else the one played last (`runs`: [{ id, playedAt }], playedAt = when its doc
+ * last changed), else null.
+ */
+export function currentRunId({ lastRun = null, runs = [] } = {}) {
+  if (lastRun && runs.some((r) => r.id === lastRun)) return lastRun;
+  let best = null;
+  for (const r of runs) if (r?.id && (!best || (r.playedAt || 0) > (best.playedAt || 0))) best = r;
+  return best?.id || null;
+}
+
+// ---- how big a widget is -------------------------------------------------------------------------------------
+
+/** Team members every widget makes room for – a team of one and a full team take the same space. */
+export const TEAM_SLOTS = 6;
+
+/**
+ * [w, h] of a widget at scale 1 for `n` players (1–4): a fixed box that holds a full team, the longest names and the
+ * biggest (DS) sprites – the size of its OBS browser source. The overlay lays its widget out inside exactly this box
+ * whatever the data, so the source never grows or moves while the team fills up. `nick`/`hp` add the team strip's
+ * nickname and HP-bar lines.
+ */
+export function overlaySize(w, n = 1, { layout = 'h', nick = false, hp = true } = {}) {
+  const v = layout === 'v';
+  const p = Math.min(4, Math.max(1, Math.round(n) || 1));
+  const cell = 80 + (hp ? 9 : 0) + (nick ? 19 : 0); // one Pokémon of the team strip: sprite, HP bar, nickname
+  switch (w) {
+    // measured with six Pokémon, long names and nicknames, plus a few pixels of air (test/overlay.test.mjs checks the
+    // formulas, the screenshots in the pull request the look)
+    case 'team': return v ? [20 + p * 110 + (p > 1 ? 18 : 0), 213 + TEAM_SLOTS * cell + (nick ? 13 : 0)]
+      : [838, p * cell + (p === 1 ? 46 : 96 + 24 * (p - 2))];
+    case 'card': return v ? [560, 420] : [900, 250];
+    case 'counters': return v ? [300, 352] : [740 + p * 70, 74];
+    case 'where': return v ? [380, 24 + p * 128 + (p - 1) * 10] : [24 + p * 340 + (p - 1) * 10, 152];
+    case 'alerts': return [960, 440];
+    case 'stats': return v ? [340, 230 + (p > 2 ? 16 : 0)] : [640 + p * 110, 64];
+    default: return [960, 540];
+  }
+}
+
+/**
+ * The box an overlay page lays its widget out in, at scale 1: the size its browser source was made with (OBS's
+ * `layer-width`/`-height` in the URL, which already include `scale`), else `overlaySize` for the players shown now.
+ */
+export function overlayBox(params, w, n, opts = {}) {
+  const scale = Math.min(3, Math.max(0.4, Number(params?.get?.('scale')) || 1));
+  const lw = Number(params?.get?.('layer-width'));
+  const lh = Number(params?.get?.('layer-height'));
+  if (lw >= 40 && lh >= 20 && lw <= 8000 && lh <= 8000) return [lw / scale, lh / scale];
+  return overlaySize(w, n, opts);
+}
+
+/**
+ * The OBS browser-source URL of a widget. `runId` is a run's ID (the link stays on that run) or 'current'/null (it
+ * follows the run being played). `opts` are the overlay's query options (w, p, layout, theme, scale, bg, lang, sound,
+ * hp …); `size` [w, h] adds OBS's layer-width/-height so a link dropped into OBS gets that size.
  */
 export function overlayUrl(origin, runId, opts = {}, size = null, name = '') {
-  const q = new URLSearchParams({ run: runId });
+  const q = new URLSearchParams({ run: overlayRun(runId) || 'current' });
   for (const [k, v] of Object.entries(opts)) if (v !== undefined && v !== null && v !== '' && v !== false) q.set(k, v === true ? '1' : String(v));
   if (size) {
     q.set('layer-width', String(Math.round(size[0])));

@@ -4,6 +4,16 @@
 
 ## 2.3.1
 
+- **OBS overlays keep working from run to run** ([#8](https://github.com/souldewapp/souldew/issues/8)): the links on
+  the Stream page now follow the current run – the one open in souldew – so a new run, a joined SoulLink or another
+  game no longer means adding every overlay to OBS again. They switch live, without OBS reloading them. The Stream
+  page's Run menu can still pin the links to one run, and links from earlier versions keep showing their run. The
+  Pokélink bridge and the stream API's `current` streams follow along too.
+- **OBS overlays no longer grow while the team fills up** ([#7](https://github.com/souldewapp/souldew/issues/7)):
+  every widget now fills exactly the size of its browser source – the team strip and the team card keep six places,
+  the counters a place for the badges, "You are here" one plate per player, and long names are shortened – so the
+  overlay keeps its size and position in your scene from the first catch to a full team. A run with more players
+  than the source was made for, or a browser source set smaller, scales the widget down instead of cutting it off.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged
