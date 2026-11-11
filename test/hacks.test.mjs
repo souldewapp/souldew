@@ -16,16 +16,13 @@ test.after(() => rmSync(DATA, { recursive: true, force: true }));
 const catalog = JSON.parse(readFileSync(new URL('../shared/data/catalog.json', import.meta.url), 'utf8'));
 const i18n = (lang) => JSON.parse(readFileSync(new URL(`../web/i18n/${lang}.json`, import.meta.url), 'utf8'));
 
-test('a patch is linked to the hack with the longest fitting name (Too Many Types 2, Super Mariomon)', () => {
+test('a patch is linked to the hack with the longest fitting name (Too Many Types 2)', () => {
   const dir = join(DATA, 'Patches');
   mkdirSync(dir, { recursive: true });
   const ips = Buffer.from('PATCHEOF', 'latin1'); // an empty IPS patch
   const files = {
     'Pokemon Too Many Types v1.6.ips': 'too-many-types',
     'Too Many Types 2 v1.5.3.ips': 'too-many-types-2',
-    'Super Mariomon 1.4.ips': 'super-mariomon',
-    'Mariomon.ips': 'mariomon',
-    'Mariomon_with_Typebars.ips': 'mariomon',
     'Pokemon Run&Bun 1.07.ips': 'run-and-bun',
   };
   for (const f of Object.keys(files)) writeFileSync(join(dir, f), ips);
@@ -40,7 +37,7 @@ test('catalog: the live-tracking state of a hack is one the library can show, in
   const langs = ['en', 'de', 'es', 'fr', 'it'].map((l) => [l, i18n(l)]);
   const withLive = catalog.hacks.filter((h) => h.live);
   assert.ok(withLive.some((h) => h.id === 'run-and-bun'));
-  for (const id of ['too-many-types', 'too-many-types-2', 'super-mariomon', 'mariomon']) assert.ok(catalog.hacks.some((h) => h.id === id), id);
+  for (const id of ['too-many-types', 'too-many-types-2']) assert.ok(catalog.hacks.some((h) => h.id === id), id);
   for (const h of withLive) {
     assert.ok(states.includes(h.live), `${h.id}: ${h.live}`);
     for (const [l, d] of langs) {
@@ -62,7 +59,7 @@ test('the species picker of a run offers every Pokémon its game holds (Run & Bu
   // Run & Bun: species by name in National Dex order – Chimchar (#390) and everything up to Gen 8
   rd.romSpecies = { engine: 'expanded', map: Object.assign([0], { 390: 390, 905: 905, 1100: 263 }), unknown: {} };
   assert.equal(rd.maxSpecies(), 905);
-  // Mariomon: its creatures aren't Pokémon – offered under the game's names
+  // a hack's own creatures (names the base game doesn't know) are offered under the game's names
   rd.romSpecies = { engine: 'vanilla', map: [0, 0, 152], unknown: { 1: 'Goomba' } };
   assert.equal(rd.maxSpecies(), 386);
   assert.deepEqual(rd.ownSpecies(), [FAKEMON + 1]);

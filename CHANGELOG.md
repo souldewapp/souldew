@@ -58,8 +58,8 @@
   battle it follows the left Pokémon of each side, and its partner once the left one is down.
 - **Enter every Pokémon the game holds by hand**: the species picker only offered the base game's generation – no
   Sinnoh starters in Run & Bun. It now follows the ROM: up to #905 in Run & Bun, the Gen 4/5 Pokémon of Light
-  Platinum, the randomizer's Pokémon, and a hack's own creatures (Mariomon) under the names the game gives them.
-- **More ROM hacks in the library**: Too Many Types, Too Many Types 2, Super Mariomon and Mariomon are recognised, and
+  Platinum, the randomizer's Pokémon, and a hack's own creatures under the names the game gives them.
+- **More ROM hacks in the library**: Too Many Types and Too Many Types 2 are recognised, and
   a hack's details now say how far live tracking works for it (read live, with limits, not checked yet) and what to
   know – e.g. that Too Many Types' own types aren't known to souldew. A patch named after the longer of two hacks
   ("Too Many Types 2") is linked to that one.

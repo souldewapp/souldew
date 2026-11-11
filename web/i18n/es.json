@@ -2223,7 +2223,6 @@
   "lib.liveNo": "No compatible: apunta las capturas a mano",
   "lib.liveNote.rnb": "El equipo, el lugar, los combates y las capturas se leen en directo. El truco de los Caramelos Raros no está disponible y los objetos equipados no muestran su nombre: el hack numera sus objetos a su manera.",
   "lib.liveNote.types": "souldew no conoce los tipos propios de este hack: el tablero y las reglas de tipo usan los oficiales.",
-  "lib.liveNote.ownMons": "Sus criaturas no son Pokémon: souldew las muestra con los nombres del juego, sin sprites, y a mano también las eliges por esos nombres.",
   "party.holds": "lleva {item}",
   "cap.champion": "Campeón",
   "cap.eliteFour": "Alto Mando"

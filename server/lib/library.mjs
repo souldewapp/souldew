@@ -197,7 +197,7 @@ export function scanLibrary(config = {}) {
 
   // Link patches to hacks / base games
   for (const p of patches) {
-    // (the longest name that fits wins: "Too Many Types 2" over "Too Many Types", "Super Mariomon" over "Mariomon")
+    // (the longest name that fits wins: "Too Many Types 2" over "Too Many Types")
     const byName = [...(cat.hacks || [])].sort((a, b) => String(b.name).length - String(a.name).length);
     const hack = byName.find((h) => (p.sha1 && h.patchSha1 === p.sha1) || (h.baseCrc32 && p.expectedCrc && String(h.baseCrc32).toUpperCase() === p.expectedCrc && nameLike(p.name, h.name)))
       || byName.find((h) => nameLike(p.name, h.name));
