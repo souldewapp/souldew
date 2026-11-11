@@ -2222,9 +2222,11 @@
   "lib.liveUntested": "Non ancora provato",
   "lib.liveNo": "Non supportato: inserisci le catture a mano",
   "lib.liveNote.rnb": "Squadra, luogo, lotte e catture vengono letti dal vivo. Il trucco delle Caramelle Rare non c’è e gli strumenti tenuti non mostrano il nome: l’hack numera i suoi strumenti a modo suo.",
-  "lib.liveNote.types": "souldew non conosce i tipi propri di questo hack: la bacheca e le regole sui tipi usano quelli ufficiali.",
+  "lib.liveNote.types": "Squadra, luogo, lotte e catture vengono letti dal vivo. souldew non conosce i tipi propri dell’hack: invece di quelli ufficiali non mostra tipi, efficacia o regola dei tipi per i suoi Pokémon. Il trucco delle Caramelle Rare non c’è.",
   "party.holds": "tiene {item}",
   "cap.champion": "Campione",
   "cap.eliteFour": "Superquattro",
-  "battle.ownTypes": "Questo hack ROM ha tipi propri che souldew non conosce: per questo qui non mostra tipi, efficacia o regola dei tipi invece di mostrarli sbagliati."
+  "battle.ownTypes": "Questo hack ROM ha tipi propri che souldew non conosce: per questo qui non mostra tipi, efficacia o regola dei tipi invece di mostrarli sbagliati.",
+  "lib.patchedRom": "La tua ROM",
+  "lib.patchedRomHint": "Già patchata: riconosciuta dal suo checksum."
 }

@@ -2222,9 +2222,11 @@
   "lib.liveUntested": "Aún sin probar",
   "lib.liveNo": "No compatible: apunta las capturas a mano",
   "lib.liveNote.rnb": "El equipo, el lugar, los combates y las capturas se leen en directo. El truco de los Caramelos Raros no está disponible y los objetos equipados no muestran su nombre: el hack numera sus objetos a su manera.",
-  "lib.liveNote.types": "souldew no conoce los tipos propios de este hack: el tablero y las reglas de tipo usan los oficiales.",
+  "lib.liveNote.types": "El equipo, el lugar, los combates y las capturas se leen en directo. souldew no conoce los tipos propios del hack: en lugar de los oficiales, no muestra tipos, efectividades ni la regla de tipos para sus Pokémon. El truco de los Caramelos Raros no está disponible.",
   "party.holds": "lleva {item}",
   "cap.champion": "Campeón",
   "cap.eliteFour": "Alto Mando",
-  "battle.ownTypes": "Este hack de ROM tiene tipos propios que souldew no conoce, así que aquí no muestra tipos, efectividades ni la regla de tipos en lugar de mostrarlos mal."
+  "battle.ownTypes": "Este hack de ROM tiene tipos propios que souldew no conoce, así que aquí no muestra tipos, efectividades ni la regla de tipos en lugar de mostrarlos mal.",
+  "lib.patchedRom": "Tu ROM",
+  "lib.patchedRomHint": "Ya parcheada: reconocida por su suma de comprobación."
 }
