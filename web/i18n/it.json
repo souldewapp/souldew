@@ -2221,6 +2221,7 @@
   "lib.livePartial": "Letto dal vivo, con limiti",
   "lib.liveUntested": "Non ancora provato",
   "lib.liveNo": "Non supportato: inserisci le catture a mano",
+  "lib.liveNote.cfru": "Squadra, luogo e lotte vengono letti dal vivo, gli strumenti tenuti con i nomi che dà loro il gioco. souldew non mostra un limite di livello per l’hack e il trucco delle Caramelle Rare non c’è.",
   "lib.liveNote.rnb": "Squadra, luogo, lotte e catture vengono letti dal vivo. Il trucco delle Caramelle Rare non c’è e gli strumenti tenuti non mostrano il nome: l’hack numera i suoi strumenti a modo suo.",
   "lib.liveNote.types": "Squadra, luogo, lotte e catture vengono letti dal vivo. souldew non conosce i tipi propri dell’hack: invece di quelli ufficiali non mostra tipi, efficacia o regola dei tipi per i suoi Pokémon. Il trucco delle Caramelle Rare non c’è.",
   "party.holds": "tiene {item}",

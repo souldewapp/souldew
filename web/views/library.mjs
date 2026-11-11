@@ -521,6 +521,7 @@ const liveLabel = (v) => ({
   no: t('lib.liveNo', 'Not supported – enter catches by hand'),
 }[v] || '–');
 const liveNote = (k) => ({
+  cfru: t('lib.liveNote.cfru', 'Team, place and battles are read live, held items by the names the game gives them. souldew shows no level cap for the hack, and the Rare Candy cheat is off.'),
   rnb: t('lib.liveNote.rnb', 'Team, place, battles and catches are read live. The Rare Candy cheat is off and held items aren’t named – the hack numbers its items its own way.'),
   types: t('lib.liveNote.types', 'Team, place, battles and catches are read live. souldew doesn’t know the hack’s own types: it shows no types, matchups or type rule for its Pokémon rather than the official ones. The Rare Candy cheat is off.'),
 }[k] || '');

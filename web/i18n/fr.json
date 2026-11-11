@@ -2221,6 +2221,7 @@
   "lib.livePartial": "Lu en direct, avec des limites",
   "lib.liveUntested": "Pas encore testé",
   "lib.liveNo": "Non pris en charge – note tes captures à la main",
+  "lib.liveNote.cfru": "L’équipe, le lieu et les combats sont lus en direct, les objets tenus avec les noms que leur donne le jeu. souldew n’affiche pas de limite de niveau pour ce hack et la triche Super Bonbon est désactivée.",
   "lib.liveNote.rnb": "L’équipe, le lieu, les combats et les captures sont lus en direct. La triche Super Bonbon est désactivée et les objets tenus n’ont pas de nom : le hack numérote ses objets à sa façon.",
   "lib.liveNote.types": "L’équipe, le lieu, les combats et les captures sont lus en direct. souldew ne connaît pas les types propres au hack : plutôt que les types officiels, il n’affiche pour ses Pokémon ni types, ni efficacités, ni règle de type. La triche Super Bonbon est désactivée.",
   "party.holds": "tient {item}",

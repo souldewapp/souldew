@@ -2221,6 +2221,7 @@
   "lib.livePartial": "Wird live gelesen, mit Einschränkungen",
   "lib.liveUntested": "Noch nicht getestet",
   "lib.liveNo": "Nicht unterstützt – trag Fänge von Hand ein",
+  "lib.liveNote.cfru": "Team, Ort und Kämpfe werden live gelesen, getragene Items mit den Namen aus dem Spiel. Ein Level-Cap zeigt souldew für den Hack nicht an, und der Sonderbonbon-Cheat ist aus.",
   "lib.liveNote.rnb": "Team, Ort, Kämpfe und Fänge werden live gelesen. Der Sonderbonbon-Cheat ist aus und getragene Items stehen ohne Namen da – der Hack nummeriert seine Items auf eigene Art.",
   "lib.liveNote.types": "Team, Ort, Kämpfe und Fänge werden live gelesen. Die eigenen Typen des Hacks kennt souldew nicht: Statt der offiziellen zeigt es für seine Pokémon keine Typen, keine Effektivität und keine Typ-Regel. Der Sonderbonbon-Cheat ist aus.",
   "party.holds": "trägt {item}",

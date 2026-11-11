@@ -2221,6 +2221,7 @@
   "lib.livePartial": "Se lee en directo, con limitaciones",
   "lib.liveUntested": "Aún sin probar",
   "lib.liveNo": "No compatible: apunta las capturas a mano",
+  "lib.liveNote.cfru": "El equipo, el lugar y los combates se leen en directo, los objetos equipados con los nombres que les da el juego. souldew no muestra ningún límite de nivel para el hack y el truco de los Caramelos Raros no está disponible.",
   "lib.liveNote.rnb": "El equipo, el lugar, los combates y las capturas se leen en directo. El truco de los Caramelos Raros no está disponible y los objetos equipados no muestran su nombre: el hack numera sus objetos a su manera.",
   "lib.liveNote.types": "El equipo, el lugar, los combates y las capturas se leen en directo. souldew no conoce los tipos propios del hack: en lugar de los oficiales, no muestra tipos, efectividades ni la regla de tipos para sus Pokémon. El truco de los Caramelos Raros no está disponible.",
   "party.holds": "lleva {item}",

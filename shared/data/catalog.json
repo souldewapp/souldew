@@ -1470,7 +1470,12 @@
    "uprCompatible": "no",
    "uprNote": "CFRU/DPE-expanded ROM (new species tables, engine); UPR ZX cannot randomize it.",
    "color": "#9C3B32",
-   "notes": "Thread title states version 4.1 (first post last edited 2024-03-22). Patch must be applied to FireRed USA 1.0 (not Rev 1)."
+   "live": "partial",
+   "liveNote": "cfru",
+   "notes": "Thread title states version 4.1 (first post last edited 2024-03-22). Patch must be applied to FireRed USA 1.0 (not Rev 1). Checked in souldew with a pre-patched 4.1 ROM (CRC32 FBA55DD8): team, place and battles read live.",
+   "romCrc32": [
+    "FBA55DD8"
+   ]
   },
   {
    "id": "unbound",
@@ -1479,7 +1484,7 @@
    "baseGameId": "pokemon-firered",
    "baseCrc32": "DD88761C",
    "system": "gba",
-   "patchFormat": "bps",
+   "patchFormat": "ups",
    "latestVersion": "2.1.1.1",
    "descriptionEn": "A complete FireRed-based adventure in the new Borrius region with a new story, modern mechanics and several difficulty settings.",
    "descriptionDe": "Ein vollständiges Abenteuer auf FireRed-Basis in der neuen Region Borrius mit eigener Story, modernen Mechaniken und mehreren Schwierigkeitsstufen.",
@@ -1496,10 +1501,11 @@
    "uprCompatible": "no",
    "uprNote": "CFRU/DPE-expanded ROM; UPR ZX cannot randomize it.",
    "color": "#3F4E7A",
-   "notes": "Version 2.1.1.1 is the newest listed in the first post (last edited 2025-04-14).",
-   "uncertain": true,
-   "uncertainFields": [
-    "patchFormat"
+   "live": "partial",
+   "liveNote": "cfru",
+   "notes": "Version 2.1.1.1 is the newest listed in the first post (last edited 2025-04-14). The official patch is a UPS patch for FireRed USA 1.0 (result CRC32 4B3D4957); checked in souldew with it: team, place and battles read live.",
+   "romCrc32": [
+    "4B3D4957"
    ]
   },
   {
