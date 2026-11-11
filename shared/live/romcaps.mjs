@@ -152,8 +152,14 @@ export function gen3Classes(rom, table, maxClass) {
   const words = ['LEADER', 'Leader', 'LEITER', 'Leiter', 'LÍDER', 'Líder', 'CAPOPALESTRA', 'Capopalestra', 'ELITE FOUR', 'Elite Four', 'TOP VIER', 'CONSEIL 4', 'ALTO MANDO', 'SUPERQUATTRO', 'CHAMPION', 'Champion', 'CHAMP', 'CAMPEÓN', 'CAMPIONE']
     .map((w) => [...w].map((c) => code[c])).filter((b) => b.every((x) => x !== undefined));
   const hits = [];
-  for (let o = 0; o + 16 < rom.length; o++) if (words.some((b) => rom[o] === b[0] && b.every((x, k) => rom[o + k] === x) && rom[o + b.length] === 0xff)) hits.push(o);
+  const lead = new Set(words.map((b) => b[0]));
+  for (let o = 0; o + 16 < rom.length; o++) if (lead.has(rom[o]) && words.some((b) => rom[o] === b[0] && b.every((x, k) => rom[o + k] === x) && rom[o + b.length] === 0xff)) hits.push(o);
   const tried = new Set();
+  const memo = new Map(); // (the alignments overlap: each entry is read once)
+  const name = (q) => {
+    if (!memo.has(q)) memo.set(q, text3(rom, q, 13, table));
+    return memo.get(q);
+  };
   let best = null;
   for (const o of hits) {
     for (let k = 0; k <= maxClass; k++) {
@@ -165,12 +171,12 @@ export function gen3Classes(rom, table, maxClass) {
       let good = 0;
       const names = [];
       for (let i = 0; i <= maxClass; i++) {
-        const t = text3(rom, start + i * 13, 13, table);
+        const t = name(start + i * 13);
         names.push(t === null ? '' : t.trim());
         if (t) good++;
       }
       // (shifted by a whole entry it reads as well: then the start is where the entry before it isn't a name)
-      const score = aligned * 1000 + good * 2 + (text3(rom, start - 13, 13, table) === null ? 1 : 0);
+      const score = aligned * 1000 + good * 2 + (name(start - 13) === null ? 1 : 0);
       if (good > (maxClass + 1) * 0.8 && (!best || score > best.score)) best = { offset: start, names, good, score };
     }
   }

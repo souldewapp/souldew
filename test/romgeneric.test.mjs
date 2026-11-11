@@ -550,3 +550,35 @@ test('what souldew can read: from the ROM data, then confirmed poll by poll – 
   fc.noteBattle({ enemy: { level: 172, hp: 5, maxHp: 11 } });
   assert.equal(fc.status().battle, 'no', 'an impossible level: the battle reading is given up');
 });
+
+test('run: the caps read from the ROM are filed with the run; the cap shows with badges read from the game; the first badge count isn\'t news', async () => {
+  const { RunDoc } = await import('../web/lib/doc.mjs');
+  const R = await import('../web/lib/run.mjs');
+  const doc = new RunDoc('caps');
+  doc.by = 'a';
+  doc._persistSoon = () => {};
+  const manifest = { id: 'caps', mode: 'nuzlocke', players: { p1: { name: 'Lou' } }, game: { id: 'pokemon-firered', code: 'BPRE', system: 'gba' } };
+  doc.set('rules', { levelCaps: 'warn' });
+  const mon = { key: 'g3-1', species: 4, level: 12, hp: 30, maxHp: 35, metLocation: 88, metLevel: 5 };
+  const romCaps = { caps: [14, 21, 24, 29, 43, 43, 47, 50], leaders: ['BROCK', 'MISTY', 'LT. SURGE'], final: { name: 'Champion', cap: 63 } };
+  R.applySnapshot(doc, manifest, 3, 'p1', { source: 'live', party: [mon], romCaps });
+  assert.deepEqual(doc.get('romcaps:p1'), romCaps);
+  assert.equal(R.levelCap(doc, manifest, 'p1').cap, null, 'no badges read from the game yet: no cap');
+  // the first count after none (a save with two badges loaded): where the player stands – no "badge earned"
+  R.applySnapshot(doc, manifest, 3, 'p1', { source: 'live', party: [mon], badges: 2, romCaps });
+  assert.equal(R.feedList(doc).filter((f) => f.type === 'badge').length, 0);
+  const cap = R.levelCap(doc, manifest, 'p1');
+  assert.equal(cap.cap, 24);
+  assert.equal(cap.rom, true);
+  assert.match(cap.boss.name, /Lt\. Surge/);
+  // a badge won now is news
+  R.applySnapshot(doc, manifest, 3, 'p1', { source: 'live', party: [mon], badges: 3, romCaps });
+  assert.equal(R.feedList(doc).filter((f) => f.type === 'badge').length, 1);
+  assert.equal(R.levelCap(doc, manifest, 'p1').cap, 29);
+  // a hack: no curated list, the caps read from its ROM still count
+  const hack = { ...manifest, game: { ...manifest.game, hackId: 'some-hack' } };
+  assert.equal(R.levelCap(doc, hack, 'p1').cap, 29);
+  // a game without caps read (Run & Bun): nothing
+  doc.set('romcaps:p1', null);
+  assert.equal(R.levelCap(doc, manifest, 'p1').cap, null);
+});

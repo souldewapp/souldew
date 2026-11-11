@@ -21,9 +21,23 @@
 - **A pre-patched Radical Red 4.1 ROM shows up as Radical Red** – in the library, when you play it and in a new run –
   instead of as FireRed, and the official Unbound patch is linked to Unbound whatever its file is called (the library
   listed it as a BPS patch; it is a UPS patch).
-- Not for these hacks yet: level caps (Unbound's optional cap isn't read; Radical Red 4.1 has none), the Rare Candy
-  cheat, and types that differ from the original games (Clefairy is Fairy there) – the battle helper uses souldew's
-  own type data, as for Run & Bun.
+- **Catches in these hacks are filed too**: a new Pokémon in the team goes under the place it was met, as in every other
+  game – checked with a real catch on Radical Red's Route 1 and a Pokémon joining an Unbound team.
+- **Types come from the game itself** – for every game, not only these two: each Pokémon's types, the type chart and,
+  where the game has them, the moves' types. Hacks that added Fairy (Unbound, Radical Red, Run & Bun, Renegade
+  Platinum, Blaze Black 2 Redux) or retyped Pokémon now show the types the game really uses, with its matchups.
+  **Too Many Types** shows its own types under the game's names, with their matchups, instead of none. In a GBA battle
+  the helper uses the types both sides have right now, so a type change during the battle shows at once.
+- **Level caps for more games**, read from the game's own trainers: the gym leaders' aces, then the champion's after the
+  last badge – Ruby, Sapphire, Emerald, FireRed and LeafGreen (also German), Platinum and Renegade Platinum. Badges are
+  now read live in GBA games and in Diamond, Pearl and Platinum. Where the caps can't be told apart with confidence
+  (Unbound's difficulty settings, Radical Red's and Light Platinum's second set of leaders, Blaze Black 2 Redux's
+  Challenge Mode) no cap is shown rather than a wrong one, and "Level cap: unknown for this game" is gone – the cap
+  only shows when it's known and the run uses caps.
+- **The library says what souldew can read for each game** – team, held items, place, battles, catches, types and level
+  caps – worked out from your ROM, and what it can't (hidden rather than guessed). In the game, held items and moves
+  that can't be named are left out instead of showing wrong ones, and "Save diagnostics" records what was confirmed.
+- Not for these hacks yet: the Rare Candy cheat.
 
 ## 2.3.1
 

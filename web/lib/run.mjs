@@ -906,7 +906,10 @@ export function applySnapshot(doc, manifest, gen, slot, snap, { auto = true, rd 
   // Badges never go down in a game – fewer is an older savestate. Winning one back after it is no news (and was
   // judged against the cap the first time), so only a count above the best one seen is a new badge.
   const best = Math.max(prevLive?.badgesBest ?? 0, prevLive?.badges || 0);
-  if (prevLive && badges > best) {
+  // (the first count a game gives after it had none – Gen 3 and Diamond/Pearl/Platinum didn't read badges before – is
+  // where the player stands, not badges won just now)
+  const firstRead = snap.badges !== undefined && prevLive && !prevLive.badgesRead && snap.source !== 'save';
+  if (prevLive && badges > best && !firstRead) {
     feedMsg(doc, manifest, { type: 'badge', slot, msg: msg('feed.badge', 'Earned badge #{n}!', { n: badges }) });
     // Nuzlocke: was the boss beaten with a mon over the cap that applied before this badge? (The team as last
     // seen before the badge – levels gained in that very fight are allowed.)

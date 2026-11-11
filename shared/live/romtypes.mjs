@@ -16,7 +16,6 @@
 import { listNdsFiles, ndsFile, parseNarc, ndsArm9, blzDecompress } from '../nds.mjs';
 import { retailSingle } from '../typechart.mjs';
 
-const u16 = (b, o) => b[o] | (b[o + 1] << 8);
 const u32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
 
 /** The official types in the games' id order (Gen 3/4: '???' at 9; Gen 5 has none, Fairy hacks add it as 17). */
@@ -65,7 +64,9 @@ export function gbaTypeNames(rom, charset) {
   const firsts = ['Normal', 'NORMAL', 'Normale', 'NORMALE'].map((w) => [...w].map((c) => code[c])).filter((b) => b.every((x) => x !== undefined));
   if (!firsts.length) return null;
   let best = null;
+  const lead = new Set(firsts.map((b) => b[0]));
   for (let o = 0; o + 64 < rom.length; o++) {
+    if (!lead.has(rom[o])) continue;
     const w = firsts.find((b) => rom[o] === b[0] && b.every((x, k) => rom[o + k] === x) && rom[o + b.length] === 0xff);
     if (!w) continue;
     for (let stride = w.length + 1; stride <= 48; stride++) {
@@ -179,14 +180,15 @@ function mismatches(mult, idOf, gen) {
 /**
  * Charts stored as triples (attacker, defender, multiplier ×10 – 0, 5 or 20) up to 0xFF: the retail GBA and DS games,
  * Complete FireRed Upgrade (Fairy as 23) and the Game Boy games (`gb`: a single 0xFE byte before the Foresight
- * entries, GBA: 0xFE 0xFE 0x00). → [{ offset, cells: Map('a,d' → mult) }].
+ * entries, GBA: 0xFE 0xFE 0x00). → [{ offset, cells: Float32Array(64 × 64) of the multipliers, -1 where none is listed }].
  */
 function tripleCharts(rom, { gb = false, maxId = 0x40, min = 60 } = {}) {
   const out = [];
   const ok = (a, b, m) => a < maxId && b < maxId && (m === 0 || m === 5 || m === 20) && !(a === 0 && b === 0);
+  const dead = [0, 0, 0]; // per alignment: a run that came to nothing ends here – a start inside it would too
   for (let o = 0; o + 3 < rom.length; o++) {
-    if (!ok(rom[o], rom[o + 1], rom[o + 2])) continue;
-    const cells = new Map();
+    if (o < dead[o % 3] || !ok(rom[o], rom[o + 1], rom[o + 2])) continue;
+    const cells = new Float32Array(64 * 64).fill(-1);
     let p = o;
     let n = 0;
     while (p + 2 < rom.length) {
@@ -201,15 +203,15 @@ function tripleCharts(rom, { gb = false, maxId = 0x40, min = 60 } = {}) {
         continue;
       }
       if (!ok(a, rom[p + 1], rom[p + 2])) break;
-      const k = `${a},${rom[p + 1]}`;
-      if (!cells.has(k)) cells.set(k, rom[p + 2] / 10);
+      const k = a * 64 + rom[p + 1];
+      if (cells[k] < 0) cells[k] = rom[p + 2] / 10;
       n++;
       p += 3;
     }
     if (rom[p] === 0xff && n >= min) {
       out.push({ offset: o, cells, n });
       o = p;
-    }
+    } else dead[o % 3] = p;
   }
   return out;
 }
@@ -223,14 +225,18 @@ function tripleCharts(rom, { gb = false, maxId = 0x40, min = 60 } = {}) {
  */
 function matrixCharts(rom, shift = 0) {
   const out = [];
+  // (typed views over the ROM – a 32 MB scan per cell size)
+  const buf = rom.byteOffset % 4 ? rom.slice() : rom;
   for (const cell of [1, 2, 4]) {
-    const rd = cell === 1 ? (o) => rom[o] : cell === 2 ? (o) => u16(rom, o) : (o) => u32(rom, o);
-    for (let o = 0; o + 9 * cell * 20 < rom.length; o += cell) {
-      const X = rd(o);
-      const Y = rd(o + 5 * cell);
-      const Z = rd(o + 7 * cell);
-      if (X === Y || X === Z || Y === Z || rd(o + 8 * cell) !== Y) continue;
-      if (![1, 2, 3, 4, 6].every((k) => rd(o + k * cell) === X)) continue;
+    const v = cell === 1 ? buf : cell === 2 ? new Uint16Array(buf.buffer, buf.byteOffset, buf.length >> 1) : new Uint32Array(buf.buffer, buf.byteOffset, buf.length >> 2);
+    const rd = (o) => v[o / cell];
+    for (let i = 0; i + 9 * 20 < v.length; i++) {
+      const X = v[i];
+      if (v[i + 1] !== X || v[i + 2] !== X || v[i + 3] !== X || v[i + 4] !== X || v[i + 6] !== X) continue;
+      const Y = v[i + 5];
+      const Z = v[i + 7];
+      if (X === Y || X === Z || Y === Z || v[i + 8] !== Y) continue;
+      const o = i * cell;
       for (let n = 17; n <= 128; n++) {
         const f = (k) => rd(o + (n + k) * cell);
         const W = f(0);
@@ -269,7 +275,7 @@ function pickChart(candidates, idOf, gen, maxId) {
   return best;
 }
 
-const fromTriples = (t) => ({ ...t, mult: (a, d) => t.cells.get(`${a},${d}`) ?? 1 });
+const fromTriples = (t) => ({ ...t, mult: (a, d) => (a < 64 && d < 64 && t.cells[a * 64 + d] >= 0 ? t.cells[a * 64 + d] : 1) });
 
 // what Fairy deals and takes (Gen 6) – for a game whose Pokémon have the type but whose chart (found by the retail
 // matchups) has none for it: Renegade Platinum keeps the retail chart and handles Fairy elsewhere

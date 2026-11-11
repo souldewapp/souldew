@@ -49,6 +49,26 @@ Visible text that differs per platform (⌘ / Ctrl, Finder / Explorer / file man
 `test/` has examples for run logic, live-memory parsing (synthetic RAM), sync, invite codes, the server and the
 overlay API.
 
+### The ROM matrix (before a release, and after any change to the live readers)
+
+Live tracking reads what it can from the ROM itself (`shared/live/romtypes.mjs`, `romcaps.mjs`, `romspecies.mjs`,
+`romloc.mjs`) and hides what it can't read with confidence (`shared/live/features.mjs`). Whether that still holds for
+every game is checked by playing them – one command for a folder of your own ROMs and patches:
+
+```sh
+npm run matrix -- <folder with ROMs and patches> [more folders or files]
+```
+
+It finds every ROM (also in `.zip`), applies every patch to the base it belongs to, and plays each game that has an
+input plan (`scripts/rom-matrix/plans/`) in souldew's own emulator page – hidden, muted, with a throwaway data folder,
+never your own. The result is a table (`<out>/matrix.md`, `matrix.json`, screenshots) with one column per live feature:
+team, held items, place, battle, catch, types (a retail ROM's types and type chart must equal the app's data) and
+level cap ("hidden" where souldew can't read it for that game and shows nothing). Every ✅ of the last release must
+still be there. Useful options: `--only <text>` (one game), `--out <dir>`, `--saves <dir>` (saves for plans that start
+from one, e.g. `unbound.sav`), `--plan <file>` (play another plan, e.g. a probe), `--attempts <n>`, `--show`.
+Plain Node and Electron from `node_modules` – it runs the same on Windows. GB games take a minute, GBA a few, DS 10–25
+minutes each. Never commit ROMs, saves, patched ROMs or the screenshots.
+
 ## Code style
 
 - Plain ES modules everywhere, no build step for the UI (Preact + htm in `web/`).

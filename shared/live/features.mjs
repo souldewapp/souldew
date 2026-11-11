@@ -26,8 +26,9 @@ export function romFeatures(rom, addresses, { curatedCaps = false } = {}) {
   if (!entry || (expanded && !rom.species?.map)) return out;
   out.party = 'yes';
   out.catch = 'yes';
-  // held items: none in Gen 1; an expanded engine numbers them its own way – named only from its item table
-  out.items = gen === 1 ? 'no' : expanded ? (rom.items ? 'yes' : 'no') : 'yes';
+  // held items, by name: none in Gen 1, Gen 2's aren't named (the app has no names for them); an expanded engine numbers
+  // them its own way – named only from its item table
+  out.items = gen <= 2 ? 'no' : expanded ? (rom.items ? 'yes' : 'no') : 'yes';
   out.moves = 'yes';
   // the place: Gen 1/2 from the tables, Gen 3–5 from the ROM's own place names
   out.location = gen <= 2 || rom.data ? 'yes' : 'no';
