@@ -205,7 +205,7 @@
    "source": "gMapHeader 0x02036DFC: same as firered_us (EWRAM; pokebot-gen3 pokefirered.yml has no D/F/I/S override, Ironmon-Tracker Feuerrote.json gMapHeader 0x02036DFC)",
    "musicAddr": "0x03000FC0",
    "musicSize": 2,
-   "musicSource": "sCurrentMapMusic of firered_us – inferred, not in either table: it sits 0x18 after sSaveDialogDelay (0x03000FA8), which Ironmon-Tracker lists unchanged for D/F/I/S, while the 0xB0 IWRAM shift shows from gMain on. A wrong value only makes the turbo music fall back to the map's song."
+   "musicSource": "sCurrentMapMusic of firered_us – inferred, not in either table: it sits 0x18 after sSaveDialogDelay (0x03000FA8), which Ironmon-Tracker lists unchanged for D/F/I/S, while the 0xB0 IWRAM shift shows from gMain on. Checked live in German FireRed/LeafGreen: it holds the map header's music (gMapHeader+0x10) on every map – 300 Pallet Town, 301 Oak's lab, 291 Route 1 – and the battle's song during a battle (297 trainer, 298 wild); the ROM loads 0x03000FC0 from 11 literal pools."
   },
   "leafgreen_eu": {
    "gen": 3,
@@ -214,7 +214,7 @@
    "source": "gMapHeader 0x02036DFC: same as leafgreen_us (EWRAM; pokebot-gen3 pokeleafgreen.yml has no D/F/I/S override, Ironmon-Tracker Feuerrote.json gMapHeader 0x02036DFC)",
    "musicAddr": "0x03000FC0",
    "musicSize": 2,
-   "musicSource": "sCurrentMapMusic of leafgreen_us – inferred, not in either table: it sits 0x18 after sSaveDialogDelay (0x03000FA8), which Ironmon-Tracker lists unchanged for D/F/I/S, while the 0xB0 IWRAM shift shows from gMain on. A wrong value only makes the turbo music fall back to the map's song."
+   "musicSource": "sCurrentMapMusic of leafgreen_us – inferred, not in either table: it sits 0x18 after sSaveDialogDelay (0x03000FA8), which Ironmon-Tracker lists unchanged for D/F/I/S, while the 0xB0 IWRAM shift shows from gMain on. Checked live in German FireRed/LeafGreen: it holds the map header's music (gMapHeader+0x10) on every map – 300 Pallet Town, 301 Oak's lab, 291 Route 1 – and the battle's song during a battle (297 trainer, 298 wild); the ROM loads 0x03000FC0 from 11 literal pools."
   }
  },
  "tables": {
