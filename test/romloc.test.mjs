@@ -143,6 +143,34 @@ test('Gen 3 region map table: names by section, all-caps names prettified', () =
   assert.equal(langOfCode('IREO'), 'en');
 });
 
+test('Gen 3 FireRed/LeafGreen names: the place-name table, not the longer Fame Checker one (German ROMs, #16)', () => {
+  const rom = new Uint8Array(0x8000);
+  rom[0xb2] = 0x96;
+  rom.set([...'BPRD'].map((c) => c.charCodeAt(0)), 0xac);
+  const enc = (t) => [...t].map((c) => parseInt(Object.entries(cs3.table).find(([, v]) => v === c)[0], 16));
+  let str = 0x4000;
+  const ptr = (t) => {
+    const at = str;
+    const bytes = [...enc(t), 0xff];
+    rom.set(bytes, at);
+    str += bytes.length;
+    return 0x08000000 + at;
+  };
+  // the German Fame Checker: places and people, many of them twice – 120 entries, longer than the place names
+  const fame = ['ALABASTIA', 'POKéMON-LABOR', 'POKéMON-LABOR', 'VERTANIA CITY', 'ARENA MARMORIA', 'ARENA MARMORIA', 'PROF. EICH', 'SCHILD'];
+  for (let i = 0; i < 120; i++) put32(rom, 0x400 + i * 4, ptr(fame[i % fame.length]));
+  // the place names by section from 0x58: 80 of them, one with a lower-case letter in it
+  const places = Array.from({ length: 80 }, (_, i) => (i === 0 ? 'ALABASTIA' : i === 13 ? 'ROUTE 1' : i === 43 ? 'DIGDAs HÖHLE' : i === 47 ? 'POKéMON-HAUS' : `ORT ${i}`));
+  places.forEach((t, i) => put32(rom, 0x1000 + i * 4, ptr(t)));
+  const g = gen3Names(rom, cs3);
+  assert.equal(g.layout, 'mapNamePointers');
+  assert.equal(g.offset, 0x1000, 'the table with the most different names');
+  assert.deepEqual([g.names[0x58], g.names[0x58 + 13], g.names[0x58 + 43], g.names[0x58 + 47]], ['Alabastia', 'Route 1', 'Digdas Höhle', 'Pokémon-Haus']);
+  assert.equal(g.names.length, 0x58 + 80);
+  assert.equal(prettyName('POKéMON LEAGUE'), 'Pokémon League');
+  assert.equal(prettyName('Pokémon League'), 'Pokémon League');
+});
+
 test('BLZ: an uncompressed binary passes through', () => {
   const b = Uint8Array.from({ length: 64 }, (_, i) => (i < 60 ? i : 0)); // size increase 0 = not compressed
   assert.equal(blzDecompress(b), b);
@@ -219,6 +247,12 @@ test('real ROMs: the ROM-derived locations match the tables', { skip: roms.lengt
         same++;
       }
       if (r.lang === 'en') assert.ok(same >= 80, `${f}: ${same} sections compared`);
+      // a German ROM against the app's German names (FireRed/LeafGreen: the Fame Checker's table was read once, #16)
+      if (r.lang === 'de') {
+        const de = Object.entries(loc3.map).filter(([k, v]) => v.de && r.names[Number(k)]);
+        const hits = de.filter(([k, v]) => variants(v.de).some((x) => x.toLowerCase() === r.names[Number(k)].toLowerCase()));
+        assert.ok(de.length >= 80 && hits.length >= de.length * 0.8, `${f}: ${hits.length} of ${de.length} German names agree`);
+      }
     } else if (r.gen === 5) {
       if (r.lang === 'en') {
         assert.equal(r.names[4], 'Nuvema Town', f);
