@@ -309,6 +309,14 @@ function readGen3(entry, read, T, state = {}) {
 const statusOk = (s) => s === 0 || (s & ~7) === 0 || s === 8 || s === 16 || s === 32 || s === 64 || ((s & ~0xf80) === 0 && !!(s & 0x80));
 
 /**
+ * Gen 5 stores the status condition as a number, not as Gen 3/4's bits (PKHeX StatusType: 1 paralysis, 2 sleep,
+ * 3 freeze, 4 burn, 5 poison – no sleep turns, and bad poison is plain poison outside battle). Read as bits, every one
+ * of them has a "sleep counter" (1–7): every Pokémon with a status showed SLP. → the Gen 3/4 bits the app reads
+ * everywhere (sleep as one turn), 0 for anything else.
+ */
+export const gen5Status = (s) => [0, 0x40, 1, 0x20, 0x10, 0x08][s & 0xff] ?? 0;
+
+/**
  * The battle stats block of a party mon (0x88-0xEB) is not covered by the checksum. GetMonData/SetMonData decrypt
  * a mon in place – the battle stats first, then the box block – and encrypt it again afterwards, without setting the
  * lock flags (pokeheartgold src/pokemon.c GetMonData: DECRYPT_PTY, DECRYPT_BOX, …, ENCRYPT_PTY, ENCRYPT_BOX). The
@@ -357,7 +365,7 @@ function pkMon(raw, gen, T) {
     moves: [u16le(d, 0x28), u16le(d, 0x2a), u16le(d, 0x2c), u16le(d, 0x2e)].filter(Boolean),
     metLocation, metLevel: d[0x84] & 0x7f, gender: ['M', 'F', '-'][(d[0x40] >> 1) & 3],
     shiny: (((pid >>> 16) ^ (pid & 0xffff) ^ tid ^ sid) >>> 0) < 8,
-    status: d[0x88], level: d[0x8c], hp: u16le(d, 0x8e), maxHp: u16le(d, 0x90),
+    status: gen === 5 ? gen5Status(d[0x88]) : d[0x88], level: d[0x8c], hp: u16le(d, 0x8e), maxHp: u16le(d, 0x90),
   };
 }
 
