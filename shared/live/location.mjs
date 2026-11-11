@@ -159,6 +159,8 @@ function readGen3x(m, read, maps, entry, ctx = {}) {
     if (sb1 < 0x02000000 || sb1 >= 0x02040000) return null;
     const b = read(sb1, 6);
     if (!ok(b, 6)) return null;
+    // a SaveBlock1 still empty (title screen, intro: no save loaded yet) reads as map 0.0 at 0,0 – Petalburg City
+    if (b.every((v) => v === 0)) return { empty: true };
     const x = (u16le(b, 0) << 16) >> 16;
     const y = (u16le(b, 2) << 16) >> 16;
     const sec = t.mapsec[`${b[4]}.${b[5]}`];
@@ -166,10 +168,12 @@ function readGen3x(m, read, maps, entry, ctx = {}) {
   };
   if (st.sb1PtrAddr) {
     const r = tryPtr(st.sb1PtrAddr);
+    if (r?.empty) return null;
     if (r) return r.id < 0xd5 ? r : null;
   }
   for (const a of t.iwram || []) {
     const r = tryPtr(a);
+    if (r?.empty) return null; // (no place yet – and no other address is tried and remembered meanwhile)
     if (r) {
       st.sb1PtrAddr = a;
       return r.id < 0xd5 ? r : null;

@@ -2208,5 +2208,13 @@
   "battle.dealsTip": "Stärkster Treffer: {move} ({mult})",
   "battle.takesTip": "Trifft es am härtesten: {move} ({mult})",
   "battle.out": "im Kampf",
-  "battle.fainted": "K.O."
+  "battle.fainted": "K.O.",
+  "lib.live": "Live-Tracking",
+  "lib.liveYes": "Wird live gelesen",
+  "lib.livePartial": "Wird live gelesen, mit Einschränkungen",
+  "lib.liveUntested": "Noch nicht getestet",
+  "lib.liveNo": "Nicht unterstützt – trag Fänge von Hand ein",
+  "lib.liveNote.rnb": "Team, Ort, Kämpfe und Fänge werden live gelesen. Im Kampf zeigt die KP deines eigenen Pokémon den Wert von vor dem Kampf.",
+  "lib.liveNote.types": "souldew kennt die eigenen Typen dieses Hacks nicht: Board und Typ-Regeln nutzen die offiziellen.",
+  "lib.liveNote.ownMons": "Seine Wesen sind keine Pokémon: souldew zeigt sie unter den Namen aus dem Spiel, ohne Sprites – von Hand wählst du sie auch über diese Namen."
 }

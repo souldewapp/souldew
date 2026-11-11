@@ -77,7 +77,7 @@ test('Gen 2 (Crystal): party with caught location', () => {
   assert.deepEqual([r.party[0].species, r.party[0].level, r.party[0].hp, r.party[0].metLocation], [155, 6, 20, 2]);
 });
 
-function pk3({ pid, otId, internal, nick, level, hp, maxHp, met }) {
+function pk3({ pid, otId, internal, nick, level, hp, maxHp, met, ivWord = 0, flags = 0 }) {
   const d = new Uint8Array(100);
   const dv = new DataView(d.buffer);
   dv.setUint32(0, pid, true);
@@ -93,6 +93,8 @@ function pk3({ pid, otId, internal, nick, level, hp, maxHp, met }) {
   pv.setUint16(at('A'), 33, true);
   plain[at('M') + 1] = met;
   pv.setUint16(at('M') + 2, 5, true); // met level 5
+  pv.setUint32(at('M') + 4, ivWord, true); // IVs (+ the egg bit 30 in the retail games)
+  d[0x13] = flags; // BoxPokemon +0x13: isBadEgg, hasSpecies, isEgg
   let sum = 0;
   for (let i = 0; i < 48; i += 2) sum = (sum + pv.getUint16(i, true)) & 0xffff;
   dv.setUint16(28, sum, true);
@@ -121,6 +123,59 @@ test('Gen 3 (FireRed): encrypted party struct', () => {
   const bad = pk3({ pid: 1, otId: 2, internal: 1, nick: 'X', level: 5, hp: 1, maxHp: 1, met: 0 });
   bad[40] ^= 0xff;
   assert.ok(parsePk3(bad, T).bad);
+});
+
+test('Gen 3 FireRed/LeafGreen in German, French, Italian and Spanish: their own table entry, the English EWRAM layout', () => {
+  for (const code of ['BPRD', 'BPRF', 'BPRI', 'BPRS', 'BPGD', 'BPGF', 'BPGI', 'BPGS']) {
+    const e = findEntry(TABLE, { platform: 'gba', code });
+    assert.equal(e?.id, code[2] === 'R' ? 'firered_eu' : 'leafgreen_eu', code);
+    assert.ok(!e.scanOnly, code);
+  }
+  // the English ROMs keep theirs
+  assert.equal(findEntry(TABLE, { platform: 'gba', code: 'BPGE' }).id, 'leafgreen_us');
+  const us = findEntry(TABLE, { platform: 'gba', code: 'BPGE' });
+  const de = findEntry(TABLE, { platform: 'gba', code: 'BPGD' }); // the issue's ROM: "POKEMON LEAF", BPGD
+  // EWRAM as in the English game (pokebot-gen3 language patches, Ironmon-Tracker Feuerrote.json …)
+  for (const k of ['partyCountAddr', 'partyAddr', 'enemyPartyAddr', 'battleTypeFlagsAddr']) assert.equal(de[k], us[k], k);
+  assert.deepEqual(de.liveBattleHp.battleMonsAddr, us.liveBattleHp.battleMonsAddr);
+  // IWRAM from gMain on 0xB0 lower: gMain 0x03003040 + 0x439
+  assert.equal(de.inBattle.addr, '0x03003479');
+  assert.equal(parseInt(us.inBattle.addr, 16) - parseInt(de.inBattle.addr, 16), 0xb0);
+  assert.deepEqual([de.saveBlockPtrs.sb1, de.saveBlockPtrs.sb2], ['0x03004F58', '0x03004F5C']);
+  // the party reads like the English one
+  const m = memory();
+  m.write(0x02024029, [1]);
+  m.write(0x02024284, pk3({ pid: 0x0badf00d, otId: 0xbeefcafe, internal: 1, nick: 'BISASAM', level: 5, hp: 20, maxHp: 21, met: 88 }));
+  const r = readLiveParty(de, m.read, T);
+  assert.deepEqual(r.party.map((x) => [x.species, x.nickname, x.level, x.hp, x.maxHp, x.metLocation]), [[1, 'BISASAM', 5, 20, 21, 88]]);
+  assert.deepEqual(regionsFor(de), regionsFor(us));
+});
+
+test('Gen 3 expanded engines (Run & Bun): the egg flag comes from the plain header, not from bit 30 of the IVs', () => {
+  // Run & Bun keeps the IVs at bits 1–30: a starter with a high Sp. Def IV has bit 30 set – read the retail way it was
+  // an egg, and every such Pokémon was left out of the run (never filed as the starter or a catch)
+  const map = [0, 1, 2, 3];
+  const RB = T.withSpecies({ engine: 'expanded', map, changed: 1 });
+  const mon = (flags) => parsePk3(pk3({ pid: 0xa15dde71, otId: 0xdc7ca513, internal: 1, nick: 'BULBA', level: 5, hp: 20, maxHp: 20, met: 0xff, ivWord: 0x77e3f7fe, flags }), RB);
+  assert.equal(mon(0b010).isEgg, false, 'hasSpecies only: a Pokémon, whatever bit 30 says');
+  assert.equal(mon(0b110).isEgg, true, 'the header’s isEgg bit');
+  // the retail games: bit 30 as before (SetBoxMonData keeps both copies in step there)
+  const retail = (ivWord, flags) => parsePk3(pk3({ pid: 0x0badf00d, otId: 0xbeefcafe, internal: 1, nick: 'BULBA', level: 5, hp: 20, maxHp: 20, met: 16, ivWord, flags }), T).isEgg;
+  assert.equal(retail(0x40000000, 0b110), true);
+  assert.equal(retail(0x3fffffff, 0b010), false);
+});
+
+test('Gen 3: gMain.inBattle as a plain flag (an expanded engine’s team search that finds nothing in a battle has failed)', async () => {
+  const { inBattleFlag } = await import('../shared/live/parse.mjs');
+  const em = findEntry(TABLE, { platform: 'gba', code: 'BPEE' });
+  const m = memory();
+  assert.equal(inBattleFlag(em, m.read), false);
+  m.write(0x030026f9, [0x02]);
+  assert.equal(inBattleFlag(em, m.read), true);
+  assert.equal(inBattleFlag(findEntry(TABLE, { platform: 'gb', title: 'POKEMON RED' }), m.read), false, 'Gen 3 only');
+  const de = findEntry(TABLE, { platform: 'gba', code: 'BPGD' });
+  m.write(0x03003479, [0x02]);
+  assert.equal(inBattleFlag(de, m.read), true, 'German LeafGreen: gMain 0xB0 lower');
 });
 
 test('Gen 4 (HeartGold): party via save-data pointer', () => {

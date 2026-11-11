@@ -3,7 +3,7 @@
 "hacks": [
 "run-and-bun"
 ],
-"note": "Run & Bun 1.07 (expanded engine: species by name, team searched for in RAM, place through SaveBlock1): starter (Chimchar) and the first wild battle by fixed waits; its save-block pointer is at 0x03005D9C",
+"note": "Run & Bun 1.07 (expanded engine: species by name, team searched for in RAM, place through SaveBlock1): starter (Chimchar) and the first wild battle by fixed waits, then a real catch on Route 101 (Poké Balls written into the bag); its save-block pointer is at 0x03005D9C",
 "pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4))))",
 "steps": [
 {
@@ -982,6 +982,838 @@
 ]
 ],
 "max": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "give",
+"item": 1,
+"count": 20,
+"pocket": "items",
+"saveBlockPtrs": {
+"sb1": "0x03005D9C",
+"sb2": "0x03005DA0",
+"keyOff": "0xA4"
+},
+"note": "Run & Bun: Poké Ball is item 1 (expansion order); put into the Items pocket, which the battle bag opens on – the save block pointers and the key offset are Run & Bun’s"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "go",
+"x": 6,
+"y": 30,
+"order": "xy",
+"leave": true,
+"map": 260,
+"required": false,
+"patience": 6
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4)))))[0]===9 && (((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4)))))[2]===17"
+},
+"max": 900,
+"required": false
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "go",
+"x": 10,
+"y": 17,
+"order": "x",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "go",
+"x": 6,
+"y": 30,
+"order": "xy",
+"leave": true,
+"map": 260,
+"required": false,
+"patience": 6
+},
+{
+"do": "until",
+"until": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4)))))[0]===9 && (((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4)))))[2]===17"
+},
+"max": 900,
+"required": false
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "go",
+"x": 10,
+"y": 17,
+"order": "x",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 4
+},
+{
+"do": "log",
+"name": "town",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4))))"
+},
+{
+"do": "go",
+"x": 10,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"x": 11,
+"y": -2,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "check",
+"name": "r101"
+},
+{
+"do": "go",
+"y": 15,
+"order": "y",
+"required": false,
+"patience": 6
+},
+{
+"do": "go",
+"x": 4,
+"y": 15,
+"order": "xy",
+"required": false,
+"patience": 6
+},
+{
+"do": "log",
+"name": "grass",
+"expr": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D9C,4))))"
+},
+{
+"do": "shot",
+"name": "x3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 4,
+"every": 16,
+"max": 10000,
+"until": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "shot",
+"name": "throw"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"every": 20,
+"max": 500,
+"until": "party>=2",
+"required": false,
+"note": "text away (\"Give a nickname?\" → no)"
+},
+{
+"do": "press",
+"keys": "RIGHT",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 20
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6
+},
+{
+"do": "wait",
+"frames": 40
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 6,
+"note": "BAG → Poké Ball (first in the Items pocket) → Use"
+},
+{
+"do": "wait",
+"frames": 400
+},
+{
+"do": "check",
+"name": "caught0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000,
+"until": "nobattle",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "check",
+"name": "caught"
+},
+{
+"do": "shot",
+"name": "caught"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1200
+},
+{
+"do": "check",
+"name": "caught2"
 }
 ],
 "expect": {
@@ -1005,6 +1837,11 @@
 },
 "afterbattle": {
 "place": "Littleroot Town"
+},
+"caught2": {
+"catch": {
+"area": "Route 101"
+}
 }
 }
 }

@@ -37,6 +37,24 @@
 - **The battle helper no longer disappears in a long battle** (#12): in 2.2.0 it vanished after about 90 seconds in
   Black 2 (fixed in 2.3.0, which reads the game's battle flag – checked again: two minutes in the battle menu, the
   panel stays); now it also keeps the opponent through a moment where the game rewrites its data.
+- **German, French, Italian and Spanish FireRed/LeafGreen are read live** (Feuerrote/Blattgrüne, Rouge Feu/Vert
+  Feuille, Rosso Fuoco/Verde Foglia, Rojo Fuego/Verde Hoja – also randomized): they showed "No live data for this
+  game". Their memory layout is now in the table – the team, battles, the place sign and the Rare Candy cheat. The
+  addresses come from two trackers that run on these versions and agree; no such ROM was at hand to check them in a
+  running game, so please report it if something looks off.
+- **Run & Bun: the starter and your catches are filed** (also in other expanded-engine hacks, issue #3):
+  about every second Pokémon was read as an egg – Run & Bun stores the IVs one bit further on than the original
+  games – and never reached the run, and the search for the team gave up after half a minute without one, long
+  before the starter. Checked in the game: Chimchar lands under "Starter", a Zigzagoon caught on Route 101 under
+  "Route 101". Pokémon whose names the game shortens (Corviknight, Crabominable, Fletchinder …) are recognised, and the
+  title screen no longer claims you are in Petalburg City.
+- **Enter every Pokémon the game holds by hand**: the species picker only offered the base game's generation – no
+  Sinnoh starters in Run & Bun. It now follows the ROM: up to #905 in Run & Bun, the Gen 4/5 Pokémon of Light
+  Platinum, the randomizer's Pokémon, and a hack's own creatures (Mariomon) under the names the game gives them.
+- **More ROM hacks in the library**: Too Many Types, Too Many Types 2, Super Mariomon and Mariomon are recognised, and
+  a hack's details now say how far live tracking works for it (read live, with limits, not checked yet) and what to
+  know – e.g. that Too Many Types' own types aren't known to souldew. A patch named after the longer of two hacks
+  ("Too Many Types 2") is linked to that one.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged

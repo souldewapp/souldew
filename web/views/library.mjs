@@ -511,6 +511,19 @@ function GameDetail({ id, onClose, openHack }) {
   <//>`;
 }
 
+// How far souldew reads a ROM hack live (catalog `live`, docs/TESTED_GAMES.md) and what to know about it (`liveNote`).
+const liveLabel = (v) => ({
+  yes: t('lib.liveYes', 'Read live'),
+  partial: t('lib.livePartial', 'Read live, with limits'),
+  untested: t('lib.liveUntested', 'Not checked yet'),
+  no: t('lib.liveNo', 'Not supported – enter catches by hand'),
+}[v] || '–');
+const liveNote = (k) => ({
+  rnb: t('lib.liveNote.rnb', 'Team, place, battles and catches are read live. During a battle your own Pokémon’s HP shows the value from before the fight.'),
+  types: t('lib.liveNote.types', 'souldew doesn’t know this hack’s own types: the board and the type rules use the official ones.'),
+  ownMons: t('lib.liveNote.ownMons', 'Its creatures aren’t Pokémon: souldew shows them under the game’s own names, without sprites – by hand you pick them by those names too.'),
+}[k] || '');
+
 function HackDetail({ id, onClose, openGame }) {
   const { library, reloadLibrary, toast } = useApp();
   const cat = catalog();
@@ -536,6 +549,7 @@ function HackDetail({ id, onClose, openGame }) {
           <dt>${t('lib.baseGame', 'Base game')}</dt><dd>${base ? html`<a href="#" onClick=${(e) => { e.preventDefault(); openGame(base.id); }}>${gameTitle(base)}</a>` : '–'}${h.baseCrc32 ? html` <span class="faint mono small">CRC32 ${h.baseCrc32}</span>` : ''}</dd>
           <dt>${t('lib.difficulty', 'Difficulty')}</dt><dd>${difficultyLabel(h.difficulty)}${h.nuzlockeFriendly ? ` · ${t('lib.nuzlocke', 'Nuzlocke-friendly')}` : ''}</dd>
           <dt>${t('lib.randomizer', 'Randomizer')}</dt><dd>${{ yes: t('lib.yes', 'Supported'), no: t('lib.no', 'Not supported'), unknown: t('lib.unknown', 'Unknown') }[h.uprCompatible] || '–'}</dd>
+          ${h.live && html`<dt>${t('lib.live', 'Live tracking')}</dt><dd>${liveLabel(h.live)}${h.liveNote && html`<div class="small muted">${liveNote(h.liveNote)}</div>`}</dd>`}
           <dt>${t('lib.patch', 'Patch')}</dt><dd>${patch ? html`<span class="mono small">${patch.name}</span>` : html`<span class="muted">${t('lib.noPatch', 'Not added yet')}</span>`}</dd>
           <dt>${t('lib.baseRom', 'Your base ROM')}</dt><dd>${baseRom ? html`<span class="mono small">${baseRom.name}</span>` : html`<span class="muted">${t('lib.notOwned', 'Not in your library')}</span>`}</dd>
         </dl>

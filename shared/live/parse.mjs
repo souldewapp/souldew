@@ -109,6 +109,7 @@ export class LiveTables {
     const t = Object.create(this);
     t.idx3 = sp.map;
     t.fake3 = sp.unknown && Object.keys(sp.unknown).length ? sp.unknown : null;
+    t.expanded3 = sp.engine === 'expanded';
     return t;
   }
 }
@@ -221,7 +222,11 @@ export function parsePk3(d, T) {
     key: `g3-${pid.toString(16).padStart(8, '0')}-${otId.toString(16)}`,
     pid, species, nickname: decodeText(d.subarray(8, 18), T.cs3, 0xff), item: u16le(G, 2),
     moves: [u16le(A, 0), u16le(A, 2), u16le(A, 4), u16le(A, 6)].filter(Boolean),
-    metLocation: M[1], metLevel: origins & 0x7f, isEgg: !!(ivs & 0x40000000), shiny,
+    // the egg flag: bit 30 of the IV word in the retail games. Expanded engines moved the IVs (Run & Bun keeps them at
+    // bits 1–30, so bit 30 is the top of the Sp. Def IV – every second Pokémon read as an egg and was never filed as a
+    // catch); the copy in the plain header (BoxPokemon +0x13 bit 2, set together with it by SetBoxMonData) is the same
+    // in every engine
+    metLocation: M[1], metLevel: origins & 0x7f, isEgg: T.expanded3 ? !!(d[0x13] & 4) : !!(ivs & 0x40000000), shiny,
     status: u32le(d, 80) & 0xff, level: d[84], hp: u16le(d, 86), maxHp: u16le(d, 88),
   };
 }
@@ -1062,6 +1067,16 @@ function note(state, what, flag) {
  * two of the player's own Pokémon are out; `enemy` / `active` stay the first of them.
  * `party` is the party just read with readLiveParty (DS needs it to tell the copies apart).
  */
+/**
+ * GBA: is gMain.inBattle set (addresses.json inBattle)? A cheap flag for the play view – an expanded engine's team
+ * search that finds nothing during a battle has failed (nobody battles without a Pokémon). false for other systems.
+ */
+export function inBattleFlag(entry, read) {
+  if (entry?.gen !== 3 || !entry.inBattle?.addr) return false;
+  const b = read(hex(entry.inBattle.addr), 1);
+  return !!b && !!(b[0] & hex(entry.inBattle.mask || '0x02'));
+}
+
 export function readLiveBattle(entry, read, T, state = {}, party = null) {
   if (!entry) return null;
   try {

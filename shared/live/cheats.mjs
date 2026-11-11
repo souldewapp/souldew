@@ -62,7 +62,11 @@ function layoutOf(entry) {
   }
   if (entry.gen === 3) {
     const key = /^(ruby|sapphire)_/.test(id) ? 'ruby' : /^emerald_/.test(id) ? 'emerald' : /^(firered|leafgreen)_/.test(id) ? 'firered' : null;
-    return key ? { kind: 'gba', ...GBA[key] } : null;
+    if (!key) return null;
+    // the other-language FireRed/LeafGreen keep the save block pointers elsewhere in IWRAM (addresses.json saveBlockPtrs)
+    const P = entry.saveBlockPtrs;
+    const ptrs = P ? { sb1Ptr: parseInt(P.sb1, 16), sb2Ptr: parseInt(P.sb2, 16), ...(P.keyOff ? { keyOff: parseInt(P.keyOff, 16) } : {}) } : {};
+    return { kind: 'gba', ...GBA[key], ...ptrs };
   }
   const key = /^(heartgold|soulsilver)_/.test(id) ? 'hgss' : /^platinum_/.test(id) ? 'platinum' : /^(diamond|pearl)_/.test(id) ? 'dp'
     : /^(black|white|black2|white2)_/.test(id) ? 'bw' : null;

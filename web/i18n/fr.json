@@ -2208,5 +2208,13 @@
   "battle.dealsTip": "Meilleure attaque : {move} ({mult})",
   "battle.takesTip": "Ce qui le touche le plus : {move} ({mult})",
   "battle.out": "au combat",
-  "battle.fainted": "K.O."
+  "battle.fainted": "K.O.",
+  "lib.live": "Suivi en direct",
+  "lib.liveYes": "Lu en direct",
+  "lib.livePartial": "Lu en direct, avec des limites",
+  "lib.liveUntested": "Pas encore testé",
+  "lib.liveNo": "Non pris en charge – note tes captures à la main",
+  "lib.liveNote.rnb": "L’équipe, le lieu, les combats et les captures sont lus en direct. Pendant un combat, les PV de ton propre Pokémon affichent la valeur d’avant le combat.",
+  "lib.liveNote.types": "souldew ne connaît pas les types propres à ce hack : le tableau et les règles de type utilisent les types officiels.",
+  "lib.liveNote.ownMons": "Ses créatures ne sont pas des Pokémon : souldew les affiche sous les noms du jeu, sans sprites – à la main, tu les choisis aussi par ces noms."
 }

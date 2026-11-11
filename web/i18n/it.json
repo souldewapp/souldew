@@ -2208,5 +2208,13 @@
   "battle.dealsTip": "Colpo migliore: {move} ({mult})",
   "battle.takesTip": "Ciò che lo colpisce di più: {move} ({mult})",
   "battle.out": "in campo",
-  "battle.fainted": "esausto"
+  "battle.fainted": "esausto",
+  "lib.live": "Tracciamento dal vivo",
+  "lib.liveYes": "Letto dal vivo",
+  "lib.livePartial": "Letto dal vivo, con limiti",
+  "lib.liveUntested": "Non ancora provato",
+  "lib.liveNo": "Non supportato: inserisci le catture a mano",
+  "lib.liveNote.rnb": "Squadra, luogo, lotte e catture vengono letti dal vivo. Durante una lotta i PS del tuo Pokémon mostrano il valore di prima dello scontro.",
+  "lib.liveNote.types": "souldew non conosce i tipi propri di questo hack: la bacheca e le regole sui tipi usano quelli ufficiali.",
+  "lib.liveNote.ownMons": "Le sue creature non sono Pokémon: souldew le mostra con i nomi del gioco, senza sprite, e a mano le scegli con quei nomi."
 }

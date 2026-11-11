@@ -16,7 +16,6 @@ import { RestartModal } from './restart.mjs';
 import { useStreamer } from '../lib/streamer.mjs';
 import { NuzlockeRules, Choice, TypeHelpRule } from './nuzrules.mjs';
 
-const MAX_ID = [0, 151, 251, 386, 493, 649];
 
 /** Is `slot` connected right now? Per player once the app tracks it (`onlineSlots`), before that "any partner". */
 function slotOnline({ me, onlineSlots, partnerOnline }, slot) {
@@ -625,7 +624,7 @@ function EncounterModal({ area, slot, onClose }) {
       <button class=${outcome === 'missed' ? 'on' : ''} aria-pressed=${outcome === 'missed'} onClick=${() => setOutcome('missed')}>${t('enc.missed', 'Missed (fled / fainted)')}</button>
     </div>
     ${outcome === 'caught' && html`<div class="stack">
-      <${SpeciesPicker} value=${species} onChange=${setSpecies} autoFocus=${!existing} maxId=${MAX_ID[runData.gen] || 649} typesOf=${(id) => runData.types(id, slot)} />
+      <${SpeciesPicker} value=${species} onChange=${setSpecies} autoFocus=${!existing} maxId=${runData.maxSpecies()} extra=${runData.ownSpecies()} typesOf=${(id) => runData.types(id, slot)} />
       ${species && html`<div class="row"><${Sprite} id=${species} shiny=${shiny} size=${64} gen=${runData.gen} /><div><h3>${speciesName(species)}</h3><${Types} types=${runData.types(species, slot)} /></div></div>`}
       ${dupe && html`<div class="warning">${solo
         ? t('enc.dupeSolo', 'Dupes clause: you already caught this one ({area}) – keep looking.', { area: areaName(doc, manifest, dupe.area) })

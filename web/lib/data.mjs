@@ -3,6 +3,7 @@
 import { api } from './api.mjs';
 import { currentLang } from './i18n.mjs';
 import { slotsOf } from '/shared/slots.mjs';
+import { speciesCeiling } from '/shared/live/romspecies.mjs';
 
 let P = null;
 let CATALOG = { games: [], hacks: [] };
@@ -27,11 +28,16 @@ const nameLang = () => (P?.names?.[currentLang()] ? currentLang() : 'en');
 
 // Pokémon only the running ROM knows (a ROM hack's own: shared/live/parse.mjs FAKEMON + their index in the game),
 // named as the game names them (shared/live/romspecies.mjs `unknown`).
-const FAKEMON = 20000; // = shared/live/parse.mjs FAKEMON (PokeAPI's form ids run from 10001)
+export const FAKEMON = 20000; // = shared/live/parse.mjs FAKEMON (PokeAPI's form ids run from 10001)
 let ROM_SPECIES = null;
+let ROM_CEILING = null; // the highest National Dex number the running ROM holds (a hack with later Pokémon)
 export function setRomSpecies(sp) {
   ROM_SPECIES = sp?.unknown && Object.keys(sp.unknown).length ? sp.unknown : null;
+  ROM_CEILING = speciesCeiling(sp);
 }
+
+/** The last National Dex number of each generation's games. */
+export const GEN_MAX_ID = [0, 151, 251, 386, 493, 649];
 
 // The running ROM's own Pokémon types where they differ from PokeAPI's (a ROM hack: Fairy in Renegade Platinum / Blaze
 // Black 2 Redux, retyped Pokémon, a Gen 3 hack's own ones – shared/live/romspecies.mjs romTypes). `fairy`: the hack
@@ -74,7 +80,7 @@ export function moveName(id) {
 export function spriteUrl(id, { gen = 4, shiny = false } = {}) {
   if (!id || id > FAKEMON) return ''; // (a ROM hack's own Pokémon has no sprite here)
   const g = Math.min(Math.max(gen || 4, 1), 5);
-  if (id > [0, 151, 251, 386, 493, 649][g]) return `/sprites/${shiny ? 'shiny' : 'default'}/${id}.png`;
+  if (id > GEN_MAX_ID[g]) return `/sprites/${shiny ? 'shiny' : 'default'}/${id}.png`;
   const set = { 1: 'gen1', 2: shiny ? 'gen2shiny' : 'gen2', 3: shiny ? 'gen3shiny' : 'gen3', 4: shiny ? 'gen4shiny' : 'gen4', 5: shiny ? 'gen5shiny' : 'gen5' }[g];
   return `/sprites/${set}/${id}.png`;
 }
@@ -107,15 +113,42 @@ export class RunData {
       this.romData[slot] = d;
       this.byId[slot] = d ? new Map(d.pokemon.filter((p) => p.forme === 0).map((p) => [p.id, p])) : null;
     }
-    // a ROM hack without the randomizer: its own types come from the ROM (server/lib/romloc.mjs)
+    // a ROM hack without the randomizer: its own types come from the ROM (server/lib/romloc.mjs), and for a GBA game
+    // which Pokémon it holds (a hack with later generations' Pokémon: Run & Bun, Light Platinum – also a ROM that was
+    // patched before it was added, so any GBA game is asked)
     this.romTypes = null;
-    const out = manifest?.patch && Object.entries(manifest.outputs || {}).find(([s]) => !this.byId[s]);
+    this.romSpecies = null;
+    const out = (manifest?.patch || this.gen === 3) && Object.entries(manifest.outputs || {}).find(([s, o]) => !this.byId[s] && o?.rom);
     if (out) {
       const src = `/api/runs/${manifest.id}/file?inline=1&name=${encodeURIComponent(out[1].rom)}`;
       const j = await fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       this.romTypes = j?.types || null;
+      this.romSpecies = j?.species || null;
+      // a hack's own Pokémon are named as the game names them – on the board too, not only while the game runs
+      if (this.romSpecies?.unknown && Object.keys(this.romSpecies.unknown).length) setRomSpecies(this.romSpecies);
     }
     return this;
+  }
+
+  /** A ROM hack's own Pokémon (no National Dex number): their ids (FAKEMON + the game's index), for the picker. */
+  ownSpecies() {
+    const unknown = this.romSpecies?.unknown || (this.gen === 3 ? ROM_SPECIES : null) || {};
+    return Object.keys(unknown).map((i) => FAKEMON + Number(i));
+  }
+
+  /**
+   * The highest National Dex number the run's game can hold – what the species picker offers. The generation's last
+   * Pokémon, or more for a game that has later ones: a ROM hack's species table (Run & Bun: 1000+, Light Platinum: Gen
+   * 4/5 Pokémon in a Ruby ROM), the randomizer's Pokémon list, or the ROM running right now.
+   */
+  maxSpecies() {
+    let max = GEN_MAX_ID[this.gen] || 649;
+    for (const m of Object.values(this.byId)) if (m) for (const id of m.keys()) if (id > max && id < FAKEMON) max = id;
+    const own = speciesCeiling(this.romSpecies);
+    if (own > max) max = own;
+    // (the play view sets the running ROM's table – the same game in a run)
+    if (this.gen === 3 && ROM_CEILING > max) max = ROM_CEILING;
+    return max;
   }
 
   /** The ROM data of `slot` – or of any player this computer has it for (each one builds only their own game). */
