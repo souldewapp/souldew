@@ -54,6 +54,12 @@ test('medals: every kind and tier is drawn, locked ones in the same shape', () =
   }
 });
 
+test('medals: each regional dex medal has its own numeral, Kanto I to Alola VII', () => {
+  const look = (gen) => JSON.stringify(medalPixels('dex', 'gold', gen));
+  const all = [1, 2, 3, 4, 5, 6, 7].map(look);
+  assert.equal(new Set(all).size, 7, 'no two generations share a medal');
+});
+
 test('watchRun: live moments of my player – 1 HP, a badge won underleveled, Bidoof team, species met – go out with the next sync', async () => {
   const sent = [];
   globalThis.fetch = async (url, o) => {
