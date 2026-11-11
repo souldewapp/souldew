@@ -73,6 +73,19 @@ export function gen3SpeciesMap(names, vanilla, dexNames) {
   dexNames.forEach((n, id) => {
     if (n && id && !byKey.has(nameKey(n))) byKey.set(nameKey(n), id);
   });
+  // A name that fills the game's 10 letters may be a shortened longer one (Run & Bun: "Corvknight", "Flechinder",
+  // "Crabminabl"): the one longer Pokémon name that has its letters in that order and starts the same is it.
+  const longer = [...byKey.entries()].filter(([k]) => k.length > 10);
+  const inOrder = (short, long) => {
+    let j = 0;
+    for (let k = 0; k < long.length && j < short.length; k++) if (long[k] === short[j]) j++;
+    return j === short.length;
+  };
+  const abbreviated = (key) => {
+    if (key.length < 10) return 0;
+    const hits = longer.filter(([k]) => k[0] === key[0] && k.length > key.length && inOrder(key, k));
+    return hits.length === 1 ? hits[0][1] : 0;
+  };
   const map = [0];
   const unknown = {};
   let changed = 0;
@@ -88,7 +101,7 @@ export function gen3SpeciesMap(names, vanilla, dexNames) {
       map[i] = 0;
       continue;
     }
-    const id = byKey.get(key) || 0;
+    const id = byKey.get(key) || abbreviated(key) || 0;
     map[i] = id;
     if (!id) unknown[i] = names[i];
     if (id !== v) changed++;
@@ -119,6 +132,18 @@ export function romSpecies(rom, opts = {}) {
   } catch {
     return null;
   }
+}
+
+/**
+ * The highest National Dex number a GBA ROM's species table holds (romSpecies() result): a hack with Pokémon of later
+ * generations – Light Platinum's Gen 4/5 ones, Run & Bun's 1000+ – lets the player pick them by hand, not only the base
+ * game's 386. null when the ROM keeps the retail species (nothing to add) or nothing is known.
+ */
+export function speciesCeiling(species) {
+  if (!species?.map?.length) return null;
+  let max = 0;
+  for (const id of species.map) if (id > max) max = id;
+  return max || null;
 }
 
 // ---------------------------------------------------------------- types from the ROM

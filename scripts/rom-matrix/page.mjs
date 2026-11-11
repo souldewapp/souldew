@@ -291,7 +291,9 @@ function helper() {
         const { addItem, POKE_BALL } = await import('/shared/live/cheats.mjs');
         team(); // (the DS readers find the bag through the party reader's state)
         const item = s.item === 'ball' || !s.item ? POKE_BALL[ctx.entry.gen] : s.item;
-        const r = addItem(ctx.entry, { read: e.read, write: e.write }, ctx.state, item, s.count || 5, { pocket: s.pocket ?? (s.item === 'ball' || !s.item ? 'balls' : null), allowEmpty: true });
+        // (s.saveBlockPtrs: where a hack keeps its save block pointers – Run & Bun's aren't the base game's)
+        const ent = s.saveBlockPtrs ? { ...ctx.entry, saveBlockPtrs: s.saveBlockPtrs } : ctx.entry;
+        const r = addItem(ent, { read: e.read, write: e.write }, ctx.state, item, s.count || 5, { pocket: s.pocket ?? (s.item === 'ball' || !s.item ? 'balls' : null), allowEmpty: true });
         log.push({ do: 'give', item, result: r, required: s.required !== false, ok: !r.error });
         if (r.error && s.required !== false) {
           shots.push(await shot(`fail-${log.length}`));

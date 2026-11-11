@@ -8,7 +8,7 @@ import { t, ago } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
 import { gameById, gameTitle, speciesName } from '../lib/data.mjs';
 import { players as getPlayers, live, othersOf, runMode, missedQuestion, openAreas, markMissed, locationChoices, areaForCatch, genOfRun, profileOf, rules as getRules, logCheat } from '../lib/run.mjs';
-import { findEntry, readLiveParty, readLiveBattle, withBattleHp, LiveTables } from '/shared/live/parse.mjs';
+import { findEntry, readLiveParty, readLiveBattle, withBattleHp, inBattleFlag, LiveTables } from '/shared/live/parse.mjs';
 import { addRareCandies, cheatSupported } from '/shared/live/cheats.mjs';
 import { MusicKeyTracker } from '/shared/live/location.mjs';
 import { PlayHome } from './playhome.mjs';
@@ -743,7 +743,7 @@ export function GameSession({ session, mode }) {
       // live loop
       let lastLocate = 0;
       let wramEntry = null;
-      let expandedMisses = 0; // reads without a team in an expanded engine (after ~30 s: "not supported")
+      let expandedMisses = 0; // reads in a battle without a team in an expanded engine (after ~15 s: "not supported")
       const tick = () => {
         if (stopped) return;
         const e = emu();
@@ -761,8 +761,8 @@ export function GameSession({ session, mode }) {
           if (entry.gen <= 3 && !romDataReady()) {
             // (GB and GBA games are read once the ROM's own data is known – a moment after the start: a hack may keep
             // its variables elsewhere or other Pokémon in the slots)
-          } else if (sp?.engine === 'expanded' && (expandedMisses > 40 || !romSpeciesNow()?.map)) {
-            // an expanded engine whose team couldn't be found (or whose species table can't be read): say so
+          } else if (sp?.engine === 'expanded' && !romSpeciesNow()?.map) {
+            // an expanded engine whose species table can't be read: say so
             setLiveState({ status: 'hack', entry: entry.name });
             setHere(null);
             setCheatGame(false); // (the bag isn't where the base game keeps it either)
@@ -779,7 +779,11 @@ export function GameSession({ session, mode }) {
             setHere((p) => nextHere(p, hereNow));
             const TT = sp ? T.withSpecies(sp) : T; // a hack's own Pokémon in the slots (Light Platinum)
             const res = readLiveParty(ent, e.read, TT, state);
-            if (expanded && !res?.party?.length) expandedMisses++;
+            // An expanded engine's team is searched for – and there is none before the first Pokémon (Run & Bun's
+            // intro takes minutes). Searching never stops: it used to give up after ~30 s without a team, so the
+            // starter and every catch after it were never seen. Only a battle without a team proves the search
+            // wrong (nobody battles without a Pokémon): then this hack isn't supported – until a team turns up.
+            if (expanded && !res?.party?.length && inBattleFlag(ent, e.read) && ++expandedMisses > 20) setLiveState({ status: 'hack', entry: entry.name });
             if (res?.party) {
               expandedMisses = 0;
               const fight = readLiveBattle(ent, e.read, TT, state, res.party);

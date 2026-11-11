@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { registerHooks } from 'node:module';
-import { gen3SpeciesNames, gen3SpeciesMap, romSpecies, nameKey } from '../shared/live/romspecies.mjs';
+import { gen3SpeciesNames, gen3SpeciesMap, romSpecies, nameKey, speciesCeiling } from '../shared/live/romspecies.mjs';
 import { gen3Names, gen5Messages, gen5PlaceNames, romLocations } from '../shared/live/romloc.mjs';
 import { placeName } from '../shared/live/location.mjs';
 import { LiveTables, parsePk3, FAKEMON } from '../shared/live/parse.mjs';
@@ -104,6 +104,13 @@ test('Gen 3 species table: an expanded engine (hundreds more species) is recogni
 test('gen3SpeciesMap: the vanilla Pokémon of a slot wins over a same-named later one', () => {
   const m = gen3SpeciesMap(['', 'BULBASAUR', 'IVYSAUR'], [0, 1, 2], dexNames);
   assert.deepEqual(m, { map: [0, 1, 2], unknown: {}, changed: 0 });
+});
+
+test('gen3SpeciesMap: a name the game shortened to its 10 letters is still that Pokémon (Run & Bun), a made-up one stays unknown', () => {
+  const names = ['', 'Corvknight', 'Flechinder', 'Crabminabl', 'Polteageis', 'Basclegion', 'Goombario', 'Koopatroop'];
+  const m = gen3SpeciesMap(names, [], dexNames);
+  assert.deepEqual(m.map.slice(1, 6), [823, 662, 740, 855, 902]);
+  assert.deepEqual(m.unknown, { 6: 'Goombario', 7: 'Koopatroop' });
 });
 
 function pk3({ pid = 0x01020304, otId = 0x0a0b0c0d, internal, level = 5, hp = 20, maxHp = 20 }) {
@@ -209,6 +216,16 @@ test('catches are named like the sign: Gen 5 gets the ROM\'s names, a hack its o
   R.setRomPlaces(null);
 });
 
+test('the species picker offers every Pokémon a hack holds: speciesCeiling = the highest National Dex number in its table', () => {
+  assert.equal(speciesCeiling(null), null);
+  assert.equal(speciesCeiling({ engine: 'vanilla', changed: 0 }), null, 'a retail table adds nothing');
+  // Light Platinum (Ruby): Gen 4/5 Pokémon in the slots
+  assert.equal(speciesCeiling({ engine: 'vanilla', map: [0, 1, 543, 387, 0] }), 543);
+  // Run & Bun: National Dex order up to the newest generation
+  assert.equal(speciesCeiling({ engine: 'expanded', map: Object.assign([0], { 390: 390, 905: 905, 1100: 263 }) }), 905);
+  assert.equal(speciesCeiling({ engine: 'expanded', map: [0, 0, 0], unknown: { 1: 'Goomba', 2: 'Koopa' } }), null, 'only its own creatures: nothing past the base game');
+});
+
 // ---------------------------------------------------------------- real ROMs (optional)
 
 const DIR = process.env.SOULDEW_TEST_ROMS;
@@ -228,6 +245,8 @@ test('real ROMs: retail dumps are vanilla with the retail species; hacks are tol
     }
     // a modified ROM: whatever it is, the place data (when there is some) must come from the ROM's own tables
     if (r.data) assert.equal(r.data.vanilla, false, f);
+    // Run & Bun: the Sinnoh starters (and everything up to the newest generation) can be picked by hand
+    if (gba && r.species.engine === 'expanded') assert.ok(speciesCeiling(r.species) >= 905 && r.species.map.includes(390), `${f}: Chimchar and Gen 8 in the picker`);
     if (gba && r.species.engine === 'vanilla' && r.species.changed) {
       for (const [i, n] of Object.entries(r.species.unknown || {})) assert.ok(!dexNames.some((d) => d && nameKey(d) === nameKey(n)), `${f}: ${i} ${n} is a real Pokémon`);
       assert.ok(r.species.map.every((v) => v >= 0 && v <= 1025), f);
@@ -440,6 +459,10 @@ test('expanded GBA engines (Run & Bun): the team is searched for in EWRAM, the p
   put(0x02024cbc, [10, 0, 15, 0, 0, 16]);
   assert.deepEqual(readLocation(maps, emerald, read, { rom, state }), { gen: 3, id: 16, map: '0.16', romName: 'Route 101' });
   assert.equal(state.sb1PtrAddr, 0x03005d9c);
+  // the title screen: SaveBlock1 still empty – no place (it read as Petalburg City, map 0.0 at 0,0)
+  put(0x02024cbc, [0, 0, 0, 0, 0, 0]);
+  assert.equal(readLocation(maps, emerald, read, { rom, state }), null);
+  assert.equal(readLocation(maps, emerald, read, { rom, state: {} }), null, 'and no other pointer is taken for it');
 });
 
 test('Platinum and Pearl: the battle flag (checked live) ends a battle at once, also one that left no HP change', async () => {

@@ -9,6 +9,12 @@
   game". Their memory layout is now in the table – the team, battles, the place sign and the Rare Candy cheat. The
   addresses come from two trackers that run on these versions and agree; no such ROM was at hand to check them in a
   running game, so please report it if something looks off.
+- **Run & Bun: the starter and your catches are filed** (also in other expanded-engine hacks, issue #3):
+  about every second Pokémon was read as an egg – Run & Bun stores the IVs one bit further on than the original
+  games – and never reached the run, and the search for the team gave up after half a minute without one, long
+  before the starter. Checked in the game: Chimchar lands under "Starter", a Zigzagoon caught on Route 101 under
+  "Route 101". Pokémon whose names the game shortens (Corviknight, Crabominable, Fletchinder …) are recognised, and the
+  title screen no longer claims you are in Petalburg City.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged

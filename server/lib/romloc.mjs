@@ -15,7 +15,7 @@ import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 6; // bump when romLocations() / romSpecies() change what they find
+const VERSION = 7; // bump when romLocations() / romSpecies() change what they find
 const memo = new Map();
 let tables = null;
 
