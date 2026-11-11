@@ -189,9 +189,11 @@
 .ach-text h3 { font-family: var(--font-pixel); font-weight: 500; font-size: 15.5px; line-height: 1.2; }
 .ach-text p { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
 .ach-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; min-height: 18px; }
+.ach-foot > .num, .ach-foot .rarity { white-space: nowrap; }
+.ach-foot .ach-bar { flex: 0 1 84px; min-width: 40px; }
 .rarity { font-family: var(--font-pixel); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--rc); }
 .ach-date { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ok-ink); white-space: nowrap; }
-.ach-prog { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); }
+.ach-prog { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); min-width: 0; white-space: nowrap; }
 .ach-bar { width: 84px; height: 6px; border-radius: 3px; background: #0d0c10; overflow: hidden; box-shadow: inset 0 0 0 1px #000; }
 .ach-bar > i { display: block; height: 100%; background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 60%, #000), var(--rc)); border-radius: 3px; }
 
