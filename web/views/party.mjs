@@ -51,7 +51,7 @@ export function statusLabel(k) {
  * types (shown instead of the HP bar when no HP is known), caption (small line at the bottom, e.g. the area),
  * placeholder (text for an empty slot), onPick (makes it a button), size (sprite px override).
  */
-export function PartyPanel({ mon, gen = 4, lead, compact, accent, dead, types, caption, placeholder, onPick, size, index = 0 }) {
+export function PartyPanel({ mon, gen = 4, lead, compact, accent, dead, types, caption, placeholder, onPick, size, index = 0, noItems = false }) {
   const style = accent ? `--acc:${accent}` : '';
   if (!mon) {
     return html`<div class=${`pp empty ${compact ? 'compact' : ''}`} style=${style} aria-label=${placeholder || t('party.empty', 'Empty slot')}>
@@ -64,7 +64,8 @@ export function PartyPanel({ mon, gen = 4, lead, compact, accent, dead, types, c
   const species = speciesName(mon.species);
   const showSpecies = species && name.toLowerCase() !== species.toLowerCase();
   const g = mon.gender === 'M' || mon.gender === 'F' ? mon.gender : null;
-  const hasItem = mon.item !== undefined && mon.item !== null && mon.item !== 0 && mon.item !== '';
+  // (noItems: this game's held items can't be named with confidence – shared/live/features.mjs – so none are shown)
+  const hasItem = !noItems && mon.item !== undefined && mon.item !== null && mon.item !== 0 && mon.item !== '';
   // the held item by name (Gen 3–5; a ROM hack's own item by the name the game gives it – '' when that isn't known: Gen
   // 1/2, a hack whose item table wasn't found)
   const item = hasItem ? (typeof mon.item === 'string' ? mon.item : mon.itemOwn ? mon.itemName || '' : itemName(mon.item, gen)) : '';
@@ -104,14 +105,14 @@ export function PartyPanel({ mon, gen = 4, lead, compact, accent, dead, types, c
  * layout ('grid' = 2 columns | 'row' = 6 in a row, 3 × 2 when narrow), typesOf(species) for mons without HP,
  * caption(mon) → small text under a panel (e.g. area name), isDead(mon) → force the fainted look.
  */
-export function PartyGrid({ party, gen = 4, compact, accent, emptySlots = true, onPick, layout = 'grid', typesOf, caption, isDead, label }) {
+export function PartyGrid({ party, gen = 4, compact, accent, emptySlots = true, onPick, layout = 'grid', typesOf, caption, isDead, label, noItems = false }) {
   const mons = (party || []).filter((m) => m && m.species).slice(0, 6);
   const pad = emptySlots ? Math.max(0, 6 - mons.length) : 0;
   const small = compact || layout === 'row';
   return html`<div class=${`party-wrap ${layout === 'row' ? 'row' : ''}`}>
     <div class=${`party ${layout === 'row' ? 'row' : ''} ${small ? 'compact' : ''}`} role="list" aria-label=${label || t('party.title', 'Party')}>
       ${mons.map((m, i) => html`<div role="listitem" class="party-cell" key=${m.key || `${i}-${m.species}`}>
-        <${PartyPanel} mon=${m} gen=${gen} lead=${i === 0} compact=${small} accent=${accent} index=${i} onPick=${onPick}
+        <${PartyPanel} mon=${m} gen=${gen} lead=${i === 0} compact=${small} accent=${accent} index=${i} onPick=${onPick} noItems=${noItems}
           dead=${isDead ? isDead(m) : false} types=${typesOf && !m.maxHp ? typesOf(m.species) : null} caption=${caption ? caption(m) : null} /></div>`)}
       ${Array.from({ length: pad }, (_, i) => html`<div role="listitem" class="party-cell" key=${`empty-${i}`}><${PartyPanel} mon=${null} compact=${small} accent=${accent} /></div>`)}
     </div>

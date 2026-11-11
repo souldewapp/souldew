@@ -10,7 +10,7 @@ import { slotsOf, runMode } from './slots.mjs';
 import { runGen, areaLabel, statusKey, validLevel } from './overlay.mjs';
 import { legendaryKind } from './legendaries.mjs';
 import { rulesWithDefaults } from './rules.mjs';
-import { levelCapFor, gymCapsFamily, vanillaCapFor } from './routes.mjs';
+import { levelCapFor, gymCapsFamily, vanillaCapFor, romCapFor, prettyTrainer } from './routes.mjs';
 
 export const API_VERSION = 1;
 export const API_PREFIX = '/api/v1';
@@ -100,7 +100,7 @@ const BOSS_NAMES = {
 const HGSS = ['IPKE', 'IPGE', 'IPKD', 'IPGD', 'IPKF', 'IPGF', 'IPKS', 'IPGS', 'IPKI', 'IPGI'];
 
 /** The level cap of a player with `badges`, when the run uses caps and the game has them: { cap, boss } or null. */
-export function levelCapOf(manifest, rules, raw, badges) {
+export function levelCapOf(manifest, rules, raw, badges, slot = null) {
   if (!rules?.levelCaps || !Number.isInteger(badges)) return null;
   if (HGSS.includes(String(manifest?.game?.code || '').toUpperCase())) {
     const defeated = {};
@@ -108,9 +108,14 @@ export function levelCapOf(manifest, rules, raw, badges) {
     const r = levelCapFor(badges, defeated, !manifest?.patch);
     return { cap: r.cap, boss: r.boss ? { key: r.boss.key, name: BOSS_NAMES[r.boss.key] || r.boss.key } : null };
   }
-  if (manifest?.game?.hackId || manifest?.patch) return null; // a ROM hack's trainers have other levels
-  const v = vanillaCapFor(gymCapsFamily(manifest?.game?.id || manifest?.base?.gameId || ''), badges);
-  return v ? { cap: v.cap, boss: { key: v.boss.key, name: v.boss.name || (v.boss.badge !== undefined ? `Gym ${v.boss.badge + 1}` : v.boss.key) } } : null;
+  const name = (b) => b.name || (b.badge !== undefined ? (b.leader ? `${prettyTrainer(b.leader)} (gym ${b.badge + 1})` : `Gym ${b.badge + 1}`) : b.key);
+  // the curated gym aces of the unmodified games (a ROM hack's trainers have other levels) …
+  const v = manifest?.game?.hackId || manifest?.patch ? null : vanillaCapFor(gymCapsFamily(manifest?.game?.id || manifest?.base?.gameId || ''), badges);
+  if (v) return { cap: v.cap, boss: { key: v.boss.key, name: name(v.boss) } };
+  // … else the caps read from the player's game (romcaps:<slot>, web/lib/run.mjs) once its badges were read
+  const live = slot ? raw?.[`live:${slot}`]?.v : null;
+  const r = live?.badgesRead ? romCapFor(raw?.[`romcaps:${slot}`]?.v, badges) : null;
+  return r ? { cap: r.cap, boss: { key: r.boss.key, name: name(r.boss) } } : null;
 }
 
 /**
@@ -190,7 +195,7 @@ export function buildState(manifest, doc, opts = {}) {
     return {
       slot, name: str(meta.name, 24) || str(manifest?.players?.[slot]?.name, 24) || slot.toUpperCase(), color: PLAYER_COLORS[slot],
       live: Number.isFinite(live?.at) && Math.abs(now - live.at) < LIVE_FRESH, updatedAt: num(live?.at),
-      badges: int(live?.badges), levelCap: live ? levelCapOf(manifest, rules, raw, int(live.badges) ?? 0) : null, playTime: playTime(live?.playTime),
+      badges: int(live?.badges), levelCap: live ? levelCapOf(manifest, rules, raw, int(live.badges) ?? 0, slot) : null, playTime: playTime(live?.playTime),
       location: where ? {
         id: int(where.id), gen: int(where.gen), name: str(where.name, 60) || null, at: num(where.at),
         battle: fight && Number.isInteger(fight.species) ? { kind: fight.kind === 'trainer' ? 'trainer' : 'wild', species: fight.species, name: sp(fight.species),

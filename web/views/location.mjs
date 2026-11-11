@@ -4,7 +4,7 @@
 import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
 import { useApp } from '../lib/ui.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
-import { speciesName, gen4data, setRomSpecies, setRomTypes, setRomOwnTypes } from '../lib/data.mjs';
+import { speciesName, gen4data, setRomSpecies, setRomTypes } from '../lib/data.mjs';
 import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation, placeName } from '/shared/live/location.mjs';
 import { pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, genOfRun, setRomPlaces, areaForPlace } from '../lib/run.mjs';
 
@@ -31,17 +31,18 @@ export function loadRomLocations(src) {
   setRomPlaces(null); // (another game's names don't apply any more)
   setRomSpecies(null);
   setRomTypes(null);
-  setRomOwnTypes(null);
   const p = fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`)
     .then((r) => (r.ok ? r.json() : null))
     .catch(() => null)
     .then((j) => {
       if (ROMLOC.src !== src) return;
-      Object.assign(ROMLOC, { data: j?.data || null, species: j?.species || null, wram: j?.wram || null, own: { items: j?.items || null, moves: j?.moves || null }, pending: false });
+      Object.assign(ROMLOC, {
+        data: j?.data || null, species: j?.species || null, wram: j?.wram || null, pending: false,
+        own: { items: j?.items || null, moves: j?.moves || null, types: j?.types || null, caps: j?.caps || null, capsWhy: j?.capsWhy || null, header: j?.header || null, vanilla: j ? j.vanilla !== false : null },
+      });
       setRomPlaces(ROMLOC.data); // catches made now are named like the sign names their place
       setRomSpecies(ROMLOC.species); // a ROM hack's own Pokémon get the game's names
-      setRomTypes(j?.types || null); // … and the game's types (Fairy hacks)
-      setRomOwnTypes(j?.ownTypes || null); // … or none, for a hack with types of its own
+      setRomTypes(j?.types || null); // … and the game's types (names, chart, Fairy, a hack's own)
     });
   ROMLOC.p = p;
   return p;
@@ -49,8 +50,14 @@ export function loadRomLocations(src) {
 
 /** The running ROM's species table (romSpecies(): { engine, map, unknown } – GBA only), null while unknown. */
 export const romSpeciesNow = () => ROMLOC.species;
-/** An expanded GBA engine's own item names and move numbers ({ items, moves }, server/lib/romloc.mjs ownTables3), or null. */
+/**
+ * What else the server read from the running ROM, or null while it loads: { items, moves } (an expanded GBA engine's
+ * own item names and move numbers, server/lib/romloc.mjs ownTables3), `types` (shared/live/romtypes.mjs), `caps` /
+ * `capsWhy` (shared/live/romcaps.mjs) and `vanilla` (an unmodified retail ROM).
+ */
 export const romOwnNow = () => ROMLOC.own;
+/** All of the running ROM's data in romData()'s shape (shared/live/features.mjs romFeatures), null while it loads. */
+export const romDataNow = () => (ROMLOC.own ? { ...ROMLOC.own, data: ROMLOC.data, species: ROMLOC.species } : null);
 /** A Game Boy hack's moved RAM variables (romwram.mjs gbWramShift), null: the retail addresses. */
 export const romWramNow = () => ROMLOC.wram;
 /** An expanded GBA engine's hints from its code (romloc.mjs gen3MapTable: the party pair, gMain), or null. */

@@ -9,13 +9,15 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
 import { romLocations, gen3MapTable } from '../../shared/live/romloc.mjs';
-import { romSpecies, romTypes, gen3TypeNames, OWN_TYPES_ABOVE, gen3ItemNames, gen3MoveNames, gen3MoveMap } from '../../shared/live/romspecies.mjs';
+import { romSpecies, gen3ItemNames, gen3MoveNames, gen3MoveMap } from '../../shared/live/romspecies.mjs';
+import { romTypes } from '../../shared/live/romtypes.mjs';
+import { romCaps } from '../../shared/live/romcaps.mjs';
 import { gbWramShift } from '../../shared/live/romwram.mjs';
 import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 12; // bump when romData() changes what it finds or the shape of its result (12: CFRU tables, item and move names)
+const VERSION = 13; // bump when romData() changes what it finds or the shape of its result (13: types and level caps from the ROM)
 const memo = new Map();
 let tables = null;
 
@@ -44,7 +46,7 @@ export function romCrc(bytes) {
   return (v >>> 0).toString(16).toUpperCase().padStart(8, '0');
 }
 
-/** All results for a ROM's bytes: { data (locations or null), species (or null), wram (or null), vanilla }. */
+/** All results for a ROM's bytes: { data (locations or null), species, wram, types, caps, capsWhy, items, moves, vanilla }. */
 export function romData(u8, sharedDir) {
   const o = opts(sharedDir);
   let vanilla = false;
@@ -58,16 +60,19 @@ export function romData(u8, sharedDir) {
   const species = romSpecies(u8, o);
   // an expanded GBA engine moved gMapHeader: the place comes from SaveBlock1's map and the ROM's map table instead
   if (data && species?.engine === 'expanded') data.maps3 = gen3MapTable(u8);
-  // a modified ROM's own types where they differ from the app's (Fairy hacks, retyped or new Pokémon)
-  const types = vanilla || species?.engine === 'expanded' ? null : romTypes(u8, { baseTypes: o.baseTypes, speciesMap: species?.map ? species : null, vanillaIndex: o.gen3Index });
-  // a GBA hack with types of its own (Too Many Types: 58 / 81 type names): souldew knows neither them nor their
-  // matchups – the app shows no types for its Pokémon rather than the official ones (web/lib/data.mjs)
-  const names = !vanilla && species ? gen3TypeNames(u8, o.gen3Charset) : null;
-  const ownTypes = names && names.count > OWN_TYPES_ABOVE ? { count: names.names.filter((n) => n !== '???').length, names: names.names } : null;
   // an expanded engine numbers its items and moves its own way (Complete FireRed Upgrade: Unbound, Radical Red): the
   // game's item names (held items by name) and its moves in the app's numbering (the battle helper's moves)
   const own = species?.engine === 'expanded' ? ownTables3(u8, o) : { items: null, moves: null };
-  return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, ownTypes, ...own, vanilla };
+  // the game's types – names, each Pokémon's, the chart, the moves' (shared/live/romtypes.mjs): any ROM, so a hack that
+  // changed them shows what it uses; a retail ROM reads as the app's own data
+  const types = romTypes(u8, { gen3Charset: o.gen3Charset, speciesMap: species?.map ? species : null, vanillaIndex: o.gen3Index, baseTypes: o.baseTypes, moveMap: own.moves?.map || null });
+  // level caps from the game's trainers (shared/live/romcaps.mjs) – only a clean result; `capsWhy` says why not
+  const c = romCaps(u8, { gen3Charset: o.gen3Charset, gen4Chars: o.gen4Chars });
+  const caps = c.caps ? { caps: c.caps, leaders: c.leaders, final: c.final, badgeFlags: c.badgeFlags ?? null } : null;
+  // the header (system, game code, title): which memory table entry reads it (shared/live/features.mjs)
+  const h = identifyRom(u8.subarray(0, 0x200));
+  const header = h?.system ? { system: h.system, code: h.code || '', title: h.title || '' } : null;
+  return { data, species, wram: vanilla ? null : gbShift(u8, o), types, caps, capsWhy: caps ? null : c.why || null, ...own, header, vanilla };
 }
 
 /**
@@ -94,14 +99,14 @@ function gbShift(u8, o) {
  * The ROM's data by file path or (an unpacked archive entry) by its bytes plus a key: { data, species, wram, vanilla }
  * – `data` the location data (null when the ROM has none: another engine, an unsupported layout), `species` the GBA
  * species table (null for other systems), `wram` a Game Boy hack's moved variables (null: the retail addresses),
- * `types` a modified ROM's own Pokémon types where they differ from the app's (shared/live/romspecies.mjs romTypes).
+ * `types` the game's types (shared/live/romtypes.mjs), `caps` level caps from its trainers (shared/live/romcaps.mjs).
  * Never throws.
  */
 /** What romDataFor finds when there's nothing to find – also the list of fields the disk cache must give back. */
-export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, ownTypes: null, items: null, moves: null, vanilla: null });
+export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, caps: null, capsWhy: null, items: null, moves: null, header: null, vanilla: null });
 /** A disk-cache entry back into romDataFor's result (every field of ROMDATA_NONE – a missing one would be lost on the
  * next start, as the own types of Too Many Types were). */
-export const fromRomCache = (v) => ({ data: v.data ?? null, species: v.species ?? null, wram: v.wram ?? null, types: v.types ?? null, ownTypes: v.ownTypes ?? null, items: v.items ?? null, moves: v.moves ?? null, vanilla: v.vanilla ?? null });
+export const fromRomCache = (v) => Object.fromEntries(Object.keys(ROMDATA_NONE).map((k) => [k, v[k] ?? null]));
 
 export function romDataFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
   const none = { ...ROMDATA_NONE };

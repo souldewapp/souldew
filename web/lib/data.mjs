@@ -4,6 +4,7 @@ import { api } from './api.mjs';
 import { currentLang } from './i18n.mjs';
 import { slotsOf } from '/shared/slots.mjs';
 import { speciesCeiling } from '/shared/live/romspecies.mjs';
+import { setTypeChart } from '/shared/typechart.mjs';
 
 let P = null;
 let CATALOG = { games: [], hacks: [] };
@@ -39,20 +40,17 @@ export function setRomSpecies(sp) {
 /** The last National Dex number of each generation's games. */
 export const GEN_MAX_ID = [0, 151, 251, 386, 493, 649];
 
-// The running ROM's own Pokémon types where they differ from PokeAPI's (a ROM hack: Fairy in Renegade Platinum / Blaze
-// Black 2 Redux, retyped Pokémon, a Gen 3 hack's own ones – shared/live/romspecies.mjs romTypes). `fairy`: the hack
-// has the type.
+// The running ROM's types (shared/live/romtypes.mjs via server/lib/romloc.mjs): the game's own – each Pokémon's, the
+// chart, the moves', the names of types only it has (Too Many Types) – so a hack that changed them shows what it uses.
+// The chart goes to shared/typechart.mjs for the battle helper.
 let ROM_TYPES = null;
+const TYPE_LABELS = {}; // a game's own types by key ('x-monke') → the game's name ("Monke")
 export function setRomTypes(t) {
-  ROM_TYPES = t?.types ? t : null;
+  ROM_TYPES = t?.species ? t : null;
+  Object.assign(TYPE_LABELS, ROM_TYPES?.labels || {});
+  setTypeChart(ROM_TYPES);
 }
 export const romTypesNow = () => ROM_TYPES;
-// The running ROM has types of its own (romloc.mjs ownTypes – Too Many Types): no Pokémon's types are known then.
-let ROM_OWN_TYPES = null;
-export function setRomOwnTypes(t) {
-  ROM_OWN_TYPES = t?.count ? t : null;
-}
-export const romOwnTypesNow = () => ROM_OWN_TYPES;
 
 export function speciesName(id, lang = nameLang()) {
   if (!id) return '';
@@ -74,7 +72,7 @@ export function baseTypes(id, gen = 9) {
 
 export function typeLabel(type) {
   const t = String(type || '').toLowerCase();
-  return P?.typeNames?.[currentLang()]?.[t] || P?.typeNames?.en?.[t] || t;
+  return TYPE_LABELS[t] || P?.typeNames?.[currentLang()]?.[t] || P?.typeNames?.en?.[t] || t;
 }
 
 export function moveName(id) {
@@ -129,19 +127,20 @@ export class RunData {
       this.romData[slot] = d;
       this.byId[slot] = d ? new Map(d.pokemon.filter((p) => p.forme === 0).map((p) => [p.id, p])) : null;
     }
-    // a ROM hack without the randomizer: its own types come from the ROM (server/lib/romloc.mjs), and for a GBA game
-    // which Pokémon it holds (a hack with later generations' Pokémon: Run & Bun, Light Platinum – also a ROM that was
-    // patched before it was added, so any GBA game is asked)
+    // the game's own data from its ROM (server/lib/romloc.mjs): its types (any game – a hack may have changed them) and,
+    // for a GBA game, which Pokémon it holds (a hack with later generations' Pokémon: Run & Bun, Light Platinum – also a
+    // ROM that was patched before it was added)
     this.romTypes = null;
     this.romSpecies = null;
-    this.ownTypes = null;
-    const out = (manifest?.patch || this.gen === 3) && Object.entries(manifest.outputs || {}).find(([s, o]) => !this.byId[s] && o?.rom);
+    this.romVanilla = null;
+    const out = Object.entries(manifest?.outputs || {}).find(([s, o]) => !this.byId[s] && o?.rom);
     if (out) {
       const src = `/api/runs/${manifest.id}/file?inline=1&name=${encodeURIComponent(out[1].rom)}`;
       const j = await fetch(`/api/rom/locations?src=${encodeURIComponent(src)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-      this.romTypes = j?.types || null;
+      this.romTypes = j?.types?.species ? j.types : null;
       this.romSpecies = j?.species || null;
-      this.ownTypes = j?.ownTypes || null;
+      this.romVanilla = j ? j.vanilla !== false : null;
+      Object.assign(TYPE_LABELS, this.romTypes?.labels || {});
       // a hack's own Pokémon are named as the game names them – on the board too, not only while the game runs
       if (this.romSpecies?.unknown && Object.keys(this.romSpecies.unknown).length) setRomSpecies(this.romSpecies);
     }
@@ -177,17 +176,19 @@ export class RunData {
   types(id, slot) {
     const p = this.byId[slot]?.get(id) || Object.keys(this.byId).sort().map((s) => this.byId[s]?.get(id)).find(Boolean);
     if (p) return p.types.filter(Boolean).map((t) => t.toLowerCase());
-    // a hack with types of its own (Too Many Types): none known – no type, no matchup, no type rule, rather than wrong ones
-    if (this.typesUnknown) return [];
-    // a ROM hack's own types (loaded with the run, or from the game running right now)
-    const own = (this.romTypes || ROM_TYPES)?.types?.[id];
-    if (own) return own;
+    // the game's own types (read from the ROM: loaded with the run, or from the game running right now)
+    const rt = this.romTypes || ROM_TYPES;
+    if (rt) return rt.species[id] || [];
+    // a modified ROM whose types couldn't be read: none rather than the official ones, which may be wrong there
+    if (this.romVanilla === false) return [];
     return baseTypes(id, this.gen);
   }
 
-  /** Does the game have types of its own that souldew doesn't know (romloc.mjs ownTypes)? */
-  get typesUnknown() {
-    return !!(this.ownTypes || ROM_OWN_TYPES);
+  /** Can the battle helper tell matchups? The game's own chart, or the official one where the game has only those types. */
+  get matchupsKnown() {
+    const rt = this.romTypes || ROM_TYPES;
+    if (!rt) return this.romVanilla !== false; // (a modified ROM whose types couldn't be read: no types to go by)
+    return !!rt.chart || !rt.own;
   }
 
   /** Does the game have the Fairy type (a hack that added it)? */

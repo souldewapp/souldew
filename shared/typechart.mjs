@@ -1,5 +1,5 @@
 // Type effectiveness for Gen 1–5 (no Fairy; Steel still resists Ghost and Dark). ROM hacks that add the Fairy type
-// (Renegade Platinum, Blaze Black 2 Redux – shared/live/romspecies.mjs romTypes) get its Gen 6 matchups on top.
+// get its Gen 6 matchups on top – or the game's own chart, read from the ROM (shared/live/romtypes.mjs, setTypeChart).
 // Gen 1 differences: no Dark/Steel, Ghost → Psychic does nothing (the famous bug), Bug ↔ Poison
 // are super effective on each other, and Ice → Fire is neutral.
 
@@ -41,13 +41,28 @@ const GEN1 = {
   ice: { fire: 1 },
 };
 
-/** The attacking types of a generation; `fairy` adds the type for a hack that has it. */
-export const typesOfGen = (gen, fairy = false) => (gen === 1 ? TYPES.filter((t) => t !== 'dark' && t !== 'steel') : fairy ? [...TYPES, 'fairy'] : TYPES);
+// The running game's own chart, read from its ROM (shared/live/romtypes.mjs: a hack that changed matchups or has
+// types of its own) – used instead of the built-in one while it is set (web/lib/data.mjs setRomTypes).
+let ROM = null;
+/** `t` = romtypes.mjs result ({ keys, chart }) or null (the built-in chart). */
+export function setTypeChart(t) {
+  ROM = t?.chart ? { chart: t.chart, keys: [...new Set((t.keys || []).filter((k) => k && k !== '???'))] } : null;
+}
+export const typeChartNow = () => ROM;
+
+/** The attacking types of a generation; `fairy` adds the type for a hack that has it. A ROM's own chart: its types. */
+export const typesOfGen = (gen, fairy = false) => (ROM ? ROM.keys : gen === 1 ? TYPES.filter((t) => t !== 'dark' && t !== 'steel') : fairy ? [...TYPES, 'fairy'] : TYPES);
+
+/** The retail games' multiplier of one attacking type against one defending type (never a ROM's own chart). */
+export function retailSingle(atk, def, gen = 4) {
+  if (gen === 1 && GEN1[atk]?.[def] !== undefined) return GEN1[atk][def];
+  return CHART[atk]?.[def] ?? 1;
+}
 
 /** Multiplier of one attacking type against one defending type. Unknown types ('???', Curse) are neutral. */
 export function single(atk, def, gen = 4) {
-  if (gen === 1 && GEN1[atk]?.[def] !== undefined) return GEN1[atk][def];
-  return CHART[atk]?.[def] ?? 1;
+  if (ROM) return ROM.chart[atk]?.[def] ?? 1;
+  return retailSingle(atk, def, gen);
 }
 
 /** Multiplier of an attacking type against a (one or two) typed defender: 0, 0.25, 0.5, 1, 2 or 4. */

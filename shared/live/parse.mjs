@@ -115,6 +115,18 @@ export class LiveTables {
     t.moves3 = t.expanded3 ? own?.moves?.map || null : null;
     return t;
   }
+
+  /**
+   * These tables with what the server read from the running ROM (server/lib/romloc.mjs): its types (`types3`: the
+   * battle's current types are named with them) and the badge flags its leaders' scripts set (`badges3`, romcaps.mjs).
+   */
+  withRom(rom) {
+    if (!rom?.types && !rom?.caps) return this;
+    const t = Object.create(this);
+    t.types3 = rom.types?.keys && rom.types?.species ? rom.types : null;
+    t.badges3 = Number.isInteger(rom.caps?.badgeFlags) ? rom.caps.badgeFlags : null;
+    return t;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -444,7 +456,48 @@ function readGen3(entry, read, T, state = {}) {
     if (state.bad3) delete state.bad3[i]; // a good read: a Bad Egg there has to be seen three times anew
     party.push(m);
   }
-  return { party };
+  const badges = party.length ? gen3Badges(entry, read, T, state) : undefined;
+  return badges === undefined ? { party } : { party, badges };
+}
+
+/**
+ * Gen 3 badges: the badge flags in SaveBlock1's flag array (Ruby/Sapphire keep SaveBlock1 at a fixed place, Emerald
+ * and FireRed/LeafGreen behind a pointer in IWRAM – the other-language FireRed/LeafGreen's in addresses.json). The
+ * badge flags are the base game's, or the ones the ROM's own leader scripts set (romcaps.mjs, LiveTables.withRom); an
+ * expanded engine only with those, its SaveBlock1 pointer as the place reader found it. Trusted only while "has a
+ * Pokémon" (FLAG_SYS_POKEMON_GET, 7 before the badges in Ruby/Sapphire/Emerald, 8 after them in FireRed/LeafGreen) is
+ * set there – the team is read, so it must be.
+ */
+const GBA_FLAGS = {
+  rs: { sb1: 0x02025734, flags: 0x1220, badge: 0x807, sys: -7 },
+  e: { sb1Ptr: 0x03005d8c, flags: 0x1270, badge: 0x867, sys: -7 },
+  frlg: { sb1Ptr: 0x03005008, flags: 0xee0, badge: 0x820, sys: 8 },
+};
+function gen3Badges(entry, read, T, state) {
+  const id = String(entry.id || '');
+  const L = GBA_FLAGS[/^(ruby|sapphire)_/.test(id) ? 'rs' : /^emerald_/.test(id) ? 'e' : /^(firered|leafgreen)_/.test(id) ? 'frlg' : ''];
+  if (!L) return undefined;
+  const badge = T.badges3 ?? (entry.scan3 ? null : L.badge);
+  if (badge === null || badge === undefined) return undefined;
+  let sb1 = L.sb1;
+  if (!sb1) {
+    const at = entry.saveBlockPtrs?.sb1 ? hex(entry.saveBlockPtrs.sb1) : entry.scan3 && state.sb1PtrAddr ? state.sb1PtrAddr : L.sb1Ptr;
+    const p = read(at, 4);
+    sb1 = p ? u32le(p, 0) : 0;
+  }
+  if (sb1 < 0x02000000 || sb1 >= 0x02040000) return undefined;
+  const flag = (f) => {
+    const b = read(sb1 + L.flags + (f >> 3), 1);
+    return b ? (b[0] >> (f & 7)) & 1 : null;
+  };
+  if (flag(badge + L.sys) !== 1) return undefined;
+  let n = 0;
+  for (let i = 0; i < 8; i++) {
+    const f = flag(badge + i);
+    if (f === null) return undefined;
+    n += f;
+  }
+  return n;
 }
 
 // ---------------------------------------------------------------------------
@@ -579,7 +632,7 @@ function readDS(entry, read, T, state) {
     if (party) {
       state.partyAddr = core;
       state.ptrOk = true;
-      return { party, boxes: readBoxesGen4(entry, read, T, state), badges: gen === 5 ? readBadgesGen5(entry, read, state, party) : readBadgesGen4(entry, read, state) };
+      return { party, boxes: readBoxesGen4(entry, read, T, state), badges: gen === 5 ? readBadgesGen5(entry, read, state, party) : readBadgesGen4(entry, read, state, party) };
     }
     // The pointer has worked in this session, so the layout is right and the party is just not there right
     // now (title screen after a soft reset, save being reloaded). Scanning would grab whatever PartyCore is
@@ -626,11 +679,21 @@ function saveBaseFromScan(entry, read, state) {
   if (base >= 0x02000000 && base < 0x02400000 && base + hex(entry.partyMonsOffset) - 8 === state.partyAddr) state.saveBase = base;
 }
 
-/** HGSS badges sit in the general block of the save image in RAM, like in the .sav file. */
-function readBadgesGen4(entry, read, state) {
+/**
+ * Gen 4 badges sit in the general block of the save image in RAM, like in the .sav file. HGSS: the Johto and Kanto
+ * bytes; Diamond/Pearl/Platinum: one byte in the trainer data (PKHeX Trainer1 + 0x1A), trusted only while the trainer ID
+ * and secret ID in front of it (+0x10/+0x12) are those of a Pokémon in the team.
+ */
+function readBadgesGen4(entry, read, state, party = null) {
   const b = entry.badges;
-  if (!b?.johtoOffset || !state.saveBase) return undefined;
+  if (!state.saveBase || !b) return undefined;
   const general = state.saveBase + hex(b.generalOffsetFromSaveBase);
+  if (b.trainerOffset) {
+    const t = read(general + hex(b.trainerOffset), 0x1b);
+    if (!t || !party?.some((m) => m.key?.endsWith(`-${u16le(t, 0x10)}-${u16le(t, 0x12)}`))) return undefined;
+    return popcount(t[0x1a]);
+  }
+  if (!b.johtoOffset) return undefined;
   const j = read(general + hex(b.johtoOffset), 1);
   const k = read(general + hex(b.kantoOffset), 1);
   return j && k ? popcount(j[0]) + popcount(k[0]) : undefined;
@@ -824,8 +887,8 @@ function activeGB(entry, read, T, state, party, stale) {
  * +0x2A, maxHP +0x2C, personality +0x48, status1 +0x4C, otId +0x54 – measured in Unbound at FireRed's 0x02023BE4): both
  * layouts are searched for, the one found is kept (state.bmLayout3).
  */
-const BMON3X = { size: 0x5c, sizes: [0x5c, 0x60, 0x64, 0x68], species: 0x00, hp: 0x2a, level: 0x2c, maxHp: 0x2e, pid: 0x4c, status: 0x50, otId: 0x58 };
-const BMON3 = { size: 0x58, sizes: [0x58], species: 0x00, hp: 0x28, level: 0x2a, maxHp: 0x2c, pid: 0x48, status: 0x4c, otId: 0x54 };
+const BMON3X = { size: 0x5c, sizes: [0x5c, 0x60, 0x64, 0x68], species: 0x00, types: 0x22, ntypes: 3, hp: 0x2a, level: 0x2c, maxHp: 0x2e, pid: 0x4c, status: 0x50, otId: 0x58 };
+const BMON3 = { size: 0x58, sizes: [0x58], species: 0x00, types: 0x21, ntypes: 2, hp: 0x28, level: 0x2a, maxHp: 0x2c, pid: 0x48, status: 0x4c, otId: 0x54 };
 const BMON3_LAYOUTS = [BMON3X, BMON3];
 
 /** The mons of a gen 3 party array (count, 100-byte structs): raw PID and OT ID next to the parsed mon. */
@@ -851,7 +914,25 @@ function battler3x(read, b, mons, L = BMON3X) {
   const maxHp = u16le(d, L.maxHp);
   // (level and max HP as in the party struct – both are written together with the battle's; HP at most the max)
   if (maxHp !== p.m.maxHp || d[L.level] !== p.m.level || hp > maxHp) return null;
-  return { p, hp, maxHp, status: u32le(d, L.status) & 0xff };
+  return { p, hp, maxHp, status: u32le(d, L.status) & 0xff, typeIds: [...d.subarray(L.types, L.types + L.ntypes)] };
+}
+
+/**
+ * The types a battler has right now (BattlePokemon type1/type2 – CFRU and the retail games at +0x21, pokeemerald-
+ * expansion's three at +0x22): a type change in battle, a hack's retyped or Fairy Pokémon. Named with the ROM's type
+ * ids (LiveTables.withRom); trusted once the player's battler has read as its species' types in this session
+ * (state.types3Ok) – before that, or without the ROM's types, none (the species' types stand in).
+ */
+function battlerTypes3(T, state, x, own = false) {
+  const keys = T.types3?.keys;
+  if (!keys || !x?.typeIds || x.typeIds.some((i) => i >= keys.length && i !== 0xff)) return null;
+  const ks = [...new Set(x.typeIds.map((i) => keys[i]).filter((k) => k && k !== '???'))];
+  if (!ks.length) return null;
+  if (own && !state.types3Ok) {
+    const want = T.types3.species?.[x.p.m.species];
+    if (want && want.length === ks.length && want.every((k) => ks.includes(k))) state.types3Ok = true;
+  }
+  return state.types3Ok ? ks : null;
 }
 
 /** Finds gBattleMons in EWRAM (see BMON3X) while a battle is on; at most once a second while it isn't found. */
@@ -925,14 +1006,16 @@ function battleGen3(entry, read, T, state = {}) {
       }
     }
     const e = foe ? foe.p.m : (foes.find((x) => x.m.hp > 0) || foes[0]).m;
-    const enemy = { species: e.species, level: e.level, hp: foe ? foe.hp : e.hp, maxHp: e.maxHp, shiny: e.shiny, moves: e.moves };
+    const meTypes = me ? battlerTypes3(T, state, me, true) : null;
+    const foeTypes = foe ? battlerTypes3(T, state, foe) : null;
+    const enemy = { species: e.species, level: e.level, hp: foe ? foe.hp : e.hp, maxHp: e.maxHp, shiny: e.shiny, moves: e.moves, ...(foeTypes ? { types: foeTypes } : {}) };
     // wild or trainer: a wild Pokémon is created with the player's trainer ID (CreateWildMon → OT_ID_PLAYER_ID, the
     // same in pokeemerald-expansion), a trainer's with a random one (OT_ID_RANDOM_NO_SHINY) – the opponent's OT ID
     // is one of the team's (its own catches) only in a wild battle
     const ot = (foe ? foe.p : foes[0]).otId;
     const kind = mine.length ? (mine.some((x) => x.otId === ot) ? 'wild' : 'trainer') : foes.length > 1 ? 'trainer' : 'wild';
     // (the index into the team as readGen3 lists it – the same structs, the same checks)
-    const active = me && foe ? { index: mine.indexOf(me.p), hp: me.hp, maxHp: me.maxHp, ...(statusOk(me.status) ? { status: me.status } : {}) } : null;
+    const active = me && foe ? { index: mine.indexOf(me.p), hp: me.hp, maxHp: me.maxHp, ...(statusOk(me.status) ? { status: me.status } : {}), ...(meTypes ? { types: meTypes } : {}) } : null;
     return { kind, enemy, active };
   }
   const types = read(hex(entry.battleTypeFlagsAddr), 4);
@@ -944,7 +1027,22 @@ function battleGen3(entry, read, T, state = {}) {
   const m = raw && parsePk3(raw, T);
   const enemy = m && !m.bad && m.level >= 1 && m.level <= 100 ? { species: m.species, level: m.level, hp: m.hp, maxHp: m.maxHp, shiny: m.shiny, moves: m.moves } : null;
   const index = idx ? u16le(idx, 0) : null;
-  return { kind: trainer ? 'trainer' : 'wild', enemy, active: index !== null && index < 6 ? { index } : null };
+  const active = index !== null && index < 6 ? { index } : null;
+  // the types both sides have right now, from gBattleMons (searched for as in an expanded engine) – with the ROM's types
+  if (T.types3 && enemy) {
+    const n = read(hex(entry.partyCountAddr), 1)?.[0];
+    const mine = n >= 1 && n <= 6 ? rawParty3(read, hex(entry.partyAddr), n, T) : [];
+    const foes = rawParty3(read, hex(entry.enemyPartyAddr), 6, T);
+    const bm = mine.length && foes.length ? findBattleMons3x(read, T, state, mine, foes) : null;
+    const L = state.bmLayout3 || BMON3;
+    const me = bm ? battler3x(read, bm, mine, L) : null;
+    const foe = me ? battler3x(read, bm + (state.bmSize3 || L.size), foes, L) : null;
+    const mt = me ? battlerTypes3(T, state, me, true) : null;
+    const ft = foe && foe.p.m.species === enemy.species ? battlerTypes3(T, state, foe) : null;
+    if (ft) enemy.types = ft;
+    if (mt && active && mine[active.index]?.pid === me.p.pid) active.types = mt;
+  }
+  return { kind: trainer ? 'trainer' : 'wild', enemy, active };
 }
 
 /**

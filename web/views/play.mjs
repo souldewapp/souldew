@@ -6,7 +6,7 @@ import { diag } from '../lib/diag.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, ago } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
-import { gameById, gameTitle, speciesName, hackById } from '../lib/data.mjs';
+import { gameById, gameTitle, speciesName, hackById, itemName, moveName } from '../lib/data.mjs';
 import { players as getPlayers, live, othersOf, runMode, missedQuestion, openAreas, markMissed, locationChoices, areaForCatch, genOfRun, profileOf, rules as getRules, logCheat } from '../lib/run.mjs';
 import { findEntry, readLiveParty, readLiveBattle, withBattleHp, inBattleFlag, LiveTables, expandedEntry } from '/shared/live/parse.mjs';
 import { addRareCandies, cheatSupported } from '/shared/live/cheats.mjs';
@@ -16,7 +16,9 @@ import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
 import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer, useBattlePanelPrefs } from './session-info.mjs';
-import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now, romOwnNow } from './location.mjs';
+import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now, romOwnNow, romDataNow } from './location.mjs';
+import { FeatureCheck, romFeatures } from '/shared/live/features.mjs';
+import { gymCapsFamily } from '/shared/routes.mjs';
 import { shiftEntry } from '/shared/live/romwram.mjs';
 import { RulesTab } from './board.mjs';
 import { CartInsert } from './cartinsert.mjs';
@@ -211,6 +213,9 @@ export function GameSession({ session, mode }) {
   const setMine = (m) => setMineState((prev) => (JSON.stringify(prev) === JSON.stringify(m) ? prev : m));
   const [battle, setBattleState] = useState(null); // what's on the other side right now (readLiveBattle)
   const [here, setHere] = useState(null); // where the player is right now (location.mjs readHere)
+  // what souldew has confirmed it can read in this game (shared/live/features.mjs) – held items and moves only once
+  // they all have names
+  const [features, setFeatures] = useState(null);
   const setBattle = (b) => setBattleState((prev) => (JSON.stringify(prev) === JSON.stringify(b) ? prev : b));
   const [liveState, setLiveStateRaw] = useState({ status: 'searching' });
   const setLiveState = (x) => setLiveStateRaw((prev) => (prev.status === x.status && prev.entry === x.entry ? prev : x));
@@ -752,6 +757,11 @@ export function GameSession({ session, mode }) {
       let x3 = null; // (one entry object for the session: liveRef and the cheats compare it)
       const scan3Entry = (en) => (x3?.from === en ? x3.entry : (x3 = { from: en, entry: expandedEntry(en, romMaps3Now()) }).entry);
       let expandedMisses = 0; // reads in a battle without a team in an expanded engine (after ~15 s: "not supported")
+      // what souldew can read for this game, confirmed poll by poll (shared/live/features.mjs): only what passed is shown,
+      // and every change goes into the diagnostics
+      let fc = null;
+      let seenKeys = null; // the Pokémon of the first team read – one that joins later is a catch
+      setFeatures(null);
       const tick = () => {
         if (stopped) return;
         const e = emu();
@@ -785,9 +795,17 @@ export function GameSession({ session, mode }) {
             if (liveRef.current?.entry !== ent) liveRef.current = { ...liveRef.current, entry: ent }; // (the cheats use it)
             const hereNow = readHere(ent, e.read, state);
             setHere((p) => nextHere(p, hereNow));
-            // a hack's own Pokémon in the slots (Light Platinum); an expanded engine's own items and moves (Unbound)
-            const TT = sp ? T.withSpecies(sp, romOwnNow()) : T;
+            // a hack's own Pokémon in the slots (Light Platinum); an expanded engine's own items and moves (Unbound); the
+            // ROM's types and badge flags (the battle's current types, Gen 3 badges)
+            const own = romOwnNow();
+            const TT = (sp ? T.withSpecies(sp, own) : T).withRom(own);
             const res = readLiveParty(ent, e.read, TT, state);
+            if (!fc && romDataReady()) {
+              const rd = romDataNow();
+              const curatedCaps = /^IP[KG]/.test(String(target.code || '')) || (!!rd?.vanilla && !!gymCapsFamily(target.gameId));
+              fc = new FeatureCheck(romFeatures(rd, addresses, { curatedCaps }));
+              fc.noteTypes(romFeatures(rd, addresses).types);
+            }
             // An expanded engine's team is searched for – and there is none before the first Pokémon (Run & Bun's
             // intro takes minutes). Searching never stops: it used to give up after ~30 s without a team, so the
             // starter and every catch after it were never seen. Only a battle without a team proves the search
@@ -803,8 +821,28 @@ export function GameSession({ session, mode }) {
               noteMons([...res.party, ...(res.boxes || [])]);
               liveRead.current = { boxes: Array.isArray(res.boxes), party: res.party.length };
               setLiveState({ status: 'live', entry: entry.name });
-              // the battle goes along: a Pokémon that falls in it gets the opponent as its cause of death
-              if (isRun) snapRef.current?.({ source: 'live', party, boxes: res.boxes || null, game: entry.id, here: hereNow, ...(res.badges !== undefined ? { badges: res.badges } : {}) }, { battle: fight });
+              if (fc) {
+                const gen = GEN[target.system] === 4 && entry.gen === 5 ? 5 : entry.gen;
+                fc.noteParty(res.party);
+                fc.noteNames(res.party, { itemName: (m) => (typeof m.item === 'string' ? m.item : m.itemOwn ? m.itemName || '' : itemName(m.item, gen)), moveName });
+                fc.noteLocation(hereNow);
+                fc.noteBattle(fight);
+                const keys = [...res.party, ...(res.boxes || [])].map((m) => m.key);
+                if (!seenKeys) seenKeys = new Set(keys);
+                const joined = keys.filter((k) => !seenKeys.has(k));
+                for (const k of joined) seenKeys.add(k);
+                fc.noteCatch(joined.length);
+                if (res.badges !== undefined && (own?.caps || /^IP[KG]/.test(String(target.code || '')) || own?.vanilla)) fc.noteCap(0);
+                const ch = fc.changed();
+                if (ch.changed) {
+                  diag('features', { status: ch.status, why: ch.why });
+                  setFeatures(ch.status);
+                }
+              }
+              // the battle goes along: a Pokémon that falls in it gets the opponent as its cause of death; the level caps
+              // read from the game go along once its data is known (web/lib/run.mjs files them for the run)
+              const romCaps = romDataReady() ? (own?.caps ? { caps: own.caps.caps, leaders: own.caps.leaders, final: own.caps.final } : null) : undefined;
+              if (isRun) snapRef.current?.({ source: 'live', party, boxes: res.boxes || null, game: entry.id, here: hereNow, ...(res.badges !== undefined ? { badges: res.badges } : {}), ...(romCaps !== undefined ? { romCaps } : {}) }, { battle: fight });
             }
           }
         }
@@ -1060,7 +1098,7 @@ export function GameSession({ session, mode }) {
   // the battle helper: left of the game (default) or on the right above the team, folded in or not – the player's choice
   const panelSide = panelPrefs.side === 'right' ? 'right' : 'left';
   const battlePanel = html`<${BattlePanel} battle=${battle} mine=${myParty} gen=${GEN[target.system]} isRun=${isRun}
-    side=${panelSide} collapsed=${panelPrefs.collapsed} onPrefs=${setPanelPrefs} />`;
+    side=${panelSide} collapsed=${panelPrefs.collapsed} onPrefs=${setPanelPrefs} noMoves=${features?.moves === 'no'} />`;
   const hasLeft = !!(isRun || here || (battle?.enemy && panelSide === 'left'));
   return html`<div class=${`session ${mode} ${fs && mode === 'full' ? 'is-fs' : ''} ${isDs ? 'ds' : ''}`} data-v=${docVersion}>
     <div class="mini-head">
@@ -1182,7 +1220,7 @@ export function GameSession({ session, mode }) {
             : t('play.liveHackSolo', 'This ROM hack runs on an expanded engine (new Pokémon numbers and a different memory layout) that souldew can’t read reliably yet – so it shows nothing rather than wrong Pokémon.')}</span>`}
           ${isRun && names
             ? html`<${LinkedPairs} mine=${myParty} gen=${GEN[target.system]} compact=${!!battle?.enemy} />`
-            : liveState.status !== 'unsupported' && liveState.status !== 'hack' && html`<${PartyGrid} party=${myParty} gen=${GEN[target.system]} compact accent="var(--p1)" label=${t('play.yourTeam', 'Your team')} />`}
+            : liveState.status !== 'unsupported' && liveState.status !== 'hack' && html`<${PartyGrid} party=${myParty} gen=${GEN[target.system]} compact accent="var(--p1)" label=${t('play.yourTeam', 'Your team')} noItems=${features?.items === 'no'} />`}
         </section>
         ${isRun && names && !solo && mode === 'full' && html`<div class="side-partner"><${PartnerScreen} link=${link} system=${target.system} /></div>`}
       </aside>

@@ -1,7 +1,7 @@
 // SoulLink domain logic on top of the shared run document. Game-agnostic: HeartGold/SoulSilver
 // (incl. Definitive HG) use a curated route list with level caps, every other game builds its
 // area list on the fly from the catch locations the players report.
-import { PROGRESSION, VANILLA_CAPS, areaForMetLocation, levelCapFor, gymCapsFamily, vanillaCapFor } from '/shared/routes.mjs';
+import { PROGRESSION, VANILLA_CAPS, areaForMetLocation, levelCapFor, gymCapsFamily, vanillaCapFor, romCapFor, prettyTrainer } from '/shared/routes.mjs';
 import { gen4data, speciesName, pokeapi } from './data.mjs';
 import { t, currentLang } from './i18n.mjs';
 import { ALL_SLOTS, slotsOf, runMode, isNuzlocke, othersOf } from '/shared/slots.mjs';
@@ -484,13 +484,18 @@ export function counts(doc, manifest) {
 export function levelCap(doc, manifest, slot) {
   const profile = profileOf(manifest);
   if (!profile.curated) {
-    // Gen 1/2 and 5: vanilla gym aces by live badge count – not for a ROM hack, whose trainers have other levels
-    if (manifest?.game?.hackId || manifest?.patch) return { cap: null, boss: null };
-    const v = vanillaCapFor(gymCapsFamily(manifest?.game?.id || manifest?.base?.gameId), live(doc, slot)?.badges);
-    if (!v) return { cap: null, boss: null };
-    const name = v.boss.badge !== undefined ? t('cap.gym', 'Gym {n}', { n: v.boss.badge + 1 })
-      : { champion: t('cap.champion', 'Champion'), 'elite four': t('cap.eliteFour', 'Elite Four') }[v.boss.key] || v.boss.name;
-    return { cap: v.cap, boss: { ...v.boss, name }, vanilla: true };
+    const l = live(doc, slot);
+    const bossName = (b) => (b.badge !== undefined ? (b.leader ? t('cap.gymLeader', '{name} (gym {n})', { name: prettyTrainer(b.leader), n: b.badge + 1 }) : t('cap.gym', 'Gym {n}', { n: b.badge + 1 }))
+      : { champion: t('cap.champion', 'Champion'), 'elite four': t('cap.eliteFour', 'Elite Four') }[b.key] || b.name);
+    // Gen 1/2 and 5: the curated gym aces by live badge count – not for a ROM hack, whose trainers have other levels
+    if (!manifest?.game?.hackId && !manifest?.patch) {
+      const v = vanillaCapFor(gymCapsFamily(manifest?.game?.id || manifest?.base?.gameId), l?.badges);
+      if (v) return { cap: v.cap, boss: { ...v.boss, name: bossName(v.boss) }, vanilla: true };
+    }
+    // any other game: the caps read from its own trainers (shared/live/romcaps.mjs – the play view files them), with
+    // badges read from the game itself; nothing (no cap shown) when either is unknown
+    const r = romCapFor(doc.get(`romcaps:${slot}`, null), l?.badgesRead ? l.badges : undefined);
+    return r ? { cap: r.cap, boss: { ...r.boss, name: bossName(r.boss) }, rom: true } : { cap: null, boss: null };
   }
   const badges = live(doc, slot)?.badges ?? 0;
   const r = levelCapFor(badges, doc.scan('boss:'), profile.vanillaCaps);
@@ -915,10 +920,15 @@ export function applySnapshot(doc, manifest, gen, slot, snap, { auto = true, rd 
   }
   const liveParty = party.map((m) => liveMon(m, known.get(m.key)?.area || null));
   const down = snap.source !== 'save' && partyDown(liveParty);
+  // the level caps read from this player's game (romcaps.mjs, sent along by the play view): kept with the run, so the
+  // board, the partners and the stream API know them too
+  if (snap.romCaps !== undefined && JSON.stringify(doc.get(`romcaps:${slot}`, null)) !== JSON.stringify(snap.romCaps)) writes[`romcaps:${slot}`] = snap.romCaps;
   const nextLive = {
     source: snap.source || 'live',
     trainer: snap.trainer || prevLive?.trainer || '',
     badges,
+    // (the game said how many badges – a reader without them leaves the count at the last known or 0)
+    ...(snap.badges !== undefined || prevLive?.badgesRead ? { badgesRead: true } : {}),
     ...(Math.max(best, badges) > badges ? { badgesBest: best } : {}),
     playTime: snap.playTime || prevLive?.playTime || null,
     party: liveParty,

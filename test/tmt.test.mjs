@@ -13,7 +13,8 @@ const DATA = mkdtempSync(join(tmpdir(), 'sls-tmt-'));
 process.env.SLS_DATA_DIR = DATA;
 test.after(() => rmSync(DATA, { recursive: true, force: true }));
 
-const { romSpecies, gen3TypeNames, OWN_TYPES_ABOVE } = await import('../shared/live/romspecies.mjs');
+const { romSpecies } = await import('../shared/live/romspecies.mjs');
+const { gbaTypeNames } = await import('../shared/live/romtypes.mjs');
 const { partyPair, gMainOf } = await import('../shared/live/romloc.mjs');
 const { readLiveParty, readLiveBattle, findEntry, LiveTables, expandedEntry } = await import('../shared/live/parse.mjs');
 
@@ -76,15 +77,15 @@ test('TMT1 / TMT2: a type table of their own is told apart from the retail one a
     return rom;
   };
   const retail = ['NORMAL', 'FIGHT', 'FLYING', 'POISON', 'GROUND', 'ROCK', 'BUG', 'GHOST', 'STEEL', '???', 'FIRE', 'WATER', 'GRASS', 'ELECTR', 'PSYCHC', 'ICE', 'DRAGON', 'DARK'];
-  assert.equal(gen3TypeNames(build(retail, 7), cs3).count, 18);
+  assert.deepEqual(gbaTypeNames(build(retail, 7), cs3).names, retail);
   const expansion = ['Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel', '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark', 'Fairy', 'Stellar'];
-  const rnb = gen3TypeNames(build(expansion, 40), cs3);
-  assert.ok(rnb.count <= OWN_TYPES_ABOVE, 'Fairy and Stellar are no types of a hack\'s own');
-  // Too Many Types 2: 81 entries, 40 bytes apart (gTypesInfo) – "Monke", "Sus" …
-  const tmt = gen3TypeNames(build([...expansion, 'Monke', 'Sus', 'Gamer', 'Crab', 'Bean'], 40), cs3);
-  assert.ok(tmt.count > OWN_TYPES_ABOVE);
+  assert.equal(gbaTypeNames(build(expansion, 40), cs3).names.length, 20);
+  // Too Many Types 2: 81 entries, 40 bytes apart (gTypesInfo) – "Monke", "Sus" … (named as the game names them now:
+  // shared/live/romtypes.mjs)
+  const tmt = gbaTypeNames(build([...expansion, 'Monke', 'Sus', 'Gamer', 'Crab', 'Bean'], 40), cs3);
   assert.equal(tmt.names[20], 'Monke');
-  assert.equal(gen3TypeNames(gba(0x4000), cs3), null, 'no table, no guess');
+  assert.equal(tmt.stride, 40);
+  assert.equal(gbaTypeNames(gba(0x4000), cs3), null, 'no table, no guess');
 });
 
 /** A literal pool full of `value` (as the code of a build holds its RAM addresses), `n` times. */
@@ -204,8 +205,11 @@ test('TMT2: the team without a count byte in front, the Tera type masked off, th
   assert.deepEqual(last.party.map((m) => m.species), [390], 'two Bad Eggs: both left out');
 });
 
-test('the disk cache gives back every field romDataFor finds – the own types too (lost after a restart before)', async () => {
+test('the disk cache gives back every field romDataFor finds – types and level caps too (own types were lost after a restart before)', async () => {
   const { ROMDATA_NONE, fromRomCache } = await import('../server/lib/romloc.mjs');
   assert.deepEqual(Object.keys(fromRomCache({})).sort(), Object.keys(ROMDATA_NONE).sort());
-  assert.deepEqual(fromRomCache({ ownTypes: { count: 80, names: ['NORMAL'] } }).ownTypes, { count: 80, names: ['NORMAL'] });
+  const types = { gen: 3, keys: ['normal'], labels: { 'x-monke': 'Monke' }, species: { 1: ['x-monke'] }, chart: null, own: 1 };
+  assert.deepEqual(fromRomCache({ types }).types, types);
+  assert.deepEqual(fromRomCache({ caps: { caps: [14], final: null } }).caps, { caps: [14], final: null });
+  assert.equal(fromRomCache({ header: { system: 'gba' } }).header.system, 'gba');
 });

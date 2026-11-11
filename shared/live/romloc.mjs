@@ -282,10 +282,28 @@ export function gen4Messages(buf, chars) {
       continue;
     }
     let ck = (0x91bd3 * (i + 1)) & 0xffff;
-    const cs = [];
+    let cs = [];
     for (let j = 0; j < len; j++) {
       cs.push(u16(buf, off + j * 2) ^ ck);
       ck = (ck + 0x493d) & 0xffff;
+    }
+    // a compressed string (0xF100 first – the trainer names of Diamond/Pearl/Platinum): 9-bit characters, low bits
+    // first, 15 bits of each word
+    if (cs[0] === 0xf100) {
+      const out = [];
+      let acc = 0;
+      let bits = 0;
+      for (let j = 1; j < cs.length; j++) {
+        acc |= (cs[j] & 0x7fff) << bits;
+        bits += 15;
+        while (bits >= 9) {
+          const c = acc & 0x1ff;
+          acc >>>= 9;
+          bits -= 9;
+          out.push(c === 0x1ff ? 0xffff : c);
+        }
+      }
+      cs = out;
     }
     let s = '';
     for (let j = 0; j < cs.length; j++) {
@@ -370,14 +388,31 @@ export function gen5Messages(buf) {
       out.push('');
       continue;
     }
-    const cs = new Array(len);
+    let cs = new Array(len);
     let key = u16(buf, off + (len - 1) * 2) ^ 0xffff;
     for (let j = len - 1; j >= 0; j--) {
       cs[j] = u16(buf, off + j * 2) ^ key;
       key = ((key >> 3) | (key << 13)) & 0xffff;
     }
+    // a compressed string (0xF100 first – trainer names): 9-bit characters, low bits first, all 16 bits of each word
+    if (cs[0] === 0xf100) {
+      const out = [];
+      let acc = 0;
+      let bits = 0;
+      for (let j = 1; j < cs.length; j++) {
+        acc |= cs[j] << bits;
+        bits += 16;
+        while (bits >= 9) {
+          const c = acc & 0x1ff;
+          acc >>>= 9;
+          bits -= 9;
+          out.push(c === 0x1ff ? 0xffff : c);
+        }
+      }
+      cs = out;
+    }
     let s = '';
-    for (let j = 0; j < len; j++) {
+    for (let j = 0; j < cs.length; j++) {
       const c = cs[j];
       if (c === 0xffff) break;
       if (c === 0xfffe) s += ' ';
