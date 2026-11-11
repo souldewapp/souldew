@@ -100,10 +100,14 @@ same protocol and sends the picture (60 fps in the core; the software renderer h
 23/23), zone, title, picture; Azahar's own unpatched x86-64 core runs it too (no live data, as expected). The release
 builds come from `.github/workflows/ctr.yml` (gcc 12 on Ubuntu 22.04, as Azahar's CI).
 
-**Windows**: the host builds with MinGW-w64 (cross-compiled here without a warning; it needs only Windows' own DLLs),
-the core in `.github/workflows/ctr.yml` as Azahar's CI builds it; the Windows workflow starts the host on
-`windows-latest` – a game on a real Windows PC is still to come. Without Vulkan (no graphics driver) souldew opens the
-Azahar app instead.
+**Windows** (Wine 9 x86-64 in the same VM, through Rosetta; Vulkan through Wine onto Mesa): `ctrhost.exe` (MinGW-w64,
+cross-compiled here without a warning, only Windows' own DLLs) with Azahar's official Windows core runs Ultra Sun over
+souldew's protocol – stdin/stdout pipes, the command thread, ~60 fps, pictures, the title, a clean answer to a savestate
+the core rejects (one made on the Mac with another build) and QUIT. Live memory needs the patched Windows core, which
+`.github/workflows/ctr.yml` builds in libretro's MXE container (as Azahar's CI) and checks for the two exports; the
+Windows workflow starts the host on `windows-latest`. A game on a real Windows PC is still to come. (Wine only hands
+console programs Vulkan in a virtual desktop – a Wine detail, not one of Windows.) Without Vulkan (no graphics driver)
+souldew opens the Azahar app instead.
 
 Not checked: X/Alpha Sapphire/Moon/Ultra Moon (same code as their pairs).
 
