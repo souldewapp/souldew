@@ -308,7 +308,9 @@ export function LibraryView() {
   const rootOf = (id) => cat.games.find((g) => g.id === id)?.variantOf || id;
   const ownedBy = useMemo(() => {
     const m = new Map();
-    for (const r of roms) if (r.gameId && !m.has(rootOf(r.gameId))) m.set(rootOf(r.gameId), r);
+    // a pre-patched ROM hack (recognised by its checksum, r.hackId) belongs to its hack, not to the base game: it must
+    // not make the base game "owned", nor become the "continue playing" game under the base game's name
+    for (const r of roms) if (r.gameId && !r.hackId && !m.has(rootOf(r.gameId))) m.set(rootOf(r.gameId), r);
     return m;
   }, [library]);
   const unknownRoms = roms.filter((r) => !r.gameId);
