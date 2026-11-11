@@ -1,0 +1,1464 @@
+{
+"id": "white",
+"entries": [
+"white_us"
+],
+"core": "desmume",
+"note": "White (US/EU): as Black (its position sits 0x20 further on) \u2013 gift box (Tepig) \u2192 both rival battles in the room \u2192 Nuvema Town \u2192 Juniper's lab \u2192 Route 1, where a check every few steps watches Juniper's catching demo (her Minccino against a Patrat: an NPC's battle, never the player's) \u2192 a real wild catch (Pok\u00e9 Balls given into the bag). The probe records the battle flag, whose PID battleActive holds, held items, status conditions, badges and the level cap.",
+"pos": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]",
+"probe": "(()=>{const u=(a)=>{const b=read(a,2);return b?(b[0]|b[1]<<8).toString(16):null};const r=ctx.parse.readLiveParty(ctx.entry,read,ctx.T,ctx.state);const party=r?.party||[];const b0=read(0x022A7E34,4);const pid=b0?(b0[0]|b0[1]<<8|b0[2]<<16|b0[3]<<24)>>>0:0;let cap=null;try{const {R,doc,manifest}=ctx.run;doc.set('live:p1',{badges:r?.badges,at:Date.now()});cap=R.levelCap(doc,{...manifest,game:{...manifest.game,id:'pokemon-white'}},'p1').cap}catch(e){cap=String(e)}return {flag:u(0x021D07B8),atBattleActive:party.findIndex(m=>m.pid===pid),items:party.map(m=>m.item),status:party.map(m=>m.status),badges:r?.badges,cap}})()",
+"steps": [
+{
+"do": "wait",
+"frames": 900
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+],
+[
+"A"
+],
+[
+"START"
+]
+],
+"max": 7000
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "walk",
+"dir": "DOWN",
+"steps": 1,
+"hold": 18,
+"gap": 6
+},
+{
+"do": "wait",
+"frames": 30
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 6000,
+"until": "party"
+},
+{
+"do": "shot",
+"name": "starter"
+},
+{
+"do": "log",
+"name": "pos:starter",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "starter"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 8000,
+"until": "battle"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "shot",
+"name": "battle1"
+},
+{
+"do": "log",
+"name": "pos:battle1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "battle1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb0"
+},
+{
+"do": "log",
+"name": "pos:pb0",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "pb0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb1"
+},
+{
+"do": "log",
+"name": "pos:pb1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "pb1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb2"
+},
+{
+"do": "log",
+"name": "pos:pb2",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "pb2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb3"
+},
+{
+"do": "log",
+"name": "pos:pb3",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "pb3"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb4"
+},
+{
+"do": "log",
+"name": "pos:pb4",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "pb4"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb5"
+},
+{
+"do": "log",
+"name": "pos:pb5",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "pb5"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb6"
+},
+{
+"do": "log",
+"name": "pos:pb6",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "pb6"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "pb7"
+},
+{
+"do": "log",
+"name": "pos:pb7",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "pb7"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "free"
+},
+{
+"do": "log",
+"name": "pos:free",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "free"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 6,
+"x": 8
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 6,
+"y": 3
+},
+{
+"do": "shot",
+"name": "g1"
+},
+{
+"do": "log",
+"name": "pos:g1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "g1"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 6,
+"x": 11,
+"map": 391,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "shot",
+"name": "d1"
+},
+{
+"do": "log",
+"name": "pos:d1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "d1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "shot",
+"name": "d2"
+},
+{
+"do": "log",
+"name": "pos:d2",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "d2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "shot",
+"name": "d3"
+},
+{
+"do": "log",
+"name": "pos:d3",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "d3"
+},
+{
+"do": "go",
+"order": "xy",
+"required": false,
+"patience": 6,
+"x": 7,
+"y": 13,
+"map": 390,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "shot",
+"name": "o1"
+},
+{
+"do": "log",
+"name": "pos:o1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "o1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2500
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "shot",
+"name": "o2"
+},
+{
+"do": "log",
+"name": "pos:o2",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "o2"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 6,
+"y": 756
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 4,
+"x": 779
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 741
+},
+{
+"do": "shot",
+"name": "e1"
+},
+{
+"do": "log",
+"name": "pos:e1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "check",
+"name": "e1"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 60
+},
+{
+"do": "go",
+"order": "xy",
+"required": false,
+"patience": 3,
+"x": 778,
+"y": 741
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 4,
+"gap": 10
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 744
+},
+{
+"do": "go",
+"order": "xy",
+"required": false,
+"patience": 4,
+"x": 774,
+"y": 759
+},
+{
+"do": "go",
+"order": "yx",
+"required": false,
+"patience": 3,
+"x": 776,
+"y": 759
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 2,
+"y": 745,
+"map": 389,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 100
+},
+{
+"do": "log",
+"name": "pos:bianca",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3200
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 20,
+"map": 392,
+"leave": true
+},
+{
+"do": "wait",
+"frames": 90
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 4,
+"x": 774,
+"y": 758,
+"map": 389,
+"leave": true
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"x": 774,
+"y": 744,
+"map": 389,
+"leave": true
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 4,
+"x": 777,
+"y": 744,
+"map": 389,
+"leave": true
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"x": 777,
+"y": 741,
+"map": 389,
+"leave": true
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2000
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 100
+},
+{
+"do": "go",
+"order": "xy",
+"required": false,
+"patience": 2,
+"x": 778,
+"y": 742
+},
+{
+"do": "go",
+"order": "yx",
+"required": false,
+"patience": 2,
+"x": 778,
+"y": 741
+},
+{
+"do": "press",
+"keys": "LEFT",
+"hold": 4,
+"gap": 10
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 4800
+},
+{
+"do": "shot",
+"name": "lab"
+},
+{
+"do": "check",
+"name": "lab"
+},
+{
+"do": "log",
+"name": "pos:lab",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3000
+},
+{
+"do": "check",
+"name": "demo01"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "demo02"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 4,
+"y": 20,
+"map": 396,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo03"
+},
+{
+"do": "shot",
+"name": "demo03"
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 3500
+},
+{
+"do": "check",
+"name": "demo04"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "demo05"
+},
+{
+"do": "go",
+"order": "yx",
+"required": false,
+"patience": 3,
+"x": 780,
+"y": 742,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo06"
+},
+{
+"do": "shot",
+"name": "demo06"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "check",
+"name": "demo07"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 3,
+"x": 784,
+"y": 742,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo08"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "check",
+"name": "demo09"
+},
+{
+"do": "shot",
+"name": "demo09"
+},
+{
+"do": "go",
+"order": "x",
+"required": false,
+"patience": 3,
+"x": 786,
+"y": 742,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo10"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "check",
+"name": "demo11"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"x": 786,
+"y": 736,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo12"
+},
+{
+"do": "shot",
+"name": "demo12"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "check",
+"name": "demo13"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"x": 786,
+"y": 725,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo14"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 200
+},
+{
+"do": "check",
+"name": "demo15"
+},
+{
+"do": "shot",
+"name": "demo15"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 2800
+},
+{
+"do": "check",
+"name": "demo16"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "demo17"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo18"
+},
+{
+"do": "shot",
+"name": "demo18"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "check",
+"name": "demo19"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo20"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "check",
+"name": "demo21"
+},
+{
+"do": "shot",
+"name": "demo21"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo22"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "check",
+"name": "demo23"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo24"
+},
+{
+"do": "shot",
+"name": "demo24"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "check",
+"name": "demo25"
+},
+{
+"do": "go",
+"order": "y",
+"required": false,
+"patience": 3,
+"y": 700,
+"map": 389,
+"leave": true
+},
+{
+"do": "check",
+"name": "demo26"
+},
+{
+"do": "mash",
+"keys": [
+[
+"A"
+]
+],
+"max": 500
+},
+{
+"do": "check",
+"name": "demo27"
+},
+{
+"do": "shot",
+"name": "demo27"
+},
+{
+"do": "shot",
+"name": "route1"
+},
+{
+"do": "check",
+"name": "route1"
+},
+{
+"do": "log",
+"name": "pos:route1",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 3000
+},
+{
+"do": "check",
+"name": "demo28"
+},
+{
+"do": "give",
+"item": "ball",
+"count": 10
+},
+{
+"do": "walk",
+"dir": "UP",
+"steps": 3,
+"hold": 16,
+"gap": 2
+},
+{
+"do": "mash",
+"keys": [
+[
+"UP"
+],
+[
+"UP"
+],
+[
+"DOWN"
+],
+[
+"DOWN"
+]
+],
+"max": 8000,
+"hold": 16,
+"every": 4,
+"until": {
+"expr": "team()?.battle?.kind==='wild'"
+},
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 400
+},
+{
+"do": "shot",
+"name": "wild"
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "log",
+"name": "pos:wild",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 600
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 4,
+"gap": 60
+},
+{
+"do": "press",
+"keys": "A",
+"hold": 4,
+"gap": 60
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 900
+},
+{
+"do": "shot",
+"name": "wild2"
+},
+{
+"do": "check",
+"name": "wild2"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"B"
+],
+[
+"DOWN"
+],
+[
+"LEFT"
+],
+[
+"A"
+],
+[
+"RIGHT"
+],
+[
+"A"
+],
+[
+"A"
+],
+[
+"A"
+]
+],
+"max": 15000,
+"every": 60,
+"until": "party>=2"
+},
+{
+"do": "shot",
+"name": "caught0"
+},
+{
+"do": "check",
+"name": "caught0"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 1500
+},
+{
+"do": "shot",
+"name": "caught"
+},
+{
+"do": "check",
+"name": "caught"
+},
+{
+"do": "log",
+"name": "pos:caught",
+"expr": "[(b=>b[0]|b[1]<<8)(read(0x022592d2,2)), (b=>b[0]|b[1]<<8)(read(0x0224f932,2)), (b=>b[0]|b[1]<<8)(read(0x0224f93a,2))]"
+}
+],
+"expect": {
+"starter": {
+"party": {
+"species": [
+495,
+498,
+501
+],
+"level": 5
+},
+"place": "Nuvema Town"
+},
+"battle1": {
+"battle": {
+"kind": "trainer",
+"level": 5,
+"species": [
+495,
+498,
+501
+]
+}
+},
+"free": {
+"battle": null
+},
+"o1": {
+"place": "Nuvema Town"
+},
+"route1": {
+"place": "Route 1",
+"battle": null
+},
+"caught": {
+"catch": {
+"area": "Route 1"
+}
+},
+"demo01": {
+"battle": null
+},
+"demo02": {
+"battle": null
+},
+"demo03": {
+"battle": null
+},
+"demo04": {
+"battle": null
+},
+"demo05": {
+"battle": null
+},
+"demo06": {
+"battle": null
+},
+"demo07": {
+"battle": null
+},
+"demo08": {
+"battle": null
+},
+"demo09": {
+"battle": null
+},
+"demo10": {
+"battle": null
+},
+"demo11": {
+"battle": null
+},
+"demo12": {
+"battle": null
+},
+"demo13": {
+"battle": null
+},
+"demo14": {
+"battle": null
+},
+"demo15": {
+"battle": null
+},
+"demo16": {
+"battle": null
+},
+"demo17": {
+"battle": null
+},
+"demo18": {
+"battle": null
+},
+"demo19": {
+"battle": null
+},
+"demo20": {
+"battle": null
+},
+"demo21": {
+"battle": null
+},
+"demo22": {
+"battle": null
+},
+"demo23": {
+"battle": null
+},
+"demo24": {
+"battle": null
+},
+"demo25": {
+"battle": null
+},
+"demo26": {
+"battle": null
+},
+"demo27": {
+"battle": null
+},
+"demo28": {
+"battle": null
+},
+"wild": {
+"battle": {
+"kind": "wild",
+"level": [
+2,
+3,
+4
+]
+}
+},
+"wild2": {
+"battle": {
+"kind": "wild",
+"level": [
+2,
+3,
+4
+]
+}
+}
+}
+}

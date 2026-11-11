@@ -37,6 +37,7 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 | **Pearl** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Turtwig L5 21/21 from the briefcase at Lake Verity (met location Lake Verity), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity, Sandgem Town (also inside the Mart); wild Starly L2 at the lake, Bidoof / Starly L3 on Route 201. **Real catch:** Bidoof L3 / Starly L3 → "Route 201", 2 of 2 runs. **Fixed (2.3.0):** the battle flag (checked live: 0x2101 / 0x2000) – battles stayed on the panel after running away. Randomized: built ✓, no live run. |
 | **Platinum** | ✅ | ✅ | ✅ | ✅ | – | Turtwig L5 21/21 on Route 201 (met location Route 201), Barry's Chimchar L5 (trainer), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity; wild Starly / Bidoof / Kricketot L3 on Route 201. **Fixed (2.3.0):** the battle flag (checked live: 0x2100 / 0x2800) – a wild battle showed up ~1100 frames late and stayed after running away. **Real catch:** Bidoof L3 (met location Route 201) → "Route 201" (balls thrown on the touch screen). |
 | **Black** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Tepig L5, met location Nuvema Town = the sign's place; zones: bedroom, downstairs, Nuvema Town, Route 1. Rival battles Snivy / Oshawott L5, wild Lillipup / Patrat on Route 1. **Real catch:** Lillipup → "Route 1", 2 of 2 runs. **Fixed (2.3.0):** the opponent's HP stayed at full (now 19 → 14 → 4 as on screen) and your Pokémon's HP during the fight; the battle flag (checked live: 0x2100 / 0x2800). Randomized: built ✓, the plan lost its way at the naming screen. |
+| **White** | ✅ | ✅ | ✅ | ✅ | – | Tepig L5 21/21 from the gift box, filed as the starter; no status condition and no held item, read as such (none came up to check other values); 0 badges → level cap 14 (the Striaton gym's ace). Place sign: Nuvema Town (also in the house and Juniper's lab), Route 1. Rival battles Snivy L5 19 → 14 → 0 HP and Oshawott L5 20 → 15 → 0 HP, Tepig 16/21 as on screen; wild Patrat L2–L4 / Lillipup L2–L3 on Route 1. **Real catch:** Patrat / Lillipup → "Route 1", 4 of 4 runs. **Fixed (2.3.1):** Professor Juniper's catching demo (her Minccino L7 against a Patrat L2) showed as a trainer battle against Minccino, and its Patrat then stayed on the panel until the next real battle (~100 s in the test; now off the panel at all 28 checks through the demo) – the battle flag (checked live: 0x2100 in battles and also in the demo, 0xF841 elsewhere) plus: a battle without any of the player's Pokémon isn't theirs. Plan: [white.json](../scripts/rom-matrix/plans/white.json). |
 | **Black 2** | ✅ | ✅ | ✅ | ✅ | – | Tepig L5 from Bianca at the Lookout (met location Aspertia City), Aspertia City, Aspertia Gate, Route 19; Hugh's Oshawott L5 (HP going down as on screen), wild Purrloin / Patrat L2. **Real catch:** Purrloin L2 → "Route 19". **Fixed (2.3.0):** Bianca's catching demo (an NPC's battle) showed as the player's trainer battle and stayed after it ended – the battle flag (checked live: 0x2100 / 0x2800). |
 | **White 2** | ✅ | ✅ | ✅ | ✅ | – | As Black 2 (its position sits 0x40 further on); wild Patrat L2. **Real catch:** Patrat L2 → "Route 19". **Fixed (2.3.1):** the battle flag (checked live: 0x2100 in battles, 0xFAE3 elsewhere) – Bianca's catching demo showed as a battle against her Lillipup, and the summary screen (0x88C2, also in Black 2) did too. |
 
@@ -57,7 +58,7 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 
 ### Not in the test set
 
-Blue, Yellow, Gold, FireRed, LeafGreen, Diamond, HeartGold, SoulSilver, White and all non-English ROMs weren't part of this
+Blue, Yellow, Gold, FireRed, LeafGreen, Diamond, HeartGold, SoulSilver and all non-English ROMs weren't part of this
 round (HeartGold US, Definitive HeartGold and Silver were checked live before 2.2.1). FireRed/LeafGreen's place-name
 table layout is read by a separate path that no ROM here could check.
 
@@ -89,7 +90,7 @@ bag by the test, the game itself throws and catches):
 
 - **Catch filing:** every real catch landed in the right area – by the game's met location (Crystal, Gen 3–5) or, for
   Gen 1 and Gold/Silver, by the place the sign showed when the catch joined right after a wild battle (new).
-- **Battle flags** checked in the running games (Platinum, Pearl, Black, Black 2) and used: battles start and end on
+- **Battle flags** checked in the running games (Platinum, Pearl, Black, Black 2; White 2 and White in 2.3.1) and used: battles start and end on
   time, an NPC's catching demo is no longer the player's battle.
 - **Gen 5 battle HP** from the battle's own structs: the opponent's and your Pokémon's HP go down as on screen.
 - **Types from hack ROMs** (Gen 3 base stats, Gen 4/5 personal data), Fairy matchups for hacks that add the type.
@@ -97,8 +98,9 @@ bag by the test, the game itself throws and catches):
 
 ## Known gaps
 
-- White's battle flag isn't checked (no White ROM in the matrix): its catching demo may show as a battle for a while.
-  Black, Black 2 and White 2 count only the flag's battle values (2.3.1, #9).
+- White: the address souldew had for "your Pokémon that is out" (battleActive, from NDS-Ironmon-Tracker) holds the wild
+  opponent's PID instead (checked live) – it's only used when it is one of yours. Switching in a battle wasn't checked
+  in White (one Pokémon in the test team).
 - Run & Bun: double battles aren't read as such – the panel follows the left Pokémon of each side, and its partner once the left one is down; both at once aren't shown (no double battle in the test run, checked with a test only).
 - Expanded-engine hacks (Run & Bun, Too Many Types …): the Rare Candy cheat is off (other item numbers).
 - Hacks with types of their own (Too Many Types: 62/80 types) show the official types.
