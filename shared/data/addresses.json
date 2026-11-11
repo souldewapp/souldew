@@ -1458,7 +1458,15 @@
      "0x2100",
      "0x2101"
     ],
-    "source": "NDS-Ironmon-Tracker (community, unverified)"
+    "notInBattleValues": [
+     "0xF841"
+    ],
+    "source": "NDS-Ironmon-Tracker (community)",
+    "verified": "runtime-checked on White (IRAO) 2026-11-11 by the ROM matrix: 0x2100 in both rival battles, a wild battle on Route 1 and Juniper's catching demo (an NPC's battle – see npcBattles), 0xF841 everywhere else (house, town, lab, Route 1, after the catch)",
+    "othersNotInBattle": true,
+    "othersNote": "any value but the battle values is no battle (NDS-Ironmon-Tracker BattleHandlerBase.lua treats it the same way); left to the heap copies, the catching demo's Patrat stayed on the panel as a trainer battle until the next real one (#9)",
+    "npcBattles": true,
+    "npcNote": "Juniper's catching demo on Route 1 sets 0x2100 like a real battle (checked live): a battle with no copy of the player's party and none of their PIDs at battleActive isn't theirs (shared/live/parse.mjs battleDS)"
    },
    "liveBattleParty": {
     "monsAddr": "0x0226A7B4",
@@ -1468,6 +1476,7 @@
    "battleActive": {
     "pidAddr": "0x022A7E34",
     "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua WHITE playerBattleMonPID 0x2A7E14 + 0x20 (community, static)",
+    "checked": "2026-11-11 in White (ROM matrix): holds the wild opponent's PID during a wild battle (0 in the rival battles) and keeps it afterwards – after a catch that's one of the player's PIDs. Not the player's battler 0; the player's PID showed at 0x022A7EEC in every real battle (not in the catching demo), which battler that is wasn't checked (one Pokémon in the team)",
     "validation": "only trusted when the PID is one of the player's party PIDs"
    }
   },
