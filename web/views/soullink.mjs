@@ -434,7 +434,7 @@ function NewRun({ gameId, hackId, from, mode: sectionMode }) {
   const { status, navigate, reloadStatus, setRunId, setMe } = useApp();
   const { roms, patchesFor, preferredPatch } = useGameChoices(gameId || null, hackId);
   // `from`: restart of an old run – same game, hack, settings, mode and players; seeds stay fresh.
-  const [romId, setRomId] = useState(() => (from && roms.find((r) => r.crc === from.base?.crc))?.id || (hackId && !roms.some((r) => preferredPatch(r)) && roms.find((r) => r.hackId === hackId))?.id || roms[0]?.id || null);
+  const [romId, setRomId] = useState(() => (from && roms.find((r) => r.crc === from.base?.crc))?.id || (hackId && !roms.some((r) => preferredPatch(r)) && roms.find((r) => r.hackId === hackId))?.id || (!hackId && roms.find((r) => !r.hackId))?.id || roms[0]?.id || null);
   const rom = roms.find((r) => r.id === romId) || roms[0];
   const [patchId, setPatchId] = useState(() => (from ? (from.patch ? (patchesFor(rom).find((p) => p.sha1 && p.sha1 === from.patch.sha1) || preferredPatch(rom))?.id || null : null) : preferredPatch(rom)?.id || null));
   const [inspect, setInspect] = useState(null);
@@ -575,7 +575,7 @@ function NewRun({ gameId, hackId, from, mode: sectionMode }) {
       <div class="grid-2">
         <label class="field"><span>${t('new.game', 'Game from your library')}</span>
           <select value=${rom?.id} onChange=${(e) => { setRomId(e.target.value); const r = roms.find((x) => x.id === e.target.value); setPatchId(preferredPatch(r)?.id || null); }}>
-            ${roms.map((r) => html`<option value=${r.id}>${gameById(r.gameId) ? gameTitle(gameById(r.gameId)) : r.title || r.name}</option>`)}
+            ${roms.map((r) => html`<option value=${r.id}>${r.hackId && hackById(r.hackId) ? hackById(r.hackId).name : gameById(r.gameId) ? gameTitle(gameById(r.gameId)) : r.title || r.name}</option>`)}
           </select></label>
         <label class="field"><span>${t('new.hack', 'ROM hack (optional)')}</span>
           <select value=${patchId || ''} onChange=${(e) => setPatchId(e.target.value || null)}>

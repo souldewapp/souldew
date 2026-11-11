@@ -2,7 +2,7 @@ import { html } from '/vendor/htm-preact.mjs';
 import { useApp } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t } from '../lib/i18n.mjs';
-import { gameById, gameTitle } from '../lib/data.mjs';
+import { gameById, gameTitle, hackById } from '../lib/data.mjs';
 import { runMode } from '/shared/slots.mjs';
 import { Cart, coverOf } from './library.mjs';
 import { RunCard, runState, useStatusPoll } from './soullink.mjs';
@@ -41,7 +41,8 @@ export function PlayHome() {
         <button class="btn small" onClick=${() => navigate('library')}><${Icon} name="plus" size=${14} />${t('play.addGames', 'Add games')}</button></div>` : html`<div class="shelf">
         ${roms.map((r) => {
           const g = gameById(r.gameId);
-          return html`<${Cart} key=${r.id} title=${g ? gameTitle(g) : r.title || r.name} cover=${coverOf(library, { rom: r })} color=${g?.color} system=${r.system} owned
+          const h = r.hackId ? hackById(r.hackId) : null; // a pre-patched ROM hack: shown as the hack
+          return html`<${Cart} key=${r.id} title=${h ? h.name : g ? gameTitle(g) : r.title || r.name} cover=${coverOf(library, h ? { hackId: h.id } : { rom: r })} color=${h?.color || g?.color} system=${r.system} owned hack=${!!h}
             onClick=${() => navigate('play', { rom: r.id })} />`;
         })}</div>`}
     </section>

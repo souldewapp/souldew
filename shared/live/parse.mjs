@@ -255,8 +255,12 @@ function gen3StatsOk(d, isEgg) {
  */
 const validPk3 = (m) => m && !m.bad && m.level >= 1 && m.level <= 100 && m.maxHp >= 1 && m.hp <= m.maxHp;
 
-/** The run of valid structs at `o` in `ram` (no PID twice) and whether the slots after it are empty. */
-function pk3Run(ram, o, T) {
+/**
+ * The run of valid structs at `o` in `ram` (no PID twice) and whether the slots after it are empty. `state` (the
+ * party poll's): an invalid slot with the very same bytes for several polls is a Bad Egg, not a write in progress –
+ * it counts as a slot (readGen3 skips it) instead of freezing the team as "torn" for good.
+ */
+function pk3Run(ram, o, T, state = null) {
   const pids = [];
   let n = 0;
   for (; n < 6; n++) {
@@ -265,7 +269,18 @@ function pk3Run(ram, o, T) {
     if (!pid && !u32le(d, 4)) break;
     const m = parsePk3(d, T);
     // (a struct the game is writing right now, or a slot shown twice while the menu swaps two: torn, read again)
-    if (!validPk3(m) || pids.includes(pid)) return { n: 0, empty: false, torn: true };
+    if (!validPk3(m) || pids.includes(pid)) {
+      if (state && !pids.includes(pid) && m?.bad) {
+        const sig = `${n}:${Array.prototype.join.call(d.subarray(0, 32), ',')}`;
+        state.runBadSeen = state.runBadSig === sig ? (state.runBadSeen || 0) + 1 : 1;
+        state.runBadSig = sig;
+        if (state.runBadSeen >= 3) {
+          pids.push(pid);
+          continue;
+        }
+      }
+      return { n: 0, empty: false, torn: true };
+    }
     pids.push(pid);
   }
   let empty = true;
@@ -323,7 +338,7 @@ function findGen3Party(read, T, state, hint = null) {
 function party3Count(read, T, state) {
   if (state.count3 === null) {
     const b = read(state.party3, 600);
-    const r = b ? pk3Run(b, 0, T) : null;
+    const r = b ? pk3Run(b, 0, T, state) : null;
     return r && !r.torn ? r.n : null; // null: torn – try again next poll
   }
   return read(state.count3 ?? state.party3 - 3, 1)?.[0] ?? 0;

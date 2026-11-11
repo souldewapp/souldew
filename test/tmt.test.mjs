@@ -185,4 +185,14 @@ test('TMT2: the team without a count byte in front, the Tera type masked off, th
   mem.set(0x02032c94 + 100 + 28, (mem.get(0x02032c94 + 100 + 28) + 1) & 0xff);
   assert.deepEqual(readLiveParty(entry, read, T, state), { torn: true });
   assert.equal(state.party3, 0x02032c94, 'and the team stays where it is');
+  // the very same broken bytes poll after poll: a Bad Egg – skipped, the team goes on (it froze as "torn" before)
+  let last = null;
+  for (let i = 0; i < 6; i++) last = readLiveParty(entry, read, T, state);
+  assert.deepEqual(last.party.map((m) => m.species), [390], 'the Bad Egg is left out, the rest of the team is read');
+});
+
+test('the disk cache gives back every field romDataFor finds – the own types too (lost after a restart before)', async () => {
+  const { ROMDATA_NONE, fromRomCache } = await import('../server/lib/romloc.mjs');
+  assert.deepEqual(Object.keys(fromRomCache({})).sort(), Object.keys(ROMDATA_NONE).sort());
+  assert.deepEqual(fromRomCache({ ownTypes: { count: 80, names: ['NORMAL'] } }).ownTypes, { count: 80, names: ['NORMAL'] });
 });

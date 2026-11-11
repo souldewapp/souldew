@@ -85,7 +85,7 @@ H = [
  dict(id="too-many-types", name="Pokémon Too Many Types", author="Kobazco, CannonsCreative, MarinePez (commissioned by Alpharad)", baseGameId="pokemon-emerald", baseCrc32="1F1C08FB", system="gba", patchFormat="bps", latestVersion="1.6",
   descriptionEn="An Emerald hack on pokeemerald-expansion with 44 new types (62 in all), up to three types per Pokémon, 118 new moves and a regional dex of 295 retyped Pokémon.",
   descriptionDe="Ein Smaragd-Hack auf Basis der pokeemerald-Expansion mit 44 neuen Typen (62 insgesamt), bis zu drei Typen pro Pokémon, 118 neuen Attacken und einem Regionaldex aus 295 umgetypten Pokémon.",
-  features=["62 types", "Up to three types", "Regional dex of 295", "Randomized trainers"], difficulty="casual", nuzlockeFriendly=False,
+  features=["Over 50 types", "Up to three types", "Regional dex of 295", "Randomized trainers"], difficulty="casual", nuzlockeFriendly=False,
   uprCompatible="no", uprNote="pokeemerald-expansion ROM with its own type table; not UPR-compatible.",
   color="#8A4FA8", live="partial", liveNote="types",
   uncertainFields=["difficulty"], notes="Official thread (Sep 2023): v1.6, apply to Pokémon Emerald (US). Credits RHH pokeemerald-expansion. Checked in souldew 2.3.1 with the v1.6 BPS (result CRC32 E91FEF2D, the same as a pre-patched v1.6 ROM): team, place, battles and catches read live; its own types (57 besides '???') are unknown to souldew.",

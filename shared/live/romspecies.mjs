@@ -227,7 +227,7 @@ export function gen3TypeNames(rom, charset) {
 }
 
 /** More type names than the retail games and pokeemerald-expansion have (18 + Fairy + Stellar): types of its own. */
-export const OWN_TYPES_ABOVE = 20;
+export const OWN_TYPES_ABOVE = 24; // retail 18, pokeemerald-expansion 20: a hack with a type or two more keeps its types
 
 // type ids of the games' own tables (pokeemerald include/constants/pokemon.h, pokeplatinum, pokeblack):
 // Gen 3/4 have '???' (9) in the middle – Fairy hacks of Gen 4 (Renegade Platinum) reuse it; Gen 5 has none and Fairy

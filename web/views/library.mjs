@@ -468,7 +468,7 @@ function GameDetail({ id, onClose, openHack }) {
   const { library, reloadLibrary, toast } = useApp();
   const cat = catalog();
   const g = cat.games.find((x) => x.id === id);
-  const rom = library?.roms?.find((r) => r.gameId === id || cat.games.find((x) => x.id === r.gameId)?.variantOf === id);
+  const rom = library?.roms?.find((r) => !r.hackId && (r.gameId === id || cat.games.find((x) => x.id === r.gameId)?.variantOf === id));
   const save = useSoloSave(rom?.id);
   const [noCover, setNoCover] = useState(false); // the catalog picture didn't load → offer an own one
   if (!g) return null;
@@ -532,7 +532,7 @@ function HackDetail({ id, onClose, openGame }) {
   const patch = library?.patches?.find((p) => p.hackId === id);
   // a ROM that was patched before it was added (its CRC32 is a known version of the hack): played as it is
   const ready = !patch ? library?.roms?.find((r) => r.hackId === id) : null;
-  const baseRom = patch?.baseRomId ? library.roms.find((r) => r.id === patch.baseRomId) : library?.roms?.find((r) => r.gameId === h?.baseGameId);
+  const baseRom = patch?.baseRomId ? library.roms.find((r) => r.id === patch.baseRomId) : library?.roms?.find((r) => !r.hackId && r.gameId === h?.baseGameId);
   // Only offer the patched game when the base ROM is the one the patch expects (otherwise patching fails).
   const canPatch = !!(patch && baseRom && (!patch.expectedCrc || baseRom.crc === patch.expectedCrc));
   const save = useSoloSave(canPatch ? `${baseRom.id}|${patch.id}` : null);

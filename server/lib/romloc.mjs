@@ -82,8 +82,14 @@ function gbShift(u8, o) {
  * `types` a modified ROM's own Pokémon types where they differ from the app's (shared/live/romspecies.mjs romTypes).
  * Never throws.
  */
+/** What romDataFor finds when there's nothing to find – also the list of fields the disk cache must give back. */
+export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, ownTypes: null, vanilla: null });
+/** A disk-cache entry back into romDataFor's result (every field of ROMDATA_NONE – a missing one would be lost on the
+ * next start, as the own types of Too Many Types were). */
+export const fromRomCache = (v) => ({ data: v.data ?? null, species: v.species ?? null, wram: v.wram ?? null, types: v.types ?? null, ownTypes: v.ownTypes ?? null, vanilla: v.vanilla ?? null });
+
 export function romDataFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
-  const none = { data: null, species: null, wram: null, types: null, vanilla: null };
+  const none = { ...ROMDATA_NONE };
   let id;
   try {
     if (file) {
@@ -100,7 +106,7 @@ export function romDataFor({ file = null, bytes = null, key = null }, { sharedDi
     try {
       const v = JSON.parse(readFileSync(cached, 'utf8'));
       if (v.version === VERSION) {
-        const r = { data: v.data, species: v.species, wram: v.wram ?? null, types: v.types ?? null, vanilla: v.vanilla };
+        const r = fromRomCache(v);
         memo.set(id, r);
         return r;
       }
