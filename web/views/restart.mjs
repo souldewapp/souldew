@@ -107,7 +107,8 @@ export function RestartModal({ r, rules, onClose }) {
     return html`<${Modal} open=${true} onClose=${close} title=${t('restart.title', 'New attempt')}
       footer=${html`<button class="btn ghost" onClick=${close}>${t('common.cancel', 'Cancel')}</button>
         <button class="btn primary" onClick=${open}><${Icon} name="play" size=${14} />${t('restart.openJoined', 'Open “{run}”', { run: plan.name || next })}</button>`}>
-      <p>${t('restart.joinedText', '{name} already started the new attempt “{run}” – you joined it. Play on there, so you stay together.', { name: who(plan.by), run: plan.name || next })}</p>
+      <p>${plan.by === mine ? t('restart.ownText', 'You already started the new attempt “{run}”. Play on there – the others are invited to it.', { run: plan.name || next })
+        : t('restart.joinedText', '{name} already started the new attempt “{run}” – you joined it. Play on there, so you stay together.', { name: who(plan.by), run: plan.name || next })}</p>
     <//>`;
   }
   return html`<${Modal} open=${true} onClose=${close} title=${t('restart.title', 'New attempt')}

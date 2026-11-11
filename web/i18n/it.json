@@ -1138,6 +1138,7 @@
   "restart.text": "Così nasce la nuova run «{name}»:",
   "restart.title": "Nuovo tentativo",
   "restart.joinedText": "{name} ha già avviato il nuovo tentativo «{run}» e ne fai già parte. Continuate lì, così restate insieme.",
+  "restart.ownText": "Hai già avviato il nuovo tentativo «{run}». Continua a giocare lì: gli altri sono invitati.",
   "restart.lostText": "{name} ha avviato nello stesso momento. Giocherete il nuovo run di {name}: il tuo è stato messo da parte.",
   "restart.openJoined": "Apri «{run}»",
   "restart.waitHint": "Lascia aperto souldew: non devi fare nient’altro.",

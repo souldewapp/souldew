@@ -167,9 +167,10 @@ function BoardHead({ counts: c }) {
   const st = doc.get('run:status', null);
   // "New attempt …" from the run list lands here (?restart=1): the dialog opens once this run's document is live
   useEffect(() => {
-    if (app.route?.params?.restart === undefined || !st || st.state === 'won') return;
-    setModal('restart');
-    app.navigate(app.route.route, { run: manifest.id });
+    if (app.route?.params?.restart === undefined) return;
+    if (st) setModal('restart');
+    // drop the parameter without a history entry (Back must not open the dialog again)
+    location.replace(`#/${app.route.route}?run=${encodeURIComponent(manifest.id)}`);
   }, [app.route?.params?.restart, manifest.id, !!st]);
   const names = getPlayers(doc, manifest);
   const slots = slotsOf(manifest);

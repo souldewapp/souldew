@@ -1454,6 +1454,7 @@
   "restart.offerTextNoRnd": "Same game, same rules – a fresh start. Your app builds the new game from your own copy, like the first time.",
   "restart.offerTitle": "{name} started a new attempt",
   "restart.openJoined": "Open “{run}”",
+  "restart.ownText": "You already started the new attempt “{run}”. Play on there – the others are invited to it.",
   "restart.same1": "same game or ROM hack, same rules, same players",
   "restart.same1Solo": "same game or ROM hack, same rules",
   "restart.same2": "randomizer with the same options – but a new seed, so new Pokémon",

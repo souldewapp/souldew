@@ -708,6 +708,7 @@ function liveMon(m, area) {
   return {
     key: m.key, area, species: m.species, nick: m.nickname, level: m.level, hp: m.hp, maxHp: m.maxHp, item: m.item ?? m.heldItem,
     status: m.status, shiny: m.shiny, gender: m.gender, moves: m.moves, ...(m.isEgg ? { egg: true } : {}),
+    ...(m.itemOwn ? { itemOwn: true } : {}), // an expanded engine's own item numbers: no retail name for them
     // where an untracked mon was met – the Nuzlocke checks tell a second catch on a spent area by it
     ...(!area && m.metLocation != null ? { met: m.metLocation, metLevel: m.metLevel ?? null } : {}),
   };

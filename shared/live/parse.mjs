@@ -746,7 +746,8 @@ function battleFlag(entry, read, state = {}) {
     // straight out of a battle value, one odd read isn't the end of the battle yet (that would retire the battle's
     // copies for good): only a few in a row are – from the overworld, an odd value means "no battle" at once
     state.otherStreak = (state.otherStreak || 0) + 1;
-    if (state.flagOn && state.otherStreak < OTHER_STREAK) return null;
+    if (state.flagOn && state.otherStreak < OTHER_STREAK) return true; // still the battle (not left to the copies, whose
+    // staleness check could end it for good after a long wait in a menu)
     state.flagOn = false;
     return false;
   }
