@@ -2,6 +2,13 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## 2.3.1
+
+- **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
+  randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
+  the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged
+  where the hack rewrote their scripts. Checked with every preset.
+
 ## 2.3.0
 
 **Turbo music fixed** – the known issue from 2.2.0.

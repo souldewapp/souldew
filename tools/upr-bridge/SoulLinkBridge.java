@@ -8,6 +8,11 @@ import com.dabomstew.pkrandom.pokemon.Evolution;
 import com.dabomstew.pkrandom.pokemon.Pokemon;
 import com.dabomstew.pkrandom.pokemon.StaticEncounter;
 import com.dabomstew.pkrandom.romhandlers.Gen4RomHandler;
+import com.dabomstew.pkrandom.romhandlers.Gen5RomHandler;
+import com.dabomstew.pkrandom.constants.Gen5Constants;
+import com.dabomstew.pkrandom.newnds.NARCArchive;
+import com.dabomstew.pkrandom.pokemon.Move;
+import com.dabomstew.pkrandom.pokemon.Type;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
 
 import java.io.BufferedReader;
@@ -80,12 +85,14 @@ public class SoulLinkBridge {
         RomHandler handler = null;
         if (new Gen4RomHandler.Factory().isLoadable(path)) {
             handler = new SafeGen4RomHandler(random);
+        } else if (new Gen5RomHandler.Factory().isLoadable(path)) {
+            SafeGen5RomHandler.enableFairyByte();
+            handler = new SafeGen5RomHandler(random);
         } else {
             RomHandler.Factory[] factories = {
                 new com.dabomstew.pkrandom.romhandlers.Gen1RomHandler.Factory(),
                 new com.dabomstew.pkrandom.romhandlers.Gen2RomHandler.Factory(),
                 new com.dabomstew.pkrandom.romhandlers.Gen3RomHandler.Factory(),
-                new com.dabomstew.pkrandom.romhandlers.Gen5RomHandler.Factory(),
             };
             for (RomHandler.Factory f : factories) {
                 if (f.isLoadable(path)) {
@@ -101,6 +108,7 @@ public class SoulLinkBridge {
             throw new IllegalStateException("UPR could not load the ROM");
         }
         if (handler instanceof SafeGen4RomHandler) ((SafeGen4RomHandler) handler).probeStatics();
+        if (handler instanceof SafeGen5RomHandler) ((SafeGen5RomHandler) handler).probe();
         return handler;
     }
 
@@ -113,8 +121,9 @@ public class SoulLinkBridge {
         sb.append("\"generation\":").append(h.generationOfPokemon()).append(',');
         sb.append("\"pokemonCount\":").append(h.getPokemon().size() - 1).append(',');
         boolean safe4 = h instanceof SafeGen4RomHandler;
+        boolean statics5Broken = h instanceof SafeGen5RomHandler && ((SafeGen5RomHandler) h).staticsBroken;
         sb.append("\"introScriptFixes\":").append(safe4 ? ((SafeGen4RomHandler) h).marillEntriesRemoved : 0).append(',');
-        sb.append("\"staticsSupported\":").append(safe4 ? !((SafeGen4RomHandler) h).staticsBroken : h.canChangeStaticPokemon()).append(',');
+        sb.append("\"staticsSupported\":").append(safe4 ? !((SafeGen4RomHandler) h).staticsBroken : !statics5Broken && h.canChangeStaticPokemon()).append(',');
         sb.append("\"fairyInGame\":").append(h.typeInGame(com.dabomstew.pkrandom.pokemon.Type.FAIRY)).append(',');
         int available = h.miscTweaksAvailable();
         sb.append("\"miscTweaks\":[");
@@ -274,7 +283,9 @@ public class SoulLinkBridge {
         settings.setCustomNames(FileFunctions.getCustomNames());
         RomHandler h = load(rom);
         settings.setRomName(h.getROMName());
-        if (h instanceof SafeGen4RomHandler && ((SafeGen4RomHandler) h).staticsBroken && settings.getStaticPokemonMod() != Settings.StaticPokemonMod.UNCHANGED) {
+        boolean staticsBroken = (h instanceof SafeGen4RomHandler && ((SafeGen4RomHandler) h).staticsBroken)
+                || (h instanceof SafeGen5RomHandler && ((SafeGen5RomHandler) h).staticsBroken);
+        if (staticsBroken && settings.getStaticPokemonMod() != Settings.StaticPokemonMod.UNCHANGED) {
             Field f = Settings.class.getDeclaredField("staticPokemonMod");
             f.setAccessible(true);
             f.set(settings, Settings.StaticPokemonMod.UNCHANGED);
@@ -463,6 +474,124 @@ public class SoulLinkBridge {
         @Override
         public boolean canChangeStaticPokemon() {
             return !staticsBroken && super.canChangeStaticPokemon();
+        }
+    }
+
+    /**
+     * Gen 5 ROM hacks (Blaze Black 2 / Volt White 2 Redux, …) add the Fairy type as type byte 17 – UPR's Gen 5 tables
+     * stop at Dark (16), so those moves and Pokémon came out with no type and the randomizer crashed in its type
+     * matchups ("attackingType is null"). Byte 17 now reads as Fairy, the Gen 6 matchup table (which has Fairy) is
+     * used for such a ROM, and on saving Fairy goes back out as 17 (UPR's own writer would turn it into Normal).
+     * Static encounters whose scripts the hack rewrote are treated like in Gen 4: unavailable instead of a crash.
+     */
+    static class SafeGen5RomHandler extends Gen5RomHandler {
+        static final int FAIRY_BYTE = 17;
+        boolean staticsBroken;
+        boolean fairy;
+
+        SafeGen5RomHandler(java.util.Random random) {
+            super(random);
+        }
+
+        /** Before loading: let byte 17 read as Fairy (vanilla games never use it, so they're unaffected). */
+        static void enableFairyByte() {
+            if (Gen5Constants.typeTable.length > FAIRY_BYTE && Gen5Constants.typeTable[FAIRY_BYTE] == null) {
+                Gen5Constants.typeTable[FAIRY_BYTE] = Type.FAIRY;
+            }
+        }
+
+        void probe() {
+            for (Move m : getMoves()) if (m != null && m.type == Type.FAIRY) fairy = true;
+            for (Pokemon p : getPokemonInclFormes()) {
+                if (p != null && (p.primaryType == Type.FAIRY || p.secondaryType == Type.FAIRY)) fairy = true;
+            }
+            if (fairy) System.out.println("@@WARN " + json("This ROM hack adds the Fairy type - kept as it is, with the Gen 6 type chart for the randomizer's choices"));
+            try {
+                List<StaticEncounter> list = super.getStaticPokemon();
+                for (StaticEncounter se : list) if (se == null || se.pkmn == null) throw new IllegalStateException("empty static");
+            } catch (RuntimeException e) {
+                staticsBroken = true;
+            }
+        }
+
+        @Override
+        public boolean isEffectivenessUpdated() {
+            return fairy || super.isEffectivenessUpdated();
+        }
+
+        @Override
+        public boolean typeInGame(Type type) {
+            if (type == Type.FAIRY) return fairy;
+            return super.typeInGame(type);
+        }
+
+        @Override
+        public List<StaticEncounter> getStaticPokemon() {
+            if (staticsBroken) return new ArrayList<StaticEncounter>();
+            return super.getStaticPokemon();
+        }
+
+        @Override
+        public boolean setStaticPokemon(List<StaticEncounter> statics) {
+            if (staticsBroken) return true;
+            return super.setStaticPokemon(statics);
+        }
+
+        @Override
+        public boolean canChangeStaticPokemon() {
+            return !staticsBroken && super.canChangeStaticPokemon();
+        }
+
+        /** UPR's Gen 5 item and matchup tables have no Fairy: a Fairy move or Pokémon made "sensible held items" crash – fall back. */
+        @Override
+        public List<Integer> getSensibleHeldItemsFor(com.dabomstew.pkrandom.pokemon.TrainerPokemon tp, boolean consumableOnly, List<Move> moves, int[] pokeMoves) {
+            try {
+                return super.getSensibleHeldItemsFor(tp, consumableOnly, moves, pokeMoves);
+            } catch (RuntimeException e) { // NullPointerException / ArrayIndexOutOfBounds from the Gen 5 tables
+                return consumableOnly ? getAllConsumableHeldItems() : getAllHeldItems();
+            }
+        }
+
+        @Override
+        public void writeNARC(String name, NARCArchive narc) throws java.io.IOException {
+            if (fairy) {
+                try {
+                    restoreFairy(narc);
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException("could not keep the Fairy type: " + e);
+                }
+            }
+            super.writeNARC(name, narc);
+        }
+
+        private Object field(String name) throws ReflectiveOperationException {
+            Field f = Gen5RomHandler.class.getDeclaredField(name);
+            f.setAccessible(true);
+            return f.get(this);
+        }
+
+        /** UPR wrote Fairy as 0 (Normal): put byte 17 back where the data in memory says Fairy. */
+        private void restoreFairy(NARCArchive narc) throws ReflectiveOperationException {
+            if (narc == field("moveNarc")) {
+                Move[] moves = (Move[]) field("moves");
+                for (int i = 1; i < moves.length && i < narc.files.size(); i++) {
+                    if (moves[i] != null && moves[i].type == Type.FAIRY) narc.files.get(i)[0] = (byte) FAIRY_BYTE;
+                }
+            } else if (narc == field("pokeNarc")) {
+                Pokemon[] pokes = (Pokemon[]) field("pokes");
+                Object entry = field("romEntry");
+                Field rt = entry.getClass().getDeclaredField("romType");
+                rt.setAccessible(true);
+                int formeOffset = Gen5Constants.getFormeOffset(rt.getInt(entry));
+                for (int i = 1; i < pokes.length; i++) {
+                    Pokemon p = pokes[i];
+                    int file = i <= Gen5Constants.pokemonCount ? i : i + formeOffset;
+                    if (p == null || file >= narc.files.size()) continue;
+                    byte[] d = narc.files.get(file);
+                    if (p.primaryType == Type.FAIRY) d[6] = (byte) FAIRY_BYTE;
+                    if (p.secondaryType == Type.FAIRY || (p.secondaryType == null && p.primaryType == Type.FAIRY)) d[7] = (byte) FAIRY_BYTE;
+                }
+            }
         }
     }
 
