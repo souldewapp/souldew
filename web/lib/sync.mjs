@@ -713,6 +713,7 @@ export class SyncLink {
         this._heard(client, from);
         const at = Number(p.at);
         if (at > 0) this._offset(from, now - at);
+        if (this.byeAt) delete this.byeAt[from]; // live again (another device, a clock that went back): no goodbye stands
       }
       this._alive(from, null, seen);
       return;
