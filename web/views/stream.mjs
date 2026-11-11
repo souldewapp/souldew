@@ -1,6 +1,8 @@
 // Stream page: the streamer-mode switch and the overlay builder. Every widget is its own OBS browser source
 // (web/overlay.html): pick the options, watch the live preview, then drag the tile into OBS (the source gets the
 // right size from layer-width/-height) or copy its URL. "Test alert" reaches every open overlay, OBS included.
+// By default the links follow the current run (?run=current), so they keep working when a new run starts; one run
+// can be pinned instead.
 import { html, useEffect, useRef, useState } from '/vendor/htm-preact.mjs';
 import { useApp, copy, Led, openExternal } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
@@ -55,19 +57,22 @@ const widgets = () => [
   { id: 'stats', icon: 'clock', title: t('stream.wStats', 'Stats bar'), text: t('stream.wStatsText', 'Run name, play time, badges and the counts in one slim line – for the bottom of the screen.'), layout: true, players: 'many' },
 ];
 
-/** The stream settings the server keeps (GET/POST /api/stream): API address and token. */
-function useStreamSettings() {
+/** The stream settings the server keeps (GET/POST /api/stream): API address and token, and which run is current –
+ *  asked again soon after the app opens another run (`openRun`). */
+function useStreamSettings(openRun) {
   const [st, setSt] = useState(null);
   useEffect(() => {
     let stop = false;
     const tick = () => api.get('/api/stream').then((r) => !stop && setSt(r)).catch(() => {});
     tick();
+    const soon = setTimeout(tick, 600); // the app saves the run it opened a moment later
     const id = setInterval(tick, 5000);
     return () => {
       stop = true;
+      clearTimeout(soon);
       clearInterval(id);
     };
-  }, []);
+  }, [openRun]);
   const save = async (patch) => {
     setSt((cur) => (cur ? { ...cur, ...(patch.token === undefined ? patch : {}) } : cur));
     try {
@@ -117,7 +122,7 @@ function Preview({ src, size, bg, frameRef, stage }) {
   </div>`;
 }
 
-function WidgetCard({ w, run, slots, names, global, live, onTest }) {
+function WidgetCard({ w, run, follow, slots, names, global, live, onTest }) {
   const key = `sl-stream-${w.id}`;
   const [o, setO] = useState(() => ls.get(key, {}));
   const set = (patch) => {
@@ -140,8 +145,9 @@ function WidgetCard({ w, run, slots, names, global, live, onTest }) {
     sound: w.alerts && o.sound ? 1 : null, pos: w.alerts && o.pos === 'bottom' ? 'bottom' : null,
   };
   const scaled = [size[0] * global.scale, size[1] * global.scale];
-  const url = overlayUrl(obsOrigin(w.id), run.id, opts, scaled, `souldew · ${w.title}`);
-  const preview = overlayUrl(location.origin, run.id, { ...opts, preview: 1, scale: null });
+  const target = follow ? 'current' : run.id;
+  const url = overlayUrl(obsOrigin(w.id), target, opts, scaled, `souldew · ${w.title}`);
+  const preview = overlayUrl(location.origin, target, { ...opts, preview: 1, scale: null });
   const toggles = TOGGLES();
   const onDrag = (e) => {
     // OBS takes a dropped link as a new browser source; layer-width/-height in the URL give it its size
@@ -196,7 +202,7 @@ function WidgetCard({ w, run, slots, names, global, live, onTest }) {
  * Pokélink themes: the bridge (server/lib/pokelink.mjs) speaks the socket.io protocol Pokélink's browser sources
  * use, so an existing theme shows souldew's teams – one "user" per player, by name or slot.
  */
-function PokelinkCard({ run, slots, names }) {
+function PokelinkCard({ run, follow, slots, names }) {
   const [st, setSt] = useState(null);
   const [port, setPort] = useState('');
   const [busy, setBusy] = useState(false);
@@ -214,14 +220,15 @@ function PokelinkCard({ run, slots, names }) {
       clearInterval(id);
     };
   }, []);
-  // the bridge follows the run picked on this page
+  // the bridge follows the current run like the overlays – or the run pinned on this page
+  const want = follow ? null : run.id;
   useEffect(() => {
-    if (st?.running && st.run !== run.id) api.post('/api/pokelink', { run: run.id }).then(setSt).catch(() => {});
-  }, [run.id, st?.running, st?.run]);
+    if (st?.running && (st.pinned ?? null) !== want) api.post('/api/pokelink', { run: want }).then(setSt).catch(() => {});
+  }, [want, st?.running, st?.pinned]);
   const save = async (patch) => {
     setBusy(true);
     try {
-      setSt(await api.post('/api/pokelink', { run: run.id, port: Number(port) || undefined, ...patch }));
+      setSt(await api.post('/api/pokelink', { run: want, port: Number(port) || undefined, ...patch }));
     } catch {
       // the next poll shows the real state
     } finally {
@@ -301,7 +308,11 @@ export function StreamView() {
   const { status, manifest, doc, toast, navigate } = useApp();
   const streamer = useStreamer();
   const runs = status?.runs || [];
-  const [runId, setRunId] = useState(() => manifest?.id || ls.get('sl-stream-run', {}).id || runs[0]?.id || null);
+  const [stream, saveStream] = useStreamSettings(manifest?.id);
+  // which run the links show: 'current' (default – they follow the run being played) or one pinned run
+  const [pin, setPin] = useState(() => ls.get('sl-stream-follow', {}).run || 'current');
+  const follow = pin === 'current' || !runs.some((r) => r.id === pin);
+  const runId = follow ? (runs.some((r) => r.id === stream?.current) ? stream.current : manifest?.id || runs[0]?.id || null) : pin;
   const run = (manifest?.id === runId ? manifest : null) || runs.find((r) => r.id === runId) || manifest || runs[0] || null;
   const [global, setGlobalState] = useState(() => ({ theme: 'glass', scale: 1, lang: '', bg: 'game', ...ls.get('sl-stream-global', {}) }));
   const setGlobal = (patch) => {
@@ -310,7 +321,6 @@ export function StreamView() {
     ls.set('sl-stream-global', next);
   };
   const [live, setLive] = useState({});
-  const [stream, saveStream] = useStreamSettings();
   useEffect(() => {
     if (!run?.id) return undefined;
     let stop = false;
@@ -369,10 +379,14 @@ export function StreamView() {
     <section class="panel stack">
       <div class="row wrap" style="gap:10px 16px">
         <h2 class="grow">${t('stream.overlays', 'Overlays for OBS')}</h2>
-        ${runs.length > 1 && html`<label class="row tight small">${t('stream.run', 'Run')}
-          <select value=${run.id} onChange=${(e) => { setRunId(e.target.value); ls.set('sl-stream-run', { id: e.target.value }); }}>
-            ${runs.map((r) => html`<option value=${r.id}>${r.name}</option>`)}</select></label>`}
+        <label class="row tight small">${t('stream.run', 'Run')}
+          <select value=${follow ? 'current' : pin} onChange=${(e) => { setPin(e.target.value); ls.set('sl-stream-follow', { run: e.target.value }); }}>
+            <option value="current">${t('stream.runCurrent', 'Current run (follows what you play)')}</option>
+            <optgroup label=${t('stream.runPinned', 'Only this run')}>${runs.map((r) => html`<option value=${r.id}>${r.name}</option>`)}</optgroup></select></label>
       </div>
+      <p class=${`ov-follow small ${follow ? 'on' : ''}`}><${Icon} name=${follow ? 'link' : 'lock'} size=${16} />
+        <span>${follow ? t('stream.followOn', 'The links follow the run you play: start a new run or open another one and the overlays switch by themselves – OBS keeps the same sources. Now: {name}', { name: run.name })
+          : t('stream.followOff', 'These links always show “{name}”, even when you play another run. Pick “Current run” for links that keep working from run to run.', { name: run.name })}</span></p>
       <ol class="small muted steps">
         <li>${t('stream.s1', 'Pick a widget and set it up – the preview is exactly what OBS shows, live.')}</li>
         <li>${t('stream.s2', 'Drag “Drag into OBS” onto your scene – OBS makes a browser source of the right size. Or copy the URL into a new browser source.')}</li>
@@ -393,9 +407,9 @@ export function StreamView() {
       </div>
     </section>
     <div class="ov-grid">
-      ${shown.map((w) => html`<${WidgetCard} key=${`${run.id}-${w.id}`} w=${w} run=${run} slots=${slots} names=${names} global=${global} live=${live[w.id] || 0} onTest=${onTest} />`)}
+      ${shown.map((w) => html`<${WidgetCard} key=${follow ? w.id : `${run.id}-${w.id}`} w=${w} run=${run} follow=${follow} slots=${slots} names=${names} global=${global} live=${live[w.id] || 0} onTest=${onTest} />`)}
     </div>
-    <${PokelinkCard} run=${run} slots=${slots} names=${names} />
+    <${PokelinkCard} run=${run} follow=${follow} slots=${slots} names=${names} />
     <${ApiCard} run=${run} stream=${stream} saveStream=${saveStream} />
   </div>`;
 }

@@ -6,7 +6,8 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { request } from 'node:http';
-import { overlaySnapshot, teamOf, groupsOf, countersOf, alertsBetween, pickSlots, overlayUrl, areaLabel, statusKey, playTimeText } from '../shared/overlay.mjs';
+import { overlaySnapshot, teamOf, groupsOf, countersOf, alertsBetween, pickSlots, overlayUrl, areaLabel, statusKey, playTimeText,
+  overlayRun, currentRunId } from '../shared/overlay.mjs';
 
 const DATA = mkdtempSync(join(tmpdir(), 'sls-overlay-'));
 process.env.SLS_DATA_DIR = DATA;
@@ -121,6 +122,30 @@ test('helpers: status bytes, play time, OBS URL with its layer size', () => {
   const u = new URL(overlayUrl('http://localhost:47390', 'c0ffee01', { w: 'team', layout: 'v', hp: 0, nick: null, sound: true }, [300.4, 800], 'souldew · Team'));
   assert.equal(u.pathname, '/overlay');
   assert.deepEqual(Object.fromEntries(u.searchParams), { run: 'c0ffee01', w: 'team', layout: 'v', hp: '0', sound: '1', 'layer-width': '300', 'layer-height': '800', 'layer-name': 'souldew · Team' });
+});
+
+// ---- links that keep working across runs (issue #8) ---------------------------------------------------------
+
+test('overlay links: "current" follows the run being played, a run ID stays on that run, old links keep working', () => {
+  assert.equal(overlayRun('c0ffee01'), 'c0ffee01', 'an old link with its run ID');
+  assert.equal(overlayRun('C0FFEE01'), 'c0ffee01');
+  for (const v of [null, undefined, '', 'current', 'CURRENT', ' current ']) assert.equal(overlayRun(v), 'current', `${v}`);
+  for (const v of ['c0ffee0', 'c0ffee011', 'zzzzzzzz', '../c0ffee01', 'c0ffee01?x']) assert.equal(overlayRun(v), null, v);
+  const u = (id) => new URL(overlayUrl('http://localhost:47390', id, { w: 'team' })).searchParams.get('run');
+  assert.equal(u('current'), 'current');
+  assert.equal(u(null), 'current', 'no run given: the link follows');
+  assert.equal(u('c0ffee01'), 'c0ffee01');
+});
+
+test('current run: the one open in the app while it exists, else the one played last, else none', () => {
+  const runs = [{ id: 'aaaa0001', playedAt: 300 }, { id: 'bbbb0002', playedAt: 900 }, { id: 'cccc0003', playedAt: 0 }];
+  assert.equal(currentRunId({ lastRun: 'aaaa0001', runs }), 'aaaa0001', 'open in the app beats played later');
+  assert.equal(currentRunId({ lastRun: 'cccc0003', runs }), 'cccc0003', 'a brand-new run without a doc yet');
+  assert.equal(currentRunId({ lastRun: 'dddd0004', runs }), 'bbbb0002', 'a deleted run falls back to the one played last');
+  assert.equal(currentRunId({ lastRun: null, runs }), 'bbbb0002');
+  assert.equal(currentRunId({ runs: [{ id: 'eeee0005' }] }), 'eeee0005');
+  assert.equal(currentRunId({ lastRun: 'aaaa0001', runs: [] }), null);
+  assert.equal(currentRunId(), null);
 });
 
 // ---- the server: snapshot route, live push, test alerts ----------------------------------------------------

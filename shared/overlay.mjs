@@ -284,12 +284,35 @@ export function playTimeText(pt) {
   return `${pt.h}:${String(pt.m ?? 0).padStart(2, '0')}`;
 }
 
+// ---- which run an overlay shows ----------------------------------------------------------------------------
+
+/** The run an overlay URL asks for: a run ID (a link pinned to that run), 'current' (follows the run being played – also
+ *  when `run` is missing), or null for something that is neither. */
+export function overlayRun(param) {
+  const v = String(param ?? '').trim().toLowerCase();
+  if (!v || v === 'current') return 'current';
+  return /^[a-f0-9]{8}$/.test(v) ? v : null;
+}
+
 /**
- * The OBS browser-source URL of a widget. `opts` are the overlay's query options (w, p, layout, theme, scale,
- * bg, lang, sound, hp …); `size` [w, h] adds OBS's layer-width/-height so a link dropped into OBS gets that size.
+ * The run "current" means – for the overlays that follow it and the stream API: the run open in the app
+ * (`lastRun`, as long as it still exists), else the one played last (`runs`: [{ id, playedAt }], playedAt = when its doc
+ * last changed), else null.
+ */
+export function currentRunId({ lastRun = null, runs = [] } = {}) {
+  if (lastRun && runs.some((r) => r.id === lastRun)) return lastRun;
+  let best = null;
+  for (const r of runs) if (r?.id && (!best || (r.playedAt || 0) > (best.playedAt || 0))) best = r;
+  return best?.id || null;
+}
+
+/**
+ * The OBS browser-source URL of a widget. `runId` is a run's ID (the link stays on that run) or 'current'/null (it
+ * follows the run being played). `opts` are the overlay's query options (w, p, layout, theme, scale, bg, lang, sound,
+ * hp …); `size` [w, h] adds OBS's layer-width/-height so a link dropped into OBS gets that size.
  */
 export function overlayUrl(origin, runId, opts = {}, size = null, name = '') {
-  const q = new URLSearchParams({ run: runId });
+  const q = new URLSearchParams({ run: overlayRun(runId) || 'current' });
   for (const [k, v] of Object.entries(opts)) if (v !== undefined && v !== null && v !== '' && v !== false) q.set(k, v === true ? '1' : String(v));
   if (size) {
     q.set('layer-width', String(Math.round(size[0])));

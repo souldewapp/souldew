@@ -295,7 +295,7 @@
   <div id="popups" class="popups" aria-live="polite"></div>
   <div id="net" class="net" hidden></div>
   <script type="module">
-    import { teamOf, groupsOf, countersOf, alertsBetween, pickSlots, playTimeText, WIDGETS } from '/shared/overlay.mjs';
+    import { teamOf, groupsOf, countersOf, alertsBetween, pickSlots, playTimeText, overlayRun, WIDGETS } from '/shared/overlay.mjs';
     import { coffeeTexts, COFFEE_URL, COFFEE_CORNERS, DEFAULT_CORNER } from '/shared/coffee.mjs';
     import { qrMatrix, qrPath } from '/shared/qr.mjs';
 
@@ -336,7 +336,9 @@
     const MAX = [0, 151, 251, 386, 493];
 
     const params = new URLSearchParams(location.search);
-    const run = params.get('run');
+    // a run's ID (the link stays on that run) or 'current' – also without ?run=: follows the run being played
+    const run = overlayRun(params.get('run'));
+    const follow = run === 'current';
     const flag = (k, def) => (params.has(k) ? !['0', 'false', 'no', 'off'].includes(params.get(k)) : def);
     const opt = {
       w: WIDGETS.includes(params.get('w')) ? params.get('w') : 'team',
@@ -787,8 +789,24 @@
     // ---- live data: pushed over SSE, polled when that isn't possible ----
     const seen = new Set();
     let prev = null;
+    // following the current run: another run took over – start afresh (its old news are no alerts)
+    function resetRun() {
+      S = null;
+      prev = null;
+      painted = false;
+      seen.clear();
+      lastMons.clear();
+      lastCounts = {};
+      queue.length = 0;
+      root.innerHTML = '';
+    }
+    function noRun() {
+      resetRun();
+      root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
+    }
     function apply(snap) {
       if (!snap?.doc) return;
+      if (S && snap.id !== S.id) resetRun();
       const fresh = alertsBetween(prev, snap, seen);
       S = snap;
       prev = snap;
@@ -798,6 +816,7 @@
     }
     if (!run) root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
     else {
+      const runPath = `/api/runs/${encodeURIComponent(run)}`;
       root.innerHTML = `<div class="msg">${esc(L.loading)}</div>`;
       const q = `lang=${lang}&w=${opt.legacy ? 'team' : opt.w}${showsAlerts && opt.w !== 'alerts' ? '&alerts=1' : ''}${opt.preview ? '&preview=1' : ''}`;
       let downSince = 0;
@@ -810,10 +829,19 @@
       const startPolling = () => {
         if (poll) return;
         const tick = async () => {
-          const snap = await getJson(`/api/runs/${encodeURIComponent(run)}/overlay?${q}`);
+          let r = null;
+          try {
+            r = await fetch(`${runPath}/overlay?${q}`, { cache: 'no-store' });
+          } catch {
+            // the app is away
+          }
+          const snap = r?.ok ? await r.json().catch(() => null) : null;
           if (snap) {
             downSince = 0;
             apply(snap);
+          } else if (r?.status === 404 && follow) {
+            downSince = 0; // the app is there, it just has no run yet
+            noRun();
           } else downSince ||= Date.now();
           showNet();
         };
@@ -824,7 +852,7 @@
       // per server open, and the app and OBS need theirs.
       if (typeof EventSource === 'undefined' || opt.preview) startPolling();
       else {
-        const es = new EventSource(`/api/runs/${encodeURIComponent(run)}/overlay/events?${q}`);
+        const es = new EventSource(`${runPath}/overlay/events?${q}`);
         es.addEventListener('snapshot', (e) => {
           opened = true;
           fails = 0;
@@ -847,6 +875,14 @@
         });
         es.addEventListener('gone', () => {
           root.innerHTML = `<div class="msg">${esc(L.noRun)}</div>`;
+        });
+        // following the current run, and there is none (yet): the next snapshot brings it
+        es.addEventListener('norun', () => {
+          opened = true;
+          fails = 0;
+          downSince = 0;
+          showNet();
+          noRun();
         });
         // a stream that never answers (all of the browser's connections to the app are taken – many overlays in one
         // OBS): ask every few seconds instead

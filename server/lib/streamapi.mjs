@@ -94,7 +94,7 @@ const ENDPOINTS = [
  * popupLayer(runId) (is the app's pop-up overlay open in OBS?), onPopup(runId) (push the overlays), docs (URL).
  */
 export function createStreamHub(deps) {
-  const subs = new Map(); // res → { run, lang, base }
+  const subs = new Map(); // res → { run, lang, base, follow } – `follow`: opened for `current`, moves along with it
   const last = new Map(); // runId → Map(variant → state)
   const popups = new Map(); // runId → popup
   const sigs = new Map(); // `${runId}|${variant}` → the last state sent, without its time
@@ -219,20 +219,43 @@ export function createStreamHub(deps) {
     return makePopup(manifest, { slot: slotsOf(manifest)[0], species, level: 70, test: true, now });
   }
 
-  function openStream(req, res, manifest, lang, base) {
-    const first = stateOf(manifest, lang, base);
-    res.writeHead(200, { ...corsHeaders(req), 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
-    res.write('retry: 2000\n\n');
+  /** `hello` and the full `state` of `manifest` – when a stream opens, and again when a `current` stream moves on. */
+  function greet(res, manifest, lang, base, first = stateOf(manifest, lang, base)) {
     send(res, 'hello', { api: API_VERSION, run: manifest.id, lang, events: EVENT_TYPES });
     send(res, 'state', first);
-    subs.set(res, { run: manifest.id, lang, base });
     const v = variants(manifest.id);
     if (!v.has(`${lang}|${base}`)) {
       v.set(`${lang}|${base}`, first);
       sigs.set(`${manifest.id}|${lang}|${base}`, JSON.stringify({ ...first, generatedAt: 0 }));
     }
+  }
+
+  function openStream(req, res, manifest, lang, base, follow = false) {
+    const first = stateOf(manifest, lang, base); // throws before the stream opens
+    res.writeHead(200, { ...corsHeaders(req), 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+    res.write('retry: 2000\n\n');
+    greet(res, manifest, lang, base, first);
+    subs.set(res, { run: manifest.id, lang, base, follow });
     prime(manifest.id);
     res.on('close', () => subs.delete(res));
+  }
+
+  /** Another run became current (`runId`, null = none): the streams opened for `current` switch to it – a fresh `hello`
+   *  and `state` (`hello` with run null when there is no run any more). */
+  function follow(runId) {
+    let manifest = null;
+    try {
+      manifest = runId ? resolveRun(runId) : null;
+    } catch {
+      manifest = null;
+    }
+    for (const [res, c] of subs) {
+      if (!c.follow || c.run === (manifest?.id || null)) continue;
+      c.run = manifest?.id || null;
+      if (manifest) greet(res, manifest, c.lang, c.base);
+      else send(res, 'hello', { api: API_VERSION, run: null, lang: c.lang, events: EVENT_TYPES });
+    }
+    if (manifest) prime(manifest.id);
   }
 
   const json = (req, res, status, body, extra = {}) => {
@@ -294,7 +317,8 @@ export function createStreamHub(deps) {
         })));
       }
       if (sub === '/events') {
-        openStream(req, res, resolveRun(url.searchParams.get('run') || 'current'), lang, base);
+        const want = url.searchParams.get('run') || 'current';
+        openStream(req, res, resolveRun(want), lang, base, want === 'current');
         return true;
       }
       if (sub === '/coffee') {
@@ -312,7 +336,7 @@ export function createStreamHub(deps) {
       if (run) {
         const manifest = resolveRun(run[1]);
         if (run[2] === 'events') {
-          openStream(req, res, manifest, lang, base);
+          openStream(req, res, manifest, lang, base, run[1] === 'current');
           return true;
         }
         const st = stateOf(manifest, lang, base);
@@ -335,8 +359,9 @@ export function createStreamHub(deps) {
   }
 
   return {
-    handle, docChanged, prime, popupFor, previewCoffee, settings,
+    handle, docChanged, prime, popupFor, previewCoffee, settings, follow,
     clients: (runId) => [...subs.values()].filter((c) => !runId || c.run === runId).length,
+    followers: () => [...subs.values()].filter((c) => c.follow).length,
     close: () => {
       clearInterval(ping);
       for (const res of subs.keys()) res.end();
