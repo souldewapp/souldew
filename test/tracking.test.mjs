@@ -507,6 +507,33 @@ test('HGSS: a trainer battle follows the opponent’s switches and its next Pok�
   assert.equal(f.double, true);
 });
 
+test('HGSS: a double battle lists both opponents and both of the player’s Pokémon that are out (battle helper)', () => {
+  const { w, read, flag } = dsRam();
+  const state = {};
+  const P = [{ pid: 0x11111111, species: 152, hp: 20, maxHp: 20 }, { pid: 0x11111112, species: 16, hp: 30, maxHp: 30 }, { pid: 0x11111113, species: 19, hp: 15, maxHp: 15 }];
+  w(CORE, core(P));
+  flag(0x2100);
+  // battlers: 0 = Chikorita, 1 = Zubat, 2 = Rattata (the player's second), 3 = Geodude
+  sendOutAll(w, [P[0], { species: 41, level: 6, hp: 20, maxHp: 20, pid: 0xc1, otId: 777 }, { ...P[2], hp: 11 }, { species: 74, level: 7, hp: 22, maxHp: 22, pid: 0xc2, otId: 777 }]);
+  let f = poll(read, state, 2).fight;
+  assert.equal(f.double, true);
+  assert.deepEqual(f.foes.map((x) => x.species), [41, 74]);
+  assert.equal(f.enemy.species, 41, 'the first one still leads (overlays, missed-encounter logic)');
+  assert.deepEqual(f.actives.map((a) => a.index), [0, 2]);
+  assert.equal(f.active.index, 0);
+  assert.equal(f.party.find((m) => m.pid === P[2].pid).hp, 11, 'the second battler’s HP comes from its struct');
+  // one opponent down: only the one standing is listed
+  sendOutAll(w, [P[0], { species: 41, level: 6, hp: 0, maxHp: 20, pid: 0xc1, otId: 777 }, P[2], { species: 74, level: 7, hp: 22, maxHp: 22, pid: 0xc2, otId: 777 }]);
+  f = poll(read, state).fight;
+  assert.equal(f.enemy.species, 74);
+  assert.equal(f.foes, undefined);
+  // a multi battle: the second battler on the player's side is the partner's – not ours, not listed
+  sendOutAll(w, [P[0], { species: 41, level: 6, hp: 20, maxHp: 20, pid: 0xc1, otId: 777 }, { species: 25, level: 9, hp: 25, maxHp: 25, pid: 0xbeef }, { species: 74, level: 7, hp: 22, maxHp: 22, pid: 0xc2, otId: 777 }]);
+  f = poll(read, state).fight;
+  assert.equal(f.actives, undefined);
+  assert.equal(f.active.index, 0);
+});
+
 test('HGSS: the previous battle’s opponent never shows at the start of the next one; a switch doesn’t blank the panel', () => {
   const { w, read, flag } = dsRam();
   const state = {};
@@ -611,4 +638,104 @@ test('HGSS: a status condition from the battle shows during the battle, not only
   flag(0x2100);
   const p = poll(read, state, 6);
   assert.deepEqual(withBattleHp(p.party, p.fight).map((x) => [x.hp, x.status]), [[17, 8]]);
+});
+
+// ---------------------------------------------------------------------------
+// Black 2 battles (#11, #12): the party copies in the heap keep the HP the battle started with; the battle's own
+// structs ({ species, max HP, HP, … level at +12 }, one per team member) and its team-order pointer arrays say who
+// is out and how much HP is left.
+
+const B2E = findEntry(TABLE, { platform: 'nds', code: 'IREO' });
+function b2Battle() {
+  const { m, w, read } = dsRam();
+  const u32 = (v) => [v & 0xff, (v >>> 8) & 0xff, (v >>> 16) & 0xff, v >>> 24];
+  const flag = (v) => w(0x021b5138, [v & 0xff, v >> 8]);
+  const struct = (addr, { species, maxHp, hp, level }) => w(addr, [species & 0xff, species >> 8, maxHp & 0xff, maxHp >> 8, hp & 0xff, hp >> 8, 0, 0, 0, 0, 0, 0, level, 0]);
+  return { m, w, read, flag, struct, u32 };
+}
+const g5 = ({ pid, species, level, hp, maxHp, tid = 4242 }) => ({ pid, species, level, hp, maxHp, tid, size: 220 });
+const g5party = (mons) => mons.map((x) => ({ key: `${x.pid.toString(16).padStart(8, '0')}-${x.tid ?? 4242}-0`, pid: x.pid, species: x.species, level: x.level, hp: x.hp, maxHp: x.maxHp, status: 0, moves: [] }));
+
+test('Black 2: the Pokémon you switch in shows on the battle helper, with its live HP (#11)', () => {
+  const { w, read, flag, struct, u32 } = b2Battle();
+  const TEPIG = { pid: 0x2c11a051, species: 498, level: 6, hp: 21, maxHp: 24 };
+  const PURR = { pid: 0x7afdb84b, species: 509, level: 4, hp: 9, maxHp: 18 };
+  const PATRAT = { pid: 0x1234, species: 504, level: 4, hp: 18, maxHp: 18 };
+  const party = g5party([TEPIG, PURR]);
+  w(0x02320000, core([TEPIG, PURR].map(g5)));
+  w(0x02300000, core([g5(PATRAT)]));
+  // the battle structs (two copies each, as in the game) and the team order arrays: battle order, own order
+  const S = { tepig: 0x0225b1f0, purr: 0x0225b414, patrat: 0x0225b638 };
+  struct(S.tepig, TEPIG); struct(S.tepig + 0x66c, TEPIG);
+  struct(S.purr, PURR); struct(S.purr + 0x66c, PURR);
+  struct(S.patrat, PATRAT);
+  const order = (a, b) => w(0x0225736c, [...u32(a - 0x0c), ...u32(b - 0x0c)]);
+  order(S.tepig, S.purr);
+  w(0x022573ec, [...u32(S.tepig - 0x0c), ...u32(S.purr - 0x0c)]);
+  flag(0x2100);
+  const state = {};
+  let f = null;
+  for (let i = 0; i < 6; i++) f = readLiveBattle(B2E, read, T, state, party);
+  assert.equal(f.enemy.species, 504);
+  assert.equal(f.active.index, 0, 'Tepig leads');
+  // switched to Purrloin, which takes a hit: the battle order array turns, the copies still say 9 HP
+  order(S.purr, S.tepig);
+  struct(S.purr, { ...PURR, hp: 2 });
+  f = readLiveBattle(B2E, read, T, state, party);
+  assert.deepEqual(f.active, { index: 1, hp: 2, maxHp: 18, status: 0 });
+  assert.deepEqual(withBattleHp(party, f).map((x) => x.hp), [21, 2]);
+  // the battle ends: next battle starts with the lead again
+  flag(0x2800);
+  assert.equal(readLiveBattle(B2E, read, T, state, party), null);
+});
+
+test('Black 2: a trainer’s next Pokémon shows once the first one fainted – the copies keep its starting HP (#11)', () => {
+  const { w, read, flag, struct, u32 } = b2Battle();
+  const TEPIG = { pid: 0x2c11a051, species: 498, level: 8, hp: 26, maxHp: 26 };
+  const A = { pid: 0x51, species: 506, level: 7, hp: 22, maxHp: 22, tid: 777 };
+  const B = { pid: 0x52, species: 504, level: 8, hp: 24, maxHp: 24, tid: 777 };
+  const party = g5party([TEPIG]);
+  w(0x02320000, core([g5(TEPIG)]));
+  w(0x02300000, core([g5(A), g5(B)]));
+  struct(0x0225b1f0, TEPIG);
+  struct(0x0225b414, A);
+  struct(0x0225b638, B);
+  w(0x0225736c, u32(0x0225b1f0 - 0x0c));
+  flag(0x2100);
+  const state = {};
+  let f = null;
+  for (let i = 0; i < 6; i++) f = readLiveBattle(B2E, read, T, state, party);
+  assert.equal(f.kind, 'trainer');
+  assert.deepEqual([f.enemy.species, f.enemy.hp], [506, 22]);
+  struct(0x0225b414, { ...A, hp: 0 }); // Lillipup faints, Patrat comes in
+  f = readLiveBattle(B2E, read, T, state, party);
+  assert.deepEqual([f.enemy.species, f.enemy.hp], [504, 24]);
+});
+
+test('Black 2: the panel stays for a whole long battle and through a poll without an opponent copy (#12)', () => {
+  const { w, read, flag, struct } = b2Battle();
+  const TEPIG = { pid: 0x2c11a051, species: 498, level: 6, hp: 21, maxHp: 24 };
+  const PATRAT = { pid: 0x1234, species: 504, level: 4, hp: 18, maxHp: 18 };
+  const party = g5party([TEPIG]);
+  w(0x02320000, core([g5(TEPIG)]));
+  w(0x02300000, core([g5(PATRAT)]));
+  struct(0x0225b1f0, TEPIG);
+  struct(0x0225b414, PATRAT);
+  flag(0x2100);
+  const state = {};
+  for (let i = 0; i < 6; i++) readLiveBattle(B2E, read, T, state, party);
+  const realNow = Date.now;
+  try {
+    const t0 = realNow();
+    // ten minutes in the battle menu: nothing changes in the copies – the battle flag keeps it on the panel
+    Date.now = () => t0 + 600000;
+    assert.equal(readLiveBattle(B2E, read, T, state, party).enemy.species, 504);
+    // the opponent's copy is rewritten for a poll: the last one stays instead of a blank panel
+    w(0x02300000, new Uint8Array(8 + 220));
+    assert.equal(readLiveBattle(B2E, read, T, state, party).enemy.species, 504);
+    flag(0x2800);
+    assert.equal(readLiveBattle(B2E, read, T, state, party), null);
+  } finally {
+    Date.now = realNow;
+  }
 });

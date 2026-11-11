@@ -779,7 +779,7 @@ function battleDS(entry, read, T, state, party) {
     note(state, 'overworld', flag);
     if (state.candidates?.length) retireCopies(read, size, entry.gen, T, state);
     state.battle = null;
-    state.battleHp = state.activePid = null;
+    state.battleHp = state.activePid = state.g5order = null;
     state.scan = null;
     state.candidates = null;
     return null;
@@ -859,18 +859,31 @@ function battleDS(entry, read, T, state, party) {
   const over = flag === null && state.battleStartSig !== undefined && saveSig !== state.battleStartSig;
   const on = flag ?? (!over && ((!!enemy && now - (state.enemySince || 0) < 90000) || anyDiff));
   if (!on || !enemy) {
+    // the battle flag says the battle goes on, but no opponent copy could be read this poll (being rewritten, the
+    // heap search between two passes): keep showing the last one instead of blanking the panel until the next read
+    if (flag === true && state.battle?.enemy) {
+      note(state, 'held (no copy)', flag);
+      return state.battle;
+    }
     if (flag === null && state.battle) retireCopies(read, size, entry.gen, T, state); // battle ended (no flag)
     state.battleStartSig = undefined;
     state.battle = null;
-    state.battleHp = state.activePid = null;
+    state.battleHp = state.activePid = state.g5order = null;
     return null;
   }
-  // The active opponent: first one still standing (trainers send them in order).
-  const foe = enemy.mons.find((m) => m.hp > 0) || enemy.mons[0];
+  // The active opponent: first one still standing (trainers send them in order). Gen 5: the copies keep the HP the
+  // battle started with – who is still standing is in the battle's own structs (a trainer's first Pokémon stayed on
+  // the panel at 0 HP while the next one fought).
+  const hps = entry.gen === 5 ? gen5LiveHps(read, state, [...enemy.mons, ...party]) : null;
+  const hpOf = (m) => hps?.get(g5key(m)) ?? m.hp;
+  const foe = enemy.mons.find((m) => hpOf(m) > 0) || enemy.mons[0];
   // Active player mon. Where we know the battle mon struct, its PID says who is out – a switch shows at once.
   // Otherwise: the last one whose HP changed in this battle (it took the hit – that follows a switch), else the
   // first one standing (the lead unless it fainted).
-  const real = battleMonPid(entry, read, state, party);
+  // (Gen 5 without a known address for it – Black 2: the battle's own team order says who is out; the HP heuristic
+  // below never fires there, the copies keep the starting HP)
+  const g5 = hps && !entry.battleActive ? gen5Active(read, state, party, hpOf) : null;
+  const real = g5 !== null ? party[g5].pid : battleMonPid(entry, read, state, party);
   if (live) {
     const prev = state.battleHp || new Map();
     if (!real) for (const m of live) if (prev.has(m.pid) && prev.get(m.pid) !== m.hp) state.activePid = m.pid;
@@ -879,7 +892,7 @@ function battleDS(entry, read, T, state, party) {
   if (real) state.activePid = real;
   // The index is the save party's (the panel and the HP fold use that order) – the copy may be ordered otherwise.
   const byPid = new Map((live || party).map((m) => [m.pid, m]));
-  const standing = (m) => (byPid.get(m.pid)?.hp ?? m.hp) > 0;
+  const standing = (m) => hpOf(byPid.get(m.pid) || m) > 0;
   const hit = party.findIndex((m) => m.pid === state.activePid && (real || standing(m)));
   const index = live || real ? (hit >= 0 ? hit : Math.max(0, party.findIndex(standing))) : null;
   const cur = index !== null ? byPid.get(party[index].pid) || party[index] : null;
@@ -888,8 +901,7 @@ function battleDS(entry, read, T, state, party) {
   // out (the one of the team that has a battle struct)
   let active = cur ? { index, hp: cur.hp, maxHp: cur.maxHp, status: cur.status } : null;
   let foeHp = null;
-  if (entry.gen === 5) {
-    const hps = gen5LiveHps(read, state, [foe, ...party]);
+  if (hps) {
     foeHp = hps.get(g5key(foe)) ?? null;
     const i = active ? active.index : party.findIndex((m) => hps.has(g5key(m)));
     if (i >= 0 && hps.has(g5key(party[i]))) active = { index: i, hp: hps.get(g5key(party[i])), maxHp: party[i].maxHp, status: active?.status ?? party[i].status };
@@ -901,10 +913,10 @@ function battleDS(entry, read, T, state, party) {
     // the battle's own party copy: HP and status conditions as they are now (the save party gets them at the end)
     party: live && live.map((m) => ({ pid: m.pid, hp: m.hp, maxHp: m.maxHp, status: m.status })),
   };
-  // (Gen 5: the battle struct's HP of the Pokémon that is out wins over the party copy's starting HP)
-  if (entry.gen === 5 && active && state.battle.party) {
-    const pid = party[active.index]?.pid;
-    state.battle.party = state.battle.party.map((m) => (m.pid === pid ? { ...m, hp: active.hp } : m));
+  // (Gen 5: the battle structs' HP wins over the party copy's starting HP – every team member has one)
+  if (hps && state.battle.party) {
+    const byKey = new Map(party.map((m) => [m.pid, g5key(m)]));
+    state.battle.party = state.battle.party.map((m) => (hps.has(byKey.get(m.pid)) ? { ...m, hp: hps.get(byKey.get(m.pid)) } : m));
   }
   return state.battle;
 }
@@ -949,20 +961,90 @@ function gen5LiveHps(read, state, mons) {
   return out;
 }
 
+/**
+ * Gen 5: which of the player's Pokémon is out. The battle keeps the team twice as arrays of pointers to the battle
+ * structs (pointer = struct − 0x0C): once in the team's own order and once in battle order, the Pokémon that is out
+ * first (found live in Black 2, a wild battle with Tepig and Purrloin: 0x0225736C [Tepig, Purrloin] turned
+ * [Purrloin, Tepig] with the switch, 0x022573EC stayed; the same pair again for the structs' second copy). The arrays
+ * are found from the structs once per battle (rescanned at most every 2 s while they don't check out) and read every
+ * poll. → the party index of the Pokémon that is out, or null when that can't be told.
+ */
+const G5PTR = 0x0c;
+function gen5Active(read, state, party, hpOf) {
+  const n = party.length;
+  if (n < 2) return n === 1 ? 0 : null;
+  const keys = party.map(g5key);
+  if (new Set(keys).size !== n) return null; // two alike: their structs can't be told apart
+  const fits = (ptr, i) => {
+    const b = read(ptr + G5PTR, 14);
+    return !!b && u16le(b, 0) === party[i].species && u16le(b, G5MON.maxHp) === party[i].maxHp && b[G5MON.level] === party[i].level;
+  };
+  const orderAt = (o, addr) => {
+    const b = read(addr, n * 4);
+    if (!b) return null;
+    const order = [];
+    for (let k = 0; k < n; k++) {
+      const i = o.ptrs.get(u32le(b, k * 4));
+      if (i === undefined || order.includes(i)) return null;
+      order.push(i);
+    }
+    return order.every((i, k) => fits(u32le(b, k * 4), i)) ? order : null;
+  };
+  let o = state.g5order;
+  let orders = o && o.keys === keys.join() ? o.arrays.map((a) => orderAt(o, a)) : [];
+  if (!orders.length || orders.some((x) => !x)) {
+    const now = Date.now();
+    if (o?.at && now - o.at < 2000) return o.last ?? null;
+    o = state.g5order = { keys: keys.join(), at: now, ptrs: new Map(), arrays: [], last: o?.last ?? null };
+    const BASE = 0x02200000;
+    const ram = read(BASE, 0x200000);
+    if (!ram) return null;
+    const want = new Map(party.map((m, i) => [m.species, i]));
+    for (let x = 0; x + 14 <= ram.length; x += 2) {
+      const i = want.get(u16le(ram, x));
+      if (i === undefined) continue;
+      const m = party[i];
+      if (u16le(ram, x + G5MON.maxHp) === m.maxHp && ram[x + G5MON.level] === m.level && u16le(ram, x + G5MON.hp) <= m.maxHp) o.ptrs.set(BASE + x - G5PTR, i);
+    }
+    for (let x = 0; x + n * 4 <= ram.length && o.arrays.length < 8; x += 4) {
+      if (!o.ptrs.has(u32le(ram, x))) continue;
+      const seen = new Set();
+      for (let k = 0; k < n; k++) seen.add(o.ptrs.get(u32le(ram, x + k * 4)));
+      if (seen.size === n && !seen.has(undefined)) o.arrays.push(BASE + x);
+    }
+    orders = o.arrays.map((a) => orderAt(o, a)).filter(Boolean);
+    if (!orders.length) return null;
+  }
+  // the team's own order is the identity; an array that differs is the battle order. All the same: nobody switched –
+  // the lead is out (unless it can't fight: then the game sent the first one that can)
+  const moved = orders.find((x) => x.some((i, k) => i !== k));
+  const lead = party.findIndex((m) => !m.isEgg && hpOf(m) > 0);
+  o.last = moved ? moved[0] : party[0].isEgg || hpOf(party[0]) === 0 ? (lead >= 0 ? lead : 0) : 0;
+  return o.last;
+}
+
 /** The battle from the battle structs; `live` is the battle's party copy (HP of the mons that aren't out). */
-function structBattle({ me, foe, foe2 }, party, live) {
-  // a double battle: the one still standing (battler 1 first)
+function structBattle({ me, foe, foe2, ally }, party, live) {
+  // a double battle: the one still standing (battler 1 first) leads, and both are listed while both stand
   const f = foe.hp === 0 && foe2?.hp > 0 ? foe2 : foe;
+  const enemyOf = (x) => ({ species: x.species, level: x.level, hp: x.hp, maxHp: x.maxHp, shiny: shinyOf(x.pid, x.otId), moves: x.moves });
   const index = party.findIndex((p) => p.pid === me.pid);
-  const out = { pid: me.pid, hp: me.hp, maxHp: me.maxHp, status: me.status };
+  // the player's second battler in a double battle – only when it's one of the player's own (a multi battle's
+  // partner sends out theirs)
+  const allyIndex = foe2 && ally && ally.pid !== me.pid ? party.findIndex((p) => p.pid === ally.pid) : -1;
+  const outs = [[me, index], [allyIndex >= 0 ? ally : null, allyIndex]].filter(([m, i]) => m && i >= 0);
+  const byPid = new Map(outs.map(([m]) => [m.pid, { pid: m.pid, hp: m.hp, maxHp: m.maxHp, status: m.status }]));
+  const standing = foe2 ? [foe, foe2].filter((x) => x.hp > 0) : [];
   return {
     // wild Pokémon carry the player's trainer ID
     kind: f.otId === me.otId ? 'wild' : 'trainer',
     ...(foe2 ? { double: true } : {}),
-    enemy: { species: f.species, level: f.level, hp: f.hp, maxHp: f.maxHp, shiny: shinyOf(f.pid, f.otId), moves: f.moves },
+    enemy: enemyOf(f),
+    ...(standing.length > 1 ? { foes: standing.map(enemyOf) } : {}),
     active: index >= 0 ? { index, hp: me.hp, maxHp: me.maxHp, status: me.status } : null,
-    // the mon that is out as the struct has it (the copy can lag a hit behind), the others from the copy
-    party: live ? live.map((m) => (m.pid === me.pid ? out : { pid: m.pid, hp: m.hp, maxHp: m.maxHp, status: m.status })) : [out],
+    ...(outs.length > 1 ? { actives: outs.map(([m, i]) => ({ index: i, hp: m.hp, maxHp: m.maxHp, status: m.status })) } : {}),
+    // the mons that are out as the structs have them (the copy can lag a hit behind), the others from the copy
+    party: live ? live.map((m) => byPid.get(m.pid) || { pid: m.pid, hp: m.hp, maxHp: m.maxHp, status: m.status }) : [...byPid.values()],
   };
 }
 
@@ -975,7 +1057,9 @@ function note(state, what, flag) {
 
 /**
  * Read the battle state: { kind: 'wild'|'trainer', enemy: { species, level, hp, maxHp, shiny, moves? }|null,
- * active: { index, hp?, maxHp? }|null, party?: [{ pid, hp, maxHp }] } – or null outside battle.
+ * active: { index, hp?, maxHp? }|null, party?: [{ pid, hp, maxHp }] } – or null outside battle. A double battle
+ * whose structs are known (HGSS) adds foes: [enemy, …] while both opponents stand and actives: [active, …] while
+ * two of the player's own Pokémon are out; `enemy` / `active` stay the first of them.
  * `party` is the party just read with readLiveParty (DS needs it to tell the copies apart).
  */
 export function readLiveBattle(entry, read, T, state = {}, party = null) {
