@@ -1,12 +1,15 @@
 // What the play view needs from the ROM itself, computed here from the file instead of in the page (a DS ROM is
 // 64–512 MB, and the page already holds one copy for the emulator): the "where am I" sign's place names and map →
 // location step (shared/live/romloc.mjs), for GBA games which Pokémon the species numbers stand for
-// (shared/live/romspecies.mjs) and for Game Boy hacks where their RAM variables moved (shared/live/romwram.mjs). Both are small and cached per file (path, size, time) in CACHE_DIR/romloc.
+// (shared/live/romspecies.mjs) and for Game Boy hacks where their RAM variables moved (shared/live/romwram.mjs), its
+// types and level caps (romtypes.mjs, romcaps.mjs). Computed in a worker thread (romdata-worker.mjs, romDataFor) – the
+// result is small and cached per file (path, size, time) in CACHE_DIR/romloc.
 // `vanilla` says whether the file is an unmodified retail ROM (its CRC32 is in the catalog): a randomized game, a
 // ROM hack or anything else changed shows the ROM's own place names (shared/live/location.mjs placeName).
 import { readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { Worker } from 'node:worker_threads';
 import zlib from 'node:zlib';
 import { romLocations, gen3MapTable } from '../../shared/live/romloc.mjs';
 import { romSpecies, gen3ItemNames, gen3MoveNames, gen3MoveMap } from '../../shared/live/romspecies.mjs';
@@ -16,6 +19,7 @@ import { gbWramShift } from '../../shared/live/romwram.mjs';
 import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
+import { resolveId } from './library.mjs';
 
 const VERSION = 13; // bump when romData() changes what it finds or the shape of its result (13: types and level caps from the ROM)
 const memo = new Map();
@@ -100,7 +104,6 @@ function gbShift(u8, o) {
  * – `data` the location data (null when the ROM has none: another engine, an unsupported layout), `species` the GBA
  * species table (null for other systems), `wram` a Game Boy hack's moved variables (null: the retail addresses),
  * `types` the game's types (shared/live/romtypes.mjs), `caps` level caps from its trainers (shared/live/romcaps.mjs).
- * Never throws.
  */
 /** What romDataFor finds when there's nothing to find – also the list of fields the disk cache must give back. */
 export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, caps: null, capsWhy: null, items: null, moves: null, header: null, vanilla: null });
@@ -108,14 +111,90 @@ export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: nul
  * next start, as the own types of Too Many Types were). */
 export const fromRomCache = (v) => Object.fromEntries(Object.keys(ROMDATA_NONE).map((k) => [k, v[k] ?? null]));
 
-export function romDataFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
+// ---- computed in a worker thread (server/lib/romdata-worker.mjs): a big ROM takes seconds – the server, which shares
+// its thread with the app in Electron, keeps answering every other request meanwhile. One ROM at a time; a scan that
+// fails or takes too long gives "unknown" (ROMDATA_NONE) – not remembered, so the next request tries again.
+const TIMEOUT_MS = Number(process.env.SLS_ROMDATA_TIMEOUT_MS) || 180000;
+let worker = null;
+let seq = 0;
+const jobs = new Map(); // job id → { w (its worker), resolve, reject, timer }
+const pending = new Map(); // ROM id → its promise (two requests for one ROM share a scan)
+let chain = Promise.resolve();
+
+/** The jobs of worker `w` fail (it ended): a newer worker's jobs go on. */
+function failAll(w, err) {
+  for (const [id, j] of jobs) {
+    if (j.w !== w) continue;
+    clearTimeout(j.timer);
+    jobs.delete(id);
+    j.reject(err);
+  }
+}
+
+function getWorker() {
+  if (worker) return worker;
+  const w = new Worker(new URL('./romdata-worker.mjs', import.meta.url));
+  w.on('message', ({ id, result, error }) => {
+    const j = jobs.get(id);
+    if (!j) return;
+    jobs.delete(id);
+    clearTimeout(j.timer);
+    if (error) j.reject(new Error(error));
+    else j.resolve(result);
+  });
+  const gone = (err) => {
+    if (worker === w) worker = null;
+    failAll(w, err);
+  };
+  w.on('error', gone);
+  w.on('exit', (code) => gone(new Error(`ROM data worker ended (${code})`)));
+  w.unref(); // (after the listeners: an idle worker never keeps the app or a test from ending)
+  return (worker = w);
+}
+
+/** One job in the worker, after the ones before it; rejects on an error or after `timeoutMs` (the worker is ended). */
+function runJob(msg, timeoutMs) {
+  const run = () => new Promise((resolve, reject) => {
+    const w = getWorker();
+    const id = ++seq;
+    const timer = setTimeout(() => {
+      jobs.delete(id);
+      reject(new Error('ROM data took too long'));
+      if (worker === w) worker = null;
+      w.terminate().catch(() => {});
+    }, timeoutMs);
+    jobs.set(id, { w, resolve, reject, timer });
+    w.postMessage({ ...msg, id }, msg.bytes ? [msg.bytes] : []);
+  });
+  const p = chain.then(run, run);
+  chain = p.catch(() => {});
+  return p;
+}
+
+/**
+ * The ROM's data (see romData) for `src` – { file } (a path), { lib: { id, config } } (a library entry, maybe inside a
+ * .zip: read in the worker) or { bytes, key } – with the memory and disk cache in front (CACHE_DIR/romloc, per file:
+ * path, size, time). Resolves to ROMDATA_NONE's shape, never rejects; `env.timeoutMs` overrides the time limit.
+ */
+export async function romDataFor(src, { sharedDir, cacheDir, timeoutMs = TIMEOUT_MS }) {
   const none = { ...ROMDATA_NONE };
   let id;
+  let msg;
   try {
-    if (file) {
-      const st = statSync(file);
-      id = `${file}|${st.size}|${st.mtimeMs}`;
-    } else id = `bytes|${key}|${bytes?.length}`;
+    if (src.file) {
+      const st = statSync(src.file);
+      id = `${src.file}|${st.size}|${st.mtimeMs}`;
+      msg = { file: src.file };
+    } else if (src.lib) {
+      const { abs, entry } = resolveId(src.lib.id, src.lib.config);
+      const st = statSync(abs);
+      id = `${abs}::${entry || ''}|${st.size}|${st.mtimeMs}`;
+      msg = { lib: { id: src.lib.id, config: src.lib.config } };
+    } else if (src.bytes) {
+      id = `bytes|${src.key}|${src.bytes.length}`;
+      const copy = new Uint8Array(src.bytes); // (handed over to the worker)
+      msg = { bytes: copy.buffer };
+    } else return none;
   } catch {
     return none;
   }
@@ -134,24 +213,20 @@ export function romDataFor({ file = null, bytes = null, key = null }, { sharedDi
       // unreadable cache: compute again
     }
   }
-  let r = none;
-  try {
-    const rom = bytes || readFileSync(file);
-    r = romData(new Uint8Array(rom.buffer, rom.byteOffset, rom.byteLength), sharedDir);
-  } catch {
-    r = none;
-  }
-  memo.set(id, r);
-  if (cached) {
-    try {
-      mkdirSync(join(cacheDir, 'romloc'), { recursive: true });
-      writeFileSync(cached, JSON.stringify({ version: VERSION, ...r }));
-    } catch {
-      // a read-only cache folder only costs the next start a second parse
+  if (pending.has(id)) return pending.get(id);
+  const p = runJob({ ...msg, sharedDir }, timeoutMs).then((result) => {
+    const r = fromRomCache(result || {});
+    memo.set(id, r);
+    if (cached) {
+      try {
+        mkdirSync(join(cacheDir, 'romloc'), { recursive: true });
+        writeFileSync(cached, JSON.stringify({ version: VERSION, ...r }));
+      } catch {
+        // a read-only cache folder only costs the next start a second parse
+      }
     }
-  }
-  return r;
+    return r;
+  }, () => none).finally(() => pending.delete(id));
+  pending.set(id, p);
+  return p;
 }
-
-/** Location data alone (romDataFor().data). */
-export const romLocationsFor = (src, env) => romDataFor(src, env).data;

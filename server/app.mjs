@@ -811,6 +811,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   // The ROM's own data for the play view (server/lib/romloc.mjs): the place sign's names and map → location step, and
   // for GBA games which Pokémon the species numbers stand for. `src` is the same /api/… URL the emulator loads (a run's
   // file, a library ROM – zipped ones unpacked –, or a patched ROM). { data: null } = no location data for this game.
+  // The scan runs in a worker thread (server/lib/romloc.mjs): a big ROM takes seconds the first time, and every other
+  // request is answered meanwhile – the play view fills in what depends on it once it arrives.
   route('GET', /^\/api\/rom\/locations$/, (req, m, url) => {
     const src = new URL(url.searchParams.get('src') || '', 'http://local');
     const env = { sharedDir: SHARED_DIR, cacheDir: CACHE_DIR };
@@ -822,8 +824,10 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     }
     if (src.pathname === '/api/library/rom') {
       const id = src.searchParams.get('id');
-      const { abs, entry } = resolveId(id, loadConfig());
-      return entry ? romDataFor({ bytes: loadFile(id, loadConfig()), key: id }, env) : romDataFor({ file: abs }, env);
+      const config = loadConfig();
+      const { abs, entry } = resolveId(id, config);
+      // (an entry inside a .zip is unpacked in the worker too)
+      return entry ? romDataFor({ lib: { id, config } }, env) : romDataFor({ file: abs }, env);
     }
     if (src.pathname === '/api/library/patched') {
       const r = preparePatchedRom(src.searchParams.get('romId'), src.searchParams.get('patchId'), () => {}, loadConfig());
