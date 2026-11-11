@@ -63,6 +63,15 @@
   a hack's details now say how far live tracking works for it (read live, with limits, not checked yet) and what to
   know – e.g. that Too Many Types' own types aren't known to souldew. A patch named after the longer of two hacks
   ("Too Many Types 2") is linked to that one.
+- **Too Many Types and Too Many Types 2 are read live** (#3): checked in both games – the starter (Fennekin,
+  Chimchar) lands under "Starter", a real catch under its route (Poochyena → "Route 101", Sewaddle → "Route 121"), the
+  place sign, wild and trainer battles with HP as on screen and switches. Too Many Types 2 showed nothing useful
+  before: the game keeps its Pokémon names, its team and its battle flag elsewhere than Run & Bun, so it read as plain
+  Emerald. Both hacks have types of their own (57 and 80) that souldew doesn't know: instead of the official – wrong –
+  ones, souldew now shows no types, matchups or type rule for their Pokémon, and the battle panel says why.
+- **Patches and already patched ROMs are recognised by their checksum**: a patch is linked to its hack by what it
+  makes, whatever the file is called (a "1.1.1 mirror.bps" is Too Many Types 2), and a ROM that was patched before you
+  added it shows up as the hack – in the library, when you play it and in a new run – instead of as Emerald.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged
