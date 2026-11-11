@@ -6,7 +6,7 @@ import { diag } from '../lib/diag.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, ago } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
-import { gameById, gameTitle, speciesName } from '../lib/data.mjs';
+import { gameById, gameTitle, speciesName, hackById } from '../lib/data.mjs';
 import { players as getPlayers, live, othersOf, runMode, missedQuestion, openAreas, markMissed, locationChoices, areaForCatch, genOfRun, profileOf, rules as getRules, logCheat } from '../lib/run.mjs';
 import { findEntry, readLiveParty, readLiveBattle, withBattleHp, inBattleFlag, LiveTables, expandedEntry } from '/shared/live/parse.mjs';
 import { addRareCandies, cheatSupported } from '/shared/live/cheats.mjs';
@@ -72,7 +72,8 @@ function useTarget() {
       kind: 'solo', key: id, system: r.system, code: r.code, title: r.title, gameId: r.gameId,
       rom: p.patch ? `/api/library/patched?romId=${encodeURIComponent(p.rom)}&patchId=${encodeURIComponent(p.patch)}` : `/api/library/rom?id=${encodeURIComponent(p.rom)}`,
       name: r.name.replace(/\.\w+$/, ''), saveUrl: `/api/saves/solo?id=${encodeURIComponent(id)}`, stateId: id,
-      label: p.patch ? library.patches.find((x) => x.id === p.patch)?.name : gameById(r.gameId) ? gameTitle(gameById(r.gameId)) : r.title,
+      // (a ROM patched before it was added is named after its hack – server/lib/library.mjs describeRom)
+      label: p.patch ? library.patches.find((x) => x.id === p.patch)?.name : r.hackId && hackById(r.hackId) ? hackById(r.hackId).name : gameById(r.gameId) ? gameTitle(gameById(r.gameId)) : r.title,
       params: { rom: p.rom, patch: p.patch || undefined },
     };
   }
