@@ -545,6 +545,29 @@ test('expanded GBA engines (Run & Bun): who is out comes from gBattleMons, searc
   ({ f } = poll(state));
   assert.deepEqual([f.kind, f.enemy.species, f.enemy.hp], ['trainer', 263, 9]);
 
+  // a double battle: the left opponent is down and not replaced – the panel follows its partner (battler 3), and
+  // our partner (battler 2) once our left one is down
+  enemies([mudkip, zigzagoon]);
+  battler(1, mudkip, 0);
+  battler(3, zigzagoon, 12);
+  ({ f } = poll(state));
+  assert.deepEqual([f.enemy.species, f.enemy.hp], [263, 12], 'the opponent still standing');
+  battler(0, chimchar, 0);
+  battler(2, poochyena, 7);
+  ({ f } = poll(state));
+  assert.deepEqual(f.active, { index: 1, hp: 7, maxHp: 13, status: 0 }, 'our Pokémon still standing');
+  for (const i of [2, 3]) put(BM + i * 0x5c, new Array(0x5c).fill(0));
+  battler(0, chimchar);
+
+  // a found address that keeps failing in battle is searched for again
+  const s3 = { bmons3: 0x02010000 };
+  enemies([mudkip]);
+  battler(1, mudkip, 17);
+  for (let i = 0; i < 10; i++) poll(s3);
+  assert.equal(s3.bmons3, null, 'given up after ten failed polls');
+  poll(s3);
+  assert.equal(s3.bmons3, BM, 'and found where it really is');
+
   // a new battle before its mons are sent out: the array still holds the last one's opponent – not this battle's
   enemies([skitty]);
   ({ f } = poll(state));

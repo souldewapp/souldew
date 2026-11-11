@@ -54,7 +54,8 @@
   who switched kept their first Pokémon on the panel, and a trainer with a single Pokémon (your rival's first battle)
   counted as a wild battle, so the Nuzlocke catch rules showed up there. souldew now finds the hack's own battle data
   in its memory and reads who is out on both sides, and tells wild from trainer battles by the opponent's trainer
-  ID. Checked in the game: a switch in a wild battle and the rival's Mudkip on Route 103, HP as on screen.
+  ID. Checked in the game: a switch in a wild battle and the rival's Mudkip on Route 103, HP as on screen. In a double
+  battle it follows the left Pokémon of each side, and its partner once the left one is down.
 - **Enter every Pokémon the game holds by hand**: the species picker only offered the base game's generation – no
   Sinnoh starters in Run & Bun. It now follows the ROM: up to #905 in Run & Bun, the Gen 4/5 Pokémon of Light
   Platinum, the randomizer's Pokémon, and a hack's own creatures (Mariomon) under the names the game gives them.

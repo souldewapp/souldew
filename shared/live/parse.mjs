@@ -744,8 +744,23 @@ function battleGen3(entry, read, T, state = {}) {
     const bm = mine.length ? findBattleMons3x(read, T, state, mine, foes) : null;
     // (both battlers must belong to this battle: before the new battle's mons are sent out the array still holds
     // the previous battle's, whose opponent isn't in gEnemyParty any more)
-    const me = bm ? battler3x(read, bm, mine) : null;
-    const foe = me ? battler3x(read, bm + BMON3X.size, foes) : null;
+    let me = bm ? battler3x(read, bm, mine) : null;
+    let foe = me ? battler3x(read, bm + BMON3X.size, foes) : null;
+    if (bm) {
+      // a found address that keeps failing in battle (another copy of a battler pair, a hack with another layout):
+      // search again rather than keep it for the session
+      state.bmFail3 = me && foe ? 0 : (state.bmFail3 || 0) + 1;
+      if (state.bmFail3 >= 10) {
+        state.bmons3 = null;
+        state.bmFail3 = 0;
+      }
+    }
+    if (me && foe) {
+      // a double battle: once the left one of a side is down and not replaced, its partner (battlers 2 and 3) is the
+      // one still fighting – a single battle has no valid battler there, so nothing changes
+      if (me.hp === 0) me = battler3x(read, bm + 2 * BMON3X.size, mine)?.hp > 0 ? battler3x(read, bm + 2 * BMON3X.size, mine) : me;
+      if (foe.hp === 0) foe = battler3x(read, bm + 3 * BMON3X.size, foes)?.hp > 0 ? battler3x(read, bm + 3 * BMON3X.size, foes) : foe;
+    }
     const e = foe ? foe.p.m : (foes.find((x) => x.m.hp > 0) || foes[0]).m;
     const enemy = { species: e.species, level: e.level, hp: foe ? foe.hp : e.hp, maxHp: e.maxHp, shiny: e.shiny, moves: e.moves };
     // wild or trainer: a wild Pokémon is created with the player's trainer ID (CreateWildMon → OT_ID_PLAYER_ID, the
