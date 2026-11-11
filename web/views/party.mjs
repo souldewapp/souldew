@@ -65,8 +65,9 @@ export function PartyPanel({ mon, gen = 4, lead, compact, accent, dead, types, c
   const showSpecies = species && name.toLowerCase() !== species.toLowerCase();
   const g = mon.gender === 'M' || mon.gender === 'F' ? mon.gender : null;
   const hasItem = mon.item !== undefined && mon.item !== null && mon.item !== 0 && mon.item !== '';
-  // the held item by name (Gen 3–5; '' when the game's number isn't known: Gen 1/2, a ROM hack's own item)
-  const item = hasItem ? (typeof mon.item === 'string' ? mon.item : mon.itemOwn ? '' : itemName(mon.item, gen)) : '';
+  // the held item by name (Gen 3–5; a ROM hack's own item by the name the game gives it – '' when that isn't known: Gen
+  // 1/2, a hack whose item table wasn't found)
+  const item = hasItem ? (typeof mon.item === 'string' ? mon.item : mon.itemOwn ? mon.itemName || '' : itemName(mon.item, gen)) : '';
   const px = size || (compact ? 40 : 56);
   const lv = shownLevel(mon.level);
   const cls = `pp ${compact ? 'compact' : ''} ${lead ? 'lead' : ''} ${fainted ? 'fainted' : ''} ${mon.shiny ? 'shiny' : ''} ${onPick ? 'pick' : ''}`;

@@ -24,14 +24,18 @@ function decode(rom, o, n, table) {
   return s;
 }
 
-// a species name: letters first, then letters, digits and the few signs names use ("Mr. Mime", "Ho-Oh", "Nidoran♀")
-const NAME = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .'’\-♂♀:]*$/;
+// a species name: letters first, then letters, digits and the few signs names use ("Mr. Mime", "Ho-Oh", "Nidoran♀",
+// "Type: Null"; Complete FireRed Upgrade's Unown forms "Unown !" / "UNOWN?")
+const NAME = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .'’\-♂♀:!?]*$/;
 // (the unused slots 252–276 of the retail games are named "?")
 const okName = (s) => s !== null && s.length >= 1 && s.length <= 12 && (/^\?+$/.test(s) || (s.length >= 2 && NAME.test(s) && s.trim() === s && !/\s{2}/.test(s)));
 
 /**
  * The species-name table of a GBA Pokémon ROM: entry 0 is "??????????" (ten '?' and the terminator), then one name per
  * species, `stride` bytes each (11 in the retail games). → { offset, stride, names } or null.
+ * Complete FireRed Upgrade hacks start their own, longer table with a shorter row of '?' (Unbound "??????", Radical Red
+ * a single "?") and leave the retail one in the ROM (Radical Red even renamed its Pokémon there): of all tables found,
+ * the one with the most names is the game's.
  */
 export function gen3SpeciesNames(rom, charset) {
   const table = charset?.table || charset || {};
@@ -43,7 +47,11 @@ export function gen3SpeciesNames(rom, charset) {
     if (rom[o] !== Q) continue;
     let k = 1;
     while (k < 10 && rom[o + k] === Q) k++;
-    if (k < 10 || rom[o + 10] !== 0xff) continue;
+    if (rom[o + k] !== 0xff) {
+      o += k - 1;
+      continue;
+    }
+    let found = null;
     for (const stride of [11, 12, 13]) {
       const names = [];
       for (let i = 1; o + (i + 1) * stride <= rom.length; i++) {
@@ -51,11 +59,13 @@ export function gen3SpeciesNames(rom, charset) {
         if (!okName(s)) break;
         names.push(s);
       }
-      if (names.length >= 380 && (!best || names.length > best.names.length)) best = { offset: o, stride, names: ['', ...names] };
+      if (names.length >= 380 && (!found || names.length > found.names.length - 1)) found = { offset: o, stride, names: ['', ...names] };
     }
-    if (!best) best = speciesInfoNames(rom, o, table);
-    if (best) break;
-    o += 10;
+    // (the gSpeciesInfo layout starts with the retail "??????????" only)
+    if (!found && k === 10) found = speciesInfoNames(rom, o, table);
+    if (found && (!best || found.names.length > best.names.length)) best = found;
+    // (past a table found: its "?" placeholder slots would start shorter copies of it)
+    o = found ? found.offset + found.names.length * found.stride - 1 : o + k - 1;
   }
   return best;
 }
@@ -123,9 +133,13 @@ export function gen3SpeciesMap(names, vanilla, dexNames, otherNames = []) {
   };
   const abbreviated = (key) => {
     if (key.length < 10) return 0;
-    const hits = longer.filter(([k]) => k[0] === key[0] && k.length > key.length && inOrder(key, k));
-    return hits.length === 1 ? hits[0][1] : 0;
+    // (one Pokémon, in whichever language: Radical Red's "Poltegeist" fits the English and the French name alike)
+    const hits = new Set(longer.filter(([k]) => k[0] === key[0] && k.length > key.length && inOrder(key, k)).map(([, id]) => id));
+    return hits.size === 1 ? [...hits][0] : 0;
   };
+  // Complete FireRed Upgrade names Unown's forms ("Unown B", Radical Red "UNOWNB"): they are Unown
+  const unown = byKey.get('UNOWN');
+  const form = (key) => (unown && /^UNOWN[A-Z]$/.test(key) ? unown : 0);
   const map = [0];
   const unknown = {};
   let changed = 0;
@@ -141,7 +155,7 @@ export function gen3SpeciesMap(names, vanilla, dexNames, otherNames = []) {
       map[i] = 0;
       continue;
     }
-    const id = byKey.get(key) || abbreviated(key) || 0;
+    const id = byKey.get(key) || abbreviated(key) || form(key) || 0;
     map[i] = id;
     if (!id) unknown[i] = names[i];
     if (id !== v) changed++;
@@ -184,6 +198,166 @@ export function speciesCeiling(species) {
   let max = 0;
   for (const id of species.map) if (id > max) max = id;
   return max || null;
+}
+
+// ---------------------------------------------------------------- items and moves of an expanded engine
+
+const u16 = (b, o) => b[o] | (b[o + 1] << 8);
+const u32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+const codeOf = (table, ch) => {
+  const k = Object.entries(table).find(([, v]) => v === ch)?.[0];
+  return k === undefined ? -1 : parseInt(k, 16);
+};
+/** Gen 3 text with its terminator within `n` bytes, else null. */
+const terminated = (rom, o, n, table) => {
+  const s = decode(rom, o, n, table);
+  return s !== null && rom.subarray(o, o + n).includes(0xff) ? s : null;
+};
+
+/**
+ * The item table of a GBA Pokémon ROM (gItems: 44 bytes per item, its name in the first 14, its own number at +14):
+ * entry 0 "????????" numbered 0, Master Ball 1, Ultra Ball 2 … An expanded engine numbers its items its own way – Complete
+ * FireRed Upgrade hacks keep the retail struct in a longer table of their own (Unbound 729 entries, Radical Red 750; the
+ * retail table stays in the ROM) and Unbound names a few items through a pointer in place of the text ("Wishing Piece",
+ * "Deep Sea Tooth"). The table ends at the first entry of 0xFF bytes. → { offset, names } (names[item]: the game's
+ * name, '' for an entry without one, null where nothing could be read) or null; of the tables found the longest.
+ */
+export function gen3ItemNames(rom, charset) {
+  try {
+    const table = charset?.table || charset || {};
+    const Q = codeOf(table, '?');
+    if (Q < 0) return null;
+    const nameAt = (o) => {
+      if (rom[o] === 0xff) return '';
+      const p = u32(rom, o);
+      if (rom[o + 3] >= 0x08 && rom[o + 3] <= 0x09 && p - 0x08000000 < rom.length) {
+        const s = terminated(rom, p - 0x08000000, 24, table);
+        if (s) return s;
+      }
+      return terminated(rom, o, 14, table);
+    };
+    let best = null;
+    for (let o = 0; o + 44 * 8 <= rom.length; o += 4) {
+      if (rom[o] !== Q || rom[o + 8] !== 0xff || u16(rom, o + 14) !== 0) continue;
+      let k = 1;
+      while (k < 8 && rom[o + k] === Q) k++;
+      if (k < 8) continue;
+      if (![1, 2, 3, 4].every((i) => u16(rom, o + i * 44 + 14) === i && nameAt(o + i * 44))) continue;
+      const names = [''];
+      let bad = 0;
+      for (let i = 1; i < 4096 && o + (i + 1) * 44 <= rom.length; i++) {
+        const e = o + i * 44;
+        if (rom.subarray(e, e + 16).every((b) => b === 0xff)) break;
+        const s = nameAt(e);
+        bad = s === null ? bad + 1 : 0;
+        if (bad > 8) break;
+        names.push(s);
+      }
+      while (names.length > 1 && names[names.length - 1] === null) names.pop();
+      if (!best || names.length > best.names.length) best = { offset: o, names };
+      o += 44 * names.length - 4;
+    }
+    return best;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The move-name table of a GBA Pokémon ROM: entry 0 "-", then one name per move, `stride` bytes each (13 in the retail
+ * games; Radical Red keeps a second one of 17 for long names). `firsts` = the names of move 1 (Pound) in the languages
+ * the games came out in. → { offset, stride, names } or null; of the tables found the one with the most names.
+ */
+export function gen3MoveNames(rom, charset, firsts = ['Pound']) {
+  try {
+    const table = charset?.table || charset || {};
+    const dash = codeOf(table, '-');
+    if (dash < 0) return null;
+    const keys = new Set(firsts.map(nameKey));
+    let best = null;
+    for (let o = 0; o + 64 < rom.length; o++) {
+      if (rom[o] !== dash || rom[o + 1] !== 0xff) continue;
+      for (let stride = 13; stride <= 20; stride++) {
+        const first = terminated(rom, o + stride, stride, table);
+        if (!first || !keys.has(nameKey(first))) continue;
+        const names = [''];
+        for (let i = 1; o + (i + 1) * stride <= rom.length; i++) {
+          const s = terminated(rom, o + i * stride, stride, table);
+          if (!s) break;
+          names.push(s);
+        }
+        if (names.length > 354 && (!best || names.length > best.names.length)) best = { offset: o, stride, names };
+      }
+    }
+    return best;
+  } catch {
+    return null;
+  }
+}
+
+/** Levenshtein distance of two short strings. */
+function distance(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+/**
+ * A ROM's move numbers → the National move numbers the app's move data uses (`lists` = the move names by number, English
+ * first, then the other languages). Complete FireRed Upgrade keeps the retail 354 moves in their places but sorts the
+ * later ones its own way (Unbound #355 is Leech Fang, the National #355 Roost); pokeemerald-expansion keeps the National
+ * order. Moves 1–354 keep their number while the name is the retail one or a renamed spelling of it ("Hi Jump Kick",
+ * "Faint Attack", "SmellingSalt"); any other move is looked up by name – also a shortened one ("Psystrike" fits, a
+ * 12-letter field) – and a move the app doesn't know, or a hack's own one, maps to 0 (left out). Names are compared in
+ * the ROM's language alone, the list that fits most of the retail moves: in German "Spotlight" is Follow Me and "Finale"
+ * Self-Destruct, while an English hack's Spotlight and Finale are other moves.
+ * → { map, changed, moved } (map[rom move] = National number or 0; `moved` = the known moves at another number).
+ */
+export function gen3MoveMap(names, lists = []) {
+  const fit = (list) => {
+    let n = 0;
+    for (let i = 1; i <= 354 && i < names.length; i++) if (list?.[i] && nameKey(list[i]) === nameKey(names[i])) n++;
+    return n;
+  };
+  const own = (lists || []).reduce((a, l) => (fit(l) > fit(a) ? l : a), lists?.[0] || []);
+  lists = [own];
+  const byKey = new Map();
+  for (const list of lists) {
+    (list || []).forEach((n, id) => {
+      if (n && id && !byKey.has(nameKey(n))) byKey.set(nameKey(n), id);
+    });
+  }
+  const longer = [...byKey.entries()];
+  const inOrder = (short, long) => {
+    let j = 0;
+    for (let k = 0; k < long.length && j < short.length; k++) if (long[k] === short[j]) j++;
+    return j === short.length;
+  };
+  const lookup = (key) => {
+    if (byKey.has(key)) return byKey.get(key);
+    if (key.length < 9) return 0;
+    const hits = new Set(longer.filter(([k]) => k[0] === key[0] && k.length > key.length && inOrder(key, k)).map(([, id]) => id));
+    return hits.size === 1 ? [...hits][0] : 0;
+  };
+  const near = (key, id) => (lists || []).some((list) => {
+    const k = nameKey(list?.[id]);
+    return !!k && k[0] === key[0] && (k === key || inOrder(key, k) || distance(key, k) <= 2);
+  });
+  const map = [0];
+  let changed = 0;
+  let moved = 0;
+  for (let i = 1; i < names.length; i++) {
+    const key = nameKey(names[i]);
+    const id = !key ? 0 : i <= 354 && near(key, i) ? i : lookup(key);
+    map[i] = id;
+    if (id !== i) changed++;
+    if (id && id !== i) moved++;
+  }
+  return { map, changed, moved };
 }
 
 // ---------------------------------------------------------------- types from the ROM

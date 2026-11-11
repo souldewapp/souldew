@@ -16,7 +16,7 @@ import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
 import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer, useBattlePanelPrefs } from './session-info.mjs';
-import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now } from './location.mjs';
+import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now, romOwnNow } from './location.mjs';
 import { shiftEntry } from '/shared/live/romwram.mjs';
 import { RulesTab } from './board.mjs';
 import { CartInsert } from './cartinsert.mjs';
@@ -785,7 +785,8 @@ export function GameSession({ session, mode }) {
             if (liveRef.current?.entry !== ent) liveRef.current = { ...liveRef.current, entry: ent }; // (the cheats use it)
             const hereNow = readHere(ent, e.read, state);
             setHere((p) => nextHere(p, hereNow));
-            const TT = sp ? T.withSpecies(sp) : T; // a hack's own Pokémon in the slots (Light Platinum)
+            // a hack's own Pokémon in the slots (Light Platinum); an expanded engine's own items and moves (Unbound)
+            const TT = sp ? T.withSpecies(sp, romOwnNow()) : T;
             const res = readLiveParty(ent, e.read, TT, state);
             // An expanded engine's team is searched for – and there is none before the first Pokémon (Run & Bun's
             // intro takes minutes). Searching never stops: it used to give up after ~30 s without a team, so the

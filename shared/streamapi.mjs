@@ -156,7 +156,8 @@ export function buildState(manifest, doc, opts = {}) {
     const status = statusKey(hpOk ? m : { status: m.status });
     const fainted = hp === 0;
     const dead = deadArea(m.area);
-    const item = Number.isInteger(m.item) && m.item > 0 ? { id: m.item, name: (!m.itemOwn && itemName(m.item, gen)) || null } : null;
+    // (a ROM hack's own item: the game's own name where it came along, never a retail one)
+    const item = Number.isInteger(m.item) && m.item > 0 ? { id: m.item, name: (m.itemOwn ? m.itemName : itemName(m.item, gen)) || null } : null;
     return {
       slot, key: str(m.key) || null, area: m.area ? str(m.area, 60) : null, areaName: label(m.area),
       species, name: sp(species), nickname: str(m.nick ?? m.nickname, 24), level: lv,

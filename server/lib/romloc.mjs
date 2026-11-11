@@ -9,13 +9,13 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
 import { romLocations, gen3MapTable } from '../../shared/live/romloc.mjs';
-import { romSpecies, romTypes, gen3TypeNames, OWN_TYPES_ABOVE } from '../../shared/live/romspecies.mjs';
+import { romSpecies, romTypes, gen3TypeNames, OWN_TYPES_ABOVE, gen3ItemNames, gen3MoveNames, gen3MoveMap } from '../../shared/live/romspecies.mjs';
 import { gbWramShift } from '../../shared/live/romwram.mjs';
 import { findEntry } from '../../shared/live/parse.mjs';
 import { identifyRom } from '../../shared/romid.mjs';
 import { crc32 } from '../../shared/checksum.mjs';
 
-const VERSION = 11; // bump when romLocations() / romSpecies() change what they find (both 2.3.1 branches bumped it)
+const VERSION = 12; // bump when romData() changes what it finds or the shape of its result (12: CFRU tables, item and move names)
 const memo = new Map();
 let tables = null;
 
@@ -33,7 +33,7 @@ function opts(sharedDir) {
       const k = past ? Object.keys(past).map(Number).sort((a, b) => a - b).find((x) => x >= gen) : undefined;
       return k !== undefined ? past[k] : api.types?.[id] || [];
     };
-    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: api.names?.en || [], dexNamesOther: ['de', 'fr', 'es', 'it'].map((l) => api.names?.[l]).filter(Boolean), addresses: j('addresses.json'), maps: j('maps.json'), baseTypes };
+    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: api.names?.en || [], dexNamesOther: ['de', 'fr', 'es', 'it'].map((l) => api.names?.[l]).filter(Boolean), addresses: j('addresses.json'), maps: j('maps.json'), baseTypes, moveNames: ['en', 'de', 'fr', 'es', 'it'].map((l) => api.moves?.[l]).filter(Boolean) };
   }
   return tables;
 }
@@ -64,7 +64,22 @@ export function romData(u8, sharedDir) {
   // matchups – the app shows no types for its Pokémon rather than the official ones (web/lib/data.mjs)
   const names = !vanilla && species ? gen3TypeNames(u8, o.gen3Charset) : null;
   const ownTypes = names && names.count > OWN_TYPES_ABOVE ? { count: names.names.filter((n) => n !== '???').length, names: names.names } : null;
-  return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, ownTypes, vanilla };
+  // an expanded engine numbers its items and moves its own way (Complete FireRed Upgrade: Unbound, Radical Red): the
+  // game's item names (held items by name) and its moves in the app's numbering (the battle helper's moves)
+  const own = species?.engine === 'expanded' ? ownTables3(u8, o) : { items: null, moves: null };
+  return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, ownTypes, ...own, vanilla };
+}
+
+/**
+ * An expanded GBA engine's item names ({ names }) and move numbers ({ map }) – the map only for an engine that sorts its
+ * moves its own way (Complete FireRed Upgrade: hundreds of known moves elsewhere); pokeemerald-expansion keeps the
+ * National order and its moves stay as they are.
+ */
+function ownTables3(u8, o) {
+  const items = gen3ItemNames(u8, o.gen3Charset);
+  const mn = gen3MoveNames(u8, o.gen3Charset, o.moveNames.map((l) => l[1]).filter(Boolean));
+  const m = mn ? gen3MoveMap(mn.names, o.moveNames) : null;
+  return { items: items ? { names: items.names } : null, moves: m && m.moved >= 10 ? { map: m.map } : null };
 }
 
 /** Game Boy hacks: where the code says the party, the battle and the map variables are (shared/live/romwram.mjs). */
@@ -83,10 +98,10 @@ function gbShift(u8, o) {
  * Never throws.
  */
 /** What romDataFor finds when there's nothing to find – also the list of fields the disk cache must give back. */
-export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, ownTypes: null, vanilla: null });
+export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, ownTypes: null, items: null, moves: null, vanilla: null });
 /** A disk-cache entry back into romDataFor's result (every field of ROMDATA_NONE – a missing one would be lost on the
  * next start, as the own types of Too Many Types were). */
-export const fromRomCache = (v) => ({ data: v.data ?? null, species: v.species ?? null, wram: v.wram ?? null, types: v.types ?? null, ownTypes: v.ownTypes ?? null, vanilla: v.vanilla ?? null });
+export const fromRomCache = (v) => ({ data: v.data ?? null, species: v.species ?? null, wram: v.wram ?? null, types: v.types ?? null, ownTypes: v.ownTypes ?? null, items: v.items ?? null, moves: v.moves ?? null, vanilla: v.vanilla ?? null });
 
 export function romDataFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
   const none = { ...ROMDATA_NONE };
