@@ -24,6 +24,19 @@ const VULKAN = { darwin: 'libMoltenVK.dylib', win32: 'vulkan-1.dll', linux: 'lib
 export const MSG = { HELLO: 1, VIDEO: 2, AUDIO: 3, MEM: 4, STATE: 5, LOG: 6, EVENT: 7 };
 export const CMD = { INPUT: 1, SPEED: 2, SAVE: 3, LOAD: 4, WATCH: 5, QUIT: 6, RESET: 7, FRAMESKIP: 8 };
 
+/** Is the system's Vulkan loader there (Windows, Linux)? Looked up where the dynamic linker finds it. */
+export function systemVulkan({ platform = process.platform, env = process.env, exists = existsSync } = {}) {
+  if (platform === 'win32') {
+    const sys = env.SystemRoot || env.windir || 'C:\\Windows';
+    return exists(join(sys, 'System32', 'vulkan-1.dll'));
+  }
+  if (platform === 'linux') {
+    const dirs = [...String(env.LD_LIBRARY_PATH || '').split(':').filter(Boolean), '/usr/lib/x86_64-linux-gnu', '/usr/lib64', '/usr/lib', '/lib/x86_64-linux-gnu', '/lib64', '/usr/local/lib', '/run/host/usr/lib/x86_64-linux-gnu'];
+    return dirs.some((d) => exists(join(d, 'libvulkan.so.1')));
+  }
+  return true;
+}
+
 /** Where the 3DS tools are, the first folder that has the host and the core. */
 export function ctrDirs() {
   return [join(BUNDLED_TOOLS, 'ctr', PLATFORM_DIR), join(TOOLS_DIR, 'ctr', PLATFORM_DIR), ...(DEV ? [join(APP_ROOT, 'tools', 'ctr', PLATFORM_DIR)] : [])];
@@ -44,7 +57,11 @@ export function ctrTools({ azaharApp = null } = {}) {
     if (!vulkan) return { ok: false, missing: 'vulkan', dir };
   } else {
     const own = join(dir, VULKAN);
-    vulkan = existsSync(own) ? own : VULKAN; // the system's loader, found by the dynamic linker
+    // the system's loader (Windows: with the graphics driver; Linux: libvulkan1), found by the dynamic linker – without
+    // it the 3DS games open in Azahar itself instead of failing in the player
+    if (existsSync(own)) vulkan = own;
+    else if (systemVulkan()) vulkan = VULKAN;
+    else return { ok: false, missing: 'vulkan', dir };
   }
   return { ok: true, dir, host: join(dir, EXE), core: join(dir, CORE), vulkan, souldewCore: existsSync(join(dir, 'SOULDEW_CORE')) };
 }

@@ -73,8 +73,10 @@ and Ultra Sun**, in the development app and in the packaged app (`electron-build
 | **Omega Ruby battle panel** | ✅ wild Poochyena L3 with HP as on screen; gone after the battle |
 | **Omega Ruby place sign** (the zone in memory → the ROM's zone table → the place) | ✅ Littleroot Town ("Wurzelheim") → Route 101 |
 | Zone tables of all four ROMs (X/Y: last file of `a/0/1/2`, ORAS: second-to-last of `a/0/1/3`, Sun/Moon/USUM: `a/0/7/7` file 0, LZ11) | ✅ every zone has a named place |
-| Gen 7 team and battle | ⚠️ not seen yet: Sun and Ultra Sun were played to the house, before the starter. The party and battle addresses come from community research and are covered by unit tests with real PK7 files |
-| Gen 7 place sign | ❌ where the game keeps its zone isn't known yet: a heap scan (`__emu.watch`) needs a zone change, and Ultra Sun's story keeps the player in the house at first |
+| **Ultra Sun live:** team | ✅ Rowlet ♂ L5 23/23 the moment Kukui hands it over |
+| **Ultra Sun battle panel** | ✅ wild Yungoos ("Mangunior") L3 16/16 → HP as on screen, "wild"; Hau's Popplio L5 → "Trainer", Water vs Rowlet ×½; gone after both. **Fixed:** Gen 7 keeps the opponents after the player's 12 battlers (block 12+, 24 read now – the panel stayed empty), and the Stream Tool's trainer byte reads 1 in wild battles too on 1.0 – the battle type byte 0x33FC1F44 (found by souldew: 1 from the trainer's cutscene on, 0 for wild, also right after a trainer battle) |
+| **Ultra Sun place sign** | ✅ "Route 1" (the house 36, outside 1, the grass 5 – all Route 1 in the ROM's table). The zone sits in the player's position { u16, u16 zone, float x, y, z } at 0x33F6D74A, found with a heap scan across house → outside → house; the same after a fresh start |
+| Sun | ⚠️ team not seen (the save is before the starter); zone 0x34183CC6 found the same way (the house: zone 27, Route 1). Its trainer byte is taken from Ultra Sun's layout (0x21 before the in-battle flag), not checked in a battle |
 
 **Azahar app** (the external route, Windows/Linux or by choice): checked on macOS with **Azahar 2126.2**, installed
 through souldew's one-click install, in its own portable profile, with free homebrew and stand-ins:
@@ -89,8 +91,11 @@ through souldew's one-click install, in its own portable profile, with free home
 | Stand-in Omega Ruby, party at the 1.4 update's address | ✅ version found by itself, party read |
 | Stand-ins Sun / Ultra Moon | ⚠️ title → entry ✅; the party addresses lie outside the small homebrew process, so only the unit tests (real PK7 files) cover the Gen 7 party |
 
-Not checked: X/Alpha Sapphire/Moon/Ultra Moon (same code as their pairs), the built-in player on Windows and Linux
-(not built there yet – the host is POSIX C; those systems use the Azahar app), Azahar's Windows and Linux builds.
+Not checked: X/Alpha Sapphire/Moon/Ultra Moon (same code as their pairs), the built-in player on a real Windows or Linux
+PC. The host builds for Windows (MinGW-w64, cross-compiled here without a warning; it needs only Windows' own DLLs) and
+Linux; `.github/workflows/ctr.yml` builds host and core for both as Azahar's own CI does, and the Windows and Linux
+workflows bundle them – the first run there is still to come. Without Vulkan (no graphics driver) souldew opens the
+Azahar app instead.
 
 ### Not in the test set
 

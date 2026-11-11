@@ -1712,10 +1712,13 @@
    "battle": {
     "wild": "0x30002770",
     "stride": 816,
+    "blocks": 24,
     "inBattle": "0x341C8CCD",
-    "isTrainer": "0x3421BD74",
-    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs; ORAS checked live (Omega Ruby 1.0)"
-   }
+    "isTrainer": "0x341C8CAC",
+    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs (the base, in battle); the opponents follow the player's 12 battlers (Ultra Sun checked live). isTrainer: the battle type byte 0x21 before the in-battle flag, as found in Ultra Sun – not checked in Sun/Moon yet (the Stream Tool's 0x3421BD74 is unverified too)"
+   },
+   "zoneAddr": "0x34183CC6",
+   "zoneSource": "Found by souldew in Sun 1.0 (US cartridge): the player's position { u16 ?, u16 zone, float x, y, z } – the same layout as Ultra Sun's, 0x1214A before the party; the house reads zone 27 (Route 1 in the ROM's zone table)"
   },
   {
    "id": "usum",
@@ -1749,10 +1752,13 @@
    "battle": {
     "wild": "0x30002770",
     "stride": 816,
+    "blocks": 24,
     "inBattle": "0x33FC1F65",
-    "isTrainer": "0x340178B9",
-    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs; ORAS checked live (Omega Ruby 1.0)"
-   }
+    "isTrainer": "0x33FC1F44",
+    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs (the base, in battle). Checked live in Ultra Sun 1.0 (US cartridge): a wild Yungoos L3 at battler 12 (the opponents follow the player's 12), Hau's Popplio L5; isTrainer found by souldew – 1 from the trainer's cutscene on, 0 for a wild battle, also right after a trainer battle (the Stream Tool's 0x340178B9 reads 1 in wild battles too)"
+   },
+   "zoneAddr": "0x33F6D74A",
+   "zoneSource": "Found by souldew in Ultra Sun 1.0 (US cartridge) with a heap scan across house → outside → house → outside: the player's position { u16 4, u16 zone, float x, y, z }, a copy of the previous one 0x48 after it; the house 36, outside 1 (both Route 1 in the ROM's zone table); the same address after a fresh start"
   }
  ]
 }

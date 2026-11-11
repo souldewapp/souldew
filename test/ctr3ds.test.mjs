@@ -163,3 +163,14 @@ test('the in-game save fingerprint: only the games\' save data on the SD card, c
   utimesSync(join(data, '00000001.sav'), 2000, 2000);
   assert.notEqual(saveStamp(dir), s1, 'the game saved');
 });
+
+test('the system\'s Vulkan loader: Windows with the graphics driver, Linux libvulkan1 – else 3DS games open in Azahar', async () => {
+  const { systemVulkan } = await import('../server/lib/ctr.mjs');
+  const has = (paths) => (p) => paths.includes(p.replace(/\\/g, '/'));
+  assert.equal(systemVulkan({ platform: 'win32', env: { SystemRoot: 'C:/Windows' }, exists: has(['C:/Windows/System32/vulkan-1.dll']) }), true);
+  assert.equal(systemVulkan({ platform: 'win32', env: { SystemRoot: 'C:/Windows' }, exists: has([]) }), false);
+  assert.equal(systemVulkan({ platform: 'linux', env: {}, exists: has(['/usr/lib/x86_64-linux-gnu/libvulkan.so.1']) }), true);
+  assert.equal(systemVulkan({ platform: 'linux', env: { LD_LIBRARY_PATH: '/opt/gl' }, exists: has(['/opt/gl/libvulkan.so.1']) }), true);
+  assert.equal(systemVulkan({ platform: 'linux', env: {}, exists: has([]) }), false);
+  assert.equal(systemVulkan({ platform: 'darwin' }), true); // macOS: MoltenVK comes with souldew
+});

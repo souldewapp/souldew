@@ -242,6 +242,8 @@
   "ctl.touch": "Écran tactile (DS) : clic de souris.",
   "ctl.unbindable": "Cette touche ne peut pas servir au jeu. Appuie sur une autre touche.",
   "ctl.up": "Croix directionnelle haut",
+  "ctr.failed": "Le jeu 3DS ne peut pas tourner : {why}",
+  "ctr.stopped": "Le jeu 3DS s’est arrêté. Ferme le jeu et relance-le.",
   "death.alertMine": "Ton {mon} est tombé – le {pmon} de {partner} part avec lui.",
   "death.alertMineAlone": "Ton {mon} est tombé – la paire de cette zone est aussi perdue pour {partner}.",
   "death.alertMineGroup": "Ton {mon} est tombé – tout le groupe part avec lui.",

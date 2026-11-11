@@ -242,6 +242,8 @@
   "ctl.touch": "Touchscreen (DS): Mausklick.",
   "ctl.unbindable": "Diese Taste kann nicht fürs Spiel belegt werden. Drück eine andere Taste.",
   "ctl.up": "Steuerkreuz hoch",
+  "ctr.failed": "Das 3DS-Spiel kann nicht laufen: {why}",
+  "ctr.stopped": "Das 3DS-Spiel wurde beendet. Schließe das Spiel und starte es neu.",
   "death.alertMine": "Dein {mon} ist gefallen – {partner}s {pmon} stirbt mit.",
   "death.alertMineAlone": "Dein {mon} ist gefallen – das Paar dieses Gebiets ist auch für {partner} verloren.",
   "death.alertMineGroup": "Dein {mon} ist gefallen – die ganze Gruppe geht mit.",

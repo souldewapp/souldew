@@ -17,7 +17,10 @@ on:
       - 'package-lock.json'
       - 'scripts/smoke-app.mjs'
       - 'scripts/fetch-jre.mjs'
+      - 'scripts/build-ctr.mjs'
+      - 'native/**'
       - '.github/workflows/linux.yml'
+      - '.github/workflows/ctr.yml'
 
 permissions:
   contents: read
@@ -27,8 +30,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  ctr:
+    uses: ./.github/workflows/ctr.yml
+    with:
+      platforms: linux
+
   build:
     name: Build & smoke-test the Linux app
+    needs: ctr
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -58,6 +67,12 @@ jobs:
           path: tools/jre/linux-x64
           key: jre-linux-x64-${{ hashFiles('scripts/fetch-jre.mjs') }}
       - run: node scripts/fetch-jre.mjs x64
+      - name: The 3DS part (built by ctr.yml)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ctr-linux-x64
+          path: tools/ctr/linux-x64
+      - run: chmod +x tools/ctr/linux-x64/ctrhost && node scripts/build-ctr.mjs --check
 
       - name: Smoke test – `npm run app` from the checkout
         run: xvfb-run -a node scripts/smoke-app.mjs --dev

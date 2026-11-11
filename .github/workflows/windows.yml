@@ -18,8 +18,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  ctr:
+    uses: ./.github/workflows/ctr.yml
+    with:
+      platforms: windows
+
   build:
     name: Build & smoke-test the Windows app
+    needs: ctr
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
@@ -38,6 +44,16 @@ jobs:
           path: tools/jre/win32-x64
           key: jre-win32-x64-${{ hashFiles('scripts/fetch-jre.mjs') }}
       - run: node scripts/fetch-jre.mjs x64
+      - name: The 3DS part (built by ctr.yml)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ctr-win32-x64
+          path: tools/ctr/win32-x64
+      - name: The 3DS host runs here (usage → exit 2)
+        shell: pwsh
+        run: |
+          node scripts/build-ctr.mjs --check
+          & tools/ctr/win32-x64/ctrhost.exe; if ($LASTEXITCODE -ne 2) { throw "ctrhost.exe exit $LASTEXITCODE" }
 
       - name: Build the installer
         env:
@@ -52,6 +68,7 @@ jobs:
           if (-not (Test-Path $exe)) { Get-ChildItem dist; throw "missing $exe" }
           "{0}  {1:N1} MB" -f $exe, ((Get-Item $exe).Length / 1MB)
           if (-not (Test-Path dist/win-unpacked/resources/tools/jre/win32-x64/bin/java.exe)) { throw 'JRE not bundled' }
+          if (-not (Test-Path dist/win-unpacked/resources/tools/ctr/win32-x64/azahar_libretro.dll)) { throw '3DS part not bundled' }
 
       - name: Smoke test – unpacked app (incl. one-click melonDS zip + mGBA 7z install through the app)
         run: node scripts/smoke-app.mjs dist/win-unpacked/souldew.exe --screenshot smoke-unpacked.png --emulators

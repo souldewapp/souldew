@@ -467,6 +467,8 @@
   "ctl.touch": "Touch screen (DS): mouse click.",
   "ctl.unbindable": "This key can’t be used for the game. Press another key.",
   "ctl.up": "D-Pad up",
+  "ctr.failed": "The 3DS game can’t run: {why}",
+  "ctr.stopped": "The 3DS game stopped. Close the game and start it again.",
   "death.alertMine": "Your {mon} fell – {partner}’s {pmon} goes with it.",
   "death.alertMineAlone": "Your {mon} fell – this area’s pair is lost for {partner} too.",
   "death.alertMineGroup": "Your {mon} fell – the whole group goes with it.",

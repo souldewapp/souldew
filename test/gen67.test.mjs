@@ -158,7 +158,7 @@ test('addresses: the four 3DS entries, found by title ID or game code, every upd
   assert.ok(regions.every((r) => r.len <= 32 * 1024), 'each region is one RPC request');
   assert.ok(regions.length <= 16, 'the 3DS host watches at most 16 regions');
   // Gen 7: one battle base and the two flags
-  assert.deepEqual(regionsFor(ctr[2]).filter((r) => r.name.startsWith('battle')).map((r) => r.len), [816 * 12, 1, 1]);
+  assert.deepEqual(regionsFor(ctr[2]).filter((r) => r.name.startsWith('battle')).map((r) => r.len), [816 * 24, 1, 1]);
 });
 
 /** A memory reader over { address: bytes }. */
@@ -261,15 +261,29 @@ test('battles (Gen 6): the wild or trainer base with both sides – what Omega R
   assert.equal(readGen67Battle(oras, memory({ 0x082041fc: wild }), party).enemy.species, 263);
 });
 
-test('battles (Gen 7): the in-battle and trainer flags decide, the battle memory stays after it', () => {
+test('battles (Gen 7): the opponents after the player\'s 12 battlers, the in-battle and battle-type flags decide – Ultra Sun as seen live', () => {
+  const usum = addresses.games.find((g) => g.id === 'usum');
+  // Rowlet L5 23/23 at battler 0, the wild Yungoos L3 16/16 at battler 12 (slot 12) – what Ultra Sun 1.0 had in memory
+  const blocks = new Uint8Array(816 * 24);
+  battleBlock(blocks, 0, { species: 722, maxHp: 23, hp: 23, level: 5, slot: 0 });
+  battleBlock(blocks, 816 * 12, { species: 734, maxHp: 16, hp: 16, level: 3, slot: 12 });
+  const mem = { 0x30002770: blocks, 0x33fc1f65: Uint8Array.of(1), 0x33fc1f44: Uint8Array.of(0) };
+  assert.deepEqual(readGen67Battle(usum, memory(mem), [{ species: 722, level: 5, maxHp: 23 }]),
+    { kind: 'wild', enemy: { species: 734, level: 3, hp: 16, maxHp: 16 }, active: { index: 0, hp: 23, maxHp: 23 } });
+  // Hau's Popplio: the type byte is 1 from the trainer's cutscene on
+  mem[0x33fc1f44] = Uint8Array.of(1);
+  assert.equal(readGen67Battle(usum, memory(mem), null).kind, 'trainer');
+  mem[0x33fc1f65] = Uint8Array.of(0); // over – the battle memory may still be there
+  assert.equal(readGen67Battle(usum, memory(mem), null), null);
+  // Sun/Moon: the same layout at their flags
   const sm = addresses.games.find((g) => g.id === 'sm');
-  const blocks = new Uint8Array(816 * 12);
-  battleBlock(blocks, 0, { species: 722, maxHp: 20, hp: 9, level: 5, slot: 0 });
-  battleBlock(blocks, 816, { species: 734, maxHp: 13, hp: 13, level: 2, slot: 12 });
-  const mem = { 0x30002770: blocks, 0x341c8ccd: Uint8Array.of(1), 0x3421bd74: Uint8Array.of(0) };
-  assert.deepEqual(readGen67Battle(sm, memory(mem), [{ species: 722, level: 5, maxHp: 20 }]).enemy, { species: 734, level: 2, hp: 13, maxHp: 13 });
-  mem[0x3421bd74] = Uint8Array.of(1);
-  assert.equal(readGen67Battle(sm, memory(mem), null).kind, 'trainer');
-  mem[0x341c8ccd] = Uint8Array.of(0); // over – the blocks are still there
-  assert.equal(readGen67Battle(sm, memory(mem), null), null);
+  assert.equal(readGen67Battle(sm, memory({ 0x30002770: blocks, 0x341c8ccd: Uint8Array.of(1), 0x341c8cac: Uint8Array.of(0) }), null).kind, 'wild');
+});
+
+test('the place sign (Gen 7): the zone in the player\'s position, both game pairs', () => {
+  const usum = addresses.games.find((g) => g.id === 'usum');
+  const sm = addresses.games.find((g) => g.id === 'sm');
+  assert.equal(usum.zoneAddr, '0x33F6D74A');
+  assert.equal(sm.zoneAddr, '0x34183CC6');
+  assert.ok(regionsFor(usum).some((r) => r.name === 'zone' && r.addr === 0x33f6d74a && r.len === 2));
 });

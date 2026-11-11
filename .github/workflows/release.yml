@@ -32,8 +32,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  ctr:
+    name: The 3DS part for Windows and Linux
+    uses: ./.github/workflows/ctr.yml
+
   windows:
     name: Build the Windows installer
+    needs: ctr
     runs-on: windows-latest
     timeout-minutes: 45
     outputs:
@@ -60,6 +65,11 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: node scripts/fetch-jre.mjs x64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ctr-win32-x64
+          path: tools/ctr/win32-x64
+      - run: node scripts/build-ctr.mjs --check
       - name: Build the installer
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false' # unsigned (no certificate) – README explains SmartScreen
@@ -74,6 +84,7 @@ jobs:
 
   linux:
     name: Build the Linux AppImage and .deb
+    needs: ctr
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -92,6 +103,11 @@ jobs:
           sudo apt-get install -y --no-install-recommends xvfb xauth
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
       - run: node scripts/fetch-jre.mjs x64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ctr-linux-x64
+          path: tools/ctr/linux-x64
+      - run: chmod +x tools/ctr/linux-x64/ctrhost && node scripts/build-ctr.mjs --check
       - name: Build the AppImage and the .deb
         run: npx electron-builder --linux AppImage deb --x64 --publish never
       - name: Smoke test
@@ -108,7 +124,7 @@ jobs:
     name: Build the macOS DMG
     if: vars.MACOS_RELEASE == 'true'
     runs-on: macos-latest # Apple silicon – the app is built for arm64
-    timeout-minutes: 45
+    timeout-minutes: 120 # the 3DS core is built from source here
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -119,6 +135,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: The 3DS part (host, Azahar core with the souldew patch, MoltenVK – npm run dist checks it)
+        run: |
+          brew install cmake ninja spirv-tools vulkan-headers git-lfs
+          node scripts/build-ctr.mjs
       - name: Build the DMG
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false' # ad-hoc signed (build.mac.identity "-")

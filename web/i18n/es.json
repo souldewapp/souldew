@@ -242,6 +242,8 @@
   "ctl.touch": "Pantalla táctil (DS): clic del ratón.",
   "ctl.unbindable": "Esta tecla no se puede usar para el juego. Pulsa otra tecla.",
   "ctl.up": "Cruceta arriba",
+  "ctr.failed": "El juego de 3DS no puede ejecutarse: {why}",
+  "ctr.stopped": "El juego de 3DS se ha detenido. Cierra el juego y vuelve a iniciarlo.",
   "death.alertMine": "Tu {mon} ha caído: el {pmon} de {partner} cae con él.",
   "death.alertMineAlone": "Tu {mon} ha caído: la pareja de esta zona también se pierde para {partner}.",
   "death.alertMineGroup": "Tu {mon} ha caído – todo el grupo se va con él.",

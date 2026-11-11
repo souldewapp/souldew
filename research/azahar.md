@@ -56,7 +56,12 @@ Checked 2026-11-11 with the real US images of Omega Ruby, Y, Sun and Ultra Sun (
   the "saved in the game" indicator watches.
 - **Zones** (place sign): Gen 6 keeps the current zone at a fixed address (X/Y 0x081828EC, ORAS 0x08187BD4 –
   PKMN-NTR's `mapidoff`); the ROM's zone table turns it into a met-location ID (pk3DS: XY/ORAS 56 bytes per zone, the
-  place at +0x1C, 9 bits; SM/USUM `a/0/7/7` file 0, LZ11, 0x54 bytes, u32 at +0x1C). Gen 7's zone in memory is still
-  unknown: the bytes before Ultra Sun's party in RAM are not the save file's layout (no Situation block 0x600 before
-  it), so it has to be found by scanning across a real zone change.
+  place at +0x1C, 9 bits; SM/USUM `a/0/7/7` file 0, LZ11, 0x54 bytes, u32 at +0x1C). Gen 7 (found by souldew with
+  heap scans through `__emu.watch` across house → outside → house): the player's position { u16, u16 zone, f32 x, y, z }
+  – Ultra Sun 0x33F6D74A (a copy of the previous position 0x48 after it), Sun 0x34183CC6; fixed addresses (the same
+  after a fresh start). The bytes before the party in RAM are not the save file's layout (no Situation block).
+- **Gen 7 battles**: the battlers are 816 bytes from 0x30002770, the player's 12 first, the opponents' after them
+  (block 12+, slot ≥ 12). In-battle flag USUM 0x33FC1F65 (Stream Tool) – right; its trainer byte 0x340178B9 reads 1 in
+  wild battles too on 1.0. The battle type sits 0x21 before the in-battle flag (USUM 0x33FC1F44): 1 from a trainer's
+  cutscene on, 0 for a wild battle. The battle memory is cleared when a battle ends.
 - **Azahar 2127.0-rc2** for macOS doesn't start (libavdevice missing from the bundle) – 2126.2 is the tag to build.

@@ -242,6 +242,8 @@
   "ctl.touch": "Touchscreen (DS): clic del mouse.",
   "ctl.unbindable": "Questo tasto non si può usare per il gioco. Premi un altro tasto.",
   "ctl.up": "Croce direzionale su",
+  "ctr.failed": "Il gioco 3DS non può funzionare: {why}",
+  "ctr.stopped": "Il gioco 3DS si è fermato. Chiudi il gioco e riavvialo.",
   "death.alertMine": "Il tuo {mon} è caduto – anche il {pmon} di {partner} se ne va.",
   "death.alertMineAlone": "Il tuo {mon} è caduto – la coppia di questa zona è persa anche per {partner}.",
   "death.alertMineGroup": "Il tuo {mon} è caduto – tutto il gruppo se ne va con lui.",

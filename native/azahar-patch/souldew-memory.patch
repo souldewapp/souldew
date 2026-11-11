@@ -1,8 +1,8 @@
 diff --git a/src/citra_libretro/citra_libretro.cpp b/src/citra_libretro/citra_libretro.cpp
-index 8a65f9d..47abee3 100644
+index 8a65f9d..f5a0d94 100644
 --- a/src/citra_libretro/citra_libretro.cpp
 +++ b/src/citra_libretro/citra_libretro.cpp
-@@ -750,3 +750,45 @@ size_t retro_get_memory_size(unsigned id) {
+@@ -750,3 +750,47 @@ size_t retro_get_memory_size(unsigned id) {
  void retro_cheat_reset() {}
  
  void retro_cheat_set(unsigned index, bool enabled, const char* code) {}
@@ -12,11 +12,13 @@ index 8a65f9d..47abee3 100644
 +// its heaps, so the regions frontends need for live data (the party in the application / linear heap) aren't in it.
 +// These two calls read through the process's page table instead: any mapped address, whatever VMAs it is split
 +// into. Call them between two retro_run()s (the same thread), never from another thread.
++// RETRO_API: exported like the retro_* calls (a Windows DLL exports only what is marked, Linux builds may hide the
++// rest); macOS lists them in libretro.osx.def.
 +extern "C" {
 +
 +/// Copies `size` bytes at the game process's virtual address `addr` to `out`. false when any byte isn't mapped
 +/// (nothing is copied then) or no game runs.
-+bool souldew_read_memory(uint32_t addr, void* out, uint32_t size) {
++RETRO_API bool souldew_read_memory(uint32_t addr, void* out, uint32_t size) {
 +    if (!emu_instance || !emu_instance->game_loaded || !out || size == 0)
 +        return false;
 +    auto& system = Core::System::GetInstance();
@@ -36,7 +38,7 @@ index 8a65f9d..47abee3 100644
 +}
 +
 +/// The program (title) ID of the running process, 0 when none runs.
-+uint64_t souldew_title_id(void) {
++RETRO_API uint64_t souldew_title_id(void) {
 +    if (!emu_instance || !emu_instance->game_loaded)
 +        return 0;
 +    auto& system = Core::System::GetInstance();

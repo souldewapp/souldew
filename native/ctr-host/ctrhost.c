@@ -17,24 +17,23 @@
 //                    2 SPEED  f32 (1 = normal, 0 = paused, ≥ 100 = as fast as possible)
 //                    3 SAVE   –           4 LOAD  state bytes      5 WATCH  u32 count, count × { u32 addr, u32 len }
 //                    6 QUIT   –           7 RESET –                8 FRAMESKIP u32 (send every n-th picture in turbo)
-// Memory reads go straight to the core's memory map (RETRO_ENVIRONMENT_SET_MEMORY_MAPS: the game process's heap and
-// linear heap at their 3DS addresses) between two frames – never torn.
+// Memory reads go through souldew_read_memory (native/azahar-patch: the game process's virtual memory, page by page)
+// between two frames – never torn. Azahar's own core (no patch) runs the game without live data.
+// Builds on macOS, Linux and Windows (compat.h); scripts/build-ctr.mjs builds it.
 #define VK_NO_PROTOTYPES
 #include <vulkan/vulkan.h>
 #include "libretro.h"
 #include "libretro_vulkan.h"
 
-#include <dlfcn.h>
 #include <errno.h>
 #include <math.h>
-#include <pthread.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
+#include "compat.h" // dlopen, mutexes, the reader thread, stdin/stdout, time (POSIX or Windows)
 
 #define EXP RETRO_ENVIRONMENT_EXPERIMENTAL
 #define IS(cmd, k) (((cmd) & ~EXP) == ((k) & ~EXP))
@@ -69,7 +68,7 @@ static int protocol = 1; // off in bench mode
 static void write_all(const void *p, size_t n) {
   const uint8_t *b = p;
   while (n) {
-    ssize_t w = write(1, b, n);
+    compat_ssize w = compat_write(1, b, n);
     if (w < 0) {
       if (errno == EINTR) continue;
       exit(0); // souldew went away
@@ -563,7 +562,7 @@ static size_t load_len;
 static int read_full(void *p, size_t n) {
   uint8_t *b = p;
   while (n) {
-    ssize_t r = read(0, b, n);
+    compat_ssize r = compat_read(0, b, n);
     if (r == 0) return 0;
     if (r < 0) {
       if (errno == EINTR) continue;
@@ -628,11 +627,7 @@ static void *reader(void *arg) {
 }
 
 // ---- main --------------------------------------------------------------------------------------------------------
-static double now_s(void) {
-  struct timespec t;
-  clock_gettime(CLOCK_MONOTONIC, &t);
-  return (double)t.tv_sec + t.tv_nsec / 1e9;
-}
+static double now_s(void) { return compat_now(); }
 
 static void dump_ppm(const char *path) {
   if (!last_frame) return;
@@ -667,6 +662,7 @@ int main(int argc, char **argv) {
   if (opt_scale < 1 || opt_scale > 4) opt_scale = 1;
   snprintf(scale_str, sizeof scale_str, "%d", opt_scale);
   if (opt_bench) protocol = 0;
+  compat_init();
   if (getenv("CTRHOST_DEBUG")) debug_input = 400;
 
   load_vk(opt_vulkan);
@@ -759,7 +755,7 @@ int main(int argc, char **argv) {
       free(b);
     }
     if (sp <= 0.0f) { // paused
-      usleep(10000);
+      compat_sleep(0.01);
       next = now_s();
       continue;
     }
@@ -797,7 +793,7 @@ int main(int argc, char **argv) {
     next += 1.0 / (fps * sp);
     if (next < t - 0.1) next = t; // fell behind (loading): don't race to catch up
     double wait = next - t;
-    if (wait > 0) usleep((useconds_t)(wait * 1e6));
+    if (wait > 0) compat_sleep(wait);
   }
   // Not core.unload_game() / deinit(): Azahar's shutdown can crash after the last frame, and there is nothing left to
   // keep – the game wrote its saves to the save folder as it made them.

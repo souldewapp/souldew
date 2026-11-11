@@ -67,11 +67,17 @@ live data (the status says `liveMemory: false`). MoltenVK comes from Azahar's ma
 folder (`build-ctr.mjs --check`) and stops when it's incomplete; `SLS_NO_3DS=1 npm run dist` builds without it – 3DS
 games then open in the Azahar app.
 
+Windows and Linux: `.github/workflows/ctr.yml` builds host and core (Linux with gcc 12 on Ubuntu 22.04, Windows
+cross-compiled in libretro's MXE container – as Azahar's own CI) and keeps them per source hash in the Actions cache;
+`release.yml`, `windows.yml` and `linux.yml` bundle the artifact. `node scripts/build-ctr.mjs --platform win32-x64
+--host-only` cross-builds the Windows host on a Mac with MinGW-w64 (`brew install mingw-w64`); `native/ctr-host/compat.h`
+holds the few OS calls. Vulkan there is the system's loader (`vulkan-1.dll` / `libvulkan.so.1`); without it
+`server/lib/ctr.mjs` reports the part as missing and 3DS games open in the Azahar app.
+
 Notes: New 3DS mode is on (the core's default; a savestate from Old 3DS mode would crash the core, so the play view
 stores states as core `azahar-n3ds` and refuses others). The host exits with `_exit` – the core's unload crashes.
 `CTRHOST_DEBUG=1` logs the input it reads; `ctrhost --bench N --dump` runs a game without souldew. Windows and Linux
-aren't built yet (the host uses dlopen/pthreads; the Vulkan loader is the system's) – there 3DS games use the Azahar
-app. Research notes: [research/azahar.md](../research/azahar.md).
+are built by CI only (see above). Research notes: [research/azahar.md](../research/azahar.md).
 
 ## Releasing updates
 

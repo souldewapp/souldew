@@ -204,7 +204,7 @@ const BATTLE_BLOCKS = 12;
 export function battleRegions(entry) {
   const b = entry?.battle;
   if (!b) return [];
-  const len = (b.stride || 580) * BATTLE_BLOCKS;
+  const len = (b.stride || 580) * (b.blocks || BATTLE_BLOCKS);
   const bases = [b.wild, b.trainer].filter(Boolean).map(hex).filter((v, i, a) => a.indexOf(v) === i);
   return [
     ...bases.map((addr) => ({ addr, len, name: 'battle' })),
@@ -212,10 +212,10 @@ export function battleRegions(entry) {
   ];
 }
 
-function battleMons(bytes, stride, gen) {
+function battleMons(bytes, stride, gen, blocks = BATTLE_BLOCKS) {
   const out = [];
   if (!bytes) return out;
-  for (let i = 0; i < BATTLE_BLOCKS && (i + 1) * stride <= bytes.length; i++) {
+  for (let i = 0; i < blocks && (i + 1) * stride <= bytes.length; i++) {
     const o = i * stride;
     const species = u16(bytes, o + 4);
     const maxHp = u16(bytes, o + 6);
@@ -237,6 +237,8 @@ export function readGen67Battle(entry, read, party = null) {
   const b = entry?.battle;
   if (!b) return null;
   const stride = b.stride || 580;
+  // Gen 7 keeps the opponents' battlers after the player's 12 (Ultra Sun: a wild Yungoos at block 12, slot 12)
+  const blocks = b.blocks || BATTLE_BLOCKS;
   let kind = null;
   let mons = [];
   if (b.inBattle) {
@@ -245,11 +247,11 @@ export function readGen67Battle(entry, read, party = null) {
     if (!flag || !flag[0]) return null;
     const trainer = b.isTrainer ? read(hex(b.isTrainer), 1) : null;
     kind = trainer && trainer[0] ? 'trainer' : 'wild';
-    mons = battleMons(read(hex(b.wild || b.trainer), stride * BATTLE_BLOCKS), stride, entry.gen);
+    mons = battleMons(read(hex(b.wild || b.trainer), stride * blocks), stride, entry.gen, blocks);
   } else {
     for (const [k, base] of [['wild', b.wild], ['trainer', b.trainer]]) {
       if (!base) continue;
-      const m = battleMons(read(hex(base), stride * BATTLE_BLOCKS), stride, entry.gen);
+      const m = battleMons(read(hex(base), stride * blocks), stride, entry.gen, blocks);
       // a battle needs both sides
       if (m.some((x) => x.slot < 6) && m.some((x) => x.slot >= 12)) {
         kind = k;

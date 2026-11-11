@@ -4,13 +4,12 @@
 
 ## Unreleased
 
-- **Nintendo 3DS games play inside souldew** (macOS): X/Y, Omega Ruby/Alpha Sapphire, Sun/Moon and Ultra Sun/Ultra
-  Moon run in the play view like every other game – Azahar's core, both screens, sound, touch screen with the mouse,
+- **Nintendo 3DS games play inside souldew**: X/Y, Omega Ruby/Alpha Sapphire, Sun/Moon and Ultra Sun/Ultra Moon run
+  in the play view like every other game – Azahar's core, both screens, sound, touch screen with the mouse,
   controller, savestates, fast-forward, screenshots and the "saved in the game" indicator. Live data comes straight
-  from the game's memory: the team, the battle panel and the "You are here" sign (with the place names from the game
-  itself) – checked in Omega Ruby; Gen 7's team and battle panel weren't seen in a running game yet, and its sign
-  doesn't work yet. On Windows and Linux 3DS games still open in the Azahar app, with live data
-  through its RPC server.
+  from the game's memory: the team, the battle panel (wild or trainer) and the "You are here" sign with the place
+  names from the game itself – checked in Omega Ruby and Ultra Sun. Windows and Linux get the same player (it needs
+  the graphics driver's Vulkan; without it 3DS games open in the Azahar app, which also stays available by choice).
 - **Trophies and Pokédex up to Alola**: Kalos and Alola count in the Pokédex (#809), with their own medals and the
   new "Kalos Complete" and "Alola Complete" achievements; the Gen 6/7 starters, Sylveon, the Kalos fossils and X/Y's
   roaming bird count for their achievements, and "Time Traveller" now asks for all seven generations (already
@@ -18,6 +17,8 @@
 - **Battle helper for Gen 6/7**: the type chart knows Fairy and that Steel no longer resists Ghost and Dark; the
   species picker offers up to #721 / #809 in 3DS runs.
 - The play view's buttons stay on one row in a 1100 px window.
+- A 3DS game that stops (or can't start) says so in the player in the app's language, and a quick save / load in that
+  moment no longer waits forever.
 
 
 - **OBS overlays keep working from run to run** (#8): the links on

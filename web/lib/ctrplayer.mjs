@@ -4,6 +4,8 @@
 // and the live reader work the same way. 3DS saves aren't one battery file: they live in the host's save folder of the
 // game / run slot (server side), so getSave() has nothing to hand over.
 import * as controls from '/lib/controls.mjs';
+import { setLang, guessLang, t } from '/lib/i18n.mjs';
+import { serverErrorText } from '/lib/errors.mjs';
 import { findEntry, regionsFor } from '/shared/live/parse.mjs';
 
 const q = new URLSearchParams(location.search);
@@ -201,7 +203,7 @@ function onEvent(p) {
   else if (e.event === 'stateLoaded') waiters.loaded.splice(0).forEach((f) => f(!!e.ok));
   else if (e.event === 'error') {
     st.error = e.message;
-    showError(e.message);
+    showError(t('ctr.failed', 'The 3DS game can’t run: {why}', { why: e.message }));
   }
 }
 function showError(text) {
@@ -244,7 +246,11 @@ async function pump() {
     }
     buf = buf.subarray(o);
   }
-  if (!st.error) showError('The 3DS game stopped.');
+  // the host is gone: nothing answers what's still waiting (a quick save / load would hang the play view)
+  st.ended = true;
+  waiters.state.splice(0).forEach((f) => f(null));
+  waiters.loaded.splice(0).forEach((f) => f(false));
+  if (!st.error) showError(t('ctr.stopped', 'The 3DS game stopped. Close the game and start it again.'));
 }
 
 // ---- input ------------------------------------------------------------------------------------------------------------
@@ -412,12 +418,14 @@ window.__emu = {
   ffRatio: () => (st.speed > 1 ? st.speed : 3),
   /** A save state (the host serializes between two frames). */
   getState() {
+    if (st.ended) return Promise.resolve(null);
     return new Promise((res) => {
-      waiters.state.push((b) => res(b.length ? b : null));
+      waiters.state.push((b) => res(b && b.length ? b : null));
       cmd(CMD.SAVE);
     });
   },
   loadState(u8) {
+    if (st.ended) return Promise.resolve(false);
     audio.node?.port.postMessage('clear');
     return new Promise((res) => {
       waiters.loaded.push(res);
@@ -486,6 +494,7 @@ window.__emu = {
 // ---- start ----------------------------------------------------------------------------------------------------------
 async function start() {
   const [status] = await Promise.all([fetch('/api/status').then((r) => r.json()).catch(() => null)]);
+  await setLang(status?.config?.lang || guessLang()).catch(() => {});
   try {
     await controls.detectLayout(status?.config?.lang);
     const m = controls.resolve(status?.config?.controls);
@@ -499,11 +508,16 @@ async function start() {
     body: JSON.stringify({ rom: q.get('rom'), key: q.get('key'), scale: Number(q.get('scale')) || 1 }),
   });
   const j = await res.json().catch(() => ({}));
-  if (!res.ok) return showError(j.error || `HTTP ${res.status}`);
+  if (!res.ok) return showError(serverErrorText(j, res.status));
   st.id = j.id;
   st.liveMemory = !!j.liveMemory;
   const stop = () => fetch('/api/ctr/stop', { method: 'POST', keepalive: true, headers: { 'content-type': 'application/json', 'x-soullink': '1' }, body: JSON.stringify({ id: st.id }) }).catch(() => {});
   addEventListener('pagehide', stop);
-  pump().catch((e) => showError(e.message));
+  pump().catch((e) => {
+    st.ended = true;
+    waiters.state.splice(0).forEach((f) => f(null));
+    waiters.loaded.splice(0).forEach((f) => f(false));
+    showError(t('ctr.failed', 'The 3DS game can’t run: {why}', { why: e.message }));
+  });
 }
 start();
