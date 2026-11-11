@@ -556,8 +556,16 @@ test('expanded GBA engines (Run & Bun): who is out comes from gBattleMons, searc
   battler(2, poochyena, 7);
   ({ f } = poll(state));
   assert.deepEqual(f.active, { index: 1, hp: 7, maxHp: 13, status: 0 }, 'our Pokémon still standing');
+  // a single battle after that double battle: battler 2 still holds the old partner, battler 3 isn't one of this
+  // battle's opponents – our fainted lead stays on the panel instead of the old partner standing in for it
+  put(BM + 3 * 0x5c, new Array(0x5c).fill(0));
+  enemies([mudkip]);
+  battler(1, mudkip, 17);
+  ({ f } = poll(state));
+  assert.deepEqual(f.active, { index: 0, hp: 0, maxHp: 23, status: 0 }, 'no stale partner from an earlier double battle');
   for (const i of [2, 3]) put(BM + i * 0x5c, new Array(0x5c).fill(0));
   battler(0, chimchar);
+  enemies([mudkip, zigzagoon]);
 
   // a found address that keeps failing in battle is searched for again
   const s3 = { bmons3: 0x02010000 };

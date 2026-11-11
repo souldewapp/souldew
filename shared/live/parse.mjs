@@ -757,9 +757,15 @@ function battleGen3(entry, read, T, state = {}) {
     }
     if (me && foe) {
       // a double battle: once the left one of a side is down and not replaced, its partner (battlers 2 and 3) is the
-      // one still fighting – a single battle has no valid battler there, so nothing changes
-      if (me.hp === 0) me = battler3x(read, bm + 2 * BMON3X.size, mine)?.hp > 0 ? battler3x(read, bm + 2 * BMON3X.size, mine) : me;
-      if (foe.hp === 0) foe = battler3x(read, bm + 3 * BMON3X.size, foes)?.hp > 0 ? battler3x(read, bm + 3 * BMON3X.size, foes) : foe;
+      // one still fighting. Only when battler 3 is one of this battle's opponents is it a double battle at all –
+      // battler 2 can still hold the partner of an earlier double battle (an opponent of an earlier battle is never
+      // in gEnemyParty), which must not stand in for a fainted Pokémon in a single battle
+      const foe2 = battler3x(read, bm + 3 * BMON3X.size, foes);
+      if (foe2) {
+        const me2 = battler3x(read, bm + 2 * BMON3X.size, mine);
+        if (me.hp === 0 && me2?.hp > 0) me = me2;
+        if (foe.hp === 0 && foe2.hp > 0) foe = foe2;
+      }
     }
     const e = foe ? foe.p.m : (foes.find((x) => x.m.hp > 0) || foes[0]).m;
     const enemy = { species: e.species, level: e.level, hp: foe ? foe.hp : e.hp, maxHp: e.maxHp, shiny: e.shiny, moves: e.moves };
