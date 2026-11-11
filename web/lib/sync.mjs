@@ -509,7 +509,7 @@ export class SyncLink {
     if (msg.kind !== 'snapshot') {
       const at = Number(msg.at);
       if (at > 0 && msg.kind !== 'screen-frame') this._offset(msg.from, Date.now() - at); // ≈ clock difference (+ latency)
-      this._alive(msg.from, via);
+      if (!(via === 'relay' && at > 0 && at <= (this.byeAt?.[msg.from] || 0))) this._alive(msg.from, via);
     }
     if (data) {
       // `live`: ops are only ever sent right after the change; `offset` lets listeners judge the sender's
@@ -717,6 +717,9 @@ export class SyncLink {
       this._alive(from, null, seen);
       return;
     }
+    // a goodbye's time (the sender's clock): relay messages from before it – the farewell ops, decrypted after the
+    // goodbye arrived – are no sign of life any more
+    if (p?.bye && Number(p.at) > 0) (this.byeAt ||= {})[from] = Math.max(this.byeAt[from] || 0, Number(p.at));
     if (this._p2pSlots().has(from)) return; // the direct link still hears them
     // "Offline" is retained per broker: an old one on one broker means nothing while the player is live on
     // another. A last will (no `bye`) only says this one broker lost them – it counts once no other broker heard
