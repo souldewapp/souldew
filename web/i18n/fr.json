@@ -2175,5 +2175,8 @@
   "trophy.unlocked": "Succès débloqué",
   "play.liveHack": "Pas encore pris en charge pour ce hack",
   "play.liveHackRun": "Ce hack de ROM tourne sur un moteur étendu (nouveaux numéros de Pokémon et autre organisation de la mémoire) que souldew ne sait pas encore lire de façon fiable – il n’affiche donc rien plutôt que de faux Pokémon. Le run fonctionne quand même : saisis les captures à la main.",
-  "play.liveHackSolo": "Ce hack de ROM tourne sur un moteur étendu (nouveaux numéros de Pokémon et autre organisation de la mémoire) que souldew ne sait pas encore lire de façon fiable – il n’affiche donc rien plutôt que de faux Pokémon."
+  "play.liveHackSolo": "Ce hack de ROM tourne sur un moteur étendu (nouveaux numéros de Pokémon et autre organisation de la mémoire) que souldew ne sait pas encore lire de façon fiable – il n’affiche donc rien plutôt que de faux Pokémon.",
+  "party.holds": "tient {item}",
+  "cap.champion": "Maître",
+  "cap.eliteFour": "Conseil 4"
 }

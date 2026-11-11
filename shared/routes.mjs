@@ -180,11 +180,18 @@ const GYM_CAPS = {
   // Kanto badges only come after the Elite Four, so a 9th badge means Lance is beaten.
   gs: { caps: [9, 16, 20, 25, 30, 35, 35, 40], after: [{ name: 'Lance', cap: 50, below: 9 }, { name: 'Blue', cap: 58, below: 16 }, { name: 'Red', cap: 81 }] },
   crystal: { caps: [9, 16, 20, 25, 30, 35, 35, 41], after: [{ name: 'Lance', cap: 50, below: 9 }, { name: 'Blue', cap: 58, below: 16 }, { name: 'Red', cap: 81 }] },
+  // Gen 5 (Normal mode): no badge after the eighth, so the Elite Four's ace stays the cap from there (Black/White: N and
+  // Ghetsis follow right after them, Black 2/White 2: Iris)
+  bw: { caps: [14, 20, 23, 27, 31, 35, 39, 43], after: [{ name: 'Elite Four', cap: 50 }] },
+  b2w2: { caps: [13, 18, 24, 30, 33, 39, 48, 51], after: [{ name: 'Elite Four', cap: 58 }] },
 };
 
 export function gymCapsFamily(gameId = '') {
   const id = String(gameId).replace(/-(de|jp|fr|es|it)$/, '');
-  return { 'pokemon-red': 'rb', 'pokemon-blue': 'rb', 'pokemon-green': 'rb', 'pokemon-yellow': 'yellow', 'pokemon-gold': 'gs', 'pokemon-silver': 'gs', 'pokemon-crystal': 'crystal' }[id] || null;
+  return {
+    'pokemon-red': 'rb', 'pokemon-blue': 'rb', 'pokemon-green': 'rb', 'pokemon-yellow': 'yellow', 'pokemon-gold': 'gs', 'pokemon-silver': 'gs', 'pokemon-crystal': 'crystal',
+    'pokemon-black': 'bw', 'pokemon-white': 'bw', 'pokemon-black-2': 'b2w2', 'pokemon-white-2': 'b2w2',
+  }[id] || null;
 }
 
 /** { cap, boss: { name, badge? } } for a vanilla game by badge count, or null when unknown. */

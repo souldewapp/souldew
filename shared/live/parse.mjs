@@ -432,7 +432,7 @@ function readDS(entry, read, T, state) {
     if (party) {
       state.partyAddr = core;
       state.ptrOk = true;
-      return { party, boxes: readBoxesGen4(entry, read, T, state), badges: readBadgesGen4(entry, read, state) };
+      return { party, boxes: readBoxesGen4(entry, read, T, state), badges: gen === 5 ? readBadgesGen5(entry, read, state, party) : readBadgesGen4(entry, read, state) };
     }
     // The pointer has worked in this session, so the layout is right and the party is just not there right
     // now (title screen after a soft reset, save being reloaded). Scanning would grab whatever PartyCore is
@@ -447,7 +447,7 @@ function readDS(entry, read, T, state) {
     const party = readPartyCore(read, state.partyAddr, size, gen, T);
     if (party) {
       saveBaseFromScan(entry, read, state);
-      return { party };
+      return gen === 5 ? { party, badges: readBadgesGen5(entry, read, state, party) } : { party };
     }
     state.partyAddr = null;
   }
@@ -461,7 +461,8 @@ function readDS(entry, read, T, state) {
   // The canonical party is the lowest stable hit; battle copies come and go.
   state.partyAddr = hits[0];
   const party = readPartyCore(read, state.partyAddr, size, gen, T);
-  return party ? { party } : null;
+  if (!party) return null;
+  return gen === 5 ? { party, badges: readBadgesGen5(entry, read, state, party) } : { party };
 }
 
 /**
@@ -486,6 +487,28 @@ function readBadgesGen4(entry, read, state) {
   const j = read(general + hex(b.johtoOffset), 1);
   const k = read(general + hex(b.kantoOffset), 1);
   return j && k ? popcount(j[0]) + popcount(k[0]) : undefined;
+}
+
+/**
+ * Gen 5 badges: the game keeps its save blocks in RAM in the order of the .sav (the bag 0xA00 before the party block –
+ * shared/live/cheats.mjs), so the "Misc" block (money u32, badge flags u8 at +4) sits a fixed step after the party
+ * block: 0x21200 − 0x18E00 in Black/White, 0x21100 − 0x18E00 in Black 2/White 2 (PKHeX SaveBlockAccessor5BW/B2W2.cs,
+ * Misc5.cs). Only trusted when the trainer data block (0x19400: TID/SID at +0x14) belongs to the party's own trainer –
+ * a scanned copy of the party (a battle's) has neither block behind it – and the money is a real amount.
+ */
+const GEN5_MISC = { bw: 0x21200 - 0x18e00, b2w2: 0x21100 - 0x18e00 };
+const GEN5_TRAINER = 0x19400 - 0x18e00;
+function readBadgesGen5(entry, read, state, party) {
+  const core = state.partyAddr;
+  if (!core || !party?.length) return undefined;
+  const misc = /^(black2|white2)_/.test(entry.id) ? GEN5_MISC.b2w2 : GEN5_MISC.bw;
+  const tr = read(core + GEN5_TRAINER + 0x14, 4);
+  if (!tr) return undefined;
+  const ot = `${u16le(tr, 0)}-${u16le(tr, 2)}`;
+  if (!party.some((m) => m.key?.endsWith(`-${ot}`))) return undefined;
+  const b = read(core + misc, 5);
+  if (!b || u32le(b, 0) > 9999999) return undefined;
+  return popcount(b[4]);
 }
 
 /** HGSS keeps the whole save image in RAM: storage follows the general block like in the file. */

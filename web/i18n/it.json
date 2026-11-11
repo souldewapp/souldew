@@ -2175,5 +2175,8 @@
   "trophy.unlocked": "Obiettivo sbloccato",
   "play.liveHack": "Non ancora supportato per questo hack",
   "play.liveHackRun": "Questo hack della ROM usa un motore ampliato (nuovi numeri dei Pokémon e una diversa struttura della memoria) che souldew non sa ancora leggere in modo affidabile, quindi preferisce non mostrare nulla piuttosto che Pokémon sbagliati. Il run funziona comunque: inserisci le catture a mano.",
-  "play.liveHackSolo": "Questo hack della ROM usa un motore ampliato (nuovi numeri dei Pokémon e una diversa struttura della memoria) che souldew non sa ancora leggere in modo affidabile, quindi preferisce non mostrare nulla piuttosto che Pokémon sbagliati."
+  "play.liveHackSolo": "Questo hack della ROM usa un motore ampliato (nuovi numeri dei Pokémon e una diversa struttura della memoria) che souldew non sa ancora leggere in modo affidabile, quindi preferisce non mostrare nulla piuttosto che Pokémon sbagliati.",
+  "party.holds": "tiene {item}",
+  "cap.champion": "Campione",
+  "cap.eliteFour": "Superquattro"
 }

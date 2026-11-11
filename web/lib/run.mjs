@@ -461,10 +461,11 @@ export function counts(doc, manifest) {
 export function levelCap(doc, manifest, slot) {
   const profile = profileOf(manifest);
   if (!profile.curated) {
-    // Gen 1/2: vanilla gym aces by live badge count
+    // Gen 1/2 and 5: vanilla gym aces by live badge count
     const v = vanillaCapFor(gymCapsFamily(manifest?.game?.id || manifest?.base?.gameId), live(doc, slot)?.badges);
     if (!v) return { cap: null, boss: null };
-    const name = v.boss.badge !== undefined ? t('cap.gym', 'Gym {n}', { n: v.boss.badge + 1 }) : v.boss.name;
+    const name = v.boss.badge !== undefined ? t('cap.gym', 'Gym {n}', { n: v.boss.badge + 1 })
+      : { champion: t('cap.champion', 'Champion'), 'elite four': t('cap.eliteFour', 'Elite Four') }[v.boss.key] || v.boss.name;
     return { cap: v.cap, boss: { ...v.boss, name }, vanilla: true };
   }
   const badges = live(doc, slot)?.badges ?? 0;
