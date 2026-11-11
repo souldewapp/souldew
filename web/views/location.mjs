@@ -22,12 +22,12 @@ const load = () => {
 // The running ROM's own data (server/lib/romloc.mjs, computed by the server from the file): its map → location step
 // and place names (shared/live/romloc.mjs), and for GBA games its species table (shared/live/romspecies.mjs).
 // `pending` while it loads; `data` null = the ROM has no location data (the tables still serve).
-const ROMLOC = { src: null, data: null, species: null, wram: null, pending: false };
+const ROMLOC = { src: null, data: null, species: null, wram: null, ownRegion: null, pending: false };
 
 /** Starts loading the location data of the ROM at `src` (the /api/… URL the emulator loads); resolves when done. */
 export function loadRomLocations(src) {
   if (!src || ROMLOC.src === src) return ROMLOC.p || Promise.resolve();
-  Object.assign(ROMLOC, { src, data: null, species: null, wram: null, pending: true });
+  Object.assign(ROMLOC, { src, data: null, species: null, wram: null, ownRegion: null, pending: true });
   setRomPlaces(null); // (another game's names don't apply any more)
   setRomSpecies(null);
   setRomTypes(null);
@@ -37,7 +37,7 @@ export function loadRomLocations(src) {
     .catch(() => null)
     .then((j) => {
       if (ROMLOC.src !== src) return;
-      Object.assign(ROMLOC, { data: j?.data || null, species: j?.species || null, wram: j?.wram || null, pending: false });
+      Object.assign(ROMLOC, { data: j?.data || null, species: j?.species || null, wram: j?.wram || null, ownRegion: j?.ownRegion || null, pending: false });
       setRomPlaces(ROMLOC.data); // catches made now are named like the sign names their place
       setRomSpecies(ROMLOC.species); // a ROM hack's own Pokémon get the game's names
       setRomTypes(j?.types || null); // … and the game's types (Fairy hacks)
@@ -68,6 +68,8 @@ export function readHere(entry, read, state = null) {
     return null;
   }
   const rom = ROMLOC.data;
+  // a hack in a region of its own (Unbound: Borrius) whose place names couldn't be read: the base game's would be wrong
+  if (ROMLOC.ownRegion && !rom) return null;
   const r = readLocation(MAPS, entry, read, { rom, state });
   if (!r) return null;
   const lang = currentLang();
@@ -92,6 +94,7 @@ export function musicInfo(entry, read) {
 export function locationSupport(entry) {
   if (!entry) return false;
   if (!MAPS) return null;
+  if (ROMLOC.ownRegion && !ROMLOC.data) return ROMLOC.pending ? null : false;
   if (canReadLocation(MAPS, entry, ROMLOC.data)) return true;
   return ROMLOC.pending ? null : false;
 }

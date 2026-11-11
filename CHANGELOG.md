@@ -16,6 +16,11 @@
   unlocked stays unlocked).
 - **Battle helper for Gen 6/7**: the type chart knows Fairy and that Steel no longer resists Ghost and Dark; the
   species picker offers up to #721 / #809 in 3DS runs.
+- **Radical Red shows your team** (#17): the Complete FireRed Upgrade keeps its own species table next to FireRed's,
+  stores the team unencrypted and keeps FireRed's party addresses – souldew read it as plain FireRed and found no
+  team. Now the team, the battle helper and the place sign work (checked up to the rival's battle). Pre-patched Radical
+  Red and Unbound ROMs are recognised by their checksums; Unbound's place sign stays empty instead of showing Kanto
+  names (it plays in Borrius).
 - The play view's buttons stay on one row in a 1100 px window.
 - A 3DS game that stops (or can't start) says so in the player in the app's language, and a quick save / load in that
   moment no longer waits forever.

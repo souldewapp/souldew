@@ -25,7 +25,7 @@ function decode(rom, o, n, table) {
 }
 
 // a species name: letters first, then letters, digits and the few signs names use ("Mr. Mime", "Ho-Oh", "Nidoran♀")
-const NAME = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .'’\-♂♀:]*$/;
+const NAME = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .'’\-♂♀:!?]*$/; // "Unown !" / "Unown ?" (CFRU)
 // (the unused slots 252–276 of the retail games are named "?")
 const okName = (s) => s !== null && s.length >= 1 && s.length <= 12 && (/^\?+$/.test(s) || (s.length >= 2 && NAME.test(s) && s.trim() === s && !/\s{2}/.test(s)));
 
@@ -41,21 +41,26 @@ export function gen3SpeciesNames(rom, charset) {
   let best = null;
   for (let o = 0; o + 0x40 < rom.length; o++) {
     if (rom[o] !== Q) continue;
+    // entry 0: "??????????" in the retail games and pokeemerald builds; Complete FireRed Upgrade hacks start their own
+    // table with a shorter one ("?" in Radical Red, "??????" in Unbound) and keep FireRed's 412 names where they were
     let k = 1;
     while (k < 10 && rom[o + k] === Q) k++;
-    if (k < 10 || rom[o + 10] !== 0xff) continue;
+    if (rom[o + k] !== 0xff || (o > 0 && rom[o - 1] === Q)) continue;
+    let found = null;
     for (const stride of [11, 12, 13]) {
+      if (k >= stride) continue;
       const names = [];
       for (let i = 1; o + (i + 1) * stride <= rom.length; i++) {
         const s = decode(rom, o + i * stride, stride, table);
         if (!okName(s)) break;
         names.push(s);
       }
-      if (names.length >= 380 && (!best || names.length > best.names.length)) best = { offset: o, stride, names: ['', ...names] };
+      if (names.length >= 380 && (!found || names.length > found.names.length)) found = { offset: o, stride, names: ['', ...names] };
     }
-    if (!best) best = speciesInfoNames(rom, o, table);
-    if (best) break;
-    o += 10;
+    if (!found && k === 10) found = speciesInfoNames(rom, o, table);
+    // the longest table wins: a CFRU hack's own one (1300+ species) over FireRed's that it left in place
+    if (found && (!best || found.names.length > best.names.length)) best = found;
+    o += k;
   }
   return best;
 }

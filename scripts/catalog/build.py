@@ -57,6 +57,8 @@ for h in H:
     # checksums the library recognises the hack by: its patched ROMs (also what a BPS/UPS patch says it makes) and the patch
     if h.get("romCrc32"): out["romCrc32"]=h["romCrc32"]
     if h.get("patchSha1"): out["patchSha1"]=h["patchSha1"]
+    # a region of its own: the base game's place names would be wrong ones (server/lib/romloc.mjs ownRegion)
+    if h.get("region"): out["region"]=h["region"]
     # sanity: baseCrc32 must be a dump of base game
     if out["baseCrc32"]:
         bg=[g for g in games if g["id"]==h["baseGameId"]][0]

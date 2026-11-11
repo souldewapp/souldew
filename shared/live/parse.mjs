@@ -220,8 +220,19 @@ export function parsePk3(d, T) {
   }
   let sum = 0;
   for (let i = 0; i < 48; i += 2) sum = (sum + u16le(data, i)) & 0xffff;
-  if (sum !== u16le(d, 28)) return { bad: true };
-  const order = GEN3_ORDERS[pid % 24];
+  let order = GEN3_ORDERS[pid % 24];
+  if (sum !== u16le(d, 28)) {
+    // Complete FireRed Upgrade hacks (Radical Red – issue #17) keep the four blocks unencrypted, always in the order
+    // Growth, Attacks, EVs, Misc, and leave the checksum 0: their team read as garbage and was never shown
+    // (only where the team was found at the base game's addresses – T.plain3, findGen3Party: anywhere else in RAM a
+    // checksum of 0 would let random bytes through, e.g. an intro's leftovers read as a fainted Bulbasaur)
+    const plain = T.plain3 ? d.subarray(32, 80) : null;
+    let plainSum = 0;
+    if (plain) for (let i = 0; i < 48; i += 2) plainSum = (plainSum + u16le(plain, i)) & 0xffff;
+    if (!plain || (u16le(d, 28) !== 0 && u16le(d, 28) !== plainSum)) return { bad: true };
+    data.set(plain);
+    order = 'GAEM';
+  }
   const sub = (ch) => data.subarray(order.indexOf(ch) * 12, order.indexOf(ch) * 12 + 12);
   const G = sub('G');
   const A = sub('A');
@@ -268,6 +279,8 @@ function gen3StatsOk(d, isEgg) {
  * state.party3 = the player's party, state.enemy3 = the opponent's, state.count3 = where the count is (null: counted).
  */
 const validPk3 = (m) => m && !m.bad && m.level >= 1 && m.level <= 100 && m.maxHp >= 1 && m.hp <= m.maxHp;
+/** These tables reading CFRU's unencrypted structs too (parsePk3) – for a team found at the base game's addresses. */
+const plainT = (T) => (T.plain3 ? T : Object.assign(Object.create(T), { plain3: true }));
 
 /**
  * The run of valid structs at `o` in `ram` (no PID twice) and whether the slots after it are empty. `state` (the
@@ -303,7 +316,7 @@ function pk3Run(ram, o, T, state = null) {
   return { n, empty };
 }
 
-function findGen3Party(read, T, state, hint = null) {
+function findGen3Party(read, T, state, hint = null, base = null) {
   const okAt = (ram, o) => {
     const n = ram[o - 3];
     if (n < 1 || n > 6) return false;
@@ -319,13 +332,19 @@ function findGen3Party(read, T, state, hint = null) {
       const b = read(state.party3, 600);
       const r = b ? pk3Run(b, 0, T) : null;
       if (r && (r.n >= 1 || r.torn)) return state.party3;
-    } else {
+    } else if (state.count3 === state.party3 - 3) {
       const b = read(state.party3 - 4, 4 + 600);
       if (b && okAt(b, 4)) return state.party3;
+    } else {
+      // (the base game's count elsewhere – CFRU: kept while it still counts a valid team)
+      const n = read(state.count3, 1)?.[0];
+      const b = read(state.party3, 600);
+      if (b && n >= 1 && n <= 6 && validPk3(parsePk3(b.subarray(0, 100), plainT(T)))) return state.party3;
     }
   }
   if (state.lastScan3 && Date.now() - state.lastScan3 < 3000) return null;
   state.lastScan3 = Date.now();
+  state.plain3 = false;
   const ram = read(0x02000000, 0x40000);
   if (!ram) return null;
   for (let o = 4; o + 600 <= ram.length; o += 4) {
@@ -333,6 +352,22 @@ function findGen3Party(read, T, state, hint = null) {
     if (okAt(ram, o)) {
       Object.assign(state, { count3: 0x02000000 + o - 3, enemy3: 0x02000000 + o + 600 });
       return (state.party3 = 0x02000000 + o);
+    }
+  }
+  // the base game's own addresses: Complete FireRed Upgrade hacks (Radical Red, Unbound – issue #17) keep FireRed's
+  // gPlayerPartyCount / gPlayerParty / gEnemyParty, which are far apart – no count byte right before the team
+  const bp = base?.partyAddr ? hex(base.partyAddr) : 0;
+  const bc = base?.partyCountAddr ? hex(base.partyCountAddr) : 0;
+  if (bp >= 0x02000000 && bp + 600 <= 0x02040000 && bc >= 0x02000000 && bc < 0x02040000) {
+    const n = ram[bc - 0x02000000];
+    if (n >= 1 && n <= 6) {
+      let ok = true;
+      const TP = plainT(T);
+      for (let i = 0; i < n && ok; i++) ok = validPk3(parsePk3(ram.subarray(bp - 0x02000000 + i * 100, bp - 0x02000000 + i * 100 + 100), TP));
+      if (ok) {
+        Object.assign(state, { count3: bc, enemy3: base.enemyPartyAddr ? hex(base.enemyPartyAddr) : bp + 600, plain3: true });
+        return (state.party3 = bp);
+      }
     }
   }
   // no count byte in front of a team: the pair the ROM's code names, if its player half holds a team (and nothing
@@ -373,8 +408,9 @@ export function expandedEntry(entry, maps3 = null) {
 function readGen3(entry, read, T, state = {}) {
   let count;
   if (entry.scan3) {
-    const at = findGen3Party(read, T, state, entry.party3At);
+    const at = findGen3Party(read, T, state, entry.party3At, entry);
     if (!at) return null;
+    if (state.plain3) T = plainT(T);
     count = party3Count(read, T, state);
     if (count === null) return { torn: true };
     entry = { ...entry, partyAddr: `0x${at.toString(16)}` };
@@ -848,6 +884,7 @@ function battleGen3(entry, read, T, state = {}) {
     // parties are found (gEnemyParty 600 bytes after the player's); who is out on both sides comes from gBattleMons
     // (searched for, findBattleMons3x) – without it the opponent is gEnemyParty's first one standing.
     if (!state.party3) return null;
+    if (state.plain3) T = plainT(T);
     const count = party3Count(read, T, state) ?? 0;
     const mine = count >= 1 && count <= 6 ? rawParty3(read, state.party3, count, T) : [];
     const foes = rawParty3(read, state.enemy3 || state.party3 + 600, 6, T);
