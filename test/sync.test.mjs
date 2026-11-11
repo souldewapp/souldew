@@ -614,6 +614,9 @@ test('p3 and p4 offline: their retained snapshots catch the others up', async ()
   d4.set('enc:route-2:p4', { species: 133 });
   c.stop();
   d.stop();
+  // (let the messages still in flight from the stopped links land first: on a busy machine a heartbeat sent just
+  // before stop() could otherwise reach p1 after it joined and pass for a live partner)
+  await sleep(200);
   const d1 = mkDoc('a');
   const a = mkLink(net, 'p1', d1, { slots: SLOTS4 });
   await a.start();
