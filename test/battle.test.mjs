@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { effectiveness, defenseChart, moveInfo, single } from '../shared/typechart.mjs';
+import { effectiveness, defenseChart, moveInfo, single, matchup } from '../shared/typechart.mjs';
 import { readLiveBattle, withBattleHp, LiveTables } from '../shared/live/parse.mjs';
 import { vanillaCapFor, gymCapsFamily } from '../shared/routes.mjs';
 
@@ -36,6 +36,27 @@ test('move data follows the generation', () => {
   assert.equal(moveInfo(MOVES, 7, 3).cls, 'special'); // Fire Punch is special in Gen 3 …
   assert.equal(moveInfo(MOVES, 7, 4).cls, 'physical'); // … and physical from Gen 4
   assert.equal(moveInfo(MOVES, 174, 2).type, null); // Curse: ??? type
+});
+
+test('switch-in check: best hit and worst incoming per team member, by moves or by types', () => {
+  const mv = (...ids) => ids.map((id) => ({ id, ...moveInfo(MOVES, id, 5) }));
+  // Tepig (Ember, Tackle, Tail Whip) against a wild Pidove (Normal/Flying) that knows Gust and Quick Attack
+  const pidove = { types: ['normal', 'flying'], moves: mv(16, 98) };
+  const tepig = matchup({ types: ['fire'], moves: mv(52, 33, 39) }, pidove, 5);
+  assert.deepEqual(tepig, { deals: 1, dealsBy: 52, takes: 1, takesBy: 16 });
+  // Snivy (Vine Whip): Grass on Normal/Flying ×½, Tackle ×1 is its best; Gust hits it ×2
+  const snivy = matchup({ types: ['grass'], moves: mv(22, 33) }, pidove, 5);
+  assert.deepEqual(snivy, { deals: 1, dealsBy: 33, takes: 2, takesBy: 16 });
+  // status moves never count as a hit; with only status moves there is nothing to deal
+  assert.equal(matchup({ types: ['grass'], moves: mv(45, 39) }, pidove, 5).deals, null, 'Growl and Tail Whip');
+  // moves unknown on either side: the types stand in (what their STAB would do)
+  const geodude = { types: ['rock', 'ground'], moves: [] };
+  const oshawott = matchup({ types: ['water'], moves: [] }, geodude, 5);
+  assert.deepEqual(oshawott, { deals: 4, dealsBy: 'water', takes: 1, takesBy: 'rock' });
+  const pikachu = matchup({ types: ['electric'], moves: [] }, geodude, 5);
+  assert.deepEqual(pikachu, { deals: 0, dealsBy: 'electric', takes: 2, takesBy: 'ground' });
+  // no types known for the opponent (data still loading): nothing to show
+  assert.deepEqual(matchup({ types: ['water'], moves: [] }, { types: [], moves: [] }, 5), { deals: null, dealsBy: null, takes: null, takesBy: null });
 });
 
 /** A bus reader over a sparse byte map. */

@@ -2195,5 +2195,18 @@
   "play.slowGraphics": "Prova un’altra interfaccia grafica in Impostazioni › Generale (ora: {backend}): su alcuni PC l’emulatore gira fluido solo con una di esse.",
   "play.slowPower": "Su un portatile: collegalo alla corrente e scegli la modalità di alimentazione per le massime prestazioni. Chiudi gli altri programmi che tengono occupato il computer.",
   "play.slowSettings": "Apri le impostazioni",
-  "play.slowOk": "Ho capito"
+  "play.slowOk": "Ho capito",
+  "battle.moveLeft": "Mostra l’aiuto in battaglia a sinistra del gioco",
+  "battle.moveRight": "Mostra l’aiuto in battaglia a destra del gioco",
+  "battle.expand": "Mostra tutto l’aiuto in battaglia",
+  "battle.collapse": "Comprimi l’aiuto in battaglia",
+  "battle.vsBoth": "contro {names}",
+  "battle.vsMon": "contro {mon}",
+  "battle.teamCheck": "La tua squadra contro {mon}",
+  "battle.deals": "infligge",
+  "battle.takes": "subisce",
+  "battle.dealsTip": "Colpo migliore: {move} ({mult})",
+  "battle.takesTip": "Ciò che lo colpisce di più: {move} ({mult})",
+  "battle.out": "in campo",
+  "battle.fainted": "esausto"
 }

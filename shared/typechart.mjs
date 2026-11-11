@@ -80,3 +80,31 @@ export function moveInfo(moves, id, gen = 4) {
   const power = old ? old[1] : moves.power[id];
   return { type: type === 'unknown' ? null : type, power, cls: physicalSpecialSplit(type, moves.cls[id], gen) };
 }
+
+/**
+ * Switch-in check for the battle helper: how a Pokémon fares against the opponent. `deals` – its best damaging move
+ * against the opponent's types (its own types when its moves aren't known: what its STAB would do); `takes` – the
+ * worst the opponent's known damaging moves do to it (the opponent's own types while its moves aren't known).
+ * mon / foe = { types: [...], moves: [{ id, type, power, cls }] } (moves through moveInfo; status moves don't count).
+ * → { deals, dealsBy, takes, takesBy } – multipliers and the move id or type behind them; null when there's nothing to go by.
+ */
+export function matchup(mon, foe, gen = 4) {
+  const hits = (list) => (list || []).filter((m) => m && m.type && m.cls !== 'status' && m.power > 0);
+  const best = (attacks, def) => {
+    let out = { m: null, by: null };
+    if (!def?.length) return out;
+    for (const a of attacks) {
+      const m = effectiveness(a.type, def, gen);
+      if (out.m === null || m > out.m) out = { m, by: a.by };
+    }
+    return out;
+  };
+  const myHits = hits(mon.moves);
+  const foeHits = hits(foe.moves);
+  // (known moves that are all status moves: nothing to deal – the types only stand in while the moves aren't known)
+  const mine = mon.moves?.length ? myHits.map((m) => ({ type: m.type, by: m.id })) : (mon.types || []).map((ty) => ({ type: ty, by: ty }));
+  const theirs = foeHits.length ? foeHits.map((m) => ({ type: m.type, by: m.id })) : (foe.types || []).map((ty) => ({ type: ty, by: ty }));
+  const d = best(mine, foe.types);
+  const k = best(theirs, mon.types);
+  return { deals: d.m, dealsBy: d.by, takes: k.m, takesBy: k.by };
+}

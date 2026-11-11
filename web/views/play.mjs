@@ -15,7 +15,7 @@ import { PlayHome } from './playhome.mjs';
 import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
-import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer } from './session-info.mjs';
+import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer, useBattlePanelPrefs } from './session-info.mjs';
 import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow } from './location.mjs';
 import { shiftEntry } from '/shared/live/romwram.mjs';
 import { RulesTab } from './board.mjs';
@@ -203,6 +203,7 @@ export function GameSession({ session, mode }) {
   const [fs, setFs] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [panelPrefs, setPanelPrefs] = useBattlePanelPrefs();
   const [osd, setOsd] = useState(null);
   const [mine, setMineState] = useState(null); // latest live party read from RAM
   // The live loop reads RAM every 700 ms – only re-render the session when something visible changed.
@@ -1048,6 +1049,11 @@ export function GameSession({ session, mode }) {
     focusGame();
   };
 
+  // the battle helper: left of the game (default) or on the right above the team, folded in or not – the player's choice
+  const panelSide = panelPrefs.side === 'right' ? 'right' : 'left';
+  const battlePanel = html`<${BattlePanel} battle=${battle} mine=${myParty} gen=${GEN[target.system]} isRun=${isRun}
+    side=${panelSide} collapsed=${panelPrefs.collapsed} onPrefs=${setPanelPrefs} />`;
+  const hasLeft = !!(isRun || here || (battle?.enemy && panelSide === 'left'));
   return html`<div class=${`session ${mode} ${fs && mode === 'full' ? 'is-fs' : ''} ${isDs ? 'ds' : ''}`} data-v=${docVersion}>
     <div class="mini-head">
       <${Led} on=${phase === 'running' && !paused} color="green" /><span class="grow ellipsis">${target.label}</span>
@@ -1060,11 +1066,11 @@ export function GameSession({ session, mode }) {
       ${isRun && html`<button class="btn small ghost" onClick=${() => navigate('soullink', { run: target.runId })}><${Icon} name="link" size=${14} />${t('play.board', 'Board')}</button>`}
       <button class="btn small ghost" onClick=${actions.close}><${Icon} name="close" size=${14} />${t('play.close', 'Close game')}</button>
     </div>
-    <div class=${`session-body ${isRun || battle?.enemy || here ? 'has-left' : ''}`}>
-      ${(isRun || battle?.enemy || here) && html`<aside class="session-left">
+    <div class=${`session-body ${hasLeft ? 'has-left' : ''}`}>
+      ${hasLeft && html`<aside class="session-left">
         <${LocationSign} here=${here} live=${liveState.status === 'live'} isRun=${isRun} game=${liveRef.current?.entry} />
         ${isRun && names && html`<${RunStrip} mine=${myParty} onRules=${() => setRulesOpen(true)} />`}
-        <${BattlePanel} battle=${battle} mine=${myParty} gen=${GEN[target.system]} isRun=${isRun} />
+        ${panelSide === 'left' && battlePanel}
       </aside>`}
       <div class="session-stage">
         <div class="session-screen" onClick=${focusGame}>
@@ -1149,6 +1155,7 @@ export function GameSession({ session, mode }) {
           onClose=${closeStates} onSave=${(n) => actions.quicksave(n)} onLoad=${(n) => { setStatesOpen(false); actions.quickload(n); }} />`}
       </div>
       <aside class="session-side">
+        ${panelSide === 'right' && battlePanel}
         <section class="screen stack" style="gap:8px">
           <div class="row"><${Led} on=${liveState.status === 'live'} color="green" blink=${liveState.status === 'searching' && phase === 'running'} />
             <b class="px">${names ? names[me].name : t('play.liveOn', 'Live tracking')}</b>

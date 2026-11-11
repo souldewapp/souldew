@@ -72,12 +72,15 @@ test('type matchup help: switching it is logged like the cheats rule', () => {
 test('type matchup help: the battle helper hides the matchups when it is off, the board and wizard offer it', () => {
   const panel = readFileSync(new URL('../web/views/session-info.mjs', import.meta.url), 'utf8');
   assert.match(panel, /const help = !isRun \|\| typeHelpOn\(doc, manifest\)/);
-  assert.match(panel, /\$\{help && html`<div class="bt-block">\s*<h4>\$\{t\('battle\.danger'/);
-  for (const block of ['myMoves.length > 0', 'chart && html`<${TypeChart}', 'myChart && html`<${TypeChart}']) {
+  // moves / what hits you (OutHelp), the team's switch-in check and both weakness charts: all behind the switch
+  for (const block of ['outs.map((m) => html`<${OutHelp}', 'html`<${TeamCheck}', 'foeData.map(({ f, types }) => types.length > 0 && html`<${TypeChart}', 'outs.map((m) => typesOf(m.species).length > 0 && html`<${TypeChart}']) {
     const at = panel.indexOf(block);
     assert.ok(at > 0, block);
     assert.match(panel.slice(at - 12, at), /help && /, `${block} is behind the help switch`);
   }
+  // only the panel renders them (no second way in that would skip the switch)
+  assert.equal(panel.split('<${OutHelp}').length - 1, 1);
+  assert.equal(panel.split('<${TeamCheck}').length - 1, 1);
   const board = readFileSync(new URL('../web/views/board.mjs', import.meta.url), 'utf8');
   assert.match(board, /allowedRulesPatch\(asked, me\)/);
   assert.match(board, /locked=\$\{!isHost\(me\)\}/);

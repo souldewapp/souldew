@@ -26,6 +26,17 @@
   report) pressed nothing in the game. souldew now picks the controller itself – a real one, skipping microphones,
   headsets and devices with hardly any buttons – and Settings › Controller has a new "Controller to use" choice
   that lists every connected device; the one you pick is remembered and used whenever it is connected.
+- **Battle helper: your choice where it sits** (#10): two small buttons on the panel move it to the left or the right
+  of the game and fold it in to one line (the opponent, and a catch rule only when it says "don't"). souldew
+  remembers both. If the host switched the type matchup help off for a run, it stays off.
+- **Battle helper for your whole team** (#11): a new "Your team against …" list shows every team member's best hit
+  on the opponent and the opponent's worst for it – who to send in at a glance. Black 2: the panel
+  now follows a switch – it showed your lead's moves, matchups and HP for the whole battle – shows the HP of every
+  team member during the fight, and shows a trainer's next Pokémon once the first one fainted (it stayed on the
+  first one at 0 HP). HeartGold/SoulSilver double battles show both opponents and both of your Pokémon.
+- **The battle helper no longer disappears in a long battle** (#12): in 2.2.0 it vanished after about 90 seconds in
+  Black 2 (fixed in 2.3.0, which reads the game's battle flag – checked again: two minutes in the battle menu, the
+  panel stays); now it also keeps the opponent through a moment where the game rewrites its data.
 - **Randomizing Gen 5 ROM hacks with the Fairy type works** (Blaze Black 2 Redux, Volt White 2 Redux …): creating a
   randomized run stopped with "Randomizer error: … attackingType is null" (or "pk is null"). The randomizer now keeps
   the hack's Fairy type as it is, uses the Gen 6 type chart for its choices, and leaves static encounters unchanged

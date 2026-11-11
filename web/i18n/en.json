@@ -2195,5 +2195,18 @@
   "upd.updatedTitle": "Updated",
   "upd.version": "Version {version}",
   "upd.whatsNew": "What’s new",
-  "upd.youHave": "You have {version}."
+  "upd.youHave": "You have {version}.",
+  "battle.moveLeft": "Show the battle helper left of the game",
+  "battle.moveRight": "Show the battle helper right of the game",
+  "battle.expand": "Show the battle helper in full",
+  "battle.collapse": "Fold the battle helper in",
+  "battle.vsBoth": "against {names}",
+  "battle.vsMon": "against {mon}",
+  "battle.teamCheck": "Your team against {mon}",
+  "battle.deals": "deals",
+  "battle.takes": "takes",
+  "battle.dealsTip": "Best hit: {move} ({mult})",
+  "battle.takesTip": "Hits it hardest: {move} ({mult})",
+  "battle.out": "in battle",
+  "battle.fainted": "fainted"
 }

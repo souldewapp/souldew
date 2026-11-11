@@ -84,6 +84,38 @@
 .bt-chart-row { display: flex; align-items: baseline; gap: 8px; font-size: 12px; }
 .bt-chart-k { flex: none; width: 92px; color: var(--ink-3); font-size: 11.5px; }
 .bt-chart-row .types { gap: 4px 8px; }
+.bt-mults { flex: none; display: inline-flex; gap: 3px; }
+.bt-vs { font-weight: 400; color: var(--ink-3); }
+/* head line: what this is (or, folded in, who's out there), wild/trainer, and the player's two switches: side and fold */
+.bt-head { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 24px; margin: -3px -6px -2px 0; }
+.bt-head .bt-kind { margin-left: auto; flex: none; }
+.bt-title { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.bt-ctls { flex: none; display: inline-flex; gap: 0; }
+.bt-ctl.btn.icon { width: 24px; height: 24px; min-width: 24px; padding: 0; color: var(--ink-3); }
+.bt-ctl.btn.icon svg { width: 14px; height: 14px; }
+.bt-ctl.btn.icon:hover, .bt-ctl.btn.icon:focus-visible { color: var(--ink); }
+.battle.collapsed { gap: 6px; padding: 7px 10px; }
+.bt-head-foes { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-width: 0; }
+.bt-head-foe { display: inline-flex; align-items: center; gap: 5px; min-width: 0; font-size: 12px; color: var(--ink-2); }
+.bt-head-foe .sprite { display: block; line-height: 0; }
+.bt-head-foe .sprite img { width: 30px; height: 30px; margin: -5px -3px -5px -4px; }
+.bt-head-foe b { font-family: var(--font-pixel); font-weight: 400; font-size: 13px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* switch-in check: one row per team member – its best hit on the opponent, the opponent's worst for it */
+.bt-team ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.bt-team-head, .bt-team li { display: grid; grid-template-columns: minmax(0, 1fr) 46px 46px; align-items: center; gap: 4px; }
+.bt-team-head { font-size: 10.5px; color: var(--ink-3); text-align: center; margin-bottom: 1px; }
+.bt-team li { min-height: 28px; padding: 0 2px; border-radius: var(--r-s); font-size: 12px; }
+.bt-team li + li { margin-top: 0; } /* (the global list spacing: the rows sit close like a party menu) */
+.bt-team li .mult { justify-self: center; min-width: 34px; text-align: center; }
+.bt-team li.out { background: color-mix(in srgb, var(--p1) 10%, transparent); box-shadow: inset 2px 0 0 color-mix(in srgb, var(--p1) 70%, transparent); }
+.bt-team li.down { opacity: .5; }
+.bt-team-mon { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.bt-team-mon .sprite { display: block; line-height: 0; }
+.bt-team-mon .sprite img { width: 30px; height: 30px; margin: -3px -2px -3px -3px; }
+.bt-team-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bt-team li.out .bt-team-name { color: var(--ink); font-weight: 500; }
+.bt-team-tag { flex: none; font-size: 10px; padding: 0 5px; border-radius: 99px; }
+.bt-team-tag.down { background: color-mix(in srgb, var(--cir) 15%, transparent); color: var(--bad-ink); }
 
 /* Shiny / legendary burst over the game */
 .enc-fx { position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; border-radius: inherit; animation: enc-fade 4.6s ease-out forwards;

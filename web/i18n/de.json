@@ -2195,5 +2195,18 @@
   "play.slowGraphics": "Probier unter Einstellungen › Allgemein eine andere Grafik-Schnittstelle (gerade: {backend}) – auf manchen PCs läuft der Emulator nur mit einer davon flüssig.",
   "play.slowPower": "Am Laptop: Netzteil anschließen und den Energiemodus „Beste Leistung“ wählen. Schließ andere Programme, die den Computer beschäftigen.",
   "play.slowSettings": "Einstellungen öffnen",
-  "play.slowOk": "Alles klar"
+  "play.slowOk": "Alles klar",
+  "battle.moveLeft": "Kampfhilfe links neben dem Spiel zeigen",
+  "battle.moveRight": "Kampfhilfe rechts neben dem Spiel zeigen",
+  "battle.expand": "Kampfhilfe ganz zeigen",
+  "battle.collapse": "Kampfhilfe einklappen",
+  "battle.vsBoth": "gegen {names}",
+  "battle.vsMon": "gegen {mon}",
+  "battle.teamCheck": "Dein Team gegen {mon}",
+  "battle.deals": "teilt aus",
+  "battle.takes": "steckt ein",
+  "battle.dealsTip": "Stärkster Treffer: {move} ({mult})",
+  "battle.takesTip": "Trifft es am härtesten: {move} ({mult})",
+  "battle.out": "im Kampf",
+  "battle.fainted": "K.O."
 }
