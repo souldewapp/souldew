@@ -11,7 +11,7 @@ import {
   areaName, causeText, slotsOf, othersOf, openAreas, isNuzlocke, pairTypeClash, typeHelpOn,
 } from '../lib/run.mjs';
 import { statusOf, statusLabel, shownLevel } from './party.mjs';
-import { effectiveness, defenseChart, moveInfo } from '/shared/typechart.mjs';
+import { effectiveness, defenseChart, moveInfo, matchup } from '/shared/typechart.mjs';
 import { RestartModal } from './restart.mjs';
 
 // PokeAPI pokemon_species.csv is_legendary / is_mythical (Gen 1–5)
@@ -246,25 +246,59 @@ function TeamList({ mine, gen, compact }) {
   </section>`;
 }
 
-/** Battle helper: who is out there, how your moves land, what hits you, and whether you may catch it. */
-export function BattlePanel({ battle, mine, gen, isRun }) {
+// The battle helper's place, per player on this computer: next to the game on the left (default) or on the right,
+// and folded in to its head line. (A run whose host switched the matchup help off keeps it off either way.)
+const PANEL_KEY = 'sl-battle-panel';
+const PANEL_DEFAULT = { side: 'left', collapsed: false };
+function readPanelPrefs() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PANEL_KEY) || 'null');
+    return { side: v?.side === 'right' ? 'right' : 'left', collapsed: v?.collapsed === true };
+  } catch {
+    return PANEL_DEFAULT;
+  }
+}
+/** [prefs, update] – { side: 'left'|'right', collapsed } for the battle helper, remembered in this profile. */
+export function useBattlePanelPrefs() {
+  const [p, setP] = useState(readPanelPrefs);
+  const update = (patch) => setP((prev) => {
+    const next = { ...prev, ...patch };
+    try {
+      localStorage.setItem(PANEL_KEY, JSON.stringify(next));
+    } catch {
+      // private mode: this session only
+    }
+    return next;
+  });
+  return [p, update];
+}
+
+const fainted = (m) => m.maxHp > 0 && m.hp === 0;
+const monName = (m) => (m ? m.nickname || speciesName(m.species) : '');
+
+/**
+ * Battle helper: who is out there, how your moves land, what hits you, how the rest of your team would fare, and
+ * whether you may catch it. `side` / `collapsed` / `onPrefs`: where the player put it (useBattlePanelPrefs).
+ */
+export function BattlePanel({ battle, mine, gen, isRun, side = 'left', collapsed = false, onPrefs }) {
   const { doc, manifest, me, runData } = useApp();
   const moves = useMoves();
   const foe = battle?.enemy;
   if (!foe) return null;
   const slot = me || 'p1';
   const typesOf = (id) => (runData ? runData.types(id, slot) : []);
-  const foeTypes = typesOf(foe.species);
-  // the reader's active slot (it follows a switch); unknown → the first one that can fight, as the game sends it out
-  const team = mine || [];
-  const mon = team[battle.active?.index] || team.find((m) => !m.isEgg && !(m.maxHp > 0 && m.hp === 0)) || team[0];
-  const monTypes = mon ? typesOf(mon.species) : [];
   const fairy = !!runData?.fairy; // a hack that added the type
-  const chart = foeTypes.length ? defenseChart(foeTypes, gen, { fairy }) : null;
-  const myChart = monTypes.length ? defenseChart(monTypes, gen, { fairy }) : null;
-  const myMoves = (mon?.moves || []).map((id) => ({ id, info: moveInfo(moves, id, gen) })).filter((m) => m.info);
-  const foeMoves = (foe.moves || []).map((id) => ({ id, info: moveInfo(moves, id, gen) })).filter((m) => m.info && m.info.power > 0);
-  const stab = foeTypes.map((ty) => ({ type: ty, m: effectiveness(ty, monTypes, gen) }));
+  // everyone the reader sees out there (a double battle: both), the one it follows first
+  const foes = (battle.foes?.length ? battle.foes : [foe]).filter((f) => f?.species);
+  const foeTypes = typesOf(foe.species);
+  const team = (mine || []).filter(Boolean);
+  // the player's Pokémon that are out – the reader's active slots (they follow a switch); unknown → the first one that
+  // can fight, as the game sends it out
+  const outIdx = [...new Set((battle.actives?.length ? battle.actives : [battle.active]).map((a) => a?.index).filter((i) => Number.isInteger(i) && team[i]))];
+  const lead = team.find((m) => !m.isEgg && !fainted(m)) || team[0];
+  const outs = outIdx.length ? outIdx.map((i) => team[i]) : lead ? [lead] : [];
+  const movesOf = (list, damaging) => (list || []).map((id) => ({ id, info: moveInfo(moves, id, gen) })).filter((m) => m.info && (!damaging || m.info.power > 0));
+  const foeData = foes.map((f) => ({ f, types: typesOf(f.species), moves: movesOf(f.moves, true) }));
   const r = isRun && doc ? getRules(doc, manifest) : null;
   const solo = isRun && isNuzlocke(manifest);
   // the host can switch the matchup help off for the whole run: then only who's out there and the catch rules stay
@@ -292,45 +326,111 @@ export function BattlePanel({ battle, mine, gen, isRun }) {
   }
   if (battle.kind === 'trainer' && r) {
     const { cap } = r.levelCaps ? levelCap(doc, manifest, slot) : {};
-    const over = cap ? (mine || []).filter((m) => !m.isEgg && m.level > cap) : [];
+    const over = cap ? team.filter((m) => !m.isEgg && m.level > cap) : [];
     if (over.length) {
-      rule = { ok: false, text: t('battle.overCap', 'Over the level cap ({cap}): {names} – if this is a boss, box them first.', { cap, names: over.map((m) => m.nickname || speciesName(m.species)).join(', ') }) };
+      rule = { ok: false, text: t('battle.overCap', 'Over the level cap ({cap}): {names} – if this is a boss, box them first.', { cap, names: over.map(monName).join(', ') }) };
     }
     if (solo && r.noBattleItems) notes.push(t('battle.noItems', 'No items from the bag'));
     if (solo && r.setMode) notes.push(t('battle.setMode', 'Set mode: no free switch after a knockout'));
   }
-  return html`<section class=${`battle ${foe.shiny ? 'shiny' : ''} ${isLegendary(foe.species) ? 'legend' : ''}`} aria-label=${t('battle.title', 'Battle')}>
+  const kind = battle.kind === 'wild' ? t('battle.wild', 'wild') : t('battle.trainer', 'trainer');
+  const other = side === 'right' ? 'left' : 'right';
+  const moveLabel = other === 'left' ? t('battle.moveLeft', 'Show the battle helper left of the game') : t('battle.moveRight', 'Show the battle helper right of the game');
+  const foldLabel = collapsed ? t('battle.expand', 'Show the battle helper in full') : t('battle.collapse', 'Fold the battle helper in');
+  const head = html`<div class="bt-head">
+    ${collapsed ? html`<span class="bt-head-foes">${foes.map((f) => html`<span class="bt-head-foe" key=${`${f.species}:${f.level}`}><${Sprite} id=${f.species} shiny=${f.shiny} size=${30} gen=${gen} /><b>${speciesName(f.species)}</b><span class="num">${t('common.lv', 'Lv')} ${f.level}</span></span>`)}</span>`
+      : html`<span class="bt-title px">${t('battle.title', 'Battle')}</span>`}
+    <span class="bt-kind">${kind}</span>
+    ${onPrefs && html`<span class="bt-ctls">
+      <button class="btn ghost icon bt-ctl" title=${moveLabel} aria-label=${moveLabel} onClick=${() => onPrefs({ side: other })}><${Icon} name=${other === 'left' ? 'panelLeft' : 'panelRight'} size=${14} /></button>
+      <button class="btn ghost icon bt-ctl" title=${foldLabel} aria-label=${foldLabel} aria-expanded=${!collapsed} onClick=${() => onPrefs({ collapsed: !collapsed })}><${Icon} name=${collapsed ? 'chevDown' : 'chevUp'} size=${14} /></button>
+    </span>`}
+  </div>`;
+  const ruleLine = rule && html`<p class=${`bt-rule ${rule.ok ? 'ok' : 'no'} ${rule.clash ? 'clash' : ''}`}>${rule.clash && html`<span class="bt-clash"><${Types} types=${foeTypes.slice(0, 1)} /> ${t('battle.typeTwice', 'same type')}</span>`}${rule.text}</p>`;
+  const cls = `battle ${foe.shiny ? 'shiny' : ''} ${isLegendary(foe.species) ? 'legend' : ''} ${collapsed ? 'collapsed' : ''}`;
+  if (collapsed) {
+    // folded in: who's out there, and a catch rule only when it says "don't"
+    return html`<section class=${cls} aria-label=${t('battle.title', 'Battle')}>
+      <${EncounterFx} battle=${battle} />
+      ${head}
+      ${rule && !rule.ok && ruleLine}
+    </section>`;
+  }
+  const many = foeData.length > 1;
+  return html`<section class=${cls} aria-label=${t('battle.title', 'Battle')}>
     <${EncounterFx} battle=${battle} />
-    <div class="bt-foe">
-      <${Sprite} id=${foe.species} shiny=${foe.shiny} size=${48} gen=${gen} />
+    ${head}
+    ${foeData.map(({ f, types }) => html`<div class="bt-foe" key=${`${f.species}:${f.level}`}>
+      <${Sprite} id=${f.species} shiny=${f.shiny} size=${many ? 40 : 48} gen=${gen} />
       <div class="bt-foe-body">
-        <div class="bt-name"><b>${speciesName(foe.species)}</b><span class="num">${t('common.lv', 'Lv')} ${foe.level}</span>
-          ${foe.shiny && html`<span class="bt-tag shiny">✦ ${t('routes.bonusShiny', 'Shiny')}</span>`}${isLegendary(foe.species) && html`<span class="bt-tag legend">${t('battle.legendary', 'Legendary')}</span>`}
-          <span class="bt-kind">${battle.kind === 'wild' ? t('battle.wild', 'wild') : t('battle.trainer', 'trainer')}</span></div>
-        <${Types} types=${foeTypes} />
-        ${foe.maxHp > 0 && html`<${HpBar} hp=${foe.hp} max=${foe.maxHp} />`}
+        <div class="bt-name"><b>${speciesName(f.species)}</b><span class="num">${t('common.lv', 'Lv')} ${f.level}</span>
+          ${f.shiny && html`<span class="bt-tag shiny">✦ ${t('routes.bonusShiny', 'Shiny')}</span>`}${isLegendary(f.species) && html`<span class="bt-tag legend">${t('battle.legendary', 'Legendary')}</span>`}</div>
+        <${Types} types=${types} />
+        ${f.maxHp > 0 && html`<${HpBar} hp=${f.hp} max=${f.maxHp} />`}
       </div>
-    </div>
-    ${rule && html`<p class=${`bt-rule ${rule.ok ? 'ok' : 'no'} ${rule.clash ? 'clash' : ''}`}>${rule.clash && html`<span class="bt-clash"><${Types} types=${foeTypes.slice(0, 1)} /> ${t('battle.typeTwice', 'same type')}</span>`}${rule.text}</p>`}
+    </div>`)}
+    ${ruleLine}
     ${notes.length > 0 && html`<div class="bt-notes">${notes.map((x) => html`<span class="rs-chip honour" title=${t('nz.honourHint', 'The app can’t check this – it only reminds you. Keep it yourself.')}>${x}</span>`)}</div>`}
     ${!help && html`<p class="tiny faint bt-nohelp">${t('battle.helpOff', 'Type matchup help is off in this run.')}</p>`}
-    ${help && myMoves.length > 0 && html`<div class="bt-block">
-      <h4>${t('battle.yourMoves', '{mon}’s moves', { mon: mon.nickname || speciesName(mon.species) })}</h4>
-      <ul class="bt-moves">${myMoves.map(({ id, info }) => {
-        const m = info.cls === 'status' || !info.type ? null : effectiveness(info.type, foeTypes, gen);
-        return html`<li><span class=${`type t-${info.type || 'normal'}`}>${moveName(id)}</span>
-          ${m === null ? html`<span class="mult x1">${t('fx.status', 'status')}</span>` : html`<span class=${`mult ${multClass(m)}`}>${multText(m)} ${multLabel(m)}</span>`}</li>`;
-      })}</ul></div>`}
-    ${help && html`<div class="bt-block">
-      <h4>${t('battle.danger', 'What hits {mon}', { mon: mon ? mon.nickname || speciesName(mon.species) : '' })}</h4>
-      <ul class="bt-moves">
-        ${(foeMoves.length ? foeMoves.map(({ id, info }) => ({ label: moveName(id), type: info.type, m: effectiveness(info.type, monTypes, gen) })) : stab.map((s) => ({ label: t('battle.stab', '{type} attacks', { type: typeLabel(s.type) }), type: s.type, m: s.m })))
-          .map((x) => html`<li><span class=${`type t-${x.type}`}>${x.label}</span><span class=${`mult ${multClass(x.m)} foe`}>${multText(x.m)} ${multLabel(x.m)}</span></li>`)}
-      </ul>
-    </div>`}
-    ${help && chart && html`<${TypeChart} title=${t('battle.chart', '{mon} against types', { mon: speciesName(foe.species) })} chart=${chart} />`}
-    ${help && myChart && html`<${TypeChart} title=${t('battle.myChart', 'Your {mon} against types', { mon: mon.nickname || speciesName(mon.species) })} chart=${myChart} mine />`}
+    ${help && outs.map((m) => html`<${OutHelp} key=${m.key || m.species} mon=${m} foes=${foeData} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`)}
+    ${help && html`<${TeamCheck} team=${team} out=${new Set(outs)} foe=${foeData.find(({ f }) => !(f.maxHp > 0 && f.hp === 0)) || foeData[0]} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`}
+    ${help && foeData.map(({ f, types }) => types.length > 0 && html`<${TypeChart} key=${`c${f.species}`} title=${t('battle.chart', '{mon} against types', { mon: speciesName(f.species) })} chart=${defenseChart(types, gen, { fairy })} />`)}
+    ${help && outs.map((m) => typesOf(m.species).length > 0 && html`<${TypeChart} key=${`m${m.key || m.species}`} title=${t('battle.myChart', 'Your {mon} against types', { mon: monName(m) })} chart=${defenseChart(typesOf(m.species), gen, { fairy })} mine />`)}
   </section>`;
+}
+
+/** One of your Pokémon that is out: how its moves land on every opponent, and what hits it. */
+function OutHelp({ mon, foes, typesOf, movesOf, gen }) {
+  const monTypes = typesOf(mon.species);
+  const myMoves = movesOf(mon.moves, false);
+  const many = foes.length > 1;
+  // incoming: the opponents' known damaging moves, else what their own types would do (STAB)
+  const incoming = foes.flatMap(({ f, types, moves: fm }) => (fm.length
+    ? fm.map(({ id, info }) => ({ key: `${f.species}:${id}`, by: f, label: moveName(id), type: info.type, m: effectiveness(info.type, monTypes, gen) }))
+    : types.map((ty) => ({ key: `${f.species}:${ty}`, by: f, label: t('battle.stab', '{type} attacks', { type: typeLabel(ty) }), type: ty, m: effectiveness(ty, monTypes, gen) }))));
+  return html`${myMoves.length > 0 && html`<div class="bt-block">
+      <h4>${t('battle.yourMoves', '{mon}’s moves', { mon: monName(mon) })}${many ? html` <span class="bt-vs">${t('battle.vsBoth', 'against {names}', { names: foes.map(({ f }) => speciesName(f.species)).join(' · ') })}</span>` : ''}</h4>
+      <ul class="bt-moves">${myMoves.map(({ id, info }) => html`<li key=${id}><span class=${`type t-${info.type || 'normal'}`}>${moveName(id)}</span>
+        <span class="bt-mults">${foes.map(({ f, types }) => {
+          const m = info.cls === 'status' || !info.type ? null : effectiveness(info.type, types, gen);
+          const vs = many ? t('battle.vsMon', 'against {mon}', { mon: speciesName(f.species) }) : undefined;
+          return m === null ? html`<span class="mult x1" title=${vs}>${t('fx.status', 'status')}</span>` : html`<span class=${`mult ${multClass(m)}`} title=${vs}>${multText(m)}${many ? '' : ` ${multLabel(m)}`}</span>`;
+        })}</span></li>`)}</ul></div>`}
+    <div class="bt-block">
+      <h4>${t('battle.danger', 'What hits {mon}', { mon: monName(mon) })}</h4>
+      <ul class="bt-moves">
+        ${incoming.map((x) => html`<li key=${x.key}><span class=${`type t-${x.type}`}>${many ? `${speciesName(x.by.species)}: ` : ''}${x.label}</span><span class=${`mult ${multClass(x.m)} foe`}>${multText(x.m)} ${multLabel(x.m)}</span></li>`)}
+      </ul>
+    </div>`;
+}
+
+/**
+ * Switch-in check: every Pokémon of your team against the opponent – its best hit and the opponent's worst for it –
+ * so you see at a glance who to send in. Shown from two Pokémon on.
+ */
+function TeamCheck({ team, out, foe, typesOf, movesOf, gen }) {
+  const list = team.filter((m) => m && !m.isEgg && m.species);
+  if (list.length < 2 || !foe?.types?.length) return null;
+  const foeSide = { types: foe.types, moves: foe.moves.map(({ id, info }) => ({ id, ...info })) };
+  const label = (by) => (by == null ? '' : typeof by === 'number' ? moveName(by) : t('battle.stab', '{type} attacks', { type: typeLabel(by) }));
+  return html`<div class="bt-block bt-team">
+    <h4>${t('battle.teamCheck', 'Your team against {mon}', { mon: speciesName(foe.f.species) })}</h4>
+    <div class="bt-team-head" aria-hidden="true"><span></span><span>${t('battle.deals', 'deals')}</span><span>${t('battle.takes', 'takes')}</span></div>
+    <ul>${list.map((m) => {
+      const mu = matchup({ types: typesOf(m.species), moves: movesOf(m.moves, false).map(({ id, info }) => ({ id, ...info })) }, foeSide, gen);
+      const down = fainted(m);
+      const isOut = out.has(m);
+      const dealsTip = mu.deals == null ? '' : t('battle.dealsTip', 'Best hit: {move} ({mult})', { move: label(mu.dealsBy), mult: multText(mu.deals) });
+      const takesTip = mu.takes == null ? '' : t('battle.takesTip', 'Hits it hardest: {move} ({mult})', { move: label(mu.takesBy), mult: multText(mu.takes) });
+      // the one that is out: highlighted like the selected slot of a party menu (named for screen readers)
+      return html`<li key=${m.key || m.species} class=${`${isOut ? 'out' : ''} ${down ? 'down' : ''}`} title=${isOut ? t('battle.out', 'in battle') : undefined}>
+        <span class="bt-team-mon"><${Sprite} id=${m.species} shiny=${m.shiny} size=${30} gen=${gen} /><span class="bt-team-name">${monName(m)}</span>
+          ${isOut ? html`<span class="sr-only">(${t('battle.out', 'in battle')})</span>` : down ? html`<span class="bt-team-tag down">${t('battle.fainted', 'fainted')}</span>` : ''}</span>
+        ${mu.deals == null ? html`<span class="mult x1">–</span>` : html`<span class=${`mult ${multClass(mu.deals)}`} title=${dealsTip} aria-label=${dealsTip}>${multText(mu.deals)}</span>`}
+        ${mu.takes == null ? html`<span class="mult x1">–</span>` : html`<span class=${`mult ${multClass(mu.takes)} foe`} title=${takesTip} aria-label=${takesTip}>${multText(mu.takes)}</span>`}
+      </li>`;
+    })}</ul>
+  </div>`;
 }
 
 /** Weaknesses and resistances of one Pokémon in battle, grouped like a Pokédex chart. */

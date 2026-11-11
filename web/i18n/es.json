@@ -2175,5 +2175,18 @@
   "trophy.unlocked": "Logro desbloqueado",
   "play.liveHack": "Aún no compatible con este hack",
   "play.liveHackRun": "Este hack de ROM usa un motor ampliado (nuevos números de Pokémon y otra estructura de memoria) que souldew aún no puede leer con fiabilidad, así que no muestra nada antes que Pokémon equivocados. El run funciona igual: introduce las capturas a mano.",
-  "play.liveHackSolo": "Este hack de ROM usa un motor ampliado (nuevos números de Pokémon y otra estructura de memoria) que souldew aún no puede leer con fiabilidad, así que no muestra nada antes que Pokémon equivocados."
+  "play.liveHackSolo": "Este hack de ROM usa un motor ampliado (nuevos números de Pokémon y otra estructura de memoria) que souldew aún no puede leer con fiabilidad, así que no muestra nada antes que Pokémon equivocados.",
+  "battle.moveLeft": "Mostrar la ayuda en combate a la izquierda del juego",
+  "battle.moveRight": "Mostrar la ayuda en combate a la derecha del juego",
+  "battle.expand": "Mostrar toda la ayuda en combate",
+  "battle.collapse": "Plegar la ayuda en combate",
+  "battle.vsBoth": "contra {names}",
+  "battle.vsMon": "contra {mon}",
+  "battle.teamCheck": "Tu equipo contra {mon}",
+  "battle.deals": "causa",
+  "battle.takes": "recibe",
+  "battle.dealsTip": "Mejor golpe: {move} ({mult})",
+  "battle.takesTip": "Lo que más le afecta: {move} ({mult})",
+  "battle.out": "en combate",
+  "battle.fainted": "debilitado"
 }

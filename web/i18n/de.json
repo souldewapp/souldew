@@ -2175,5 +2175,18 @@
   "trophy.unlocked": "Erfolg freigeschaltet",
   "play.liveHack": "Für diesen Hack noch nicht unterstützt",
   "play.liveHackRun": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon. Der Run funktioniert trotzdem: Trag Fänge von Hand ein.",
-  "play.liveHackSolo": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon."
+  "play.liveHackSolo": "Dieser ROM-Hack läuft auf einer erweiterten Engine (neue Pokémon-Nummern und ein anderer Speicheraufbau), die souldew noch nicht zuverlässig lesen kann – deshalb zeigt es lieber nichts als falsche Pokémon.",
+  "battle.moveLeft": "Kampfhilfe links neben dem Spiel zeigen",
+  "battle.moveRight": "Kampfhilfe rechts neben dem Spiel zeigen",
+  "battle.expand": "Kampfhilfe ganz zeigen",
+  "battle.collapse": "Kampfhilfe einklappen",
+  "battle.vsBoth": "gegen {names}",
+  "battle.vsMon": "gegen {mon}",
+  "battle.teamCheck": "Dein Team gegen {mon}",
+  "battle.deals": "teilt aus",
+  "battle.takes": "steckt ein",
+  "battle.dealsTip": "Stärkster Treffer: {move} ({mult})",
+  "battle.takesTip": "Trifft es am härtesten: {move} ({mult})",
+  "battle.out": "im Kampf",
+  "battle.fainted": "K.O."
 }
