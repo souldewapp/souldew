@@ -11,7 +11,7 @@
 //              status (raw status byte or 'slp'|'psn'|'brn'|'frz'|'par'|'tox'|'fnt'), item, area? }
 import { html } from '/vendor/htm-preact.mjs';
 import { Sprite, HpBar, Types } from '../lib/ui.mjs';
-import { speciesName } from '../lib/data.mjs';
+import { speciesName, itemName } from '../lib/data.mjs';
 import { t } from '../lib/i18n.mjs';
 
 const nameOf = (m) => m.nickname || m.nick || speciesName(m.species);
@@ -65,14 +65,16 @@ export function PartyPanel({ mon, gen = 4, lead, compact, accent, dead, types, c
   const showSpecies = species && name.toLowerCase() !== species.toLowerCase();
   const g = mon.gender === 'M' || mon.gender === 'F' ? mon.gender : null;
   const hasItem = mon.item !== undefined && mon.item !== null && mon.item !== 0 && mon.item !== '';
+  // the held item by name (Gen 3–5; '' when the game's number isn't known: Gen 1/2, a ROM hack's own item)
+  const item = hasItem ? (typeof mon.item === 'string' ? mon.item : itemName(mon.item, gen)) : '';
   const px = size || (compact ? 40 : 56);
   const lv = shownLevel(mon.level);
   const cls = `pp ${compact ? 'compact' : ''} ${lead ? 'lead' : ''} ${fainted ? 'fainted' : ''} ${mon.shiny ? 'shiny' : ''} ${onPick ? 'pick' : ''}`;
-  const label = [name, showSpecies ? species : '', lv ? `${t('common.lv', 'Lv')} ${lv}` : '', mon.maxHp ? `${mon.hp}/${mon.maxHp} ${t('hp.label', 'HP')}` : '', st ? statusLabel(st) : ''].filter(Boolean).join(', ');
+  const label = [name, showSpecies ? species : '', lv ? `${t('common.lv', 'Lv')} ${lv}` : '', mon.maxHp ? `${mon.hp}/${mon.maxHp} ${t('hp.label', 'HP')}` : '', st ? statusLabel(st) : '', item ? t('party.holds', 'holds {item}', { item }) : ''].filter(Boolean).join(', ');
   const body = html`
     <span class="pp-sprite" style=${`--sp:${px}px`}>
       <${Sprite} id=${mon.species} shiny=${mon.shiny} size=${px} gen=${gen} />
-      ${hasItem && html`<i class="pp-item" title=${typeof mon.item === 'string' ? mon.item : t('party.item', 'Holds an item')}></i>`}
+      ${hasItem && html`<i class="pp-item" title=${item || t('party.item', 'Holds an item')}></i>`}
     </span>
     <span class="pp-top">
       <span class="pp-name">${name}</span>
@@ -83,6 +85,7 @@ export function PartyPanel({ mon, gen = 4, lead, compact, accent, dead, types, c
       ${lv ? html`<span class="pp-lv">${t('common.lv', 'Lv')}${compact ? '' : ' '}${lv}</span>` : ''}
       ${st && html`<span class=${`pp-st ${st}`}>${statusLabel(st)}</span>`}
       ${showSpecies && !compact && html`<span class="pp-species">${species}</span>`}
+      ${item && !compact && html`<span class="pp-held">${item}</span>`}
     </span>
     ${mon.maxHp
       ? html`<span class="pp-hp"><span class="pp-hpl" aria-hidden="true">${t('hp.label', 'HP')}</span><${HpBar} hp=${mon.hp} max=${mon.maxHp} />

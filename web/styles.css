@@ -614,6 +614,9 @@ details.group details.group { margin: 0 14px 8px; }
 .pp-meta { grid-area: meta; display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; font-size: 12px; color: var(--ink-2); }
 .pp-lv { flex: none; font-family: var(--font-pixel); font-size: 12.5px; line-height: 1.2; color: var(--ink-2); }
 .pp-species { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); }
+/* the held item by name, after a dot like the one on the sprite */
+.pp-held { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); }
+.pp-held::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; vertical-align: 1px; background: #d8cfb6; box-shadow: inset 0 -1.5px 0 #0003; }
 .pp-st { flex: none; font-family: var(--font-pixel); font-size: 10.5px; line-height: 1; letter-spacing: 0.04em; padding: 2px 5px; border-radius: 4px; color: #17161b; background: var(--ink-3); }
 .pp-st.slp { background: #a39dba; }
 .pp-st.psn, .pp-st.tox { background: #b28cc2; }
