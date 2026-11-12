@@ -20,19 +20,53 @@ const st = {
 const waiters = { state: [], loaded: [] };
 
 // ---- commands -----------------------------------------------------------------------------------------------------
-let chain = Promise.resolve();
+// One request at a time, and what comes meanwhile goes along with the next one (the server takes several framed
+// commands in one body, in order): the host sees input in the order it happened, and a burst of input (dragging on
+// the touch screen) is a few requests, not thousands – one request per command piled up native memory in the renderer
+// until Chromium ended the page (found with the fast player, lib/nativeplayer.mjs). Resolves false when the server
+// refused it (it never reached the host – nothing will answer), else true.
+const MAX_BATCH = 8 * 1024 * 1024; // (a save state goes alone)
+const queue = []; // { bytes, done }
+let inFlight = false;
+function sendQueued() {
+  if (inFlight || !queue.length) return;
+  if (!st.id) return queue.splice(0).forEach((c) => c.done(false));
+  const batch = [];
+  let size = 0;
+  while (queue.length && (!batch.length || size + queue[0].bytes.length <= MAX_BATCH)) {
+    const c = queue.shift();
+    batch.push(c);
+    size += c.bytes.length;
+  }
+  const body = new Uint8Array(size);
+  let o = 0;
+  for (const c of batch) {
+    body.set(c.bytes, o);
+    o += c.bytes.length;
+  }
+  inFlight = true;
+  fetch(`/api/ctr/cmd?id=${st.id}`, { method: 'POST', headers: { 'x-soullink': '1' }, body })
+    .then(async (r) => {
+      await r.arrayBuffer().catch(() => null); // (read it: an unread response holds on to its resources)
+      return r.ok;
+    })
+    .catch(() => true) // (no answer at all: the server is gone – the stream's end answers what waits)
+    .then((ok) => {
+      inFlight = false;
+      for (const c of batch) c.done(ok);
+      sendQueued();
+    });
+}
 function cmd(type, payload = new Uint8Array(0)) {
   const b = new Uint8Array(8 + payload.length);
   const v = new DataView(b.buffer);
   v.setUint32(0, type, true);
   v.setUint32(4, payload.length, true);
   b.set(payload, 8);
-  // one after another: the host must see input in the order it happened. Resolves false when the server refused it
-  // (it never reached the host – nothing will answer), else true.
-  const sent = chain.then(() => (st.id ? fetch(`/api/ctr/cmd?id=${st.id}`, { method: 'POST', headers: { 'x-soullink': '1' }, body: b }).then((r) => r.ok) : false))
-    .catch(() => true); // (no answer at all: the server is gone – the stream's end answers what waits)
-  chain = sent;
-  return sent;
+  return new Promise((done) => {
+    queue.push({ bytes: b, done });
+    sendQueued();
+  });
 }
 /** Wait for the host's answer to a command; `fallback` when the command never reached it. */
 function ask(list, type, payload, fallback, map = (x) => x) {
