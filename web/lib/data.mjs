@@ -81,12 +81,12 @@ export function moveName(id) {
 }
 
 /**
- * A held item's name: the game's item number → PokeAPI's name in the app's language (Gen 3, 4 and 5 number their
- * items differently – pokeapi.json items.gen3/gen4/gen5). '' when unknown: Gen 1/2, an item only a ROM hack has.
+ * A held item's name: the game's item number → PokeAPI's name in the app's language (each generation from 3 to 7
+ * numbers its items its own way – pokeapi.json items.gen3 … gen7). '' when unknown: Gen 1/2, an item only a ROM hack has.
  */
 export function itemName(id, gen, lang = currentLang()) {
   const items = P?.items;
-  const key = Number.isInteger(id) && id > 0 && gen >= 3 && gen <= 5 ? items?.[`gen${gen}`]?.[id] : null;
+  const key = Number.isInteger(id) && id > 0 && gen >= 3 && gen <= 7 ? items?.[`gen${gen}`]?.[id] : null;
   return key ? items.names?.[lang]?.[key] || items.names?.en?.[key] || '' : '';
 }
 

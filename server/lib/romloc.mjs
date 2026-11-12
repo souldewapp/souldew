@@ -24,7 +24,7 @@ import { isCtrExt } from '../../shared/romid.mjs';
 import { identifyCtr } from '../../shared/ctr.mjs';
 import { ctrZonePlaces } from '../../shared/live/ctrzones.mjs';
 
-const VERSION = 14; // bump when romData() / ctrData() change what they find or the shape of the result (13: types and level caps from the ROM, 14: 3DS zone tables)
+const VERSION = 15; // bump when romData() / ctrData() change what they find or the shape of the result (13: types and level caps from the ROM, 14: 3DS zone tables, 15: their header)
 const memo = new Map();
 let tables = null;
 
@@ -123,7 +123,9 @@ export function ctrData(file) {
     };
     const info = identifyCtr(readAt, extname(file).slice(1));
     const z = info ? ctrZonePlaces(readAt, info) : null;
-    return { ...ROMDATA_NONE, data: z ? { gen: z.gen, ctr: { family: z.family, places: z.places } } : null };
+    // the header: which memory table entry reads it (shared/live/features.mjs) – the game code, else the title ID
+    const header = info ? { system: '3ds', code: info.code || '', title: '', titleId: info.titleId || null } : null;
+    return { ...ROMDATA_NONE, data: z ? { gen: z.gen, ctr: { family: z.family, places: z.places } } : null, header };
   } catch {
     return { ...ROMDATA_NONE };
   } finally {

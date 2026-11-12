@@ -4,7 +4,7 @@ from collections import defaultdict
 CSV = sys.argv[1]
 OUT = sys.argv[2]
 MAX_SPECIES = int(sys.argv[3]) if len(sys.argv) > 3 else 1025
-MAX_MOVE = 559
+MAX_MOVE = 742  # Gen 7 (Ultra Sun/Ultra Moon, Let's Go)
 
 def rows(name):
     with open(os.path.join(CSV, name + '.csv'), newline='', encoding='utf-8') as f:
@@ -153,7 +153,7 @@ data['natureIds'] = [r['identifier'] for r in nat]
 # stat effect per nature in game_index order: [increased stat index, decreased stat index] (1..5 = atk..spe order hp,atk,def,spa,spd,spe)
 data['natureStats'] = [[int(r['increased_stat_id']) - 1, int(r['decreased_stat_id']) - 1] for r in nat]
 
-# items: PokeAPI identifiers indexed by in-game item index for Gen 3/4/5, names keyed by identifier
+# items: PokeAPI identifiers indexed by in-game item index for Gen 3–7, names keyed by identifier
 items = {int(r['id']): r['identifier'] for r in rows('items')}
 gi = defaultdict(lambda: defaultdict(list))
 for r in rows('item_game_indices'):
@@ -165,7 +165,7 @@ for k, iids in gi[4].items():
 itemsOut = {}
 used = set()
 collisions = []
-for gen in (3, 4, 5):
+for gen in (3, 4, 5, 6, 7):
     table = gi[gen]
     arr = [''] * (max(table) + 1)
     displaced = []

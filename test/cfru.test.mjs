@@ -107,7 +107,7 @@ test('moves: Complete FireRed Upgrade\'s own order after the retail 354 → the 
   assert.equal(m.map[at('Leech Fang')], 0, 'a move the app doesn\'t know is left out');
   assert.equal(m.map[at('Air Slash')], 403);
   assert.equal(m.map[at('Aqua Jet')], 453);
-  assert.equal(m.map[at('Spotlight')], 0, 'not Follow Me ("Spotlight" in German)');
+  assert.equal(m.map[at('Spotlight')], 671, 'the Gen 7 move – not Follow Me ("Spotlight" in German)');
   assert.equal(m.map[at('Finale')], 0, 'not Self-Destruct ("Finale" in German)');
   assert.equal(m.map[at('Psystrike')], 540);
   assert.ok(m.moved >= 3);

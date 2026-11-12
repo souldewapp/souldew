@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { familyOf, romfsFile, garcFile, lz11, ctrZonePlaces } from '../shared/live/ctrzones.mjs';
 import { readLocation, locationLabel, canReadLocation } from '../shared/live/location.mjs';
 import { cciWithRomfs, garc, lz11Literal } from './fixtures/ctr.mjs';
+import { romFeatures } from '../shared/live/features.mjs';
 
 const DATA = mkdtempSync(join(tmpdir(), 'sls-ctr3ds-'));
 process.env.SLS_DATA_DIR = DATA;
@@ -104,6 +105,30 @@ test('ctrData reads a .3ds file in pieces: the zone places for the place sign', 
   writeFileSync(join(DATA, 'x.3ds'), 'hello');
   assert.equal(ctrData(join(DATA, 'x.3ds')).data, null);
   assert.equal(ctrData(join(DATA, 'missing.3ds')).data, null);
+});
+
+test('what souldew reads in a 3DS game: its header finds the memory table entry (team, moves, items, place, battles)', () => {
+  const file = join(DATA, 'or2.3ds');
+  writeFileSync(file, cciWithRomfs({}, { 'a/0/1/3': garc([table6([0, 170]), new Uint8Array(8)]) }));
+  const d = ctrData(file);
+  assert.equal(d.header.system, '3ds');
+  assert.equal(d.header.code, 'ECRA');
+  const f = romFeatures(d, addresses);
+  for (const k of ['party', 'items', 'moves', 'location', 'battle', 'catch', 'types']) assert.equal(f[k], 'yes', k);
+  assert.equal(f.caps, 'no');
+  // no zone table: no place, the rest still
+  writeFileSync(file, cciWithRomfs({}, {}));
+  const g = romFeatures(ctrData(file), addresses);
+  assert.equal(g.location, 'no');
+  assert.equal(g.moves, 'yes');
+});
+
+test('Gen 6/7 moves have names (the battle helper hides all moves when one has none)', () => {
+  const api = json('pokeapi.json');
+  for (const id of [560, 585, 617, 621, 670, 718, 728]) assert.ok(api.moves.en[id] && api.moves.de[id], `move ${id}`);
+  assert.equal(api.moves.de[585], 'Mondgewalt');
+  const moves = json('moves.json');
+  for (let id = 1; id <= 728; id++) assert.ok(moves.type[id], `move ${id} has a type`);
 });
 
 test('the place sign: the zone the game reports → the place, once the live party has found the game', () => {

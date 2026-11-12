@@ -237,6 +237,11 @@ test('held items by name: the game\'s number in Gen 3, 4 and 5 (#15)', async () 
   assert.equal(itemName(155, 5, 'en'), 'Oran Berry');
   assert.equal(itemName(155, 5, 'de'), 'Sinelbeere');
   assert.equal(itemName(234, 5, 'en'), 'Leftovers');
+  // Gen 6/7 (3DS): their own numbers – Assault Vest came with X/Y
+  assert.equal(itemName(234, 7, 'en'), 'Leftovers');
+  assert.equal(itemName(640, 6, 'en'), 'Assault Vest');
+  assert.equal(itemName(640, 7, 'de'), 'Offensivweste');
+  assert.equal(itemName(640, 5, 'en'), '');
   assert.equal(itemName(155, 4, 'en'), 'Oran Berry');
   assert.equal(itemName(139, 3, 'en'), 'Oran Berry', 'Gen 3 numbers its items differently');
   assert.equal(itemName(155, 2, 'en'), '', 'no table for Gen 1/2');

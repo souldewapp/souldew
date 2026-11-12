@@ -19,7 +19,7 @@ export function romFeatures(rom, addresses, { curatedCaps = false } = {}) {
   const out = Object.fromEntries(FEATURES.map((f) => [f, 'no']));
   const h = rom?.header;
   if (!h?.system) return out;
-  const entry = findEntry(addresses, { platform: h.system, code: h.code, title: h.title });
+  const entry = findEntry(addresses, { platform: h.system, code: h.code, title: h.title, titleId: h.titleId });
   const gen = entry?.gen || { gb: 1, gbc: 2, gba: 3, nds: 4 }[h.system];
   const expanded = rom.species?.engine === 'expanded';
   // the team: a memory table entry, and for an expanded GBA engine its species table (else "not supported")
@@ -36,7 +36,8 @@ export function romFeatures(rom, addresses, { curatedCaps = false } = {}) {
   // types: the game's own (read from the ROM); a game with types of its own needs its chart for matchups; a ROM whose
   // types couldn't be read: only an unmodified one has the official ones
   const t = rom.types;
-  out.types = t?.species ? (t.chart || !t.own ? 'yes' : 'partial') : rom.vanilla ? 'yes' : 'no';
+  // (3DS: the app's own Gen 6/7 types and chart – a 3DS game's types aren't read from its RomFS)
+  out.types = t?.species ? (t.chart || !t.own ? 'yes' : 'partial') : rom.vanilla || h.system === '3ds' ? 'yes' : 'no';
   // level caps: a curated list, or caps read from the game's trainers – and its badges must be readable live (an
   // expanded engine's only through the badge flags its own scripts name)
   out.caps = curatedCaps || (rom.caps && (!expanded || Number.isInteger(rom.caps.badgeFlags))) ? 'yes' : 'no';

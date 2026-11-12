@@ -9,10 +9,8 @@ oldest gives every generation's values (Bite: Normal in Gen 1, Dark from Gen 2 â
 import csv, json, os, sys
 
 CSV, OUT = sys.argv[1], sys.argv[2]
-MAX_MOVE = 559  # Gen 5
-GENS = range(1, 6)
-# version group id -> generation (PokeAPI version_groups.csv)
-VG_GEN = {1: 1, 2: 1, 3: 2, 4: 2, 5: 3, 6: 3, 7: 3, 8: 4, 9: 4, 10: 4, 11: 5, 12: 3, 13: 3, 14: 5}
+MAX_MOVE = 742  # Gen 7 (Ultra Sun/Ultra Moon, Let's Go)
+GENS = range(1, 8)
 
 
 def rows(name):
@@ -20,6 +18,12 @@ def rows(name):
         return list(csv.DictReader(f))
 
 
+# A generation's values are those of its last main-series version group (Yellow, Crystal, FireRed/LeafGreen,
+# HeartGold/SoulSilver, Black 2/White 2, Omega Ruby/Alpha Sapphire, Ultra Sun/Ultra Moon). move_changelog lists the
+# values a move had before `changed_in_version_group_id`, in the order of version_groups.csv â€“ Let's Go (between
+# Ultra Sun and Sword) included, whose values must not leak into the main series.
+VG_ORDER = {int(r['id']): int(r['order']) for r in rows('version_groups')}
+LAST_VG = {1: 2, 2: 4, 3: 7, 4: 10, 5: 14, 6: 16, 7: 18}
 types = {int(r['id']): r['identifier'] for r in rows('types')}
 classes = {1: 'status', 2: 'physical', 3: 'special'}
 cur = {}
@@ -31,7 +35,7 @@ for r in rows('moves'):
 
 changes = sorted(
     (r for r in rows('move_changelog') if int(r['move_id']) <= MAX_MOVE),
-    key=lambda r: VG_GEN.get(int(r['changed_in_version_group_id']), 9), reverse=True)
+    key=lambda r: VG_ORDER[int(r['changed_in_version_group_id'])], reverse=True)
 
 by_gen = {}
 for g in GENS:
@@ -39,7 +43,7 @@ for g in GENS:
     for i, m in cur.items():
         t, p = m['type'], m['power']
         for r in changes:
-            if int(r['move_id']) != i or VG_GEN.get(int(r['changed_in_version_group_id']), 9) <= g:
+            if int(r['move_id']) != i or VG_ORDER[int(r['changed_in_version_group_id'])] <= VG_ORDER[LAST_VG[g]]:
                 continue
             if r['type_id']:
                 t = types[int(r['type_id'])]
@@ -50,7 +54,7 @@ for g in GENS:
     by_gen[str(g)] = diff
 
 out = {
-    'meta': {'source': 'PokeAPI (github.com/PokeAPI/pokeapi data/v2/csv: moves, move_changelog, types)', 'maxMove': MAX_MOVE,
+    'meta': {'source': 'PokeAPI (github.com/PokeAPI/pokeapi data/v2/csv: moves, move_changelog, types, version_groups)', 'maxMove': MAX_MOVE,
              'notes': 'type/power/cls are indexed by move id (newest values). byGen[g][id] = [type, power] where Gen g differs. '
                       'Before Gen 4 the damage class follows the type, not cls.'},
     'type': [''] + [cur[i]['type'] if i in cur else '' for i in range(1, MAX_MOVE + 1)],

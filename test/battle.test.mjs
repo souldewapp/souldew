@@ -42,6 +42,18 @@ test('move data follows the generation', () => {
   assert.equal(moveInfo(MOVES, 7, 3).cls, 'special'); // Fire Punch is special in Gen 3 …
   assert.equal(moveInfo(MOVES, 7, 4).cls, 'physical'); // … and physical from Gen 4
   assert.equal(moveInfo(MOVES, 174, 2).type, null); // Curse: ??? type
+  // Gen 6/7 (3DS): Tackle 50 in Gen 6, 40 from Gen 7; Charm turned Fairy in Gen 6; Sucker Punch 80 → 70 in Gen 7
+  assert.equal(moveInfo(MOVES, 33, 6).power, 50);
+  assert.equal(moveInfo(MOVES, 33, 7).power, 40);
+  assert.equal(moveInfo(MOVES, 204, 5).type, 'normal');
+  assert.equal(moveInfo(MOVES, 204, 6).type, 'fairy');
+  assert.equal(moveInfo(MOVES, 389, 6).power, 80);
+  assert.equal(moveInfo(MOVES, 389, 7).power, 70);
+  assert.deepEqual(moveInfo(MOVES, 585, 6), { type: 'fairy', power: 95, cls: 'special' }); // Moonblast
+  assert.deepEqual(moveInfo(MOVES, 670, 7), { type: 'grass', power: 40, cls: 'physical' }); // Leafage
+  // Let's Go's values (between Ultra Sun and Sword) don't leak into the main series: Absorb was 20 until Let's Go
+  for (const g of [1, 3, 5, 7]) assert.equal(moveInfo(MOVES, 71, g).power, 20);
+  assert.equal(moveInfo(MOVES, 76, 4).power, 120); // Solar Beam
 });
 
 test('switch-in check: best hit and worst incoming per team member, by moves or by types', () => {

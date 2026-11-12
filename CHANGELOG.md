@@ -17,7 +17,10 @@
 - **Trophies: a hack run counts for its base game's generation** – Blaze Black 2 Redux or Blaze Black were counted as
   Gen 4 ("a DS game"), so "Time Traveller" and the per-generation numbers missed Gen 5; 3DS runs count as Gen 6/7.
 - **Battle helper for Gen 6/7**: the type chart knows Fairy and that Steel no longer resists Ghost and Dark; the
-  species picker offers up to #721 / #809 in 3DS runs.
+  species picker offers up to #721 / #809 in 3DS runs. The moves of X/Y to Ultra Sun/Ultra Moon (Moonblast, Leafage …)
+  and their held items have names and values now – with names missing, the helper would have left out every move.
+- **Absorb, Mega Drain, Solar Beam and Sky Attack** had Let's Go's power in Gen 1–5 battles (40 / 75 / 200 / 200) –
+  now their own (20 / 40 / 120 / 140). Unbound's Spotlight is that move now, not left out.
 - The play view's buttons stay on one row in a 1100 px window.
 - A 3DS game that stops (or can't start) says so in the player in the app's language, and a quick save / load in that
   moment no longer waits forever.

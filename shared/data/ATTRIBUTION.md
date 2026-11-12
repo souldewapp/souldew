@@ -2,7 +2,8 @@
 
 ## pokeapi.json
 Built on 2026-10-17 from the CSV files in the PokéAPI repository
-(https://github.com/PokeAPI/pokeapi, `data/v2/csv/`).
+(https://github.com/PokeAPI/pokeapi, `data/v2/csv/`); moves (up to Gen 7) and held items (Gen 3–7) – and
+moves.json – rebuilt from the same source on 2026-11-12.
 
 - PokéAPI code is licensed under the BSD 3-Clause License,
   © 2013–2023 Paul Hallett and PokéAPI contributors.
