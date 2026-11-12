@@ -24,6 +24,14 @@
 - The play view's buttons stay on one row in a 1100 px window.
 - A 3DS game that stops (or can't start) says so in the player in the app's language, and a quick save / load in that
   moment no longer waits forever.
+- The library's live note for 3DS games no longer says "in Azahar" – they run in souldew's own player.
+
+### Known issues
+
+- Sun/Moon and Ultra Sun/Ultra Moon have island trials instead of gyms: no badges are read there, so badge trophies
+  and level caps don't count in those runs.
+- 3DS savestates are tied to the system they were made on (a Windows state doesn't load on a Mac); the player says so
+  instead of loading it.
 
 ## 2.4.0
 

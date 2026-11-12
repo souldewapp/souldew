@@ -669,9 +669,9 @@ export function liveSupportText(g) {
     3: t('lib.liveGen3', 'Party live incl. catch location'),
     4: t('lib.liveGen45', 'Party + PC boxes live incl. catch location'),
     5: t('lib.liveGen45', 'Party + PC boxes live incl. catch location'),
-    // 3DS: through Azahar's RPC server – the party (no PC boxes, no place sign or battle panel yet)
-    6: t('lib.liveGen67', 'Party live incl. catch location (in Azahar)'),
-    7: t('lib.liveGen67', 'Party live incl. catch location (in Azahar)'),
+    // 3DS: in souldew's own player (or the Azahar app over its RPC server) – the party, no PC boxes
+    6: t('lib.liveGen3', 'Party live incl. catch location'),
+    7: t('lib.liveGen3', 'Party live incl. catch location'),
   };
   return map[g.generation] || '–';
 }
