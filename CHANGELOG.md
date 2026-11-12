@@ -8,7 +8,7 @@
   in the play view like every other game – Azahar's core, both screens, sound, touch screen with the mouse,
   controller, savestates, fast-forward, screenshots and the "saved in the game" indicator. Live data comes straight
   from the game's memory: the team, the battle panel (wild or trainer) and the "You are here" sign with the place
-  names from the game itself – checked in Omega Ruby and Ultra Sun. Windows and Linux get the same player (it needs
+  names from the game itself – checked in Omega Ruby, Sun and Ultra Sun. Windows and Linux get the same player (it needs
   the graphics driver's Vulkan; without it 3DS games open in the Azahar app, which also stays available by choice).
 - **Trophies and Pokédex up to Alola**: Kalos and Alola count in the Pokédex (#809), with their own medals and the
   new "Kalos Complete" and "Alola Complete" achievements; the Gen 6/7 starters, Sylveon, the Kalos fossils and X/Y's
@@ -18,11 +18,11 @@
   Gen 4 ("a DS game"), so "Time Traveller" and the per-generation numbers missed Gen 5; 3DS runs count as Gen 6/7.
 - **Battle helper for Gen 6/7**: the type chart knows Fairy and that Steel no longer resists Ghost and Dark; the
   species picker offers up to #721 / #809 in 3DS runs.
-- **Radical Red shows your team** (#17): the Complete FireRed Upgrade keeps its own species table next to FireRed's,
-  stores the team unencrypted and keeps FireRed's party addresses – souldew read it as plain FireRed and found no
-  team. Now the team, the battle helper and the place sign work (checked up to the rival's battle). Pre-patched Radical
-  Red and Unbound ROMs are recognised by their checksums; Unbound's place sign stays empty instead of showing Kanto
-  names (it plays in Borrius).
+- **Radical Red and Unbound show your team** (#17): the Complete FireRed Upgrade keeps its own species table next to
+  FireRed's, stores the team unencrypted and keeps FireRed's party addresses – souldew read it as plain FireRed and
+  found no team. Now the team and the battle helper work in both (checked up to the first trainer battle each), and
+  Radical Red's place sign too. Pre-patched Radical Red and Unbound ROMs are recognised by their checksums; Unbound's
+  place sign stays empty instead of showing Kanto names (it plays in Borrius).
 - The play view's buttons stay on one row in a 1100 px window.
 - A 3DS game that stops (or can't start) says so in the player in the app's language, and a quick save / load in that
   moment no longer waits forever.

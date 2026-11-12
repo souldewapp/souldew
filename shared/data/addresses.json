@@ -1715,7 +1715,7 @@
     "blocks": 24,
     "inBattle": "0x341C8CCD",
     "isTrainer": "0x341C8CAC",
-    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs (the base, in battle); the opponents follow the player's 12 battlers (Ultra Sun checked live). isTrainer: the battle type byte 0x21 before the in-battle flag, as found in Ultra Sun – Sun 1.0 has the same structure there (compared outside battle: the type byte, a pointer at +4, the same block at +0x28; in-battle at +0x21), a Sun battle wasn't played yet. The Stream Tool's 0x3421BD74 is unverified"
+    "source": "Pokemon Stream Tool (Readek): Battle Pokemon.mjs / Read Battle Type.mjs (the base, in battle); the opponents follow the player's 12 battlers (Ultra Sun checked live). isTrainer: the battle type byte 0x21 before the in-battle flag, as found in Ultra Sun – Sun 1.0 has the same structure there (the type byte, a pointer at +4, the same block at +0x28; in-battle at +0x21) – checked live in Sun 1.0 (US cartridge): Hau's Popplio L5 type 1, a wild Pikipek L3 on Route 1 type 0, in-battle 1 in both; Kukui's demo battle leaves in-battle 0. The Stream Tool's 0x3421BD74 is unverified"
    },
    "zoneAddr": "0x34183CC6",
    "zoneSource": "Found by souldew in Sun 1.0 (US cartridge): the player's position { u16 ?, u16 zone, float x, y, z } – the same layout as Ultra Sun's, 0x1214A before the party; the house reads zone 27 (Route 1 in the ROM's zone table)"
