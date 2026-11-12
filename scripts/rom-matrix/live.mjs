@@ -53,6 +53,20 @@ async function runOne(url, t) {
       appendFileSync(join(job.outDir, `${t.key}-console.log`), `${line}\n`); // (as it comes: a run that hangs still leaves it)
     } catch { /* best effort */ }
   });
+  // a renderer that dies (out of memory, a crash) would leave executeJavaScript waiting for ever: note why, and the
+  // page's memory every 30 s
+  let gone = null;
+  win.webContents.on('render-process-gone', (_e, d) => {
+    gone = d;
+    try {
+      appendFileSync(join(job.outDir, `${t.key}-console.log`), `${new Date().toISOString()} RENDERER GONE ${JSON.stringify(d)}\n`);
+    } catch { /* best effort */ }
+  });
+  const memTimer = setInterval(() => {
+    const pid = win.webContents.getOSProcessId?.();
+    const m = app.getAppMetrics().find((x) => x.pid === pid);
+    if (m) try { appendFileSync(join(job.outDir, `${t.key}-console.log`), `${new Date().toISOString()} MEM renderer ${Math.round(m.memory.workingSetSize / 1024)} MB\n`); } catch { /* best effort */ }
+  }, 30000);
   if (job.native) {
     // the plans' conditions are expressions (new Function) – the fast player's page doesn't allow eval (it has no
     // emulator in the page); for the matrix only, its policy gets 'unsafe-eval' added
@@ -100,7 +114,8 @@ async function runOne(url, t) {
       await sleep(300);
     }
     await win.webContents.executeJavaScript(PAGE_HELPER);
-    const out = await win.webContents.executeJavaScript(`window.__rm.run(${JSON.stringify({ plan: t.plan, romSrc: rom, timeoutMs: job.timeoutMs || 600000 })})`);
+    const died = new Promise((_, rej) => win.webContents.once('render-process-gone', (_e, d) => rej(new Error(`renderer gone: ${d.reason}`))));
+    const out = await Promise.race([win.webContents.executeJavaScript(`window.__rm.run(${JSON.stringify({ plan: t.plan, romSrc: rom, timeoutMs: job.timeoutMs || 600000 })})`), died]);
     Object.assign(res, out);
     for (const s of out.shots || []) {
       const p = join(job.outDir, `${t.key}-${s.name}.png`);
@@ -112,6 +127,8 @@ async function runOne(url, t) {
   } catch (e) {
     res.error = String(e?.message || e);
   }
+  clearInterval(memTimer);
+  if (gone) res.error = `${res.error ? `${res.error}; ` : ''}renderer gone: ${gone.reason}`;
   if (job.native) {
     // how the native host ended (or that it still runs) and the last of what it wrote to stderr
     try {
