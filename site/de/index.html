@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>souldew – Pokémon-SoulLinks & Nuzlockes, live getrackt</title>
-<meta name="description" content="Kostenlose Desktop-App für Pokémon-SoulLinks mit 2–4 Spielern und Solo-Nuzlockes: eingebauter Emulator, Live-Tracking aus dem Spielspeicher, Randomizer, Echtzeit-Sync und OBS-Overlays.">
+<meta name="description" content="Kostenlose Desktop-App für Pokémon-SoulLinks mit 2–4 Spielern und Solo-Nuzlockes: eingebauter Emulator vom Game Boy bis zum 3DS, Live-Tracking aus dem Spielspeicher, Randomizer, Echtzeit-Sync und OBS-Overlays.">
 <link rel="canonical" href="https://souldewapp.github.io/souldew/de/">
 <link rel="alternate" hreflang="en" href="https://souldewapp.github.io/souldew/">
 <link rel="alternate" hreflang="de" href="https://souldewapp.github.io/souldew/de/">
@@ -27,12 +27,13 @@
 <script>document.documentElement.classList.replace('no-js', 'js');</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"SoftwareApplication","name":"souldew","applicationCategory":"GameApplication","operatingSystem":"macOS, Windows, Linux","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"license":"https://www.gnu.org/licenses/gpl-3.0.html","url":"https://souldewapp.github.io/souldew/de/","downloadUrl":"https://github.com/souldewapp/souldew/releases/latest","codeRepository":"https://github.com/souldewapp/souldew","description":"Pokémon-SoulLinks für 2–4 Spieler und Solo-Nuzlockes: Emulator, Live-Tracking aus dem Spielspeicher, Randomizer, Echtzeit-Sync und OBS-Overlays in einer App."},
+ {"@type":"SoftwareApplication","name":"souldew","applicationCategory":"GameApplication","operatingSystem":"macOS, Windows, Linux","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"license":"https://www.gnu.org/licenses/gpl-3.0.html","url":"https://souldewapp.github.io/souldew/de/","downloadUrl":"https://github.com/souldewapp/souldew/releases/latest","codeRepository":"https://github.com/souldewapp/souldew","description":"Pokémon-SoulLinks für 2–4 Spieler und Solo-Nuzlockes: Emulator vom Game Boy bis zum 3DS, Live-Tracking aus dem Spielspeicher, Randomizer, Echtzeit-Sync und OBS-Overlays in einer App."},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Ist souldew kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja – kostenlos und Open Source unter der GNU GPL v3.0 oder neuer. Keine Werbung, keine In-App-Käufe."}},
   {"@type":"Question","name":"Sind bei souldew Spiele dabei?","acceptedAnswer":{"@type":"Answer","text":"Nein. Du spielst deine eigenen, legal erworbenen ROMs. souldew erkennt sie an Header und Prüfsumme, auch in ZIP-Dateien, und wenn es deinen Computer durchsucht, liest es nur Dateinamen und Header."}},
   {"@type":"Question","name":"Brauche ich einen Server oder ein Konto?","acceptedAnswer":{"@type":"Answer","text":"Nein. Die Apps finden sich über öffentliche Relays und verbinden sich dann direkt. Blockiert ein Router das, laufen die Daten stattdessen über ein verschlüsseltes öffentliches Relay – ganz ohne Portfreigabe."}},
   {"@type":"Question","name":"Brauchen meine Freunde dieselbe ROM?","acceptedAnswer":{"@type":"Answer","text":"Alle nutzen ihre eigene Kopie desselben Spiels – auch eine andere Sprachversion funktioniert. Bei Randomizer-Runs baut souldew für alle Spieler das identische Spiel und vergleicht die Prüfsummen."}},
+  {"@type":"Question","name":"Kann ich 3DS-Spiele spielen?","acceptedAnswer":{"@type":"Answer","text":"Ja. X/Y, Omega Rubin/Alpha Saphir, Sonne/Mond und Ultrasonne/Ultramond laufen in souldews eigenem Player mit Live-Tracking. Sie brauchen Vulkan (unter macOS mitgeliefert, unter Windows und Linux vom Grafiktreiber)."}},
   {"@type":"Question","name":"Auf welchen Systemen läuft souldew?","acceptedAnswer":{"@type":"Answer","text":"macOS auf Apple silicon, Windows 10/11 (x64) und 64-Bit-Linux (AppImage oder .deb), auch auf dem Steam Deck."}}
  ]}
 ]}
@@ -169,7 +170,7 @@
       <p class="sec-lead" data-reveal>Emulator, Tracker, Regeln, Randomizer und Sync wohnen am selben Ort – und reden miteinander.</p>
     </div>
     <ol class="findex" data-findex>
-      <li><button type="button" aria-expanded="true"><span class="fx-n">01</span><span class="fx-t">Eingebauter Emulator</span></button><p>DS, GBA, Game Boy und Game Boy Color. 1–4× Tempo, acht Save States, Controller von PlayStation, Xbox und Switch – und das Spiel läuft im Mini-Fenster weiter, während du aufs Board schaust.</p></li>
+      <li><button type="button" aria-expanded="true"><span class="fx-n">01</span><span class="fx-t">Eingebauter Emulator</span></button><p>3DS, DS, GBA, Game Boy und Game Boy Color – 3DS-Spiele mit beiden Bildschirmen und dem Touchscreen unter deiner Maus. Vorspulen, acht Save States, Controller von PlayStation, Xbox und Switch – und das Spiel läuft im Mini-Fenster weiter, während du aufs Board schaust.</p></li>
       <li><button type="button" aria-expanded="false"><span class="fx-n">02</span><span class="fx-t">Live-Tracking</span></button><p>Art, Spitzname, Level, KP, Status und Fangort – gelesen aus dem Speicher des laufenden Spiels. Neue Fänge sortieren sich selbst unter ihrer Route ein.</p></li>
       <li><button type="button" aria-expanded="false"><span class="fx-n">03</span><span class="fx-t">Kampf-Panel</span></button><p>Typen und Schwächen des Gegners, wie deine Attacken wirken – und ob deine Regeln den Fang überhaupt erlauben, inklusive Typ-Konflikten mit deinen Partnern.</p></li>
       <li><button type="button" aria-expanded="false"><span class="fx-n">04</span><span class="fx-t">Echtzeit-Sync</span></button><p>Bis zu vier Spieler, direkt über WebRTC oder über ein verschlüsseltes Relay. Das Spiel deines Partners erscheint als kleines Livebild neben deinem.</p></li>
@@ -227,9 +228,9 @@
     <div class="sec-head row">
       <div>
         <p class="chapter"><span>07</span> Unterstützte Spiele</p>
-        <h2 id="games-title" class="display-2" data-reveal>Rot bis Weiß 2.</h2>
+        <h2 id="games-title" class="display-2" data-reveal>Rot bis Ultramond.</h2>
       </div>
-      <p class="sec-lead" data-reveal>Jedes Hauptspiel von Generation 1 bis 5 läuft in souldew. Team und KP werden überall live gelesen; das Kampf-Panel und „Du bist hier“ gibt es in Gen 1–4.</p>
+      <p class="sec-lead" data-reveal>Jedes Hauptspiel von Generation 1 bis 7 läuft in souldew – die 3DS-Spiele eingeschlossen. Team und KP, das Kampf-Panel und „Du bist hier“ werden überall live gelesen.</p>
     </div>
     <ul class="gens">
       <li data-reveal><span class="g">Gen 1</span><span class="gg">Rot · Blau · Gelb</span></li>
@@ -237,8 +238,10 @@
       <li data-reveal><span class="g">Gen 3</span><span class="gg">Rubin · Saphir · Smaragd · Feuerrot · Blattgrün</span></li>
       <li data-reveal><span class="g">Gen 4</span><span class="gg">Diamant · Perl · Platin · HeartGold · SoulSilver</span></li>
       <li data-reveal><span class="g">Gen 5</span><span class="gg">Schwarz · Weiß · Schwarz 2 · Weiß 2</span></li>
+      <li data-reveal><span class="g">Gen 6</span><span class="gg">X · Y · Omega Rubin · Alpha Saphir</span></li>
+      <li data-reveal><span class="g">Gen 7</span><span class="gg">Sonne · Mond · Ultrasonne · Ultramond</span></li>
     </ul>
-    <p class="fine">Das Team liest souldew aus englischen und deutschen Versionen. Bei anderen Sprachen und ROM-Hacks mit geändertem Speicherlayout sucht es danach – und Fänge trägst du jederzeit von Hand ein.</p>
+    <p class="fine">Das Team liest souldew aus englischen und deutschen Versionen (3DS-Spiele: jede Sprache). Bei anderen Sprachen und ROM-Hacks mit geändertem Speicherlayout sucht es danach – und Fänge trägst du jederzeit von Hand ein.</p>
   </div>
 </section>
 
@@ -310,6 +313,7 @@
       <details><summary>Brauche ich einen Server oder ein Konto?</summary><p>Nein. Die Apps finden sich über öffentliche Relays und verbinden sich dann direkt. Blockiert ein Router das, laufen die Daten stattdessen über ein verschlüsseltes öffentliches Relay – ganz ohne Portfreigabe.</p></details>
       <details><summary>Brauchen meine Freunde dieselbe ROM?</summary><p>Alle nutzen ihre eigene Kopie desselben Spiels – auch eine andere Sprachversion funktioniert. Bei Randomizer-Runs baut souldew für alle Spieler das identische Spiel und vergleicht die Prüfsummen.</p></details>
       <details><summary>Welche Emulatoren kann ich nutzen?</summary><p>Den eingebauten (empfohlen) oder melonDS und mGBA als externe Emulatoren – mGBA mit Live-Daten über ein Lua-Skript, melonDS nach jedem Speichern im Spiel.</p></details>
+      <details><summary>Kann ich 3DS-Spiele spielen?</summary><p>Ja – X/Y, Omega Rubin/Alpha Saphir, Sonne/Mond und Ultrasonne/Ultramond laufen in souldews eigenem Player (Azahars Core), mit Live-Team, Kampf-Panel und Ortsschild. Du brauchst eine entschlüsselte <code>.3ds</code>/<code>.cci</code>/<code>.cxi</code> deines eigenen Moduls. Sie brauchen Vulkan: macOS bringt es mit, unter Windows und Linux kommt es mit dem Grafiktreiber. 3DS-Spiele lassen sich nicht randomisieren.</p></details>
       <details><summary>Etwas ist schiefgelaufen – was soll ich schicken?</summary><p>Nutz direkt danach <b>Diagnose speichern</b> in der Hilfe der App und häng die Datei an einen <a href="https://github.com/souldewapp/souldew/issues/new/choose">Bug-Report</a>. Sie enthält, was die App gelesen und entschieden hat – keine ROM, keine Spielstände, keine Einladungsdaten.</p></details>
     </div>
   </div>

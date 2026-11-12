@@ -252,6 +252,8 @@ em { font-style: normal; }
 .gens li:nth-child(3) .g { color: #7fd09b; }
 .gens li:nth-child(4) .g { color: var(--p1); }
 .gens li:nth-child(5) .g { color: var(--p2); }
+.gens li:nth-child(6) .g { color: #ffb65c; }
+.gens li:nth-child(7) .g { color: #a993e6; }
 .gens .gg { font-size: clamp(17px, 1.6vw, 22px); color: var(--ink); }
 
 /* ---------- 9 · statement ---------- */
