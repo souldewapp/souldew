@@ -22,7 +22,8 @@
   clean-badge ones); SoulLink twins are judged by what both of you caught, not by what it evolved into; in Sun/Moon and
   Ultra Sun/Ultra Moon (no badges) "before the first badge" means before the first boss. Every run is read again
   once, deleted ones get their generation from their game.
-- The category medals no longer show Platinum as reached while an open achievement is missing.
+- The category medals no longer show Platinum as reached while an open achievement is missing, and categories without
+  secret achievements (Journey, Skill, Randomizer) have a Platinum step of their own before Master.
 - **SoulLink "New attempt"** (#6, checked with two apps over the real sync): whoever reloaded the join page of the new
   run – or restarted the app before building – took the host's seat and renamed the host for everyone. The seat now
   comes from the choice stored for that run. A pre-patched hack's game file is named after the hack on the joining

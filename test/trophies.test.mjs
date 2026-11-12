@@ -363,6 +363,11 @@ test('medals: tiers per category, per regional dex and the champion’s medal', 
   const ms = T.medals(almost, totals).find((x) => x.id === 'cat-soullink');
   assert.equal(ms.value, openSl.length - 1);
   assert.equal(ms.tier, 2, 'gold, not platinum, with an open one missing');
+  // a category without secret ones has a platinum step of its own before master (all)
+  for (const cat of ['journey', 'skill', 'randomizer']) {
+    const md = T.medals(states, totals).find((x) => x.id === `cat-${cat}`);
+    assert.ok(md.steps[3] < md.steps[4] && md.steps[3] > md.steps[2], `${cat}: ${md.steps}`);
+  }
   assert.equal(m['dex-1'].tier, 4, 'Kanto complete');
   assert.equal(m['dex-2'].tier, -1);
   assert.equal(m['dex-7'].tier, -1, 'Alola: a medal to earn');

@@ -559,7 +559,11 @@ export function medals(states, totals) {
     // platinum needs every open one, master the secret ones too: secret ones count towards the lower tiers, but never
     // past "one open one missing" – the value shown is the one the tiers use
     const value = gotOpen < open.length ? Math.min(got, open.length - 1) : got;
-    const steps = [1, Math.ceil(open.length * 0.35), Math.ceil(open.length * 0.7), open.length, list.length];
+    // (a category without secret ones: master is all of them, platinum a step of its own before – else the ladder
+    // promised platinum and jumped to master)
+    const gold = Math.ceil(open.length * 0.7);
+    const platinum = list.length > open.length ? open.length : Math.min(list.length - 1, Math.max(gold + 1, Math.ceil(open.length * 0.9)));
+    const steps = [1, Math.ceil(open.length * 0.35), gold, platinum, list.length];
     const tier = tierOf(value, steps);
     out.push({ id: `cat-${cat}`, kind: 'category', cat, tier, value, total: list.length, steps });
   }
