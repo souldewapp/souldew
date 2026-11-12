@@ -8,6 +8,7 @@ import { EventEmitter } from 'node:events';
 import { SyncLink } from '../web/lib/sync.mjs';
 import { RunDoc } from '../web/lib/doc.mjs';
 import { newAttempt, restartPlan, RESTART_KEY, CLAIM_TTL } from '../shared/restart.mjs';
+import { readFileSync } from 'node:fs';
 
 /** Minimal in-memory MQTT brokers: topics, retained messages (delivered on subscribe), async delivery. */
 function fakeNet() {
@@ -266,4 +267,20 @@ test('no live document (run not open, solo): nothing is claimed, a saved invite 
   assert.equal(built, 0);
   assert.ok((await newAttempt({ entry: null, me: 'p1', runs: [], build })).started);
   assert.equal(built, 1);
+});
+
+// Found with two app instances over the real sync (#6): the joining player reloaded the join page of the new attempt
+// (or restarted the app) – the page took the app's `me` while it was still the default p1, built the host's seat and
+// renamed the host to the joiner's name for everyone. The seat now comes from the stored choice for the new run.
+test('joining a new attempt: the seat comes from the stored choice, not the app default (#6); the file is named like the host’s', () => {
+  const view = readFileSync(new URL('../web/views/soullink.mjs', import.meta.url), 'utf8');
+  const join = view.slice(view.indexOf('function JoinRun()'));
+  assert.match(join, /const \[slot, setSlot\] = useState\(pack \? mySlotIn\(pack\) : null\);/);
+  assert.match(join, /setPack\(manifest\);\n\s+setSlot\(mySlotIn\(manifest\)\);/);
+  assert.doesNotMatch(join.slice(0, join.indexOf('const build')), /setSlot\(me\)|useState\(pack && me/);
+  // the RestartOffer stores the old run's seat for the new run before the join page opens
+  const offer = readFileSync(new URL('../web/views/restart.mjs', import.meta.url), 'utf8');
+  assert.match(offer, /setMe\(offer\.slot \|\| me, m\.id\);/);
+  // a pre-patched hack (no patch file) is named by the hack, as the host's wizard names it
+  assert.match(join, /gameTitle: pack\.patch\?\.name \|\| hackById\(pack\.game\?\.hackId\)\?\.name \|\|/);
 });

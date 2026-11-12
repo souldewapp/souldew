@@ -680,9 +680,11 @@ function InviteDrop({ onText }) {
 }
 
 function JoinRun() {
-  const { manifest, reloadStatus, setRunId, setMe, toast, library, navigate, reloadManifest, me, status, doc } = useApp();
+  const { manifest, reloadStatus, setRunId, setMe, toast, library, navigate, reloadManifest, status, doc } = useApp();
   const [pack, setPack] = useState(manifest?.imported && !Object.keys(manifest.outputs || {}).length ? manifest : null);
-  const [slot, setSlot] = useState(pack && me ? me : null); // a restart offer already knows our slot
+  // a restart offer already knows our slot – stored for the new run (RestartOffer: setMe), read from there: the app's
+  // `me` is still the default p1 while a reload brings the run back (the host's seat – their name overwritten)
+  const [slot, setSlot] = useState(pack ? mySlotIn(pack) : null);
   const [taken, setTaken] = useState([]); // slots the host says have somebody already (code invites only)
   // what this player calls themselves – typed with the code, else the name from the settings. It wins over the
   // name the host put into the run for this seat.
@@ -691,7 +693,7 @@ function JoinRun() {
   useEffect(() => {
     if (!pack && manifest?.imported && !Object.keys(manifest.outputs || {}).length) {
       setPack(manifest);
-      if (me) setSlot(me);
+      setSlot(mySlotIn(manifest));
     }
   }, [manifest?.id]);
   const slots = pack ? slotsOf(pack) : [];
@@ -734,8 +736,9 @@ function JoinRun() {
         runId: pack.id, romId: rom.id, patchId: patch?.id || null, values: pack.randomizer.values, randomize: pack.randomizer.enabled,
         seeds: pack.randomizer.seeds, sharedSeed: pack.randomizer.sharedSeed, players: withMyName(), buildFor: [mine], name: pack.name, mode: runMode(pack),
         expectedOutputs: pack.expectedOutputs, rules: pack.rules, gameId: pack.game?.id, hackId: pack.game?.hackId,
-        // same file name as the host's ("Robin – Silberne Edition Randomized.gbc", not the raw header title)
-        gameTitle: pack.patch?.name || (gameById(pack.game?.id) ? gameTitle(gameById(pack.game.id)) : undefined),
+        // same file name as the host's ("Robin – Silberne Edition Randomized.gbc", not the raw header title; a hack –
+        // also a pre-patched one without a patch file – by its name, as the host's wizard does)
+        gameTitle: pack.patch?.name || hackById(pack.game?.hackId)?.name || (gameById(pack.game?.id) ? gameTitle(gameById(pack.game.id)) : undefined),
       });
       setLog(res.log);
       setMe(mine, pack.id);

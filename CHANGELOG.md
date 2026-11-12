@@ -23,6 +23,10 @@
   Ultra Sun/Ultra Moon (no badges) "before the first badge" means before the first boss. Every run is read again
   once, deleted ones get their generation from their game.
 - The category medals no longer show Platinum as reached while an open achievement is missing.
+- **SoulLink "New attempt"** (#6, checked with two apps over the real sync): whoever reloaded the join page of the new
+  run – or restarted the app before building – took the host's seat and renamed the host for everyone. The seat now
+  comes from the choice stored for that run. A pre-patched hack's game file is named after the hack on the joining
+  side too ("Robin - Radical Red", not "Robin - FireRed").
 - **Battle helper for Gen 6/7**: the type chart knows Fairy and that Steel no longer resists Ghost and Dark; the
   species picker offers up to #721 / #809 in 3DS runs. The moves of X/Y to Ultra Sun/Ultra Moon (Moonblast, Leafage …)
   and their held items have names and values now – with names missing, the helper would have left out every move.
