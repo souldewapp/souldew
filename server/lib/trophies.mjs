@@ -68,18 +68,30 @@ function guessSlot(m) {
   return m.imported && slots.length > 1 ? 'p2' : 'p1';
 }
 
-/** Re-read the runs whose doc changed since the last digest (by size + mtime + slot). */
+// Bump when digestRun (shared/trophies.mjs) or the generation lookup here reads a run differently: every run is
+// digested again (2: a hack's base game's generation, evolutions once per step, the partner's deaths, bonus deaths).
+const DIGEST_VERSION = 2;
+
+/** The generation of a run's game – or a hack's base game (a hack run's game id can be the hack's). */
+function genOf(m, games) {
+  const hackIds = [m.game?.hackId, m.patch?.hackId].filter(Boolean);
+  const hack = (catalog().hacks || []).find((h) => hackIds.includes(h.id) || h.id === m.game?.id);
+  const game = [m.game?.id, m.base?.gameId, hack?.baseGameId].filter(Boolean).map((id) => games.find((g) => g.id === id)).find(Boolean);
+  return game?.generation || null;
+}
+
+/** Re-read the runs whose doc changed since the last digest (by size + mtime + slot + digest version). */
 function refreshRuns(state) {
   const games = catalog().games || [];
   const present = new Set();
   for (const m of listRuns()) {
     present.add(m.id);
     const slot = slotsOf(m).includes(state.slots[m.id]) ? state.slots[m.id] : guessSlot(m);
-    let sig = `none:${slot}`;
+    let sig = `v${DIGEST_VERSION}:none:${slot}`;
     const p = join(runDir(m.id), 'doc.json');
     try {
       const st = statSync(p);
-      sig = `${st.size}:${Math.round(st.mtimeMs)}:${slot}:${m.updatedAt || ''}:${m.name || ''}`;
+      sig = `v${DIGEST_VERSION}:${st.size}:${Math.round(st.mtimeMs)}:${slot}:${m.updatedAt || ''}:${m.name || ''}`;
     } catch {
       // no doc yet – a fresh run still counts as started
     }
@@ -92,15 +104,17 @@ function refreshRuns(state) {
       // a damaged doc: keep what was known of it
       if (prev?.digest) continue;
     }
-    // the run's game – or a hack's base game (a hack run's game id can be the hack's): its generation counts, not one
-    // guessed from the system (a DS hack of Black 2 is Gen 5, a 3DS game has its own)
-    const hackIds = [m.game?.hackId, m.patch?.hackId].filter(Boolean);
-    const hack = (catalog().hacks || []).find((h) => hackIds.includes(h.id) || h.id === m.game?.id);
-    const game = [m.game?.id, m.base?.gameId, hack?.baseGameId].filter(Boolean).map((id) => games.find((g) => g.id === id)).find(Boolean);
-    state.runs[m.id] = { sig, digest: digestRun(m, entries, slot, { areaName: curatedAreaName, gen: game?.generation || null }) };
+    // its generation from the game, not guessed from the system (a DS hack of Black 2 is Gen 5, a 3DS game has its own)
+    state.runs[m.id] = { sig, digest: digestRun(m, entries, slot, { areaName: curatedAreaName, gen: genOf(m, games) }) };
   }
-  // a deleted run stays in the trophies (its catches really happened); it is only marked
-  for (const [id, r] of Object.entries(state.runs)) if (!present.has(id) && !r.archived) state.runs[id] = { ...r, archived: true };
+  // a deleted run stays in the trophies (its catches really happened); it is only marked – its doc is gone, so an older
+  // digest only gets its generation from its game id again (a DS hack of Gen 5 was counted as Gen 4)
+  for (const [id, r] of Object.entries(state.runs)) {
+    if (present.has(id)) continue;
+    const gen = r.digest?.gameId ? genOf({ game: { id: r.digest.gameId } }, games) : null;
+    const digest = gen && r.digest.gen !== gen ? { ...r.digest, gen } : r.digest;
+    if (!r.archived || digest !== r.digest) state.runs[id] = { ...r, digest, archived: true };
+  }
 }
 
 /**

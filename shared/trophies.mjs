@@ -80,25 +80,41 @@ export function digestRun(manifest, entries, slot, opts = {}) {
   for (const s of slots) names[s] = str(doc[`player:${s}`]?.name || manifest?.players?.[s]?.name || s.toUpperCase(), 40);
   const areaName = (key) => (key === 'starter' ? '' : str(doc[`area:${key}`]?.name) || str(opts.areaName?.(key)) || key);
 
-  // feed: the original species of each catch, evolutions, badges, cheats
-  const firstSpecies = {};
-  const evolutions = [];
+  // feed: the original species of each catch (every player's – a SoulLink twin is judged by what both caught),
+  // evolutions, badges, cheats
+  const firstOf = {}; // slot → area → { species, at }
+  const evolved = [];
   const badgeTimes = [];
   let cheats = 0;
   for (const [k, f] of Object.entries(doc)) {
-    if (!k.startsWith('feed:') || !f || typeof f !== 'object' || f.slot !== me) continue;
+    if (!k.startsWith('feed:') || !f || typeof f !== 'object') continue;
     const at = num(f.at);
-    if (f.type === 'catch' && f.area && species(f.species)) {
-      const prev = firstSpecies[f.area];
-      if (!prev || (at && at < prev.at)) firstSpecies[f.area] = { species: f.species, at };
-    } else if (f.type === 'evolve') {
+    if (f.type === 'catch' && f.area && species(f.species) && slots.includes(f.slot)) {
+      const mine = (firstOf[f.slot] ||= {});
+      const prev = mine[f.area];
+      if (!prev || (at && at < prev.at)) mine[f.area] = { species: f.species, at };
+    }
+    if (f.slot !== me) continue;
+    if (f.type === 'evolve') {
       const from = species(f.msg?.vars?.from?.species);
       const to = species(f.msg?.vars?.to?.species);
-      if (to) evolutions.push({ area: str(f.area), from, to, at });
+      if (to) evolved.push({ area: str(f.area), from, to, at });
     } else if (f.type === 'badge') {
       const n = Number(f.msg?.vars?.n);
       if (Number.isInteger(n) && n >= 1 && n <= 16) badgeTimes.push({ n, at });
     } else if (f.type === 'cheat' && f.cheat === 'rareCandy') cheats += Math.max(0, Number(f.count) || 0);
+  }
+  const firstSpecies = firstOf[me] || {};
+  // one evolution per step of a Pokémon: a reloaded savestate turns it back (Charmeleon → Charmander) and evolves it
+  // again – only a species the Pokémon never was before counts, once
+  const evolutions = [];
+  const wasBefore = {};
+  for (const e of evolved.sort((a, b) => (a.at ?? Infinity) - (b.at ?? Infinity))) {
+    const seen = (wasBefore[e.area] ||= new Set([firstSpecies[e.area]?.species].filter(Boolean)));
+    if (e.from) seen.add(e.from);
+    if (seen.has(e.to)) continue;
+    seen.add(e.to);
+    evolutions.push(e);
   }
   // one time per badge number (a reloaded savestate can announce a badge again: the first one counts)
   const badgeAt = {};
@@ -114,7 +130,7 @@ export function digestRun(manifest, entries, slot, opts = {}) {
     const pair = doc[`pair:${area}`];
     const dead = pair?.state === 'dead';
     if (s !== me) {
-      if (e.outcome === 'caught' && species(e.species)) partners.push({ slot: s, area, species: e.species, shiny: !!e.shiny, nickname: str(e.nickname, 20), level: num(e.level), at: num(e.at), dead });
+      if (e.outcome === 'caught' && species(e.species)) partners.push({ slot: s, area, species: e.species, first: firstOf[s]?.[area]?.species || e.species, shiny: !!e.shiny, nickname: str(e.nickname, 20), level: num(e.level), at: num(e.at), dead });
       continue;
     }
     if (e.outcome === 'missed') {
@@ -126,8 +142,9 @@ export function digestRun(manifest, entries, slot, opts = {}) {
     catches.push({
       area, areaName: areaName(area), species: e.species, first, nickname: str(e.nickname, 20), level: num(e.level), metLevel: num(e.metLevel),
       shiny: !!e.shiny, at: num(e.at) ?? firstSpecies[area]?.at ?? null, dead,
-      ...(dead ? { diedAt: num(pair.diedAt), deathLevel: num(pair.level), by: str(pair.by, 4) || null, segment: pair.segment ?? null,
-        killer: pair.killer && species(pair.killer.species) ? { species: pair.killer.species, level: num(pair.killer.level), kind: pair.killer.kind === 'trainer' ? 'trainer' : pair.killer.kind === 'wild' ? 'wild' : null } : null } : {}),
+      // (a SoulLink death on the partner's side: the link is dead, but the killer and level are the partner's Pokémon's)
+      ...(dead ? { diedAt: num(pair.diedAt), by: str(pair.by, 4) || null, segment: pair.segment ?? null,
+        ...(pair.by && pair.by !== me ? { deathLevel: null, killer: null } : { deathLevel: num(pair.level), killer: pair.killer && species(pair.killer.species) ? { species: pair.killer.species, level: num(pair.killer.level), kind: pair.killer.kind === 'trainer' ? 'trainer' : pair.killer.kind === 'wild' ? 'wild' : null } : null }) } : {}),
     });
   }
   // bonus Pokémon of a solo run (gifts, trades, bonus catches kept outside the route list)
@@ -140,6 +157,8 @@ export function digestRun(manifest, entries, slot, opts = {}) {
   // deaths of every link of the run (also the partner's half – it is one death in a SoulLink)
   const deaths = Object.entries(doc).filter(([k, p]) => k.startsWith('pair:') && p?.state === 'dead')
     .map(([k, p]) => ({ area: k.slice(5), at: num(p.diedAt), by: str(p.by, 4) || null }))
+    // and the bonus Pokémon of a solo run that died (a gift Eevee lost is a death of the run)
+    .concat(catches.filter((x) => x.extra && x.dead).map((x) => ({ area: null, at: x.diedAt ?? null, by: me })))
     .sort((a, b) => (a.at ?? Infinity) - (b.at ?? Infinity));
 
   const lives = {};
@@ -159,7 +178,7 @@ export function digestRun(manifest, entries, slot, opts = {}) {
   const badges = Math.max(lives[me]?.badges || 0, ...Object.keys(badgeAt).map(Number), 0);
   return {
     id: str(manifest?.id, 16), name: str(manifest?.name, 80), mode, players: slots.length, me, names,
-    gameId: str(game.id || manifest?.base?.gameId, 60) || null, gen: opts.gen || num(game.generation) || { gb: 1, gbc: 2, gba: 3, nds: 4 }[game.system] || null,
+    gameId: str(game.id || manifest?.base?.gameId, 60) || null, gen: opts.gen || num(game.generation) || { gb: 1, gbc: 2, gba: 3, nds: 4, '3ds': 6 }[game.system] || null,
     randomized: manifest?.randomizer ? manifest.randomizer.enabled !== false : false, hack: !!(manifest?.patch || game.hackId),
     createdAt: time(manifest?.createdAt), attempt: Number(manifest?.attempt) || Number(/#(\d+)\s*$/.exec(manifest?.name || '')?.[1]) || 1,
     status: st?.state ? { state: st.state, reason: str(st.reason, 20) || null, at: num(st.at), by: str(st.by, 4) || null } : null,
@@ -425,8 +444,8 @@ export const ACHIEVEMENTS = [
   { id: 'magikarp', cat: 'fun', rarity: 'epic', hidden: true, check: (c) => flag(firstBy(c.catches.filter((x) => x.killer?.species === 129).map((x) => ({ at: x.diedAt })), () => true)) },
   { id: 'rattata', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(c.catches.filter((x) => [19, 20].includes(x.killer?.species)).map((x) => ({ at: x.diedAt })), () => true)) },
   { id: 'rival', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.catches.filter((x) => x.killer?.kind === 'trainer' && STARTER_LINES.has(x.killer.species) && (x.killer.level ?? 99) <= 12
-    && (!d.badgeAt[1] || (x.diedAt && x.diedAt < d.badgeAt[1])))).map((x) => ({ at: x.diedAt })), () => true)) },
-  { id: 'starterDown', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.catches.filter((x) => x.area === 'starter' && x.dead && (!d.badgeAt[1] || (x.diedAt && x.diedAt < d.badgeAt[1])))).map((x) => ({ at: x.diedAt })), () => true)) },
+    && beforeFirstBadge(d, x))).map((x) => ({ at: x.diedAt })), () => true)) },
+  { id: 'starterDown', cat: 'fun', rarity: 'uncommon', check: (c) => flag(firstBy(c.digests.flatMap((d) => d.catches.filter((x) => x.area === 'starter' && x.dead && beforeFirstBadge(d, x))).map((x) => ({ at: x.diedAt })), () => true)) },
   { id: 'nuzlose', cat: 'fun', rarity: 'rare', target: 5, check: (c) => { const f = c.digests.filter((d) => d.mode === 'nuzlocke' && failed(d)); return count(f.length, f.map((d) => d.status.at), 5); } },
   { id: 'skillIssue', cat: 'fun', rarity: 'rare', hidden: true, check: (c) => flag(firstBy(c.digests.filter(failed).map((d) => {
     const last = [...myDeaths(d)].sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0))[0];
@@ -475,9 +494,19 @@ export const ACHIEVEMENTS = [
 function killedBy(c, test) {
   return c.catches.filter((x) => x.dead && x.killer && test(x.killer)).map((x) => ({ at: x.diedAt }));
 }
+/**
+ * A death before the run's first badge. Sun/Moon and Ultra Sun/Ultra Moon have island trials instead of gyms (no badges
+ * read): there the first boss beaten is the cut-off – without one the death isn't judged (it may be at the Elite Four).
+ */
+function beforeFirstBadge(d, x) {
+  const cut = d.badgeAt[1] ?? (d.gen >= 7 ? Math.min(...(d.bosses || []).map((b) => b.at ?? Infinity)) : null);
+  if (cut === null || cut === undefined) return true;
+  if (cut === Infinity) return false;
+  return !!(x.diedAt && x.diedAt < cut);
+}
 function twins(c) {
   return c.digests.filter((d) => d.mode === 'soullink')
-    .flatMap((d) => d.catches.filter((x) => x.area && d.partners.some((p) => p.area === x.area && p.species && (p.species === x.first || p.species === x.species))).map((x) => x.at ?? 0));
+    .flatMap((d) => d.catches.filter((x) => x.area && d.partners.some((p) => p.area === x.area && (p.first || p.species) === x.first)).map((x) => x.at ?? 0));
 }
 /** Deaths of different links within SAME_TURN_MS: the time of the second one. */
 function sameTurn(deaths) {
@@ -527,11 +556,11 @@ export function medals(states, totals) {
     const open = list.filter((s) => !s.hidden);
     const got = list.filter((s) => s.ok).length;
     const gotOpen = open.filter((s) => s.ok).length;
-    // master needs the secret ones too
-    const value = got;
+    // platinum needs every open one, master the secret ones too: secret ones count towards the lower tiers, but never
+    // past "one open one missing" – the value shown is the one the tiers use
+    const value = gotOpen < open.length ? Math.min(got, open.length - 1) : got;
     const steps = [1, Math.ceil(open.length * 0.35), Math.ceil(open.length * 0.7), open.length, list.length];
-    let tier = tierOf(value, steps);
-    if (tier >= 3 && gotOpen < open.length) tier = 2;
+    const tier = tierOf(value, steps);
     out.push({ id: `cat-${cat}`, kind: 'category', cat, tier, value, total: list.length, steps });
   }
   for (const g of totals.perGen.filter((x) => x.supported)) {

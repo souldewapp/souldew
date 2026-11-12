@@ -162,7 +162,7 @@ test('rules: deaths – clean badges only without a death in between, the funny 
   const run = T.digestRun(pair('bbbb0002'), docOf({
     'player:p2': { name: 'Robin' },
     'enc:starter:p1': caught(152, T0 + 10, { nickname: 'CHIKO' }),
-    'pair:starter': dead(T0 + 30 * 60000, { by: 'p2', killer: { species: 158, level: 5, kind: 'trainer' } }), // rival's Totodile before badge 1
+    'pair:starter': dead(T0 + 30 * 60000, { by: 'p1', killer: { species: 158, level: 5, kind: 'trainer' } }), // rival's Totodile before badge 1
     'enc:r29:p1': caught(129, T0 + 20, { nickname: 'ROBIN' }),
     'pair:r29': dead(T0 + 30 * 60000 + 4000, { by: 'p1', killer: { species: 129, level: 4, kind: 'wild' } }), // same turn, a Magikarp
     'enc:r29:p2': caught(129, T0 + 25),
@@ -170,6 +170,9 @@ test('rules: deaths – clean badges only without a death in between, the funny 
     'feed:b1': feedBadge('p1', 1, T0 + 2 * H),
     'feed:b2': feedBadge('p1', 2, T0 + 3 * H),
     'enc:r30:p1': caught(19, T0 + 2.5 * H),
+    // the run's first death: on the partner's side (Route 31, before the others)
+    'enc:r31:p1': caught(21, T0 + 40),
+    'pair:r31': dead(T0 + 20 * 60000, { by: 'p2' }),
     'run:status': { state: 'failed', reason: 'wipe', at: T0 + 25 * 60000 },
   }), 'p1');
   const s = evalOf([run]);
@@ -294,6 +297,58 @@ test('rules: every achievement has a unique id, a known category and rarity, and
   assert.doesNotThrow(() => T.evaluate(T.context(odd, [{ type: 'badge' }])));
 });
 
+test('digest: savestate rewinds, the partner’s deaths, a solo run’s bonus Pokémon, twins by what was caught, Gen 7 trials', () => {
+  const run = T.digestRun(pair('bbbb0009'), docOf({
+    'enc:r1:p1': caught(5, T0 + 10),
+    'feed:c1': feedCatch('p1', 'r1', 4, T0 + 10),
+    // Charmander → Charmeleon, a savestate back (Charmeleon → Charmander), evolved again, then Charizard
+    'feed:e1': feedEvolve('p1', 'r1', 4, 5, T0 + H),
+    'feed:e2': feedEvolve('p1', 'r1', 5, 4, T0 + H + 60000),
+    'feed:e3': feedEvolve('p1', 'r1', 4, 5, T0 + H + 120000),
+    'feed:e4': feedEvolve('p1', 'r1', 5, 6, T0 + 2 * H),
+    // the partner's Magikarp on Route 2 died to a wild Magikarp – the link is dead, the killer isn't mine
+    'enc:r2:p1': caught(16, T0 + 20),
+    'enc:r2:p2': caught(129, T0 + 25),
+    'pair:r2': dead(T0 + 3 * H, { by: 'p2', level: 9, killer: { species: 129, level: 4, kind: 'wild' } }),
+    // twins: both caught Charmander on Route 1; the partner's has evolved since
+    'enc:r1:p2': caught(5, T0 + 30),
+    'feed:c2': feedCatch('p2', 'r1', 4, T0 + 30),
+  }), 'p1');
+  assert.deepEqual(run.evolutions.map((e) => e.to), [5, 6], 'one evolution per step');
+  const r2 = run.catches.find((x) => x.area === 'r2');
+  assert.equal(r2.dead, true);
+  assert.equal(r2.killer, null);
+  assert.equal(r2.deathLevel, null);
+  assert.equal(run.partners.find((p) => p.area === 'r1').first, 4);
+  const s = evalOf([run]);
+  assert.equal(s.magikarp.ok, false, 'the partner’s loss isn’t mine');
+  assert.equal(s.soulTwins.ok, true, 'twins by the species both caught');
+  // a false twin: my Charmander evolved, the partner caught a wild Charmeleon
+  const run2 = T.digestRun(pair('bbbb0010'), docOf({
+    'enc:r1:p1': caught(5, T0 + 10), 'feed:c1': feedCatch('p1', 'r1', 4, T0 + 10),
+    'enc:r1:p2': caught(5, T0 + 30), 'feed:c2': feedCatch('p2', 'r1', 5, T0 + 30),
+  }), 'p1');
+  assert.equal(evalOf([run2]).soulTwins.ok, false);
+  // a solo run's gift Pokémon died: the run isn't deathless
+  const run3 = T.digestRun(solo('bbbb0011'), docOf({
+    'enc:starter:p1': caught(1, T0 + 10),
+    'extra:p1:gift1': { species: 133, at: T0 + 20, dead: true, diedAt: T0 + H },
+    'run:status': { state: 'won', at: T0 + 20 * H },
+  }), 'p1');
+  assert.equal(run3.deaths.length, 1);
+  assert.equal(evalOf([run3]).deathlessWin.ok, false);
+  // Gen 7 (no badges – island trials): the starter lost at the Elite Four is no "before the first badge"
+  const sun = { game: { id: 'pokemon-sun', system: '3ds', generation: 7 } };
+  const starterAt = (diedAt, bosses = {}) => T.digestRun(solo('bbbb0012', sun), docOf({
+    'enc:starter:p1': caught(722, T0 + 10), 'pair:starter': dead(diedAt, { by: 'p1' }), ...bosses,
+  }), 'p1');
+  assert.equal(evalOf([starterAt(T0 + 40 * H)]).starterDown.ok, false, 'no badge, no boss: not judged');
+  assert.equal(evalOf([starterAt(T0 + H, { 'boss:hala': { at: T0 + 5 * H } })]).starterDown.ok, true, 'before the first boss');
+  assert.equal(evalOf([starterAt(T0 + 9 * H, { 'boss:hala': { at: T0 + 5 * H } })]).starterDown.ok, false, 'after it');
+  // a 3DS run whose game wasn't identified still counts for its system's first generation
+  assert.equal(T.digestRun(solo('bbbb0013', { game: { system: '3ds' } }), docOf({}), 'p1').gen, 6);
+});
+
 test('medals: tiers per category, per regional dex and the champion’s medal', () => {
   const states = T.ACHIEVEMENTS.map((a) => ({ id: a.id, cat: a.cat, hidden: !!a.hidden, ok: a.cat === 'randomizer' || (a.cat === 'fun' && !a.hidden) }));
   const totals = T.dexTotals(Object.fromEntries(Array.from({ length: 151 }, (_, i) => [i + 1, { caught: 1, shiny: 0, seenAt: 0 }])));
@@ -301,6 +356,13 @@ test('medals: tiers per category, per regional dex and the champion’s medal', 
   assert.equal(m['cat-randomizer'].tier, 4, 'every randomizer achievement (none secret): master');
   assert.equal(m['cat-fun'].tier, 3, 'all open fun ones: platinum, the secret ones are missing for master');
   assert.equal(m['cat-skill'].tier, -1);
+  // secret ones count, but never past "one open one missing": the value shown is the one the tiers use
+  const sl = T.ACHIEVEMENTS.filter((a) => a.cat === 'soullink');
+  const openSl = sl.filter((a) => !a.hidden);
+  const almost = T.ACHIEVEMENTS.map((a) => ({ id: a.id, cat: a.cat, hidden: !!a.hidden, ok: a.cat === 'soullink' && (a.hidden || a.id !== openSl[0].id) }));
+  const ms = T.medals(almost, totals).find((x) => x.id === 'cat-soullink');
+  assert.equal(ms.value, openSl.length - 1);
+  assert.equal(ms.tier, 2, 'gold, not platinum, with an open one missing');
   assert.equal(m['dex-1'].tier, 4, 'Kanto complete');
   assert.equal(m['dex-2'].tier, -1);
   assert.equal(m['dex-7'].tier, -1, 'Alola: a medal to earn');
@@ -382,6 +444,22 @@ test('syncTrophies: a run\'s generation is its game\'s – a hack\'s base game (
   assert.equal(gen('ffff0102'), 6);
   assert.equal(gen('ffff0103'), 5, 'found through the hack\'s base game');
   for (const id of ['ffff0101', 'ffff0102', 'ffff0103']) rmSync(join(DATA, 'runs', id), { recursive: true });
+});
+
+test('syncTrophies: digests of an older version are made again; a deleted run gets its generation from its game id', () => {
+  writeRun(solo('ffff0201', { game: { id: 'blaze-black-2-redux', system: 'nds', hackId: 'blaze-black-2-redux' } }), docOf({ 'enc:starter:p1': caught(495, T0) }));
+  syncTrophies({});
+  const st = JSON.parse(readFileSync(TROPHY_PATH, 'utf8'));
+  // as an older version left them: a present run with the old signature and Gen 4, a deleted one with Gen 4
+  st.runs.ffff0201 = { sig: 'old', digest: { ...st.runs.ffff0201.digest, gen: 4 } };
+  st.runs.ffff0202 = { sig: 'old', archived: true, digest: { ...st.runs.ffff0201.digest, id: 'ffff0202', gen: 4 } };
+  writeFileSync(TROPHY_PATH, JSON.stringify(st));
+  const r = syncTrophies({});
+  const gen = (id) => r.runs.find((x) => x.id === id).gen;
+  assert.equal(gen('ffff0201'), 5, 'digested again');
+  assert.equal(gen('ffff0202'), 5, 'the deleted run: from its game id');
+  assert.equal(r.runs.find((x) => x.id === 'ffff0202').archived, true);
+  rmSync(join(DATA, 'runs', 'ffff0201'), { recursive: true });
 });
 
 test('rules: the classic memes – Miltank, Garchomp, Selfdestruct, Abra, roamers, Gyarados, Feebas, Helix, Bird Jesus, too much water', () => {

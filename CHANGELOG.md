@@ -16,6 +16,13 @@
   unlocked stays unlocked).
 - **Trophies: a hack run counts for its base game's generation** – Blaze Black 2 Redux or Blaze Black were counted as
   Gen 4 ("a DS game"), so "Time Traveller" and the per-generation numbers missed Gen 5; 3DS runs count as Gen 6/7.
+- **Trophies count what really happened:** a savestate loaded back over an evolution no longer counts it again
+  ("Evolution Master", "Glow-Up", Gyarados); a SoulLink death on your partner's side no longer gives you its killer
+  trophies (Magikarp, the rival, Miltank …); a bonus Pokémon lost in a solo run counts as a death ("Deathless" and the
+  clean-badge ones); SoulLink twins are judged by what both of you caught, not by what it evolved into; in Sun/Moon and
+  Ultra Sun/Ultra Moon (no badges) "before the first badge" means before the first boss. Every run is read again
+  once, deleted ones get their generation from their game.
+- The category medals no longer show Platinum as reached while an open achievement is missing.
 - **Battle helper for Gen 6/7**: the type chart knows Fairy and that Steel no longer resists Ghost and Dark; the
   species picker offers up to #721 / #809 in 3DS runs. The moves of X/Y to Ultra Sun/Ultra Moon (Moonblast, Leafage …)
   and their held items have names and values now – with names missing, the helper would have left out every move.
