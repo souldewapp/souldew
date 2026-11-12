@@ -164,6 +164,44 @@
   #stream .live span { padding: 6px 12px; border-radius: 6px; background: #000000a0; color: #fff; font: 600 15px/1.2 var(--body); box-shadow: 0 4px 10px #0005; }
   #stream .live span::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #e5484d; vertical-align: 1px; }
   #stream .frame { position: absolute; inset: 0; z-index: 4; border-radius: 16px; box-shadow: inset 0 0 0 1px #ffffff26, inset 0 0 80px #0004; pointer-events: none; }
+
+  /* ---------- release image: 3DS in 2.5.0 (1280×720; only for the release notes, not the README) ---------- */
+  #release .copy { top: 84px; width: 404px; }
+  #release h2 { margin: 24px 0 16px; }
+  #release .lead { font-size: 18.5px; }
+  #release .lead b { color: var(--ink); font-weight: 500; }
+  #release .window { left: 470px; top: 116px; width: 770px; --c: #ffb65c; }
+  /* the app screenshot (1440×900 css px) with the game area painted over: our own pixel scene instead of game footage */
+  #release .inner { position: relative; }
+  #release .screens { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; }
+  #release .screens .gap { position: absolute; left: 528px; top: 121px; width: 559px; height: 671px; background: #060608; border-radius: 4px; }
+  #release .scr { position: absolute; overflow: hidden; }
+  #release .scr canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+  #release .scr.top { left: 528px; top: 121px; width: 559px; height: 335px; }
+  #release .scr.bot { left: 584px; top: 457px; width: 447px; height: 335px; }
+  #release .hpbox { position: absolute; padding: 9px 14px 11px; border-radius: 6px; background: #1d1c24ee; box-shadow: 0 0 0 3px #0c0b10, inset 0 2px 0 #ffffff1c, 0 6px 0 #0006;
+    font: 700 21px/1 'Pixelify Sans'; color: var(--ink); white-space: nowrap; }
+  #release .hpbox small { margin-left: 12px; font: 700 18px/1 'Pixelify Sans'; color: var(--ink-2); }
+  #release .hpbox .hp { display: flex; align-items: center; gap: 8px; margin-top: 8px; font: 700 13px/1 var(--mono); color: var(--warn); }
+  #release .hpbox .hp i { display: block; width: 170px; height: 9px; background: #0c0b10; box-shadow: inset 0 0 0 2px #0c0b10; }
+  #release .hpbox .hp i::before { content: ''; display: block; height: 100%; width: var(--w, 100%); background: linear-gradient(#8fe0a3 0 40%, #5fbf7a 40%); }
+  #release .hpbox .num { margin-top: 6px; text-align: right; font: 700 17px/1 var(--pixel); color: var(--ink-2); }
+  #release .menu { position: absolute; inset: 26px 26px 26px; display: grid; grid-template-columns: 1.25fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 14px; }
+  #release .menu b { display: grid; place-items: center; border-radius: 10px; font: 700 34px/1 'Pixelify Sans'; letter-spacing: .04em; color: #fff; text-shadow: 0 3px 0 #0007;
+    background: var(--b); box-shadow: inset 0 0 0 3px #ffffff40, inset 0 -8px 0 #0004, 0 0 0 3px #0c0b10, 0 6px 0 #0c0b10; }
+  #release .menu .fight { grid-row: span 3; --b: linear-gradient(160deg, #ff7aa8, #e0457a); font-size: 46px; }
+  #release .menu .bag { --b: linear-gradient(160deg, #ffc76b, #e29a35); }
+  #release .menu .mon { --b: linear-gradient(160deg, #9ad883, #5ea65a); }
+  #release .menu .run { --b: linear-gradient(160deg, #8cb0ff, #5b7ee0); }
+  #release .cursor { position: absolute; left: 160px; top: 236px; width: 44px; height: 44px; filter: drop-shadow(0 4px 0 #0008); }
+  #release .ticker { position: absolute; left: 0; right: 0; bottom: 0; height: 46px; z-index: 7; display: flex; align-items: center; gap: 22px; padding-left: 64px;
+    background: linear-gradient(180deg, #1a2a1d, #101912); box-shadow: inset 0 1px 0 #2f4a33, 0 -10px 30px #0008;
+    font: 700 17px/1 'Pixelify Sans'; letter-spacing: .08em; color: var(--lcd-4); text-transform: uppercase; white-space: nowrap; }
+  #release .ticker::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, #00000030 0 1px, transparent 1px 3px); }
+  #release .ticker i { width: 6px; height: 6px; background: var(--lcd-3); }
+  #release .ticker .brand { display: flex; align-items: center; gap: 10px; margin-right: 10px; color: var(--lcd-5); }
+  #release .ticker .brand img { width: 24px; height: 24px; }
+  #release .ticker .brand em { font-style: normal; padding: 4px 7px; border-radius: 4px; background: #ffb65c; color: #1a1408; font: 700 13px/1 var(--mono); letter-spacing: .06em; }
 </style>
 </head>
 <body>
@@ -212,6 +250,40 @@
     <div class="window"><div class="bar"><i></i><i></i><i></i></div><img alt="" /></div>
     <svg class="wire"></svg>
     <div class="foot"><img src="../icon.svg" alt="" /><span>souldew</span><span class="dots"></span></div>
+  </div>
+
+  <!-- ================= release image: 3DS in 2.5.0 ================= -->
+  <div class="art stage poster" id="release" style="--c:#ffb65c">
+    <div class="glow" style="left:480px;top:-260px;width:960px;height:780px;background:radial-gradient(closest-side,#ffb65c2e,transparent)"></div>
+    <div class="glow" style="left:-200px;top:-220px;width:700px;height:560px;background:radial-gradient(closest-side,#5d7fe02a,transparent)"></div>
+    <div class="dither" style="--c:#ffb65c;left:-120px;top:-160px;width:620px;height:560px;opacity:.12"></div>
+    <div class="dither" style="--c:#ff8fdc;left:820px;top:380px;width:620px;height:500px;opacity:.12"></div>
+    <div class="copy">
+      <span class="kicker"><svg class="px" viewBox="0 0 16 16"><use href="#ic-play"/></svg><span><span class="num">New in 2.5.0 ·</span> Nintendo 3DS</span></span>
+      <h2>3DS games, <em>right inside.</em></h2>
+      <p class="lead"><b>X/Y, Omega Ruby/Alpha Sapphire, Sun/Moon and Ultra Sun/Ultra Moon</b> run in souldew’s own player – your team, every battle and the place you’re at read live, like in every other game.</p>
+      <div class="pills"></div>
+    </div>
+    <div class="window"><div class="bar"><i></i><i></i><i></i></div>
+      <div class="inner"><img src="shots/play-3ds.webp" alt="" />
+        <div class="screens">
+          <div class="gap"></div>
+          <div class="scr top"><canvas width="240" height="144"></canvas>
+            <div class="hpbox" style="left:22px;top:20px">Tapu Koko<small>Lv 60</small><div class="hp">HP<i></i></div></div>
+            <div class="hpbox" style="right:22px;bottom:20px">Smeargle<small>Lv 100</small><div class="hp">HP<i></i></div><div class="num">314/314</div></div>
+          </div>
+          <div class="scr bot"><canvas width="160" height="120"></canvas>
+            <div class="menu"><b class="fight">FIGHT</b><b class="bag">BAG</b><b class="mon">POKÉMON</b><b class="run">RUN</b></div>
+            <svg class="cursor px" viewBox="0 0 11 11"><path fill="#0c0b10" d="M0 0h2v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2h-4v1h-1v1h-2v-1h-1v-1h-1z"/><path fill="#fff" d="M1 1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h-3v1h-1v1h-1v-1h-1z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <svg class="wire"></svg>
+    <svg class="spark" style="left:448px;top:70px;--c:#ffb65c"><use href="#spark"/></svg>
+    <svg class="spark" style="left:1236px;top:92px;--c:#ff8fdc;width:10px;height:10px"><use href="#spark"/></svg>
+    <svg class="spark" style="left:1150px;top:640px;--c:#b3c770;width:10px;height:10px"><use href="#spark"/></svg>
+    <div class="ticker"><span class="brand"><img src="../icon.svg" alt="" />souldew <em>2.5.0</em></span><span>X</span><i></i><span>Y</span><i></i><span>Omega Ruby</span><i></i><span>Alpha Sapphire</span><i></i><span>Sun</span><i></i><span>Moon</span><i></i><span>Ultra Sun</span><i></i><span>Ultra Moon</span></div>
   </div>
 
   <!-- ================= how it works ================= -->
@@ -301,22 +373,40 @@
     const img = art.querySelector('.window img');
     img.src = `shots/${name}.webp`;
     // the screenshot is 1440×900 css px at 2×; the window shows it 780 px wide below a 26 px bar (+1 px border)
-    const W = { x: 456 + 1, y: 128 + 1 + 27, s: 780 / 1440 };
+    addZooms(art, P.zooms, { x: 456 + 1, y: 128 + 1 + 27, s: 780 / 1440 }, `shots/${name}.webp`, P.c);
+  }
+
+  // Marks a region of the window's screenshot (r = [x, y, w, h] in its 1440×900 space), shows it enlarged at `at` with a
+  // tag, and joins the two with a pixel-dashed line. W: where the screenshot sits on the artboard and its scale.
+  function addZooms(art, zooms, W, shot, c) {
     const wire = art.querySelector('svg.wire');
-    for (const zm of P.zooms) {
+    for (const zm of zooms) {
       const [x, y, w, h] = zm.r;
       const m = { x: W.x + x * W.s, y: W.y + y * W.s, w: w * W.s, h: h * W.s };
       art.insertAdjacentHTML('beforeend', `<div class="mark" style="left:${m.x - 4}px;top:${m.y - 4}px;width:${m.w + 4}px;height:${m.h + 4}px"></div>`);
       const L = { x: zm.at[0], y: zm.at[1], w: w * zm.z, h: h * zm.z };
-      art.insertAdjacentHTML('beforeend', `<div class="zoom" style="left:${L.x}px;top:${L.y}px"><div class="lens" style="width:${L.w}px;height:${L.h}px;background-image:url(shots/${name}.webp);background-size:${1440 * zm.z}px auto;background-position:${-x * zm.z}px ${-y * zm.z}px"></div><span class="tag">${zm.tag}</span></div>`);
+      art.insertAdjacentHTML('beforeend', `<div class="zoom" style="left:${L.x}px;top:${L.y}px"><div class="lens" style="width:${L.w}px;height:${L.h}px;background-image:url(${shot});background-size:${1440 * zm.z}px auto;background-position:${-x * zm.z}px ${-y * zm.z}px"></div><span class="tag">${zm.tag}</span></div>`);
       // connector: nearest points of the two boxes, drawn as a pixel-dashed line
       const cx = (r) => r.x + r.w / 2, cy = (r) => r.y + r.h / 2;
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
       const a = { x: clamp(cx(L), m.x - 4, m.x + m.w), y: clamp(cy(L), m.y - 4, m.y + m.h) };
       const b = { x: clamp(cx(m), L.x - 8, L.x + L.w + 8), y: clamp(cy(m), L.y - 8, L.y + L.h + 8) };
-      wire.insertAdjacentHTML('beforeend', `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${P.c}" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="square" style="filter:drop-shadow(0 0 6px ${P.c})"/>` +
-        `<rect x="${a.x - 5}" y="${a.y - 5}" width="10" height="10" fill="${P.c}"/><rect x="${b.x - 5}" y="${b.y - 5}" width="10" height="10" fill="${P.c}"/>`);
+      wire.insertAdjacentHTML('beforeend', `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${c}" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="square" style="filter:drop-shadow(0 0 6px ${c})"/>` +
+        `<rect x="${a.x - 5}" y="${a.y - 5}" width="10" height="10" fill="${c}"/><rect x="${b.x - 5}" y="${b.y - 5}" width="10" height="10" fill="${c}"/>`);
     }
+  }
+
+  if (art.id === 'release') {
+    const c = '#ffb65c';
+    art.querySelector('.pills').innerHTML = ['Both screens', 'Live team &amp; battles', 'Save states']
+      .map((p) => `<span class="pill"><svg class="px" viewBox="0 0 16 16"><use href="#ic-check"/></svg>${p}</span>`).join('');
+    art.querySelector('.screens').style.transform = `scale(${770 / 1440})`;
+    await paintBattle(art.querySelector('.scr.top canvas'));
+    paintTouch(art.querySelector('.scr.bot canvas'));
+    addZooms(art, [
+      { r: [242, 323, 256, 150], z: 1.08, at: [318, 504], tag: 'Read from the game' },
+      { r: [242, 70, 256, 116], z: 1.0, at: [968, 30], tag: 'The game’s own names' },
+    ], { x: 470 + 1, y: 116 + 1 + 27, s: 770 / 1440 }, 'shots/play-3ds.webp', c);
   }
 
   if (art.id === 'stream') paintRoute(art.querySelector('canvas'));
@@ -357,6 +447,54 @@
       tuft.forEach((row, dy) => [...row].forEach((ch, dx) => { if (ch === '#') px(x + dx, y + dy, dy === 0 ? '#c4ec98' : '#3f8f40'); }));
     }
     for (let i = 0; i < 26; i++) { const x = Math.round(rnd() * 318), y = 100 + Math.round(rnd() * 76); px(x, y, rnd() > 0.5 ? '#ffe36b' : '#ff9ccf'); px(x, y + 1, '#2f6e3a'); }
+  }
+
+  // The release image's top screen: our own pixel battle (240×144) – electric terrain, two platforms and the app's
+  // sprites of the two Pokémon in the screenshot – painted where the game's picture would be.
+  async function paintBattle(cv) {
+    const g = cv.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    const px = (x, y, c, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+    const bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+    const band = (y0, y1, cols) => { for (let y = y0; y < y1; y++) for (let x = 0; x < 240; x++) {
+      const t = (y - y0) / (y1 - y0) * (cols.length - 1), i = Math.floor(t), f = t - i;
+      px(x, y, f * 16 > bayer[y % 4][x % 4] ? cols[Math.min(i + 1, cols.length - 1)] : cols[i]);
+    } };
+    band(0, 84, ['#fff6cf', '#ffe9a0', '#fdd775', '#f6bf55']);
+    band(84, 144, ['#eab057', '#dc9a42', '#c9842f', '#b47228']);
+    // the horizon and a few bolts of the terrain
+    for (let x = 0; x < 240; x++) px(x, 84, '#fff3c2');
+    const bolt = (x, y, n) => { for (let i = 0; i < n; i++) { px(x, y, '#fffdf0', 2, 1); px(x + 1, y + 1, '#ffe15c'); x += i % 3 === 2 ? -2 : 1; y += 1; } };
+    bolt(30, 8, 22); bolt(118, 2, 18); bolt(212, 14, 26); bolt(84, 30, 12);
+    for (const [x, y] of [[60, 20], [150, 40], [196, 8], [20, 60], [228, 58], [100, 64]]) { px(x, y, '#fffdf0'); px(x - 1, y + 1, '#ffe15c', 3, 1); px(x, y + 2, '#fffdf0'); }
+    // platforms: a dithered oval with a lit rim
+    const platform = (cx, cy, rx, ry) => {
+      for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) {
+        const d = (x * x) / (rx * rx) + (y * y) / (ry * ry);
+        if (d > 1) continue;
+        const X = cx + x, Y = cy + y;
+        px(X, Y, d > 0.78 && y < 0 ? '#ffe7a3' : d > 0.78 ? '#a7652a' : (y < 0 && 8 > bayer[Y % 4][X % 4]) ? '#d7a04c' : '#c08038');
+      }
+    };
+    platform(176, 78, 46, 10);
+    platform(58, 138, 72, 16);
+    const sprite = async (src) => { const i = new Image(); i.src = src; await i.decode(); return i; };
+    const [koko, smeargle] = await Promise.all([sprite('sprites/785.png'), sprite('sprites/235-shiny.png')]);
+    // the two of them (Smeargle mirrored, facing the foe)
+    g.drawImage(koko, 176 - 48, 80 - 92);
+    g.save(); g.scale(-1, 1); g.drawImage(smeargle, -(56 + 48), 132 - 90); g.restore();
+  }
+
+  // The bottom screen behind the touch menu: a dark, dithered field (160×120).
+  function paintTouch(cv) {
+    const g = cv.getContext('2d');
+    const bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+    const cols = ['#2c3a6c', '#243058', '#1b2443', '#141a31'];
+    for (let y = 0; y < 120; y++) for (let x = 0; x < 160; x++) {
+      const d = Math.min(1, Math.hypot(x - 80, y - 60) / 100) * (cols.length - 1), i = Math.floor(d), f = d - i;
+      g.fillStyle = f * 16 > bayer[y % 4][x % 4] ? cols[Math.min(i + 1, cols.length - 1)] : cols[i];
+      g.fillRect(x, y, 1, 1);
+    }
   }
 
   art.classList.add('on');

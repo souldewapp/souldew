@@ -1,6 +1,6 @@
 // Renders the README graphics into docs/media/ from build/readme/art.html (and the pixel icons from web/lib/icons.mjs):
 // banner.webp, social-preview.png (1280×640, upload it under Settings › Social preview), how-it-works.webp,
-// streaming.webp, poster-<name>.webp and icons/<name>.svg.
+// streaming.webp, poster-<name>.webp and icons/<name>.svg (and, asked for by name, release-2.5.0-3ds.webp).
 // Needs Google Chrome and cwebp (brew install webp); run it after changing art.html, the screenshots or the overlays.
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -38,6 +38,8 @@ if (want('banner')) {
 if (want('how')) webp('art=how', [1280, 610], 'how-it-works');
 if (want('stream')) webp('art=stream', [1280, 720], 'streaming');
 if (want('poster')) for (const name of ['board', 'teams', 'routes', 'nuzlocke', 'stream']) webp(`art=poster&src=${name}`, [1280, 720], `poster-${name}`);
+// Only on request: the image for the 2.5.0 release notes (`node scripts/render-readme-art.mjs release`).
+if (only === 'release') webp('art=release', [1280, 720], 'release-2.5.0-3ds');
 
 // Pixel icons for the feature list, on a tinted tile that reads on GitHub's light and dark theme.
 const ICONS = { play: '#6f8fe0', signal: '#3f9a7c', ball: '#d45f55', link: '#e06bbd', scroll: '#c8902e', grave: '#8f78d6', sound: '#8a9c3e', globe: '#3a9aa6', stream: '#d45f55', lock: '#3f9a7c', eye: '#6f8fe0', save: '#c8902e' };
