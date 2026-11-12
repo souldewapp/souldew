@@ -83,8 +83,13 @@ function text(d, off, maxChars) {
   return s;
 }
 
-// Party status (as in Gen 3–5): sleep turns in bits 0–2, or one of poison, burn, freeze, paralysis, toxic.
-const statusOk = (s) => s === 0 || (s & ~7) === 0 || s === 8 || s === 16 || s === 32 || s === 64 || s === 128;
+// Party status. The 3DS games keep a number, not Gen 3–5's flags: 1 paralysis, 2 sleep, 3 freeze, 4 burn, 5 poison
+// (checked live in Ultra Sun: a paralysed Smeargle reads 1 – as flags that would be "asleep, 1 turn"). Handed on in
+// Gen 3–5's form (the app's status code reads that): paralysis 0x40, sleep 1, freeze 0x20, burn 0x10, poison 0x08.
+// A flag value as in Gen 3–5 is still accepted as such.
+const STATUS_CODE = [0, 0x40, 1, 0x20, 0x10, 0x08];
+const statusOk = (s) => s <= 7 || s === 8 || s === 16 || s === 32 || s === 64 || s === 128;
+export const statusCode = (s) => (s < STATUS_CODE.length ? STATUS_CODE[s] : s <= 7 ? 0 : s & 0xff);
 
 /**
  * One party Pokémon from a decrypted 260-byte PK6/PK7, or null when the bytes are no Pokémon of this generation
@@ -116,7 +121,7 @@ export function pk6Mon(raw, gen) {
     metLocation: u16(d, 0xda), eggLocation: u16(d, 0xd8), metLevel: d[0xdd] & 0x7f,
     gender: ['M', 'F', '-'][(formByte >> 1) & 3] || '-',
     shiny: ((tid ^ sid ^ (pid >>> 16) ^ (pid & 0xffff)) >>> 0) < 16,
-    status: status & 0xff, level, hp, maxHp,
+    status: statusCode(status), level, hp, maxHp,
   };
 }
 
@@ -129,11 +134,17 @@ export function slotBytes(region, i) {
   return out;
 }
 
+/** Reads of the very same slot bytes failing their checksum before the slot counts as a Bad Egg (as in Gen 3). */
+const BAD_EGG_READS = 3;
+
 /**
  * The party in a 6-slot region: the slots from the first on, up to the first empty one. null when slot 0 isn't a
  * Pokémon (title screen, another update's address) or a slot after it is damaged (the game rewriting the party).
+ * `bad` (one object per region, kept across polls): a slot whose very same bytes fail the checksum for several reads
+ * is a Bad Egg, not a write in progress – it is skipped (no party member) instead of ending the party there (it hid
+ * every Pokémon behind it – in slot 0 the whole team, for good).
  */
-export function partyFromRegion(region, gen) {
+export function partyFromRegion(region, gen, bad = null) {
   if (!region || region.length < PARTY_BYTES) return null;
   const party = [];
   for (let i = 0; i < 6; i++) {
@@ -141,15 +152,22 @@ export function partyFromRegion(region, gen) {
     if (raw.every((b) => b === 0)) break;
     const m = pk6Mon(raw, gen);
     if (!m) {
+      if (bad && !decryptPK6(raw).checksumOk) {
+        const sig = Array.prototype.join.call(raw.subarray(0, 64), ',');
+        bad[i] = bad[i]?.sig === sig ? { sig, n: bad[i].n + 1 } : { sig, n: 1 };
+        if (bad[i].n >= BAD_EGG_READS) continue;
+      }
       // slot 0 must hold a Pokémon. After it, the first slot that doesn't ends the party: empty slots hold blank
       // data (encryption constant 0, species 0), zeros or what was there before (readGen67 confirms a shrink).
       if (i === 0) return null;
       break;
     }
+    if (bad) delete bad[i]; // a good read: a Bad Egg there has to be seen several times anew
     // the same Pokémon twice: read while the party menu swaps two slots
     if (party.some((x) => x.pid === m.pid && x.ec === m.ec)) return null;
     party.push(m);
   }
+  // (only Bad Eggs – another update's address reads as garbage that never changes: no party)
   return party.length ? party : null;
 }
 
@@ -171,7 +189,9 @@ export function readGen67(entry, read, state = {}) {
   for (const i of order) {
     const a = addrs[i];
     const region = read(hex(a.addr ?? a), PARTY_BYTES);
-    const party = partyFromRegion(region, entry.gen);
+    // (Bad Egg counters per address: the update's addresses are tried in turn)
+    const bad = ((state.g67Bad ||= {})[i] ||= {});
+    const party = partyFromRegion(region, entry.gen, bad);
     if (!party) continue;
     state.g67 = i;
     // fewer Pokémon than last time: only once a second read agrees (a slot the game is rewriting ends the party early)

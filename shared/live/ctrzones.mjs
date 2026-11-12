@@ -126,7 +126,8 @@ export function garcFile(readAt, at, index = 0, maxSize = 1024 * 1024) {
   if (!fatbHead || tag(fatbHead, 0) !== 'BTAF') return null;
   const size = u32(fatbHead, 4);
   const count = u32(fatbHead, 8);
-  if (size > 4 * 1024 * 1024 || !count) return null;
+  // (every entry takes at least its 4-byte bit vector: a damaged count – up to 4 billion – would loop for minutes)
+  if (size > 4 * 1024 * 1024 || !count || count > (size - 0x0c) / 4) return null;
   const fatb = readAt(fatbAt, size);
   const want = index < 0 ? count + index : index;
   if (want < 0 || want >= count) return null;
@@ -169,6 +170,9 @@ export function lz11(src, maxSize = 4 * 1024 * 1024) {
         out[o++] = src[p++];
         continue;
       }
+      // (a reference needs 2 to 4 bytes: a stream cut short is damaged, not padded with zeros)
+      const need = src[p] >> 4 === 0 ? 3 : src[p] >> 4 === 1 ? 4 : 2;
+      if (p + need > src.length) return null;
       const b0 = src[p];
       let len;
       let disp;
@@ -204,8 +208,9 @@ export function ctrZonePlaces(readAt, ids = {}) {
     const f = romfsFile(readAt, t.path);
     if (!f) return null;
     // X/Y keep the zone table last in the GARC, Omega Ruby/Alpha Sapphire second to last (then their encounter
-    // storage): the one whose size fits a table of that many zones
-    const candidates = t.gen === 6 ? [-1, -2] : [t.file];
+    // storage): the family's own place first – the other only when that one's size doesn't fit a table of zones
+    // (Omega Ruby's last file whose size happens to be a multiple of 56 must not stand in for its zone table)
+    const candidates = t.gen === 6 ? [t.file, t.file === -1 ? -2 : -1] : [t.file];
     let table = null;
     for (const i of candidates) {
       const b = lz11(garcFile(readAt, f.offset, i));

@@ -27,9 +27,25 @@ function cmd(type, payload = new Uint8Array(0)) {
   v.setUint32(0, type, true);
   v.setUint32(4, payload.length, true);
   b.set(payload, 8);
-  // one after another: the host must see input in the order it happened
-  chain = chain.then(() => (st.id ? fetch(`/api/ctr/cmd?id=${st.id}`, { method: 'POST', headers: { 'x-soullink': '1' }, body: b }) : null)).catch(() => {});
-  return chain;
+  // one after another: the host must see input in the order it happened. Resolves false when the server refused it
+  // (it never reached the host – nothing will answer), else true.
+  const sent = chain.then(() => (st.id ? fetch(`/api/ctr/cmd?id=${st.id}`, { method: 'POST', headers: { 'x-soullink': '1' }, body: b }).then((r) => r.ok) : false))
+    .catch(() => true); // (no answer at all: the server is gone – the stream's end answers what waits)
+  chain = sent;
+  return sent;
+}
+/** Wait for the host's answer to a command; `fallback` when the command never reached it. */
+function ask(list, type, payload, fallback, map = (x) => x) {
+  return new Promise((res) => {
+    const w = (x) => res(map(x));
+    list.push(w);
+    cmd(type, payload).then((ok) => {
+      if (ok) return;
+      const i = list.indexOf(w);
+      if (i >= 0) list.splice(i, 1);
+      res(fallback);
+    });
+  });
 }
 const f32 = (x) => new Uint8Array(new Float32Array([x]).buffer);
 const u32 = (x) => new Uint8Array(new Uint32Array([x]).buffer);
@@ -218,14 +234,27 @@ async function pump() {
   if (!res.ok || !res.body) throw new Error(`stream ${res.status}`);
   const reader = res.body.getReader();
   let buf = new Uint8Array(0);
+  // the chunks of a message that isn't complete yet: joined once it is (a picture is 768 KB – up to 7 MB at 3× – in
+  // many chunks; copying everything so far on each chunk cost more than the picture itself)
+  let parts = [];
+  let partsLen = 0;
+  let need = 8;
   for (;;) {
     const { value, done } = await reader.read();
     if (done) break;
-    // append (the host's messages are often bigger than one chunk – a picture is 768 KB)
-    const next = new Uint8Array(buf.length + value.length);
+    parts.push(value);
+    partsLen += value.length;
+    if (buf.length + partsLen < need) continue;
+    const next = new Uint8Array(buf.length + partsLen);
     next.set(buf);
-    next.set(value, buf.length);
+    let at = buf.length;
+    for (const c of parts) {
+      next.set(c, at);
+      at += c.length;
+    }
     buf = next;
+    parts = [];
+    partsLen = 0;
     let o = 0;
     while (buf.length - o >= 8) {
       const v = new DataView(buf.buffer, buf.byteOffset + o, 8);
@@ -245,6 +274,7 @@ async function pump() {
       o += 8 + len;
     }
     buf = buf.subarray(o);
+    need = buf.length >= 8 ? 8 + new DataView(buf.buffer, buf.byteOffset, 8).getUint32(4, true) : 8;
   }
   // the host is gone: nothing answers what's still waiting (a quick save / load would hang the play view)
   st.ended = true;
@@ -419,18 +449,12 @@ window.__emu = {
   /** A save state (the host serializes between two frames). */
   getState() {
     if (st.ended) return Promise.resolve(null);
-    return new Promise((res) => {
-      waiters.state.push((b) => res(b && b.length ? b : null));
-      cmd(CMD.SAVE);
-    });
+    return ask(waiters.state, CMD.SAVE, undefined, null, (b) => (b && b.length ? b : null));
   },
   loadState(u8) {
     if (st.ended) return Promise.resolve(false);
     audio.node?.port.postMessage('clear');
-    return new Promise((res) => {
-      waiters.loaded.push(res);
-      cmd(CMD.LOAD, u8 instanceof Uint8Array ? u8 : new Uint8Array(u8));
-    });
+    return ask(waiters.loaded, CMD.LOAD, u8 instanceof Uint8Array ? u8 : new Uint8Array(u8), false);
   },
   async screenshot() {
     const b = await snapshot({ maxW: 4096, type: 'image/png' });

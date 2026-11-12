@@ -190,12 +190,16 @@ inames = defaultdict(dict)
 for r in rows('item_names'):
     inames[int(r['local_language_id'])][int(r['item_id'])] = r['name']
 rev = {v: k for k, v in items.items()}
+# items PokeAPI has no names for (an empty name hides a team's held items in the app): the games' own names
+ITEM_NAME_FALLBACK = {
+    'roseli-berry': {'en': 'Roseli Berry', 'de': 'Hibisbeere', 'fr': 'Baie Selro', 'es': 'Baya Hibis', 'it': 'Baccarcadè'},
+}
 itemsOut['names'] = {}
 for key in MOVE_LANGS:
     m = {}
     for ident in sorted(used, key=lambda x: rev[x]):
-        nm = inames[lang_ids[key]].get(rev[ident]) or inames[lang_ids['en']].get(rev[ident], '')
-        if not inames[lang_ids[key]].get(rev[ident]):
+        nm = inames[lang_ids[key]].get(rev[ident]) or ITEM_NAME_FALLBACK.get(ident, {}).get(key) or inames[lang_ids['en']].get(rev[ident], '') or ITEM_NAME_FALLBACK.get(ident, {}).get('en', '')
+        if not inames[lang_ids[key]].get(rev[ident]) and not ITEM_NAME_FALLBACK.get(ident, {}).get(key):
             gaps.setdefault('items', {}).setdefault(key, []).append(ident)
         m[ident] = nm
     itemsOut['names'][key] = m

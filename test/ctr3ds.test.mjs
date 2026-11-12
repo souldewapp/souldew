@@ -2,7 +2,7 @@
 // message framing and the commands a page may send, the in-game save fingerprint, the place reader.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, utimesSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, utimesSync, truncateSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { familyOf, romfsFile, garcFile, lz11, ctrZonePlaces } from '../shared/live/ctrzones.mjs';
@@ -13,7 +13,7 @@ import { romFeatures } from '../shared/live/features.mjs';
 const DATA = mkdtempSync(join(tmpdir(), 'sls-ctr3ds-'));
 process.env.SLS_DATA_DIR = DATA;
 const { splitMessages, command, checkCommands, saveStamp, CMD, MSG } = await import('../server/lib/ctr.mjs');
-const { ctrData } = await import('../server/lib/romloc.mjs');
+const { ctrData, romDataFor } = await import('../server/lib/romloc.mjs');
 test.after(() => rmSync(DATA, { recursive: true, force: true }));
 
 const json = (f) => JSON.parse(readFileSync(new URL(`../shared/data/${f}`, import.meta.url), 'utf8'));
@@ -58,6 +58,8 @@ test('LZ11: literals, short and long back references; broken data is no table', 
   // a copy from before the start, a truncated stream
   assert.equal(lz11(Uint8Array.of(0x11, 4, 0, 0, 0x80, 0x30, 0x05)), null);
   assert.equal(lz11(Uint8Array.of(0x11, 9, 0, 0, 0x00, 1, 2)), null);
+  // a back reference cut off after its first byte: damaged, not "zeros"
+  assert.equal(lz11(Uint8Array.of(0x11, 6, 0, 0, 0x40, 97, 0x10)), null);
   // not LZ11: as it is
   const raw = Uint8Array.of(5, 6, 7);
   assert.equal(lz11(raw), raw);
@@ -85,6 +87,21 @@ test('Sun/Moon, Ultra Sun/Ultra Moon: the zone GARC\'s first file, LZ11-packed, 
   assert.deepEqual(ctrZonePlaces(reader(rom), { titleId: '00040000001B5000' }), { family: 'usum', gen: 7, places });
 });
 
+test('Omega Ruby: the second-to-last file first – a last file whose size fits 56-byte zones doesn\'t stand in for it', () => {
+  const places = [0, 170, 204];
+  const rom = cciWithRomfs({}, { 'a/0/1/3': garc([new Uint8Array(40), table6(places), new Uint8Array(56 * 7)]) });
+  assert.deepEqual(ctrZonePlaces(reader(rom), { code: 'ECRA' }).places, places);
+});
+
+test('GARC: a damaged file count (far more entries than the table holds) is no archive – read at once, not looped through', () => {
+  const g = garc([table6([0, 1]), new Uint8Array(8)]);
+  const fb = 0x1c + 0x0c + 2 * 4;
+  g.set([0xff, 0xff, 0xff, 0xff], fb + 8); // 4,294,967,295 files
+  const t0 = Date.now();
+  assert.equal(garcFile(reader(g), 0, -1), null);
+  assert.ok(Date.now() - t0 < 1000);
+});
+
 test('no table: an encrypted game, another game, a table of the wrong size, garbage – never throws', () => {
   const tbl = { 'a/0/1/3': garc([table6([1, 2]), new Uint8Array(3)]) };
   assert.equal(ctrZonePlaces(reader(cciWithRomfs({ encrypted: true }, tbl)), { code: 'ECRA' }), null);
@@ -105,6 +122,17 @@ test('ctrData reads a .3ds file in pieces: the zone places for the place sign', 
   writeFileSync(join(DATA, 'x.3ds'), 'hello');
   assert.equal(ctrData(join(DATA, 'x.3ds')).data, null);
   assert.equal(ctrData(join(DATA, 'missing.3ds')).data, null);
+});
+
+// (a sparse file: no disk space; Windows' NTFS may not keep it sparse)
+test('a 3 GB game through the library\'s ROM data (the worker): read in pieces, never whole', { skip: process.platform === 'win32' }, async () => {
+  const file = join(DATA, 'big.3ds');
+  writeFileSync(file, cciWithRomfs({}, { 'a/0/1/3': garc([table6([0, 170, 204]), new Uint8Array(8)]) }));
+  truncateSync(file, 3 * 1024 ** 3); // past what a whole read could take (2 GB)
+  const d = await romDataFor({ file }, { sharedDir: null, cacheDir: null, timeoutMs: 30000 });
+  assert.deepEqual(d.data, { gen: 6, ctr: { family: 'oras', places: [0, 170, 204] } });
+  assert.equal(d.header.code, 'ECRA');
+  rmSync(file);
 });
 
 test('what souldew reads in a 3DS game: its header finds the memory table entry (team, moves, items, place, battles)', () => {
@@ -198,4 +226,102 @@ test('the system\'s Vulkan loader: Windows with the graphics driver, Linux libvu
   assert.equal(systemVulkan({ platform: 'linux', env: { LD_LIBRARY_PATH: '/opt/gl' }, exists: has(['/opt/gl/libvulkan.so.1']) }), true);
   assert.equal(systemVulkan({ platform: 'linux', env: {}, exists: has([]) }), false);
   assert.equal(systemVulkan({ platform: 'darwin' }), true); // macOS: MoltenVK comes with souldew
+});
+
+test('the host\'s output split into whole messages, however the chunks are cut', async () => {
+  const { MessageSplitter } = await import('../server/lib/ctr.mjs');
+  const msgs = [command(MSG.EVENT, Buffer.from('{"event":"loaded"}')), command(MSG.VIDEO, Buffer.alloc(5000, 3)), command(MSG.AUDIO, Buffer.alloc(0)), command(MSG.MEM, Buffer.alloc(9, 1))];
+  const all = Buffer.concat(msgs);
+  for (const size of [1, 3, 7, 8, 9, 100, 4999, all.length]) {
+    const sp = new MessageSplitter();
+    const got = [];
+    for (let o = 0; o < all.length; o += size) got.push(...sp.push(all.subarray(o, o + size)));
+    assert.deepEqual(got.map((m) => m.type), [MSG.EVENT, MSG.VIDEO, MSG.AUDIO, MSG.MEM], `chunks of ${size}`);
+    assert.ok(got.every((m, i) => m.data.equals(msgs[i])), `chunks of ${size}`);
+  }
+});
+
+// ---- a session with a stand-in host (node -e …): what the page's stream gets ------------------------------------------
+const FAKE_HOST = `
+const mode = process.argv[process.argv.indexOf('--rom') + 1];
+const msg = (type, p) => { const h = Buffer.alloc(8); h.writeUInt32LE(type, 0); h.writeUInt32LE(p.length, 4); return Buffer.concat([h, p]); };
+const ev = (o) => msg(7, Buffer.from(JSON.stringify(o)));
+const write = (b) => new Promise((r) => (process.stdout.write(b) ? r() : process.stdout.once('drain', r)));
+(async () => {
+  const parts = [ev({ event: 'loaded' })];
+  for (let i = 0; i < (mode === 'die' ? 20 : 120); i++) parts.push(msg(2, Buffer.alloc(mode === 'die' ? 1 << 20 : 256 * 1024, i)));
+  parts.push(ev({ event: mode === 'die' ? 'error' : 'done', message: 'C:\\\\Users\\\\x' }));
+  const all = Buffer.concat(parts);
+  for (let o = 0; o < all.length; o += 777777) await write(all.subarray(o, o + 777777));
+  if (mode === 'die') process.exit(1);
+  process.stdin.on('data', (d) => d.readUInt32LE(0) === 6 && process.exit(0));
+  process.stdin.on('end', () => process.exit(0));
+})();
+`;
+const { Writable } = await import('node:stream');
+const { spawn } = await import('node:child_process');
+class FakeRes extends Writable {
+  constructor({ hold = false } = {}) {
+    super({ highWaterMark: 64 * 1024 });
+    this.got = [];
+    this.hold = hold;
+  }
+  writeHead() {}
+  _write(c, e, cb) {
+    this.got.push(c);
+    if (!this.hold) cb();
+  }
+  messages() {
+    return splitMessages(Buffer.concat(this.got));
+  }
+}
+const until = async (fn, ms = 10000) => {
+  for (const end = Date.now() + ms; !fn();) {
+    if (Date.now() > end) throw new Error('timed out');
+    await new Promise((r) => setTimeout(r, 20));
+  }
+};
+const fakeSessions = async () => {
+  const { CtrSessions } = await import('../server/lib/ctr.mjs');
+  return new CtrSessions({ spawn: (cmd, args, o) => spawn(process.execPath, ['-e', FAKE_HOST, '--', ...args], o) });
+};
+const tools = { host: 'ctrhost', core: 'core', vulkan: 'vk' };
+
+test('a page that connects after the host failed: whole messages from the start, the last event, then the end', async () => {
+  const ctr = await fakeSessions();
+  const id = ctr.start({ rom: 'die', key: 'test-die', tools });
+  const s = ctr.current;
+  await until(() => s.closed);
+  assert.equal(s.exit.code, 1);
+  const res = new FakeRes();
+  ctr.attach(id, res);
+  await until(() => res.writableFinished);
+  const { messages, rest } = res.messages();
+  assert.equal(rest.length, 0, 'ends on a message boundary');
+  assert.equal(messages[0].type, MSG.EVENT);
+  const last = messages.at(-1);
+  assert.equal(last.type, MSG.EVENT);
+  assert.deepEqual(JSON.parse(last.payload), { event: 'error', message: 'C:\\Users\\x' });
+  const pictures = messages.filter((m) => m.type === MSG.VIDEO);
+  assert.ok(pictures.length >= 1 && pictures.length < 20, `pictures kept: ${pictures.length}`);
+  assert.ok(pictures.every((m) => m.payload.length === 1 << 20));
+  assert.equal(s.events.at(-1).event, 'error');
+});
+
+test('a new page takes over from one that stopped reading: the host goes on, the new page starts at a message', async () => {
+  const ctr = await fakeSessions();
+  const id = ctr.start({ rom: 'stream', key: 'test-stream', tools });
+  const s = ctr.current;
+  const a = new FakeRes({ hold: true });
+  ctr.attach(id, a);
+  await until(() => s.held);
+  const b = new FakeRes();
+  ctr.attach(id, b);
+  await until(() => b.messages().messages.some((m) => m.type === MSG.EVENT && JSON.parse(m.payload).event === 'done'));
+  const { messages } = b.messages();
+  assert.ok(messages.every((m) => [MSG.VIDEO, MSG.EVENT].includes(m.type)), 'no torn message at the start');
+  assert.ok(messages.filter((m) => m.type === MSG.VIDEO).every((m) => m.payload.length === 256 * 1024));
+  ctr.stop();
+  await until(() => s.closed);
+  assert.equal(s.exit.code, 0, 'ended by QUIT, not killed');
 });

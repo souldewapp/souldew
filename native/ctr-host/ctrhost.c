@@ -71,7 +71,7 @@ static void write_all(const void *p, size_t n) {
     compat_ssize w = compat_write(1, b, n);
     if (w < 0) {
       if (errno == EINTR) continue;
-      exit(0); // souldew went away
+      _exit(0); // souldew went away (_exit: see die() – and this may run on one of the core's threads)
     }
     b += w;
     n -= (size_t)w;
@@ -110,15 +110,27 @@ static void logf_(const char *fmt, ...) {
   if (protocol) send_msg(6, buf, (uint32_t)n);
 }
 
+/** `s` as the inside of a JSON string (paths and dlerror() texts bring backslashes – Windows – and quotes along). */
+static void json_escape(char *out, size_t cap, const char *s) {
+  size_t o = 0;
+  for (; *s && o + 7 < cap; s++) {
+    unsigned char c = (unsigned char)*s;
+    if (c == '"' || c == '\\') out[o++] = '\\', out[o++] = (char)c;
+    else if (c < 0x20) o += (size_t)snprintf(out + o, cap - o, "\\u%04x", c);
+    else out[o++] = (char)c;
+  }
+  out[o] = 0;
+}
+
 static void die(const char *fmt, ...) {
-  char buf[1024];
+  char buf[1024], esc[900];
   va_list ap;
   va_start(ap, fmt);
   vsnprintf(buf, sizeof buf, fmt, ap);
   va_end(ap);
   fprintf(stderr, "ctrhost: %s\n", buf);
-  // JSON-safe enough: the messages are ours, without quotes
-  send_event("{\"event\":\"error\",\"message\":\"%s\"}", buf);
+  json_escape(esc, sizeof esc, buf);
+  send_event("{\"event\":\"error\",\"message\":\"%s\"}", esc);
   // _exit, not exit: the exit handlers of what is loaded by then (the Vulkan driver, the core) may hang or crash
   fflush(stderr);
   fflush(stdout);
@@ -527,24 +539,33 @@ static const uint8_t *mem_at(uint32_t addr, uint32_t len) {
 }
 
 #define MAX_WATCH 16
-static struct { uint32_t addr, len; } watch[MAX_WATCH];
+static pthread_mutex_t cmd_lock = PTHREAD_MUTEX_INITIALIZER;
+static struct watch_region { uint32_t addr, len; } watch[MAX_WATCH]; // written by the reader thread (cmd_lock)
 static unsigned watch_n;
 
 static void send_mem(void) {
-  if (!watch_n) return;
+  // a copy: the reader thread may change the list meanwhile (sizes computed from one list, copied by another overran
+  // the buffer)
+  struct watch_region w[MAX_WATCH];
+  pthread_mutex_lock(&cmd_lock);
+  unsigned wn = watch_n;
+  memcpy(w, watch, sizeof w);
+  pthread_mutex_unlock(&cmd_lock);
+  if (!wn) return;
   size_t total = 4;
-  for (unsigned i = 0; i < watch_n; i++) total += 8 + watch[i].len;
+  for (unsigned i = 0; i < wn; i++) total += 8 + w[i].len;
   uint8_t *b = malloc(total), *p = b;
-  uint32_t n = watch_n;
+  if (!b) return;
+  uint32_t n = wn;
   memcpy(p, &n, 4), p += 4;
-  for (unsigned i = 0; i < watch_n; i++) {
-    uint32_t len = watch[i].len;
-    memcpy(p, &watch[i].addr, 4);
+  for (unsigned i = 0; i < wn; i++) {
+    uint32_t len = w[i].len;
+    memcpy(p, &w[i].addr, 4);
     uint8_t *lenp = p + 4, *data = p + 8;
     if (souldew_read_memory) {
-      if (!souldew_read_memory(watch[i].addr, data, len)) len = 0; // unmapped (title screen, another update's address)
+      if (!souldew_read_memory(w[i].addr, data, len)) len = 0; // unmapped (title screen, another update's address)
     } else {
-      const uint8_t *src = mem_at(watch[i].addr, len);
+      const uint8_t *src = mem_at(w[i].addr, len);
       if (src) memcpy(data, src, len);
       else len = 0;
     }
@@ -556,7 +577,6 @@ static void send_mem(void) {
 }
 
 // ---- commands from souldew ---------------------------------------------------------------------------------------
-static pthread_mutex_t cmd_lock = PTHREAD_MUTEX_INITIALIZER;
 static float speed = 1.0f;
 static int want_save, want_quit, want_reset, frameskip = 4;
 static uint8_t *load_data;
@@ -584,7 +604,11 @@ static void *reader(void *arg) {
     if (!read_full(h, 8)) break;
     if (h[1] > 512u * 1024 * 1024) break;
     uint8_t *p = h[1] ? malloc(h[1]) : NULL;
-    if (h[1] && !read_full(p, h[1])) break;
+    if (h[1] && !p) break; // out of memory: as if souldew had gone
+    if (h[1] && !read_full(p, h[1])) {
+      free(p);
+      break;
+    }
     pthread_mutex_lock(&cmd_lock);
     switch (h[0]) {
     case 1:
@@ -598,7 +622,13 @@ static void *reader(void *arg) {
         pthread_mutex_unlock(&in_lock);
       }
       break;
-    case 2: if (h[1] >= 4) memcpy(&speed, p, 4); break;
+    case 2:
+      if (h[1] >= 4) {
+        float v;
+        memcpy(&v, p, 4);
+        speed = isfinite(v) ? v : v > 0 ? 1000.0f : 1.0f; // NaN would stop the frame pacing for good
+      }
+      break;
     case 3: want_save = 1; break;
     case 4: free(load_data); load_data = p; load_len = h[1]; p = NULL; break;
     case 5:
@@ -648,6 +678,7 @@ static void dump_ppm(const char *path) {
 #define SYM(field, name) core.field = dlsym(lib, name); if (!core.field) die("%s missing in the core", name)
 
 int main(int argc, char **argv) {
+  argv = compat_utf8_argv(&argc, argv);
   for (int i = 1; i + 1 < argc; i += 2) {
     if (!strcmp(argv[i], "--core")) opt_core = argv[i + 1];
     else if (!strcmp(argv[i], "--vulkan")) opt_vulkan = argv[i + 1];

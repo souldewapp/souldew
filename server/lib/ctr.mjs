@@ -140,8 +140,53 @@ export function checkCommands(body) {
   return body;
 }
 
-export class CtrSessions {
+/**
+ * Splits the host's output into whole messages as it comes (chunks are cut anywhere): push(chunk) → complete
+ * messages as [{ type, data }], `data` the message with its header – the bytes as the host sent them.
+ */
+export class MessageSplitter {
   constructor() {
+    this.chunks = [];
+    this.size = 0;
+  }
+
+  push(chunk) {
+    this.chunks.push(chunk);
+    this.size += chunk.length;
+    const out = [];
+    for (;;) {
+      if (this.size < 8) break;
+      if (this.chunks[0].length < 8) this.merge(8);
+      const head = this.chunks[0];
+      const need = 8 + head.readUInt32LE(4);
+      if (this.size < need) break; // (a picture comes in many chunks: merged once, when it is complete)
+      if (head.length < need) this.merge(need);
+      const first = this.chunks[0];
+      out.push({ type: first.readUInt32LE(0), data: first.subarray(0, need) });
+      if (first.length === need) this.chunks.shift();
+      else this.chunks[0] = first.subarray(need);
+      this.size -= need;
+    }
+    return out;
+  }
+
+  /** The first `n` bytes into the first chunk. */
+  merge(n) {
+    const all = Buffer.concat(this.chunks, this.size);
+    this.chunks = [all];
+    if (all.length < n) throw new Error('merge past the end');
+  }
+}
+
+/** Kept for a page that isn't connected (yet): the start, events and save states – pictures, sound only up to this. */
+const BUFFER_LIMIT = 8 * 1024 * 1024;
+/** A session no page ever connected to (the page failed right after starting it) ends after this. */
+const NEVER_ATTACHED = 60 * 1000;
+
+export class CtrSessions {
+  /** `spawn`: how the host is started (tests start a stand-in) */
+  constructor({ spawn: spawnHost = spawn } = {}) {
+    this.spawn = spawnHost;
     this.current = null; // { id, child, stream, buffered, events, exit }
   }
 
@@ -157,21 +202,26 @@ export class CtrSessions {
     const system = join(save, 'system');
     mkdirSync(system, { recursive: true });
     const args = ['--core', tools.core, '--vulkan', tools.vulkan, '--rom', rom, '--system', system, '--save', save, '--scale', String(scale)];
-    const child = spawn(tools.host, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
-    const s = { id: randomBytes(8).toString('hex'), save, child, stream: null, buffered: [], bufferedBytes: 0, events: [], exit: null, log: [] };
+    const child = this.spawn(tools.host, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    const s = { id: randomBytes(8).toString('hex'), save, child, stream: null, buffered: [], bufferedBytes: 0, events: [], exit: null, closed: false, held: false, log: [] };
+    const split = new MessageSplitter();
     child.stdout.on('data', (chunk) => {
-      if (s.stream && !s.stream.destroyed) {
-        // the page reads the host's messages as they are; a slow page holds the host back (no frames pile up)
-        if (!s.stream.write(chunk)) {
-          child.stdout.pause();
-          s.stream.once('drain', () => child.stdout.resume());
+      // whole messages only: a page that connects later (or a new one) must start at a message's beginning
+      for (const m of split.push(chunk)) {
+        if (m.type === MSG.EVENT) this.peek(s, m.data);
+        if (writable(s.stream)) {
+          // the page reads the host's messages as they are; a slow page holds the host back (no frames pile up)
+          if (!s.stream.write(m.data) && !s.held) {
+            s.held = true;
+            child.stdout.pause();
+            s.stream.once('drain', () => this.release(s));
+          }
+        } else if (s.bufferedBytes + m.data.length <= BUFFER_LIMIT || m.type === MSG.EVENT || m.type === MSG.STATE) {
+          // before the page connects: keep the start (the "loaded" event, a few frames) and what is answered
+          s.buffered.push(m.data);
+          s.bufferedBytes += m.data.length;
         }
-      } else if (s.bufferedBytes < 8 * 1024 * 1024) {
-        // before the page connects: keep the start (the "loaded" event) – a few frames at most
-        s.buffered.push(chunk);
-        s.bufferedBytes += chunk.length;
       }
-      this.peek(s, chunk);
     });
     child.stderr.on('data', (d) => {
       s.log.push(String(d));
@@ -179,34 +229,44 @@ export class CtrSessions {
     });
     child.on('exit', (code, signal) => {
       s.exit = { code, signal };
+    });
+    // the end of the stream once the host's output is all read: 'exit' can come before the last of it (the error
+    // event a failing host sends right before it leaves), and a write after end() is an unhandled 'error'
+    const done = () => {
+      s.closed = true;
+      clearTimeout(s.orphan);
       s.stream?.end();
+    };
+    child.on('close', (code, signal) => {
+      s.exit ||= { code, signal };
+      done();
     });
     child.on('error', (e) => {
       s.exit = { error: e.message };
-      s.stream?.end();
+      done();
     });
     child.stdin.on('error', () => {});
+    s.orphan = setTimeout(() => {
+      if (!s.stream && this.current === s) this.stop();
+    }, NEVER_ATTACHED);
+    s.orphan.unref?.();
     this.current = s;
     return s.id;
   }
 
-  /** Remember the host's events (loaded, title, errors) for the status – without parsing every frame twice. */
-  peek(s, chunk) {
-    s.peekBuf = s.peekBuf ? Buffer.concat([s.peekBuf, chunk]) : chunk;
-    for (;;) {
-      if (s.peekBuf.length < 8) return;
-      const type = s.peekBuf.readUInt32LE(0);
-      const len = s.peekBuf.readUInt32LE(4);
-      if (s.peekBuf.length < 8 + len) return;
-      if (type === MSG.EVENT) {
-        try {
-          s.events.push(JSON.parse(s.peekBuf.subarray(8, 8 + len).toString('utf8')));
-          if (s.events.length > 50) s.events.shift();
-        } catch {
-          // not JSON – skip
-        }
-      }
-      s.peekBuf = s.peekBuf.subarray(8 + len);
+  /** Let the host write again (the page caught up, or another page / none reads now). */
+  release(s) {
+    s.held = false;
+    s.child.stdout.resume();
+  }
+
+  /** Remember the host's events (loaded, title, errors) for the status. `data`: one whole EVENT message. */
+  peek(s, data) {
+    try {
+      s.events.push(JSON.parse(data.subarray(8).toString('utf8')));
+      if (s.events.length > 50) s.events.shift();
+    } catch {
+      // not JSON – skip
     }
   }
 
@@ -220,17 +280,20 @@ export class CtrSessions {
   attach(id, res) {
     const s = this.get(id);
     res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+    res.on('error', () => {}); // the page went away mid-write – 'close' handles it
     s.stream?.end();
     clearTimeout(s.orphan);
     s.stream = res;
+    // the old stream may have held the host back (its 'drain' never comes once it is ended)
+    this.release(s);
     for (const b of s.buffered) res.write(b);
     s.buffered = [];
     s.bufferedBytes = 0;
-    if (s.exit) res.end();
+    if (s.closed) res.end();
     res.on('close', () => {
       if (s.stream !== res) return;
       s.stream = null;
-      s.child.stdout.resume();
+      this.release(s);
       // the player page is gone (closed without saying so, crashed): end the game unless a new page takes over
       clearTimeout(s.orphan);
       s.orphan = setTimeout(() => {
@@ -250,18 +313,24 @@ export class CtrSessions {
     const s = this.current;
     if (!s) return;
     this.current = null;
+    clearTimeout(s.orphan);
     try {
       s.child.stdin.write(command(CMD.QUIT));
       s.child.stdin.end();
     } catch {
       // gone
     }
+    // (a host held back by a page that no longer reads couldn't see the QUIT – let it write)
+    this.release(s);
+    s.stream?.end();
+    if (s.exit) return;
     const kill = setTimeout(() => s.child.kill('SIGKILL'), 3000);
     kill.unref?.();
     s.child.once('exit', () => clearTimeout(kill));
-    s.stream?.end();
   }
 }
+
+const writable = (res) => !!res && !res.destroyed && !res.writableEnded;
 
 /** The installed tools folder's contents (for the status / diagnostics). */
 export function ctrInventory() {

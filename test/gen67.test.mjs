@@ -92,6 +92,17 @@ test('real PK6/PK7 files (PKHeX test data): checksum, species, nickname, met loc
   assert.equal(expect['jynx-lola.pk7'].place, 'the Kanto region'); // moved over from the Virtual Console Red/Blue/Yellow
 });
 
+test('pk6Mon: the 3DS games\' status numbers become the app\'s status codes (a paralysed mon read 1 in Ultra Sun)', () => {
+  const st = (status) => pk6Mon(encryptPK6(mon({ status })), 7).status;
+  assert.equal(st(0), 0);
+  assert.equal(st(1), 0x40); // paralysis – read as "asleep" before
+  assert.equal(st(2), 1); // sleep
+  assert.equal(st(3), 0x20); // freeze
+  assert.equal(st(4), 0x10); // burn
+  assert.equal(st(5), 0x08); // poison
+  assert.equal(st(0x40), 0x40); // a Gen 3–5 flag value is still read as such
+});
+
 test('pk6Mon: fields, shiny, gender signs, and what it rejects', () => {
   const m = pk6Mon(encryptPK6(mon({ nick: 'Nidoran', level: 7, hp: 0, maxHp: 22, status: 0x08, met: 8 })), 6);
   assert.equal(m.nickname, 'Nidoran♀');
@@ -195,6 +206,39 @@ test('readGen67: the update the game runs is found and kept; badges; a shrinking
   assert.equal(r2.badges, 8);
   // nothing there (title screen): null
   assert.equal(readGen67(xy, memory({}), {}), null);
+});
+
+test('Bad Eggs: a slot failing its checksum with the very same bytes is skipped after a few reads – the team behind it stays', () => {
+  const xy = addresses.games.find((g) => g.id === 'xy');
+  const a = mon({ ec: 1, pid: 11, species: 650, nick: 'Chespin' });
+  const b = mon({ ec: 2, pid: 22, species: 661, nick: 'Fletchling' });
+  const c = mon({ ec: 3, pid: 33, species: 659, nick: 'Bunnelby' });
+  const egg = (r, slot) => {
+    r[slot * SLOT_STRIDE + 0x30] ^= 0x5a; // a damaged byte in the box data: the checksum fails
+    return r;
+  };
+  // in the middle: first read as the party's end (a write in progress), then skipped
+  const mid = egg(ramParty([a, b, c]), 1);
+  const s1 = {};
+  const reads = [];
+  for (let i = 0; i < 4; i++) reads.push(readGen67(xy, memory({ 0x08ce1ce8: mid }), s1)?.party.map((m) => m.nickname) || null);
+  assert.deepEqual(reads.at(-1), ['Chespin', 'Bunnelby']);
+  // in slot 0: no team at first, then the team without it
+  const first = egg(ramParty([a, b, c]), 0);
+  const s2 = {};
+  for (let i = 0; i < 2; i++) assert.equal(readGen67(xy, memory({ 0x08ce1ce8: first }), s2), null);
+  assert.deepEqual(readGen67(xy, memory({ 0x08ce1ce8: first }), s2).party.map((m) => m.nickname), ['Fletchling', 'Bunnelby']);
+  // bytes that change between reads are a write in progress, never a Bad Egg
+  const s3 = {};
+  for (let i = 0; i < 5; i++) {
+    const r = ramParty([a, b, c]);
+    r[1 * SLOT_STRIDE + 0x30] ^= i + 1;
+    assert.equal(partyFromRegion(r, 6, (s3.bad ||= {})).length, 1);
+  }
+  // only garbage that never changes (another update's address): no party, however often it is read
+  const junk = new Uint8Array(PARTY_BYTES).fill(0x3c);
+  const s4 = {};
+  for (let i = 0; i < 5; i++) assert.equal(readGen67(xy, memory({ 0x08ce1ce8: junk }), s4), null);
 });
 
 test('the page\'s path: Azahar regions → regionReader → readLiveParty; outside battle no battle panel', () => {
