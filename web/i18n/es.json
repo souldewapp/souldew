@@ -348,6 +348,7 @@
   "err.graveyardCheckFailed": "La comprobación tras editar ha fallado – la partida no se ha modificado.",
   "err.idMissing": "Falta el ID",
   "err.jsonObject": "Se esperaba un objeto JSON",
+  "err.nativeBusy": "El juego está ocupado: vuelve a intentarlo en un momento",
   "err.nativeEnded": "El juego se ha detenido",
   "err.nativeMissing": "Falta el reproductor rápido para este sistema: el emulador integrado lo ejecuta en su lugar",
   "err.nativeSystem": "El reproductor rápido no admite este sistema",

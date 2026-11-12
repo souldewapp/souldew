@@ -348,6 +348,7 @@
   "err.graveyardCheckFailed": "Die Prüfung nach dem Bearbeiten ist fehlgeschlagen – der Spielstand wurde nicht verändert.",
   "err.idMissing": "ID fehlt",
   "err.jsonObject": "JSON-Objekt erwartet",
+  "err.nativeBusy": "Das Spiel ist gerade beschäftigt – versuche es gleich noch einmal",
   "err.nativeEnded": "Das Spiel wurde beendet",
   "err.nativeMissing": "Der schnelle Player fehlt für dieses System – der eingebaute Emulator spielt es stattdessen",
   "err.nativeSystem": "Der schnelle Player spielt dieses System nicht",

@@ -40,6 +40,7 @@ const TEXTS = {
   nativeSystem: () => t('err.nativeSystem', 'The fast player doesn’t play this system'),
   noNativeSession: () => t('err.noNativeSession', 'No game is running in the fast player'),
   nativeEnded: () => t('err.nativeEnded', 'The game has stopped'),
+  nativeBusy: () => t('err.nativeBusy', 'The game is busy – try again in a moment'),
   badSave: () => t('err.badSave', 'Invalid save file'),
   saveTooLarge: () => t('err.saveTooLarge', 'The save file is too large'),
   emulatorOpen: (v) => t('err.emulatorOpen', '{emu} is already open – start the game there, or close {emu} and start it from here', v),

@@ -615,6 +615,7 @@
   "err.graveyardCheckFailed": "The check after editing failed – the save file was not changed.",
   "err.idMissing": "ID missing",
   "err.jsonObject": "JSON object expected",
+  "err.nativeBusy": "The game is busy – try again in a moment",
   "err.nativeEnded": "The game has stopped",
   "err.nativeMissing": "The fast player is missing for this system – the built-in emulator plays it instead",
   "err.nativeSystem": "The fast player doesn’t play this system",

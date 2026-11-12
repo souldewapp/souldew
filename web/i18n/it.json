@@ -348,6 +348,7 @@
   "err.graveyardCheckFailed": "Il controllo dopo la modifica non è riuscito – il salvataggio non è stato cambiato.",
   "err.idMissing": "ID mancante",
   "err.jsonObject": "Atteso un oggetto JSON",
+  "err.nativeBusy": "Il gioco è occupato – riprova tra un attimo",
   "err.nativeEnded": "Il gioco si è fermato",
   "err.nativeMissing": "Il lettore veloce manca per questo sistema – lo avvia l’emulatore integrato",
   "err.nativeSystem": "Il lettore veloce non supporta questo sistema",
