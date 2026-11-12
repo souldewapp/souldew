@@ -209,6 +209,9 @@ export function GameSession({ session, mode }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [panelPrefs, setPanelPrefs] = useBattlePanelPrefs();
+  // the running game's generation, from its memory table entry (a DS game is Gen 4 or 5, a 3DS game 6 or 7) – the system
+  // alone until the game is found
+  const [liveGen, setLiveGen] = useState(null);
   const [osd, setOsd] = useState(null);
   const [mine, setMineState] = useState(null); // latest live party read from RAM
   // The live loop reads RAM every 700 ms – only re-render the session when something visible changed.
@@ -856,6 +859,7 @@ export function GameSession({ session, mode }) {
               noteMons([...res.party, ...(res.boxes || [])]);
               liveRead.current = { boxes: Array.isArray(res.boxes), party: res.party.length };
               setLiveState({ status: 'live', entry: entry.name });
+              if (Number.isInteger(entry.gen)) setLiveGen((g) => (g === entry.gen ? g : entry.gen));
               if (fc) {
                 const gen = GEN[target.system] === 4 && entry.gen === 5 ? 5 : entry.gen;
                 fc.noteParty(res.party);
@@ -1136,7 +1140,8 @@ export function GameSession({ session, mode }) {
 
   // the battle helper: left of the game (default) or on the right above the team, folded in or not – the player's choice
   const panelSide = panelPrefs.side === 'right' ? 'right' : 'left';
-  const battlePanel = html`<${BattlePanel} battle=${battle} mine=${myParty} gen=${GEN[target.system]} isRun=${isRun}
+  const gameGen = liveGen || GEN[target.system] || null;
+  const battlePanel = html`<${BattlePanel} battle=${battle} mine=${myParty} gen=${gameGen} isRun=${isRun}
     side=${panelSide} collapsed=${panelPrefs.collapsed} onPrefs=${setPanelPrefs} noMoves=${features?.moves === 'no'} />`;
   const hasLeft = !!(isRun || here || (battle?.enemy && panelSide === 'left'));
   return html`<div class=${`session ${mode} ${fs && mode === 'full' ? 'is-fs' : ''} ${isDs ? 'ds' : ''}`} data-v=${docVersion}>
@@ -1236,7 +1241,7 @@ export function GameSession({ session, mode }) {
           ${btn(fs ? 'shrink' : 'full', (fs ? t('play.exitFullscreen', 'Leave fullscreen') : t('keys.fullscreen', 'Fullscreen game')) + ' (F)', actions.fullscreen)}
         </div>
         ${slow && mode === 'full' && html`<${SlowNotice} slow=${slow} isDs=${isDs} onClose=${() => { setSlow(null); focusGame(); }} />`}
-        ${statesOpen && mode === 'full' && html`<${StatePanel} id=${target.stateId} core=${core} gen=${GEN[target.system]} version=${statesVer} selected=${sel}
+        ${statesOpen && mode === 'full' && html`<${StatePanel} id=${target.stateId} core=${core} gen=${gameGen} version=${statesVer} selected=${sel}
           onClose=${closeStates} onSave=${(n) => actions.quicksave(n)} onLoad=${(n) => { setStatesOpen(false); actions.quickload(n); }} />`}
       </div>
       <aside class="session-side">
@@ -1258,8 +1263,8 @@ export function GameSession({ session, mode }) {
             ? t('play.liveHackRun', 'This ROM hack runs on an expanded engine (new Pokémon numbers and a different memory layout) that souldew can’t read reliably yet – so it shows nothing rather than wrong Pokémon. The run still works: enter catches by hand.')
             : t('play.liveHackSolo', 'This ROM hack runs on an expanded engine (new Pokémon numbers and a different memory layout) that souldew can’t read reliably yet – so it shows nothing rather than wrong Pokémon.')}</span>`}
           ${isRun && names
-            ? html`<${LinkedPairs} mine=${myParty} gen=${GEN[target.system]} compact=${!!battle?.enemy} />`
-            : liveState.status !== 'unsupported' && liveState.status !== 'hack' && html`<${PartyGrid} party=${myParty} gen=${GEN[target.system]} compact accent="var(--p1)" label=${t('play.yourTeam', 'Your team')} noItems=${features?.items === 'no'} />`}
+            ? html`<${LinkedPairs} mine=${myParty} gen=${gameGen} compact=${!!battle?.enemy} />`
+            : liveState.status !== 'unsupported' && liveState.status !== 'hack' && html`<${PartyGrid} party=${myParty} gen=${gameGen} compact accent="var(--p1)" label=${t('play.yourTeam', 'Your team')} noItems=${features?.items === 'no'} />`}
         </section>
         ${isRun && names && !solo && mode === 'full' && html`<div class="side-partner"><${PartnerScreen} link=${link} system=${target.system} /></div>`}
       </aside>

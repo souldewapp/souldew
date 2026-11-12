@@ -25,6 +25,8 @@
 - A 3DS game that stops (or can't start) says so in the player in the app's language, and a quick save / load in that
   moment no longer waits forever.
 - The library's live note for 3DS games no longer says "in Azahar" – they run in souldew's own player.
+- The battle helper judges by the running game's generation: 3DS battles used Gen 4's chart and moves (no Fairy
+  attacks, Steel resisting Ghost and Dark, Tackle at 35), Black/White's Gen 4 move power; 3DS teams name held items.
 
 ### Known issues
 

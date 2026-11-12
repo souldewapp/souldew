@@ -203,7 +203,7 @@ test('readLocation with ROM data: the vanilla table and the ROM agree; the ROM w
   assert.deepEqual(readLocation(maps, 'heartgold_us', read, { rom: hack }), { gen: 4, id: 200, map: 6, romName: 'Hack Town' });
 });
 
-test('readLocation with ROM data: Gen 5 zone id behind the main pointer (Black 2), parent zone as fallback', () => {
+test('readLocation with ROM data: Gen 5 zone id behind the main pointer (Black 2), parent zone as fallback (#1)', () => {
   const base = 0x02200000;
   const rom = { gen: 5, family: 'b2w2', code: 'IREO', lang: 'en', mapLoc: [0, 0, 0, 117], names: Object.assign(new Array(118).fill(''), { 117: 'Aspertia City' }) };
   const read = bus({ 0x02000024: le32(base), [base + 0x41b5c]: le16(3) });
