@@ -2,7 +2,7 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
-## Unreleased
+## 2.5.0
 
 - **Nintendo 3DS games play inside souldew**: X/Y, Omega Ruby/Alpha Sapphire, Sun/Moon and Ultra Sun/Ultra Moon run
   in the play view like every other game – Azahar's core, both screens, sound, touch screen with the mouse,
@@ -39,11 +39,30 @@
 - The library's live note for 3DS games no longer says "in Azahar" – they run in souldew's own player.
 - The battle helper judges by the running game's generation: 3DS battles used Gen 4's chart and moves (no Fairy
   attacks, Steel resisting Ghost and Dark, Tackle at 35), Black/White's Gen 4 move power; 3DS teams name held items.
+- **Checked with real saves** (players' saves from the internet: Ultra Sun before Tapu Koko, a finished Omega Ruby, Y,
+  HeartGold, Black, Silver): the team, the place sign, a legendary battle, a catch filed under its place, in-game
+  saving and savestates. Fixed along the way:
+  - In X/Y to Ultra Sun/Ultra Moon a **paralysed Pokémon showed as asleep** – the 3DS games number their status
+    conditions instead of using the older games' flags.
+  - A **Bad Egg** in a 3DS team hid the team (in the first slot) or everyone after it.
+  - Nuzlocke: the question after a wild battle without a catch **suggests the place you're at** (where the game shows
+    a place sign) instead of the first open area.
+  - Savestates of Sun/Moon and Ultra Sun/Ultra Moon no longer say "0 badges".
+- **SoulLink with a 3DS game:** joining, or building a new attempt, could take whichever 3DS game came first in the
+  library (3DS files have no CRC32 to compare) – now the run's own game, or a message to add it.
+- **The 3DS player is sturdier:** it no longer stalls when the play view reconnects to a running game, a refused save
+  or load no longer waits forever, the error message of a game that can't start reaches the player, Windows user
+  names with letters like "ü" work in the 3DS paths, and big pictures (3× resolution) are handled with less copying.
+- Omega Ruby/Alpha Sapphire's place sign reads its own table first (another file of the right size could be taken),
+  and a damaged 3DS ROM can no longer keep the background ROM reading busy.
+- The Roseli Berry has its name (it had none, so held items were left out for a team holding one).
+- A fresh library says "Ready to play" instead of "Pick up where you left off".
 
 ### Known issues
 
 - Sun/Moon and Ultra Sun/Ultra Moon have island trials instead of gyms: no badges are read there, so badge trophies
   and level caps don't count in those runs.
+- DS games (HeartGold, Black …) show their place names in English in the German app.
 - 3DS savestates are tied to the system they were made on (a Windows state doesn't load on a Mac); the player says so
   instead of loading it.
 

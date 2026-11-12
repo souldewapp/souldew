@@ -43,7 +43,7 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 | **Black 2** | ✅ | ✅ | ✅ | ✅ | – | Tepig L5 from Bianca at the Lookout (met location Aspertia City), Aspertia City, Aspertia Gate, Route 19; Hugh's Oshawott L5 (HP going down as on screen), wild Purrloin / Patrat L2. **Real catch:** Purrloin L2 → "Route 19". **Fixed (2.3.0):** Bianca's catching demo (an NPC's battle) showed as the player's trainer battle and stayed after it ended – the battle flag (checked live: 0x2100 / 0x2800). |
 | **White 2** | ✅ | ✅ | ✅ | ✅ | – | As Black 2 (its position sits 0x40 further on); wild Patrat L2. **Real catch:** Patrat L2 → "Route 19". **Fixed (2.3.1):** the battle flag (checked live: 0x2100 in battles, 0xFAE3 elsewhere) – Bianca's catching demo showed as a battle against her Lillipup, and the summary screen (0x88C2, also in Black 2) did too. |
 
-### The matrix after reading types and caps from the ROM (Unreleased)
+### The matrix after reading types and caps from the ROM (2.4.0)
 
 Every game of the test set played again with `npm run matrix` (the same plans, three games at a time), twice – the
 second time after the ROM's data moved into a worker thread and the audit fixes. Columns: team,
@@ -162,6 +162,21 @@ souldew opens the Azahar app instead.
 
 Not checked: X/Alpha Sapphire/Moon/Ultra Moon (same code as their pairs).
 
+### With players' saves (2.5.0)
+
+Saves other players shared (Project Pokémon's user-contributed saves; the 3DS ones as the `main` file on the
+emulator's SD card, the others as the game's battery save) in the development app with its own data folder – the
+games from the middle or the end of a playthrough instead of a new game:
+
+| Game (save) | Checked | Result |
+|---|---|---|
+| **Ultra Sun** (in front of Tapu Koko, Ruins of Conflict) | Solo Nuzlocke from the save: place sign, team, the legendary battle, False Swipe to 1 HP, a Master Ball, in-game save, savestate save / load, resume | ✅ "Ruinen des Krieges"; shiny Smeargle L100 314/314 with False Swipe, Spore, Skill Swap, Soak as in the move menu; Tapu Koko L60 → "wild", "Legendary", Electric/Fairy and its matchups, 172 → 88 → 1 HP as on screen; the catch filed under the Ruins of Conflict, Tapu Koko in the team; "saved in the game: just now"; slot 1 loaded back to the party screen it was taken on. **Fixed:** the paralysed Smeargle showed "asleep" (Gen 6/7 number their status: 1 paralysis, 2 sleep, 3 freeze, 4 burn, 5 poison) and the Nuzlocke question after the battle offered "Route 1" instead of the place on the sign |
+| **Omega Ruby** (a finished Italian save) | Team, place sign | ✅ six Pokémon L100 (four Linoone, Altaria, "Hunter") with HP, gender and held items as on the party screen; Sootopolis City ("Xeneroville") |
+| **Y** (a Vivillon-pattern save) | Team, place sign | ✅ Fletchinder ♀ L20 21/61, Route 7 |
+| **HeartGold** | Team, place sign | ✅ six nicknamed Pokémon L100 with HP from the title screen on (the game loads its save at start), Goldenrod City |
+| **Black** | Team, place sign | ✅ six Pokémon L100, Lacunosa Town as the game's own banner |
+| **Silver** | Team, place sign | ✅ six nicknamed Pokémon L100 (incl. Lugia and Ho-Oh), Ecruteak City ("Teak City") |
+
 ### Not in the test set
 
 Blue, Yellow, Gold, the English LeafGreen, Diamond, HeartGold, SoulSilver and all non-English ROMs except
@@ -221,7 +236,7 @@ Unbound and Radical Red (Complete FireRed Upgrade) – read live now:
   names, mapped to the app's move numbers by name in the ROM's language (CFRU sorts the moves after #354 its own way;
   pokeemerald-expansion keeps the National order and is left as it was).
 
-Read from the ROM instead of per-game data (Unreleased) – the matrix gained columns for held items, types and level
+Read from the ROM instead of per-game data (2.4.0) – the matrix gained columns for held items, types and level
 caps, and every game in the test set was played again (see "The matrix after reading types and caps from the ROM"):
 
 - **Types from the ROM, for every game** (`shared/live/romtypes.mjs`): the type names, each species' types and the type
