@@ -12,6 +12,20 @@ export function numberedName(base, runs) {
   return taken.length ? `${base} #${Math.max(...taken) + 1}` : base;
 }
 
+/**
+ * The library ROMs a run (manifest or invite pack) is built from: those with its base ROM's CRC32. A 3DS game has no
+ * CRC32 (the files are 1–4 GB, never read whole – its `base.crc` is null): the same game by its catalog id, else by its
+ * game code – never just any 3DS file (every one of them has the CRC null).
+ */
+export function baseRomsFor(m, roms) {
+  const crc = String(m?.base?.crc || '').toUpperCase();
+  if (crc) return (roms || []).filter((r) => String(r.crc || '').toUpperCase() === crc);
+  if (m?.game?.system !== '3ds') return [];
+  const id = m.game.id;
+  const code = String(m.game.code || '').toUpperCase();
+  return (roms || []).filter((r) => r.system === '3ds' && (id ? r.gameId === id : !!code && String(r.code || '').toUpperCase() === code));
+}
+
 /** The old run's base name without a "#n" suffix. */
 export const baseName = (name) => String(name || '').replace(/\s+#\d+$/, '').trim();
 
@@ -25,8 +39,7 @@ export const baseName = (name) => String(name || '').replace(/\s+#\d+$/, '').tri
 export function restartRequest(old, { library, runs, rules, mySlot = 'p1', gameTitle, seed = randomSeed } = {}) {
   const roms = library?.roms || [];
   const patches = library?.patches || [];
-  const crc = String(old.base?.crc || '').toUpperCase();
-  const fits = roms.filter((r) => String(r.crc || '').toUpperCase() === crc);
+  const fits = baseRomsFor(old, roms);
   const rom = fits.find((r) => old.game?.id && r.gameId === old.game.id) || fits[0];
   if (!rom) throw Object.assign(new Error('The game of this run is not in your library anymore'), { code: 'no-rom' });
   let patch = null;

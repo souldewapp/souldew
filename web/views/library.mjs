@@ -333,7 +333,9 @@ export function LibraryView() {
   const shownUnknown = filter === 'hacks' ? [] : unknownRoms.filter((r) => (filter === 'all' || r.system === filter)
     && (!q || `${r.title || ''} ${r.name}`.toLowerCase().includes(q.toLowerCase())));
 
-  const lastGame = status?.config?.lastGame && ownedBy.has(status.config.lastGame) ? status.config.lastGame : [...ownedBy.keys()][0];
+  // the game played last – on a fresh profile (nothing played yet) the first owned one, with a neutral caption
+  const resumed = !!(status?.config?.lastGame && ownedBy.has(status.config.lastGame));
+  const lastGame = resumed ? status.config.lastGame : [...ownedBy.keys()][0];
   const featured = lastGame ? cat.games.find((g) => g.id === lastGame) : null;
 
   return html`<div>
@@ -348,7 +350,7 @@ export function LibraryView() {
     ${featured && html`<section class="hero" style=${`--cc:${featured.color || '#3a3946'}`}>
       <${Cart} big title=${gameTitle(featured)} cover=${coverOf(library, { gameId: featured.id })} color=${featured.color} system=${featured.system} owned />
       <div class="stack">
-        <span class="small muted">${t('lib.continue', 'Pick up where you left off')}</span>
+        <span class="small muted">${resumed ? t('lib.continue', 'Pick up where you left off') : t('lib.readyToPlay', 'Ready to play')}</span>
         <h1>${gameTitle(featured)}</h1>
         <div class="row">
           <button class="btn primary big" onClick=${() => navigate('play', { rom: ownedBy.get(featured.id).id })}><${Icon} name="play" size=${16} />${t('lib.play', 'Play')}</button>

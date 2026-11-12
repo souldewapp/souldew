@@ -8,7 +8,7 @@ import { PRESETS, DEFAULT_VALUES, localizeRandomizer, randomSeed, sameSettings, 
 import { Cart, coverOf } from './library.mjs';
 import { RestartModal } from './restart.mjs';
 import { mySlotIn } from '../lib/restart.mjs';
-import { numberedName } from '/shared/restart.mjs';
+import { numberedName, baseRomsFor } from '/shared/restart.mjs';
 import { ALL_SLOTS, slotsOf, runMode, othersOf, defaultRunName } from '/shared/slots.mjs';
 import { NUZLOCKE_RULES, joinNames } from '../lib/run.mjs';
 import { suggestSlot } from '../lib/invitecode.mjs';
@@ -434,7 +434,7 @@ function NewRun({ gameId, hackId, from, mode: sectionMode }) {
   const { status, navigate, reloadStatus, setRunId, setMe } = useApp();
   const { roms, patchesFor, preferredPatch } = useGameChoices(gameId || null, hackId);
   // `from`: restart of an old run – same game, hack, settings, mode and players; seeds stay fresh.
-  const [romId, setRomId] = useState(() => (from && roms.find((r) => r.crc === from.base?.crc))?.id || (hackId && !roms.some((r) => preferredPatch(r)) && roms.find((r) => r.hackId === hackId))?.id || (!hackId && roms.find((r) => !r.hackId))?.id || (hackId && roms.find((r) => preferredPatch(r)))?.id || roms.find((r) => !r.hackId)?.id || roms[0]?.id || null);
+  const [romId, setRomId] = useState(() => (from && baseRomsFor(from, roms)[0])?.id || (hackId && !roms.some((r) => preferredPatch(r)) && roms.find((r) => r.hackId === hackId))?.id || (!hackId && roms.find((r) => !r.hackId))?.id || (hackId && roms.find((r) => preferredPatch(r)))?.id || roms.find((r) => !r.hackId)?.id || roms[0]?.id || null);
   const rom = roms.find((r) => r.id === romId) || roms[0];
   const [patchId, setPatchId] = useState(() => (from ? (from.patch ? (patchesFor(rom).find((p) => p.sha1 && p.sha1 === from.patch.sha1) || preferredPatch(rom))?.id || null : null) : preferredPatch(rom)?.id || null));
   const [inspect, setInspect] = useState(null);
@@ -703,8 +703,9 @@ function JoinRun() {
   const [error, setError] = useState(null);
   const [log, setLog] = useState([]);
   const baseCrc = pack?.base?.crc;
-  const rom = library?.roms?.find((r) => r.crc === baseCrc);
-  const patch = pack?.patch ? library?.patches?.find((p) => p.sha1 === pack.patch.sha1) || library?.patches?.find((p) => p.expectedCrc === baseCrc) : null;
+  // (by CRC32 – a 3DS game, which has none, by its game: never just the first 3DS file of the library)
+  const rom = pack ? baseRomsFor(pack, library?.roms)[0] : undefined;
+  const patch = pack?.patch ? library?.patches?.find((p) => p.sha1 === pack.patch.sha1) || (baseCrc && library?.patches?.find((p) => p.expectedCrc === baseCrc)) : null;
 
   // seat: the host's hint with a code invite – { slot, taken } (see JoinCode); none with an invite file
   const load = async (text, seat = null) => {
@@ -773,7 +774,8 @@ function JoinRun() {
     ${pack && html`<section class="panel stack">
       <h2>${t('join.step2', '2 · Your game')}</h2>
       ${rom ? html`<p class="small"><span class="chip ok">${t('join.found', 'Found in your library')}</span> <span class="mono">${rom.name}</span></p>`
-        : html`<p class="warning">${t('join.missing', 'Add your own copy of the base game (CRC32 {crc}) to the library first.', { crc: baseCrc })}</p>
+        : html`<p class="warning">${baseCrc ? t('join.missing', 'Add your own copy of the base game (CRC32 {crc}) to the library first.', { crc: baseCrc })
+          : t('join.missingGame', 'Add your own copy of {game} to the library first.', { game: gameById(pack.game?.id) ? gameTitle(gameById(pack.game.id)) : pack.game?.title || pack.game?.code || '?' })}</p>
           <div><button class="btn" onClick=${() => navigate('library')}>${t('nav.library', 'Library')}</button></div>`}
       ${pack.patch && (patch ? html`<p class="small"><span class="chip ok">${t('join.patchFound', 'Patch found')}</span> <span class="mono">${patch.name}</span></p>`
         : html`<p class="warning">${t('join.patchMissing', 'Add the patch for {hack} to your library.', { hack: pack.patch.name })}</p>`)}

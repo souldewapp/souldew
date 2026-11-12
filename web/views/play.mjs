@@ -16,7 +16,7 @@ import { PartyGrid } from './party.mjs';
 import { PartnerScreen, useScreenShare } from './partnerscreen.mjs';
 import { StatePanel, SaveAge, useSaveGuard, describeState, stateInfo, slotName, SHOT, MANUAL_SLOTS, AUTO_SLOT } from './savestates.mjs';
 import { RunStrip, LinkedPairs, BattlePanel, RulesDrawer, useBattlePanelPrefs } from './session-info.mjs';
-import { LocationSign, readHere, nextHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now, romOwnNow, romDataNow, resetRomData } from './location.mjs';
+import { LocationSign, readHere, nextHere, areaOfHere, musicInfo, loadRomLocations, romSpeciesNow, romDataReady, romWramNow, romMaps3Now, romOwnNow, romDataNow, resetRomData } from './location.mjs';
 import { FeatureCheck, romFeatures } from '/shared/live/features.mjs';
 import { gymCapsFamily } from '/shared/routes.mjs';
 import { shiftEntry } from '/shared/live/romwram.mjs';
@@ -906,8 +906,8 @@ export function GameSession({ session, mode }) {
     };
   }, [phase, target.key]);
 
-  // Nuzlocke: a wild battle ended without a catch → the area of that encounter is spent. The app can't tell which
-  // area the player is in, so it asks (without stopping the game) and offers the areas still open. No question when
+  // Nuzlocke: a wild battle ended without a catch → the area of that encounter is spent. It asks (without stopping
+  // the game) and offers the areas still open – the place sign's area first, where the game shows one. No question when
   // the Pokémon was caught after all, a shiny (shiny clause) or a dupe (it doesn't count anyway).
   useEffect(() => {
     const prev = prevBattle.current;
@@ -1099,7 +1099,9 @@ export function GameSession({ session, mode }) {
   const others = isRun && manifest ? othersOf(me, manifest) : [];
   const myLive = isRun && doc ? live(doc, me) : null;
   const myParty = mine || myLive?.party || [];
-  infoRef.current = () => stateInfo({ party: myParty, badges: myLive?.badges, core });
+  // Sun/Moon and Ultra Sun/Ultra Moon have no badges (island trials): no "0 badges" on their states
+  const badgeless = (liveRef.current?.entry?.gen ?? 0) >= 7;
+  infoRef.current = () => stateInfo({ party: myParty, badges: badgeless ? undefined : myLive?.badges, core });
   // progress since the last in-game save → "not saved" warning on close / quit, age in the header
   const guard = useSaveGuard({ id: target.stateId, label: target.label, party: mine, badges: myLive?.badges, running: phase === 'running', paused });
   const focusGame = () => frame.current?.contentWindow?.focus();
@@ -1174,7 +1176,7 @@ export function GameSession({ session, mode }) {
               <button class="btn small primary" onClick=${() => { actions.confirmLoad(); focusGame(); }}>${t('play.loadConfirmYes', 'Load')}</button>
               <button class="btn small ghost" onClick=${() => { actions.cancelLoad(); focusGame(); }}>${t('common.cancel', 'Cancel')}</button>
             </div>`}
-            ${missed && mode === 'full' && !pendingLoad && !confirmReset && html`<${MissedPrompt} missed=${missed} onDone=${() => { setMissed(null); focusGame(); }} />`}
+            ${missed && mode === 'full' && !pendingLoad && !confirmReset && html`<${MissedPrompt} missed=${missed} here=${here} onDone=${() => { setMissed(null); focusGame(); }} />`}
             ${confirmReset && html`<div class="screen-confirm" role="alertdialog" aria-live="assertive">
               <span class="grow">${t('play.resetConfirm', 'Reset the game? Unsaved progress is lost.')}</span>
               <button class="btn small primary" onClick=${() => { setConfirmReset(false); emu()?.restart(); focusGame(); }}>${t('play.resetYes', 'Reset')}</button>
@@ -1309,14 +1311,17 @@ function SlowNotice({ slow, isDs, onClose }) {
  * areas; in games without a curated route list also every other place of the game (an area there only exists
  * once someone caught in it) and, as a last resort, a name of your own.
  */
-function MissedPrompt({ missed, onDone }) {
+function MissedPrompt({ missed, here, onDone }) {
   const { doc, manifest, me, runData } = useApp();
   const gen = genOfRun(manifest, runData);
   const areas = doc && manifest ? openAreas(doc, manifest, me).filter((a) => a.key !== 'starter') : [];
   const known = new Set(doc ? Object.keys(doc.scan('area:')) : []);
   const places = manifest ? locationChoices(manifest, gen).filter((l) => !known.has(`m${gen}-${l.id}`)) : []; // table order = roughly the order you travel
   const own = !profileOf(manifest).curated;
-  const [area, setArea] = useState(areas[0]?.key || (places[0] ? `loc:${places[0].id}` : own ? 'new' : ''));
+  // where the place sign says the player is, when that's still open – otherwise the first open area
+  const hereKey = here ? areaOfHere(doc, manifest, gen, here) : null;
+  const atHere = hereKey && areas.some((a) => a.key === hereKey) ? hereKey : here && places.some((l) => l.id === here.id) ? `loc:${here.id}` : null;
+  const [area, setArea] = useState(atHere || areas[0]?.key || (places[0] ? `loc:${places[0].id}` : own ? 'new' : ''));
   const [name, setName] = useState('');
   if (!areas.length && !places.length && !own) return null;
   const mark = () => {

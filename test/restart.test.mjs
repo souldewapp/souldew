@@ -1,7 +1,7 @@
 // One-click "Start over": the new run's build request keeps everything but the seeds.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { restartRequest, numberedName, baseName } from '../shared/restart.mjs';
+import { restartRequest, numberedName, baseName, baseRomsFor } from '../shared/restart.mjs';
 import { PRESETS } from '../shared/randomizer-options.mjs';
 
 const old = {
@@ -57,6 +57,22 @@ test('shared seed, rules fallback, slot of the joiner, no randomizer, no patch',
 test('missing game or patch is reported, not silently swapped', () => {
   assert.throws(() => restartRequest(old, { library: { roms: [], patches: [] } }), { code: 'no-rom' });
   assert.throws(() => restartRequest(old, { library: { ...library, patches: [library.patches[0]] } }), { code: 'no-patch' });
+});
+
+test('a 3DS run (no CRC32) restarts and is joined with the same game – never just the first 3DS file', () => {
+  const ctrRun = { ...old, base: { crc: null, name: 'X.3ds' }, patch: null, game: { id: 'pokemon-x', system: '3ds', code: 'EKJA', hackId: null },
+    randomizer: { enabled: false, values: {}, seeds: { p1: '1', p2: '2' }, sharedSeed: false } };
+  const roms = [{ id: 'gba', crc: '11111111', system: 'gba' }, { id: 'moon', crc: null, system: '3ds', gameId: 'pokemon-moon', code: 'BNEA' },
+    { id: 'x', crc: null, system: '3ds', gameId: 'pokemon-x', code: 'EKJA' }];
+  assert.deepEqual(baseRomsFor(ctrRun, roms).map((r) => r.id), ['x']);
+  assert.equal(restartRequest(ctrRun, { library: { roms, patches: [] }, runs: [], seed }).romId, 'x');
+  // the game gone, another 3DS game still there: reported, not swapped
+  assert.throws(() => restartRequest(ctrRun, { library: { roms: roms.filter((r) => r.id !== 'x'), patches: [] }, runs: [], seed }), (e) => e.code === 'no-rom');
+  // a game the catalog doesn't know: by its game code
+  const unknown = { ...ctrRun, game: { id: null, system: '3ds', code: 'EKJA' } };
+  assert.deepEqual(baseRomsFor(unknown, roms).map((r) => r.id), ['x']);
+  // an old run without a CRC32 that isn't a 3DS one finds nothing
+  assert.deepEqual(baseRomsFor({ base: { crc: null }, game: { system: 'nds' } }, roms), []);
 });
 
 test('run names count up from the base name', () => {
