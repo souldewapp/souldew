@@ -177,6 +177,14 @@ games from the middle or the end of a playthrough instead of a new game:
 | **Black** | Team, place sign | ✅ six Pokémon L100, Lacunosa Town as the game's own banner |
 | **Silver** | Team, place sign | ✅ six nicknamed Pokémon L100 (incl. Lugia and Ho-Oh), Ecruteak City ("Teak City") |
 
+The game's own save on the virtual SD card was checked too: after saving in the game, Ultra Sun started cold (no
+savestate) from the title screen into the Ruins of Conflict with Tapu Koko in the team and Smeargle still paralysed.
+The packaged 2.5.0 app (`npm run dist`) ran the same run with its bundled 3DS part (60 fps, live team).
+**Windows 3DS part from GitHub Actions** (the 2.5.0 build's `ctrhost.exe` and patched core) under Wine in the VM
+described above: Ultra Sun from the same downloaded save in a save folder named "Jürgen-save" (the host now hands
+the core UTF-8 paths), 60 fps, the title ID, Smeargle L100 314/314 read from the game's memory, buttons reaching the
+game (on to the Tapu Koko battle). A real Windows PC with a graphics driver is still to come.
+
 ### Not in the test set
 
 Blue, Yellow, Gold, the English LeafGreen, Diamond, HeartGold, SoulSilver and all non-English ROMs except
