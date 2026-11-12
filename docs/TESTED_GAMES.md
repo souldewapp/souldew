@@ -45,7 +45,8 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 
 ### The matrix after reading types and caps from the ROM (Unreleased)
 
-Every game of the test set played again with `npm run matrix` (the same plans, three games at a time). Columns: team,
+Every game of the test set played again with `npm run matrix` (the same plans, three games at a time), twice – the
+second time after the ROM's data moved into a worker thread and the audit fixes. Columns: team,
 held items (all named – "hidden" where souldew can't name them: Gen 1/2, Too Many Types), place sign, battle, catch,
 types (a retail ROM's types and chart equal souldew's data; a hack's from its ROM) and level cap (shown with the badges
 read live – "hidden": no cap for that game). "–": the plan doesn't get there (no held item came up, no catch in it).
@@ -78,8 +79,9 @@ Notes: the cap shown is the one with the badges read at the start (0). Radical R
 own bag) – Hoothoot / Poochyena → "Route 1"; the rival's Squirtle read as Water from gBattleMons. Unbound: the save
 stands in the Battle Tower, so no wild battle; the catch is a Pokémon joining its full team (room made in RAM) → "Battle
 Tower". Renegade Platinum: the Platinum plan still stops in the bedroom (its intro differs) – its types (Fairy, 49
-retyped Pokémon) and caps are from the ROM. Light Platinum, Feuerrote and Crystal needed a second or third attempt
-(the plans are timing-sensitive while three games run at once). Ruby's plan works only at some times of day: Ruby
+retyped Pokémon) and caps are from the ROM. Some plans needed a second or third attempt in one of the two
+rounds (Light Platinum, Feuerrote, Crystal, the pre-patched Too Many Types 1 – its BPS-patched twin, the same file,
+passed at once –, White's catch): the plans are timing-sensitive while three games run at once. Ruby's plan works only at some times of day: Ruby
 seeds its random numbers from the clock, and at other minutes a person stands in the way at Littleroot's north exit –
 run side by side, the previous version's code and this one passed and failed together. Run & Bun, Too Many Types and Blaze Black 2 Redux held
 items: as before.
@@ -179,7 +181,8 @@ caps, and every game in the test set was played again (see "The matrix after rea
   rival Squirtle read as Water in the matrix run.
 - **Level caps from the game's trainers** (`shared/live/romcaps.mjs`): leaders, Elite Four and champion by class name
   (five languages and the hacks' spellings), each leader's weakest team, ordered by the badge flags the leaders'
-  scripts set (Gen 3) or by ace. Derived (cap with 0 … 7 badges, then the champion's):
+  scripts set (Gen 3, with the leader's name) or by ace (DS – shown as "Gym n": Pearl's Maylene and Wake share an ace
+  of 30, so a name could be the wrong one). Derived (cap with 0 … 7 badges, then the champion's):
   Ruby / Sapphire 15, 18, 23, 28, 31, 33, 42, 43 → 58 · Emerald 15, 19, 24, 29, 31, 33, 42, 46 → 58 · FireRed / LeafGreen
   (English, German) 14, 21, 24, 29, 43, 43, 47, 50 → 63 · Pearl 14, 22, 30, 30, 36, 39, 42, 49 → 66 · Platinum 14, 22, 26,
   32, 37, 41, 44, 50 → 62 · Renegade Platinum 16, 26, 33, 39, 44, 53, 56, 62 → 78 (as in the hack's own trainer list) ·
@@ -189,8 +192,9 @@ caps, and every game in the test set was played again (see "The matrix after rea
   normal ones), Run & Bun and Too Many Types (their trainer struct isn't the retail one), Crystal Legacy (Game Boy:
   curated lists only). No game's own hard cap was found (none of the hacks keeps a badge-flag → level table).
 - **Badges** are read in GBA games (SaveBlock1's badge flags – FireRed 0x820…, Emerald 0x867…, Ruby/Sapphire 0x807… –
-  trusted while "has a Pokémon" is set) and in Diamond / Pearl / Platinum (the trainer data in RAM, trusted while its
-  trainer ID is the team's).
+  trusted while "has a Pokémon" is set and SaveBlock2's trainer ID is the team's; German Ruby/Sapphire keep their RAM
+  elsewhere and weren't checked – no badges there) and in Diamond / Pearl / Platinum (the trainer data in RAM, trusted
+  while its trainer ID is the team's).
 - **Catches in CFRU hacks**: Radical Red – Master Balls written into its own bag (gBagPockets 0x0203988C points outside
   SaveBlock1; the balls are pocket 2 of 450 / 75 / 50 / 128 / 75 slots, quantity key 0) and a real catch on Route 1
   (Poochyena L4 → "Route 1"). Unbound – the save at hand stands in the Battle Tower (no wild Pokémon there): room made
@@ -227,6 +231,10 @@ German FireRed/LeafGreen (2.3.1, issue #16) – the memory table was right, two 
   data (Gen 6's types for a Fairy hack); the Pokémon's types and the chart come from the ROM.
 - The battle's current types are read in GBA games only; DS and Game Boy battles use the species' types from the ROM.
 - Gen 3 PC boxes aren't read live: a catch sent to the PC (a full team) is filed once it joins the team.
+- German Ruby/Sapphire: no badges are read (their RAM sits elsewhere than in the English games and no German ROM was at
+  hand to check), so no level cap either.
+- The ROM's data is worked out in a background thread the first time a game is opened (a few seconds for a big ROM);
+  a damaged file or a scan over 3 minutes counts as "not known" until the file changes.
 - Level caps: Game Boy hacks (Crystal Legacy) get none (the Game Boy trainer data isn't read yet). A ROM's caps need its
   badges read live – an expanded GBA engine only through badge flags its own scripts name.
 - The input plans are timing-sensitive (inputs land a frame or two apart from run to run); the matrix script retries a
