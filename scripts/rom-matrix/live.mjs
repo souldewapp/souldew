@@ -42,6 +42,15 @@ async function runOne(url, t) {
     win.showInactive();
   }
   win.webContents.setAudioMuted(true);
+  if (job.native) {
+    // the plans' conditions are expressions (new Function) – the fast player's page doesn't allow eval (it has no
+    // emulator in the page); for the matrix only, its policy gets 'unsafe-eval' added
+    win.webContents.session.webRequest.onHeadersReceived((d, cb) => {
+      const h = { ...d.responseHeaders };
+      for (const k of Object.keys(h)) if (k.toLowerCase() === 'content-security-policy' && /playernative/.test(d.url)) h[k] = h[k].map((v) => v.replace("script-src 'self'", "script-src 'self' 'unsafe-eval'"));
+      cb({ responseHeaders: h });
+    });
+  }
   const rom = `/api/library/rom?id=${encodeURIComponent(t.file)}`;
   const q = new URLSearchParams({ system: t.system, rom, name: `matrix-${t.key}`, threads: '0', volume: '0' });
   if (t.core) q.set('core', t.core);
@@ -62,7 +71,12 @@ async function runOne(url, t) {
     // (a fresh window right after the previous game's was closed sometimes reports ERR_FAILED once)
     for (let i = 0; ; i++) {
       try {
-        await win.loadURL(`${url}/player.html?${q}`);
+        if (job.native) {
+          // the fast player: the host opens the ROM itself, the save comes the same way
+          const nq = new URLSearchParams({ system: t.system, rom, key: `matrix-${t.key}`, name: `matrix-${t.key}` });
+          if (q.get('save')) nq.set('save', q.get('save'));
+          await win.loadURL(`${url}/playernative.html?${nq}`);
+        } else await win.loadURL(`${url}/player.html?${q}`);
         break;
       } catch (err) {
         if (i >= 2) throw err;

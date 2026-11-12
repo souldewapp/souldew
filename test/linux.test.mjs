@@ -85,7 +85,8 @@ test('release: the asset names are exactly what electron-builder builds (package
   const targets = pkg.build.linux.target.map((t) => `${t.target}:${t.arch.join(',')}`);
   assert.deepEqual(targets, ['AppImage:x64', 'deb:x64']);
   // the bundled Java for the randomizer, the window icon, the desktop entry that matches the window (app id)
-  assert.deepEqual(pkg.build.linux.extraResources, [{ from: 'tools/jre/linux-x64', to: 'tools/jre/linux-x64' }, { from: 'tools/ctr/linux-x64', to: 'tools/ctr/linux-x64' }]);
+  assert.deepEqual(pkg.build.linux.extraResources, [{ from: 'tools/jre/linux-x64', to: 'tools/jre/linux-x64' }, { from: 'tools/ctr/linux-x64', to: 'tools/ctr/linux-x64' },
+    { from: 'tools/native/linux-x64', to: 'tools/native/linux-x64', filter: ['retrohost*', '*_libretro.*', 'SOURCES.txt'] }]);
   assert.ok(pkg.build.linux.files.includes('build/icon.png'));
   assert.equal(pkg.desktopName, 'souldew.desktop');
   assert.equal(pkg.build.linux.executableName, 'souldew');

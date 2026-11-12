@@ -20,6 +20,7 @@ import { EMULATORS, detectEmulator, installEmulator, launchRom, revealInFileMana
 import { LiveBridge } from './lib/livebridge.mjs';
 import { AzaharBridge, enableRpc } from './lib/azahar.mjs';
 import { CtrSessions, ctrTools, saveStamp } from './lib/ctr.mjs';
+import { NativeSessions, nativeTools, NATIVE_CORES } from './lib/native.mjs';
 import { moveToGraveyard, parseHgssSave } from '../shared/gen4save.mjs';
 import { listPresets, savePreset, deletePreset } from './lib/presets.mjs';
 import { pageHeaders } from './lib/csp.mjs';
@@ -439,6 +440,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   const live = new LiveBridge(emit);
   // 3DS in souldew's own player (server/lib/ctr.mjs): one game at a time
   const ctr = new CtrSessions();
+  const native = new NativeSessions();
   const ctrToolsNow = () => ctrTools({ azaharApp: detectEmulator('azahar', loadConfig().emulatorPaths?.azahar).path || null });
   /** The file behind a ROM URL the page has (/api/library/rom?id=… or a run's /api/runs/<id>/file?name=…). */
   const romPathFromUrl = (src) => {
@@ -460,6 +462,45 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       return f;
     }
     throw httpError(400, 'Ungültige ROM-Adresse', 'badRomUrl');
+  };
+  // The native host opens the game from a file: a ROM inside an archive and a ROM patched on the fly are written to a
+  // cache file first (the two newest stay – DS games are up to 512 MB). Plain library files and runs' games as they are.
+  const nativeRomPath = (src) => {
+    let u;
+    try {
+      u = new URL(String(src || ''), 'http://localhost');
+    } catch {
+      throw httpError(400, 'Ungültige ROM-Adresse', 'badRomUrl');
+    }
+    if (u.pathname === '/api/library/patched') return preparePatchedRom(u.searchParams.get('romId'), u.searchParams.get('patchId'), () => {}, loadConfig()).path;
+    if (u.pathname === '/api/library/rom') {
+      const id = u.searchParams.get('id');
+      const { abs, entry } = resolveId(id, loadConfig());
+      if (!entry) return abs;
+      const st = statSync(abs);
+      const dir = join(CACHE_DIR, 'native-roms');
+      const ext = (extname(entry).toLowerCase().match(/^\.[a-z0-9]{1,4}$/) || ['.bin'])[0];
+      const file = join(dir, `${createHash('sha1').update(`${abs}\0${entry}\0${st.size}\0${st.mtimeMs}`).digest('hex').slice(0, 20)}${ext}`);
+      if (!existsSync(file)) {
+        mkdirSync(dir, { recursive: true });
+        const tmp = `${file}.part`;
+        writeFileSync(tmp, loadFile(id, loadConfig()));
+        renameSync(tmp, file);
+      }
+      try {
+        const old = readdirSync(dir).filter((n) => /^[0-9a-f]{20}\.[a-z0-9]{1,4}$/.test(n)).map((n) => ({ p: join(dir, n), t: statSync(join(dir, n)).mtimeMs }))
+          .filter((f) => f.p !== file).sort((a, b) => b.t - a.t).slice(1);
+        for (const f of old) rmSync(f.p, { force: true });
+      } catch {
+        // tidying is best effort
+      }
+      return file;
+    }
+    return romPathFromUrl(src);
+  };
+  const nativeStatus = () => {
+    const tl = nativeTools();
+    return { ok: tl.ok, cores: Object.fromEntries(Object.entries(tl.cores || {}).map(([k, v]) => [k, !!v])), ids: Object.fromEntries(Object.entries(NATIVE_CORES).map(([k, c]) => [k, c.id])) };
   };
   // Azahar (3DS): polled once someone plays a 3DS game – the play view asks for its status, a launch starts it too
   let azahar = null;
@@ -705,6 +746,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         const tl = ctrToolsNow();
         return { ok: tl.ok, missing: tl.missing || null, liveMemory: !!tl.souldewCore };
       })(),
+      native: nativeStatus(),
       config: {
         lang: config.lang || null,
         onboarded: !!config.onboarded,
@@ -720,6 +762,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         speedGuard: config.speedGuard === true,
         turboMax: config.turboMax === true,
         fullTurbo: config.fullTurbo !== false,
+        nativeCore: config.nativeCore !== false,
         pads: config.pads || null,
         gpuBackend: validBackend(config.gpuBackend, process.platform),
         gpuFallback: fallbackNotice(config.gpuFallback),
@@ -734,7 +777,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const allowed = {};
     // No path-like keys here: emulatorPaths decides which program /launch runs, libraryFolders which folders are
     // scanned (set via /api/library/folders). Neither may be writable by a plain config POST.
-    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax', 'fullTurbo', 'gpuBackend', 'gpuFallback', 'nag', 'nagOff']) {
+    for (const k of ['lang', 'onboarded', 'playerName', 'emulatorFor', 'lastRun', 'bootAnimation', 'sounds', 'shareScreen', 'shortcuts', 'controls', 'theme', 'pads', 'speedGuard', 'turboMax', 'fullTurbo', 'nativeCore', 'gpuBackend', 'gpuFallback', 'nag', 'nagOff']) {
       if (k in body) allowed[k] = body[k];
     }
     // the joke license window (web/lib/nag.mjs): launch count + when it last showed, and its off switch
@@ -754,6 +797,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     if ('speedGuard' in allowed) allowed.speedGuard = allowed.speedGuard === true;
     if ('turboMax' in allowed) allowed.turboMax = allowed.turboMax === true;
     if ('fullTurbo' in allowed) allowed.fullTurbo = allowed.fullTurbo !== false; // on unless switched off
+    if ('nativeCore' in allowed) allowed.nativeCore = allowed.nativeCore !== false; // the fast player: on unless switched off
     // the graphics backend electron/main.mjs applies at the next start; the fallback notice can only be dismissed
     if ('gpuBackend' in allowed) {
       if (gpuBackends(process.platform).includes(allowed.gpuBackend)) allowed.gpuStart = null; // a new choice starts counting afresh
@@ -1220,6 +1264,23 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     if (ctr.current?.id === id) ctr.stop();
     return { ok: true };
   });
+  // ---- DS / GBA / GB in the fast native player (server/lib/native.mjs) -------------------------------------------
+  route('GET', /^\/api\/native\/status$/, () => ({ tools: nativeStatus(), session: native.status() }));
+  route('POST', /^\/api\/native\/start$/, async (req) => {
+    const { rom, key, system, save } = await readBody(req);
+    if (typeof key !== 'string' || !key || key.length > 600) throw httpError(400, 'Ungültiger Spielstand-Schlüssel', 'badKey');
+    if (!Object.hasOwn(NATIVE_CORES, system)) throw httpError(400, 'Kein nativer Kern für dieses System', 'nativeSystem');
+    if (save != null && (typeof save !== 'string' || save.length > 6 * 1024 * 1024 || !/^[A-Za-z0-9+/]*={0,2}$/.test(save))) throw httpError(400, 'Ungültiger Spielstand', 'badSave');
+    const tools = nativeTools();
+    if (!tools.cores?.[system]) throw httpError(409, 'Der schnelle Emulator fehlt für dieses System', 'nativeMissing');
+    const id = native.startNative({ rom: nativeRomPath(rom), key, system, tools, save: save ? Buffer.from(save, 'base64') : null });
+    return { id, core: NATIVE_CORES[system].id };
+  });
+  route('POST', /^\/api\/native\/stop$/, async (req) => {
+    const { id } = await readBody(req);
+    if (native.current?.id === id) native.stop();
+    return { ok: true };
+  });
   route('POST', /^\/api\/live\/azahar\/enable$/, async (req) => {
     const body = await readBody(req);
     if (body?.confirm !== true) throw httpError(400, 'Bestätigung fehlt', 'confirmMissing');
@@ -1417,6 +1478,12 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         if (path === '/api/ctr/stream' && req.method === 'GET') return ctr.attach(url.searchParams.get('id'), res);
         if (path === '/api/ctr/cmd' && req.method === 'POST') {
           ctr.send(url.searchParams.get('id'), await readRaw(req, 300 * 1024 * 1024));
+          return send(res, 200, { ok: true });
+        }
+        // DS / GBA / GB native host: the same two binary channels
+        if (path === '/api/native/stream' && req.method === 'GET') return native.attach(url.searchParams.get('id'), res);
+        if (path === '/api/native/cmd' && req.method === 'POST') {
+          native.send(url.searchParams.get('id'), await readRaw(req, 80 * 1024 * 1024));
           return send(res, 200, { ok: true });
         }
         if (path === '/api/saves/solo' && req.method === 'GET') {

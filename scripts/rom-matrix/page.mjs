@@ -6,6 +6,13 @@ function helper() {
   const BTN = { B: 0, Y: 1, SELECT: 2, START: 3, UP: 4, DOWN: 5, LEFT: 6, RIGHT: 7, A: 8, X: 9, L: 10, R: 11 };
   const e = window.__emu;
   const gm = () => window.EJS_emulator.gameManager;
+  // the fast player (playernative.html): the host runs exactly the frames asked for and then waits – a plan's input
+  // lands on its frame there, every time
+  const NATIVE = !!e.native;
+  // The plans were tuned in player.html, where waiting polls the frame counter while the core races at full speed and
+  // overshoots by a few frames each time (a Game Boy core more than a DS one). Running exactly n frames, a walk is
+  // checked before its step has ended – so the fast player runs the frames the plans had in practice.
+  const SLACK = { gb: 8, gbc: 8, gba: 4, nds: 1 }[e.system?.()] ?? 2;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   let ctx = null;
 
@@ -121,6 +128,10 @@ function helper() {
   }
 
   async function frames(n) {
+    if (NATIVE) {
+      if (n > 0 && (await e.step(n + SLACK)) === null) throw new Error('emulator stopped');
+      return;
+    }
     const end = e.frames() + n;
     const t0 = performance.now();
     while (e.frames() < end) {
@@ -130,6 +141,13 @@ function helper() {
   }
 
   async function press(keys, hold = 6, gap = 14) {
+    if (NATIVE) {
+      e.hold(keys);
+      await frames(hold);
+      e.hold([]);
+      await frames(gap);
+      return;
+    }
     for (const k of keys) gm().simulateInput(0, BTN[k], 1);
     await frames(hold);
     for (const k of keys) gm().simulateInput(0, BTN[k], 0);
@@ -137,6 +155,13 @@ function helper() {
   }
 
   async function shot(name) {
+    if (NATIVE) {
+      const b = await e.screenshot();
+      if (!b) return null;
+      let s = '';
+      for (let k = 0; k < b.length; k += 0x8000) s += String.fromCharCode.apply(null, b.subarray(k, k + 0x8000));
+      return { name, png: btoa(s) };
+    }
     const g = gm();
     try { g.FS.unlink('/screenshot.png'); } catch { /* none yet */ }
     g.functions.screenshot();
@@ -154,6 +179,13 @@ function helper() {
 
   // DS touch screen: (x, y) in the bottom screen's own pixels (256 × 192), sent as mouse events to the core's canvas
   async function tap(x, y, hold = 6) {
+    if (NATIVE) {
+      e.touch((x + 0.5) / 256, (192 + y + 0.5) / 384, true);
+      await frames(hold);
+      e.touch((x + 0.5) / 256, (192 + y + 0.5) / 384, false);
+      await frames(12);
+      return;
+    }
     const c = e.canvas();
     const r = c.getBoundingClientRect();
     // screens stacked top/bottom, letterboxed into the canvas at 256:384

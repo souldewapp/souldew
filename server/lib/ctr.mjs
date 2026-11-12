@@ -188,6 +188,7 @@ export class CtrSessions {
   constructor({ spawn: spawnHost = spawn } = {}) {
     this.spawn = spawnHost;
     this.current = null; // { id, child, stream, buffered, events, exit }
+    this.keepTypes = [MSG.EVENT, MSG.STATE]; // kept for a page that connects later even past BUFFER_LIMIT
   }
 
   status() {
@@ -202,7 +203,13 @@ export class CtrSessions {
     const system = join(save, 'system');
     mkdirSync(system, { recursive: true });
     const args = ['--core', tools.core, '--vulkan', tools.vulkan, '--rom', rom, '--system', system, '--save', save, '--scale', String(scale)];
-    const child = this.spawn(tools.host, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    return this.launch(tools.host, args, save);
+  }
+
+  /** Start a host (`exe` with `args`) as the current session – shared with the DS / GBA / GB host (native.mjs). */
+  launch(exe, args, save) {
+    this.stop();
+    const child = this.spawn(exe, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
     const s = { id: randomBytes(8).toString('hex'), save, child, stream: null, buffered: [], bufferedBytes: 0, events: [], exit: null, closed: false, held: false, log: [] };
     const split = new MessageSplitter();
     child.stdout.on('data', (chunk) => {
@@ -216,7 +223,7 @@ export class CtrSessions {
             child.stdout.pause();
             s.stream.once('drain', () => this.release(s));
           }
-        } else if (s.bufferedBytes + m.data.length <= BUFFER_LIMIT || m.type === MSG.EVENT || m.type === MSG.STATE) {
+        } else if (s.bufferedBytes + m.data.length <= BUFFER_LIMIT || this.keepTypes.includes(m.type)) {
           // before the page connects: keep the start (the "loaded" event, a few frames) and what is answered
           s.buffered.push(m.data);
           s.bufferedBytes += m.data.length;
@@ -306,7 +313,12 @@ export class CtrSessions {
   send(id, body) {
     const s = this.get(id);
     if (s.exit) throw httpError(409, 'Die 3DS-Sitzung ist beendet', 'ctrEnded');
-    s.child.stdin.write(checkCommands(body));
+    s.child.stdin.write(this.check(body));
+  }
+
+  /** The commands a page may send this host (checkCommands for the 3DS host). */
+  check(body) {
+    return checkCommands(body);
   }
 
   stop() {

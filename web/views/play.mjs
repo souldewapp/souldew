@@ -249,7 +249,11 @@ export function GameSession({ session, mode }) {
   // ~10 ms per frame on an M1, the same as "DeSmuME 2015" and with any core option (lib/reach.mjs).
   // (3DS: Azahar in the New 3DS mode – states of another core or mode can't be loaded, and a state of the other mode
   // would stop the game)
-  const core = target.system === '3ds' ? 'azahar-n3ds' : isDs && /^(IPK|IPG|IRB|IRA|IRE|IRD)/.test(target.code || '') ? 'desmume' : '';
+  // The fast player (playernative.html, server/lib/native.mjs): DS, GBA and Game Boy run in souldew's native host –
+  // melonDS with its JIT, mGBA, Gambatte – at full speed with uncapped fast-forward, unless Settings › "Fast player" is
+  // off or its part is missing. When it can't start the game, the session switches to the browser emulator by itself.
+  const [nativeOn, setNativeOn] = useState(() => target.system !== '3ds' && status?.config?.nativeCore !== false && !!status?.native?.cores?.[target.system] && !!status?.native?.ids?.[target.system]);
+  const core = target.system === '3ds' ? 'azahar-n3ds' : nativeOn ? status.native.ids[target.system] : isDs && /^(IPK|IPG|IRB|IRA|IRE|IRD)/.test(target.code || '') ? 'desmume' : '';
   // What fast-forward really reaches in this game on this computer (lib/reach.mjs), remembered per game and core: the
   // turbo steps it can't reach aren't offered – the highest one then plays as fast as the computer manages.
   const reachKey = `sl-reach-${target.system}-${target.code || target.key}-${core || 'default'}`;
@@ -561,6 +565,11 @@ export function GameSession({ session, mode }) {
     const onMsg = (e) => {
       if (e.origin !== location.origin || e.source !== frame.current?.contentWindow) return;
       if (e.data?.type === 'emu-started') setPhase('running');
+      // the fast player couldn't start this game: the browser emulator takes over (a new frame)
+      if (e.data?.type === 'emu-native-failed') {
+        diag('perf', { type: 'nativeFallback', message: String(e.data.message || '').slice(0, 300) });
+        setNativeOn(false);
+      }
       if (e.data?.type === 'emu-key') onKey(e.data, true);
       if (e.data?.type === 'emu-pad' && ['turbo', 'pause'].includes(e.data.action)) act.current[e.data.action]();
       // EmulatorJS flushed the battery save by itself (periodic save) – write it to disk now.
@@ -1083,8 +1092,10 @@ export function GameSession({ session, mode }) {
     return () => clearInterval(id);
   }, [phase]);
 
+  // The fast player's page: the host opens the ROM itself; the battery save comes from the same place as for player.html
+  const [nativeSrc] = useState(() => `/playernative.html?system=${target.system}&rom=${encodeURIComponent(target.rom)}&key=${encodeURIComponent(target.key)}&name=${encodeURIComponent(target.name)}&save=${encodeURIComponent(target.saveUrl)}${layout === 'lr' ? '&layout=left' : ''}`);
   // The frame's URL is fixed for the whole session – changing it would reboot the game.
-  const [src] = useState(() => {
+  const [wasmSrc] = useState(() => {
     // 3DS: souldew's own player page – the game runs in the native host (server/lib/ctr.mjs), its saves live in the
     // host's folder for this game / run slot (target.key)
     if (target.system === '3ds') return `/player3ds.html?rom=${encodeURIComponent(target.rom)}&key=${encodeURIComponent(target.key)}&name=${encodeURIComponent(target.name)}`;
@@ -1092,8 +1103,10 @@ export function GameSession({ session, mode }) {
     const romKey = `${hash(new TextEncoder().encode(target.key)).replace(/\D/g, '')}`;
     const romUrl = `/rom/g${romKey}.${target.system}?src=${encodeURIComponent(target.rom)}`;
     const lay = layout === 'lr' ? '&layout=Left%2FRight&dlayout=left%2Fright' : '';
-    return `/player.html?system=${target.system}${core ? `&core=${core}` : ''}${lay}${fullTurbo ? '' : '&fullturbo=0'}&rom=${encodeURIComponent(romUrl)}&name=${encodeURIComponent(target.name)}&save=${encodeURIComponent(target.saveUrl)}&tap=${encodeURIComponent(t('play.tapToStart', 'Click to start'))}`;
+    const wcore = isDs && /^(IPK|IPG|IRB|IRA|IRE|IRD)/.test(target.code || '') ? 'desmume' : '';
+    return `/player.html?system=${target.system}${wcore ? `&core=${wcore}` : ''}${lay}${fullTurbo ? '' : '&fullturbo=0'}&rom=${encodeURIComponent(romUrl)}&name=${encodeURIComponent(target.name)}&save=${encodeURIComponent(target.saveUrl)}&tap=${encodeURIComponent(t('play.tapToStart', 'Click to start'))}`;
   });
+  const src = nativeOn && target.system !== '3ds' ? nativeSrc : wasmSrc;
   const arn = target.system === '3ds' ? 400 / 480 : isDs ? (layout === 'lr' ? 512 / 192 : 256 / 384) : target.system === 'gba' ? 3 / 2 : 10 / 9;
   const names = isRun && doc && manifest ? getPlayers(doc, manifest) : null;
   const others = isRun && manifest ? othersOf(me, manifest) : [];

@@ -340,6 +340,8 @@ export function SettingsView() {
     <section class="panel stack">
       <h2>${t('set.emulators', 'Emulators')}</h2>
       <p class="small muted">${t('set.emuText', 'The built-in emulator works for every system up to the DS and has the best live sync. Nintendo 3DS games run in Azahar. External emulators are optional otherwise.')}</p>
+      ${status?.native?.ok && html`<label class="check"><input type="checkbox" checked=${cfg.nativeCore !== false} onChange=${(e) => save({ nativeCore: e.target.checked })} /><span>${t('set.native', 'Fast player for DS, GBA and Game Boy')}
+        <span class="hint">${t('set.nativeHint', 'Runs the game with the real emulators (melonDS, mGBA, Gambatte) directly on your computer: full speed even on weaker PCs, and fast-forward that really reaches 4× and more. Live sync, cheats, save states and the in-game save work as before. Save states from the other player can’t be loaded here (and the other way round). Off: the browser emulator as before. Applies to the next game you start.')}</span></span></label>`}
       <table class="data"><thead><tr><th>${t('set.system', 'System')}</th><th>${t('set.useEmu', 'Play with')}</th></tr></thead><tbody>
         ${SYSTEMS.map(([sys, label]) => html`<tr><td>${label}</td><td>
           <select value=${externalOnly(sys, status) ? Object.keys(status?.emulators || {}).find((id) => status.emulators[id].systems.includes(sys)) : cfg.emulatorFor?.[sys] || 'builtin'}
@@ -377,7 +379,7 @@ export function SettingsView() {
       <dl class="facts small">
         <dt>${t('set.randomizer', 'Randomizer')}</dt><dd>Universal Pokémon Randomizer ZX ${status?.upr?.version} · Java ${status?.java?.version || t('set.javaMissing', 'not found')}${status?.java?.bundled ? ` (${t('set.bundled', 'bundled')})` : ''}</dd>
         <dt>${t('set.data', 'Pokémon data')}</dt><dd>PokeAPI · ${t('set.covers', 'covers')}: libretro-thumbnails</dd>
-        <dt>${t('set.emuCore', 'Built-in emulator')}</dt><dd>EmulatorJS (melonDS, DeSmuME, mGBA, Gambatte) · 3DS: Azahar (libretro)</dd>
+        <dt>${t('set.emuCore', 'Built-in emulator')}</dt><dd>EmulatorJS (melonDS, DeSmuME, mGBA, Gambatte) · ${t('set.nativeShort', 'Fast player')}: melonDS DS, mGBA, Gambatte (libretro) · 3DS: Azahar (libretro)</dd>
       </dl>
       <div class="row">
         <button class="btn small" onClick=${() => openExternal(LINKS.github)}><${Icon} name="external" size=${14} />${t('set.github', 'souldew on GitHub')}</button>
