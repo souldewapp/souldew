@@ -22,6 +22,7 @@
 //                 patched and randomized ROMs are deleted at the end unless --keep
 //   --attempts n  tries per game when a plan loses its way (default 3)
 //   --show        show the emulator windows (they stay muted)
+//   --battery     keep each game's battery save after its plan (<out>/shots/<key>.sav – never commit it)
 //   --native      play in the fast player (playernative.html – the native host, tools/native) instead of player.html
 //   --plan <json> play this plan file instead of the game's own (with --only: a probe for one game)
 //   --saves <dir> where saves for the plans that start from one are, too: <patch or ROM name>.sav or <hack id>.sav
@@ -352,7 +353,7 @@ async function runLive(list) {
     rmSync(resultFile, { force: true });
     materialize(r); // (one big ROM on disk at a time: unpacked or patched for its run, deleted after it)
     const job = {
-      dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), native: flag('native'), timeoutMs: 60 * 60000,
+      dataDir, outDir: join(out, 'shots'), resultFile, show: flag('show'), native: flag('native'), battery: flag('battery'), timeoutMs: 60 * 60000,
       targets: [{ key, file: r.file, system: r.system, core: plan.core || '', ...(plan.save ? { save: saveFor(r) } : {}), plan: { ...plan, header: r.header, gameId: r.gameId || r.base?.gameId || null } }],
     };
     writeFileSync(join(out, 'job.json'), JSON.stringify(job));

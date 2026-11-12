@@ -97,11 +97,13 @@ async function runOne(url, t) {
       shots.push(p);
     }
     if (job.saveStates && out.state) writeFileSync(join(job.outDir, `${t.key}.state`), Buffer.from(out.state, 'base64'));
+    if (job.battery && out.sav) writeFileSync(join(job.outDir, `${t.key}.sav`), Buffer.from(out.sav, 'base64'));
   } catch (e) {
     res.error = String(e?.message || e);
   }
   delete res.shots;
   delete res.state;
+  delete res.sav;
   res.shots = shots;
   win.destroy();
   return res;

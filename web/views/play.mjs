@@ -1002,7 +1002,7 @@ export function GameSession({ session, mode }) {
         }
         if (watch.add(fps)) {
           const reached = watch.reached();
-          const tips = slowTips({ system: target.system, backends: window.sls ? gpuBackends(PLATFORM) : [] });
+          const tips = slowTips({ system: target.system, backends: window.sls ? gpuBackends(PLATFORM) : [], native: nativeOn, nativeOff: !nativeOn && target.system !== '3ds' && !!status?.native?.cores?.[target.system] });
           setSlow({ reached, tips });
           diag('perf', { type: 'slow', reached, core: core || e.system?.() || null, tips });
         }
@@ -1010,7 +1010,7 @@ export function GameSession({ session, mode }) {
       last = now;
     }, 2000);
     return () => clearInterval(id);
-  }, [phase, core]);
+  }, [phase, core, nativeOn]);
 
   // Measure the real speed: when a scene can't keep up, the bar shows it in place of the step (the step moves to the
   // small tag above), and every window goes into the game's reach (lib/reach.mjs – which steps are offered). The chosen level is
@@ -1255,7 +1255,7 @@ export function GameSession({ session, mode }) {
           </span>
           ${btn(fs ? 'shrink' : 'full', (fs ? t('play.exitFullscreen', 'Leave fullscreen') : t('keys.fullscreen', 'Fullscreen game')) + ' (F)', actions.fullscreen)}
         </div>
-        ${slow && mode === 'full' && html`<${SlowNotice} slow=${slow} isDs=${isDs} onClose=${() => { setSlow(null); focusGame(); }} />`}
+        ${slow && mode === 'full' && html`<${SlowNotice} slow=${slow} isDs=${isDs} native=${nativeOn} onClose=${() => { setSlow(null); focusGame(); }} />`}
         ${statesOpen && mode === 'full' && html`<${StatePanel} id=${target.stateId} core=${core} gen=${gameGen} version=${statesVer} selected=${sel}
           onClose=${closeStates} onSave=${(n) => actions.quicksave(n)} onLoad=${(n) => { setStatesOpen(false); actions.quickload(n); }} />`}
       </div>
@@ -1296,11 +1296,12 @@ export function GameSession({ session, mode }) {
  * The game runs clearly below full speed at 1× on this computer (lib/slowdown.mjs): how fast it really runs, why it
  * stutters and crackles, and what helps – the melonDS app for DS games, another graphics backend, power settings.
  */
-function SlowNotice({ slow, isDs, onClose }) {
+function SlowNotice({ slow, isDs, native, onClose }) {
   const { navigate, status } = useApp();
   const backend = GPU_LABELS()[status?.config?.gpuBackend || 'auto'] || status?.config?.gpuBackend;
   const melon = status?.emulators?.melonds;
   const tip = {
+    native: t('play.slowNative', 'Turn on the fast player (Settings › Emulators): it runs this game with the real emulator directly on your computer – far faster, and live sync stays.'),
     external: melon?.installed
       ? t('play.slowExternalReady', 'Play with the melonDS app (installed): it runs DS games at full speed on much weaker computers. Pick it under Settings › Emulators – your run syncs on every in-game save.')
       : t('play.slowExternal', 'Play with the melonDS app: it runs DS games at full speed on much weaker computers. Settings › Emulators installs it with one click – your run syncs on every in-game save.'),
@@ -1311,10 +1312,10 @@ function SlowNotice({ slow, isDs, onClose }) {
   return html`<div class="note slow-note" role="status">
     <div class="row nowrap slow-head"><${Icon} name="signal" size=${16} /><b class="grow">${t('play.slowTitle', 'This computer runs the game at only about {pct} % of its speed', { pct })}</b>
       <button class="btn icon ghost" title=${t('common.close', 'Close')} aria-label=${t('common.close', 'Close')} onClick=${onClose}><${Icon} name="close" size=${14} /></button></div>
-    <span class="small">${isDs ? t('play.slowWhyDs', 'That’s why it stutters and the sound crackles. The built-in emulator runs the whole DS on one processor core and can’t go faster here – your computer is the limit, not a setting.')
+    <span class="small">${native ? t('play.slowWhyNative', 'That’s why it stutters and the sound crackles. The game already runs in the fast player – here your computer is the limit, not a setting.') : isDs ? t('play.slowWhyDs', 'That’s why it stutters and the sound crackles. The built-in emulator runs the whole DS on one processor core and can’t go faster here – your computer is the limit, not a setting.')
       : t('play.slowWhy', 'That’s why it stutters and the sound crackles. The built-in emulator runs the console on one processor core and can’t go faster here.')}</span>
     <ul class="small slow-tips">${slow.tips.map((k) => html`<li>${tip[k]}</li>`)}</ul>
-    <div class="row">${(slow.tips.includes('external') || slow.tips.includes('graphics')) && html`<button class="btn small" onClick=${() => navigate('settings')}><${Icon} name="gear" size=${14} />${t('play.slowSettings', 'Open Settings')}</button>`}
+    <div class="row">${(slow.tips.includes('external') || slow.tips.includes('graphics') || slow.tips.includes('native')) && html`<button class="btn small" onClick=${() => navigate('settings')}><${Icon} name="gear" size=${14} />${t('play.slowSettings', 'Open Settings')}</button>`}
       <button class="btn small ghost" onClick=${onClose}>${t('play.slowOk', 'Got it')}</button></div>
   </div>`;
 }

@@ -407,7 +407,7 @@ function helper() {
       } else if (s.do === 'log') {
         log.push({ do: 'log', name: s.name, value: new Function('read', 'place', 'team', 'ctx', `return (${s.expr});`)(e.read, place, team, ctx) });
         continue;
-      } else if (s.do === 'saveState') state = e.getState();
+      } else if (s.do === 'saveState') state = await e.getState(); // (the fast player answers with a promise)
       else if (s.do === 'loadState' && state) e.loadState(state);
       log.push({ do: s.do, frames: e.frames() - at, note: s.note });
     }
@@ -419,7 +419,17 @@ function helper() {
       for (let k = 0; k < st.length; k += 0x8000) s += String.fromCharCode.apply(null, st.subarray(k, k + 0x8000));
       b64 = btoa(s);
     } catch { /* no state */ }
-    return { info, log, shots: shots.filter(Boolean), state: b64, frames: e.frames(), ms: Math.round(performance.now() - t0) };
+    // the battery save as the game left it (--battery: a plan that saved in the game hands it to the next one)
+    let sav = null;
+    try {
+      const b = e.getSave();
+      if (b?.length) {
+        let s = '';
+        for (let k = 0; k < b.length; k += 0x8000) s += String.fromCharCode.apply(null, b.subarray(k, k + 0x8000));
+        sav = btoa(s);
+      }
+    } catch { /* none */ }
+    return { info, log, shots: shots.filter(Boolean), state: b64, sav, frames: e.frames(), ms: Math.round(performance.now() - t0) };
   }
 
   window.__rm = { run, press, tap, frames, shot, team, place, setup, cond };
