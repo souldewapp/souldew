@@ -184,7 +184,11 @@ The packaged 2.5.0 app (`npm run dist`) ran the same run with its bundled 3DS pa
 described above: Ultra Sun from the same downloaded save in a save folder named "Jürgen-save" (the host now hands
 the core UTF-8 paths), 60 fps, the title ID, Smeargle L100 314/314 read from the game's memory, and the whole catch
 by buttons: the Tapu Koko battle, False Swipe three times, a Master Ball, no nickname – then Tapu Koko L60 1/172 in
-the second slot read from memory (Smeargle 76/314). A real Windows PC with a graphics driver is still to come.
+the second slot read from memory (Smeargle 76/314). A savestate (18 MB) taken in the Tapu Koko cutscene loaded
+back from the battle menu to the same text ("stateLoaded ok"). Omega Ruby from the finished Italian save in a
+"Jürgen-or" folder: the team of six read live, the game's menu → Save → Yes wrote the `main` file on the SD card, and a
+cold start went back into the Pokémon Center with the same team read. A real Windows PC with a graphics driver is still
+to come.
 
 ### Not in the test set
 
