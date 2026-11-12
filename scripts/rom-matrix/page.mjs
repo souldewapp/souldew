@@ -273,6 +273,7 @@ function helper() {
         let side = 0;
         for (let n = 0; n < (s.max || 300); n++) {
           let p = pos();
+          if (window.__rmDebug) console.log(`[go] ${n} pos ${JSON.stringify(p)} frame ${e.frames()}`);
           if (done(p)) {
             ok = true;
             break;

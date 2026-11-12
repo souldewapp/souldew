@@ -98,7 +98,7 @@ async function runOne(url, t) {
       try {
         if (job.native) {
           // the fast player: the host opens the ROM itself, the save comes the same way
-          const nq = new URLSearchParams({ system: t.system, rom, key: `matrix-${t.key}`, name: `matrix-${t.key}` });
+          const nq = new URLSearchParams({ system: t.system, rom, key: `matrix-${t.key}`, name: `matrix-${t.key}`, debug: '1', ...(process.env.MATRIX_NO_AUDIO ? { audio: '0' } : {}) });
           if (q.get('save')) nq.set('save', q.get('save'));
           await win.loadURL(`${url}/playernative.html?${nq}`);
         } else await win.loadURL(`${url}/player.html?${q}`);

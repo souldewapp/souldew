@@ -13,6 +13,15 @@ const SYSTEM = q.get('system') || 'nds';
 const MSG = { VIDEO: 2, AUDIO: 3, STATE: 5, LOG: 6, EVENT: 7, RAM: 8, SRAM: 9 };
 const CMD = { INPUT: 1, SPEED: 2, SAVE: 3, LOAD: 4, QUIT: 6, RESET: 7, WRITE: 9, FLUSH: 10, SRAM: 11, RESYNC: 12, STEP: 13 };
 const post = (m) => window.parent?.postMessage(m, location.origin);
+// ?debug=1 (the ROM matrix): what arrives from the host – events, picture sizes, saves – on the console
+const DEBUG = q.get('debug') === '1';
+const dbg = (...a) => DEBUG && console.log('[native]', ...a);
+if (DEBUG) {
+  addEventListener('error', (e) => console.log('[native] error', e.message, e.filename, e.lineno));
+  addEventListener('unhandledrejection', (e) => console.log('[native] rejection', String(e.reason?.stack || e.reason)));
+  addEventListener('beforeunload', () => console.log('[native] beforeunload'));
+  addEventListener('pagehide', () => console.log('[native] pagehide'));
+}
 
 const st = {
   id: null, core: null, ready: false, paused: false, speed: 1, volume: 1, frames: 0, hostFrame: 0, fps: 0, hostSpeed: 0,
@@ -22,19 +31,64 @@ const st = {
 const waiters = { state: [], loaded: [], stepped: [] };
 
 // ---- commands -----------------------------------------------------------------------------------------------------
-let chain = Promise.resolve();
+// One request at a time, and what comes meanwhile goes along with the next one (the server takes several framed
+// commands in one body, in order): the host sees input in the order it happened, and a burst of input is a few requests,
+// not thousands. (One request per command piled up native memory in the renderer – responses not read, request
+// bookkeeping – until Chromium ended the page after ~30 000 of them: a long DS plan in the ROM matrix, and in the end
+// a long play session.) Each command's promise resolves false when the server refused it.
+const MAX_BATCH = 8 * 1024 * 1024; // (a save state goes alone)
+const queue = []; // { bytes, done }
+let inFlight = false;
+const idle = [];
+function sendQueued() {
+  if (inFlight) return;
+  if (!queue.length) return idle.splice(0).forEach((f) => f());
+  if (!st.id) {
+    queue.splice(0).forEach((c) => c.done(false));
+    return idle.splice(0).forEach((f) => f());
+  }
+  const batch = [];
+  let size = 0;
+  while (queue.length && (!batch.length || size + queue[0].bytes.length <= MAX_BATCH)) {
+    const c = queue.shift();
+    batch.push(c);
+    size += c.bytes.length;
+  }
+  const body = new Uint8Array(size);
+  let o = 0;
+  for (const c of batch) {
+    body.set(c.bytes, o);
+    o += c.bytes.length;
+  }
+  inFlight = true;
+  fetch(`/api/native/cmd?id=${st.id}`, { method: 'POST', headers: { 'x-soullink': '1' }, body })
+    .then(async (r) => {
+      await r.arrayBuffer().catch(() => null); // (read it: an unread response holds on to its resources)
+      return r.ok;
+    })
+    .catch(() => true) // (no answer at all: the server is gone – the stream's end answers what waits)
+    .then((ok) => {
+      inFlight = false;
+      for (const c of batch) c.done(ok);
+      sendQueued();
+    });
+}
 function cmd(type, payload = new Uint8Array(0)) {
   const b = new Uint8Array(8 + payload.length);
   const v = new DataView(b.buffer);
   v.setUint32(0, type, true);
   v.setUint32(4, payload.length, true);
   b.set(payload, 8);
-  // one after another: the host must see input in the order it happened. Resolves false when the server refused it.
-  const sent = chain.then(() => (st.id ? fetch(`/api/native/cmd?id=${st.id}`, { method: 'POST', headers: { 'x-soullink': '1' }, body: b }).then((r) => r.ok) : false))
-    .catch(() => true); // (no answer at all: the server is gone – the stream's end answers what waits)
-  chain = sent;
-  return sent;
+  return new Promise((done) => {
+    queue.push({ bytes: b, done });
+    sendQueued();
+  });
 }
+/** Resolves once every command so far reached the server. */
+const flushCommands = () => new Promise((res) => {
+  idle.push(res);
+  sendQueued();
+});
 function ask(list, type, payload, fallback, map = (x) => x) {
   return new Promise((res) => {
     const w = (x) => res(map(x));
@@ -114,7 +168,8 @@ function onVideo(p) {
   const h = v.getUint16(2, true);
   const fmt = v.getUint32(4, true);
   const bpp = fmt === 0 ? 4 : 2;
-  if (!w || !h || p.length < 8 + w * h * bpp) return;
+  if (!w || !h || p.length < 8 + w * h * bpp) return dbg('bad picture', w, h, fmt, p.length);
+  if (DEBUG && (w !== st.dbgW || h !== st.dbgH)) dbg('picture', w, h, fmt), (st.dbgW = w), (st.dbgH = h);
   if (!pendingFrame) requestAnimationFrame(drawFrame);
   pendingFrame = { w, h, fmt, px: p.subarray(8, 8 + w * h * bpp) };
   st.frames++;
@@ -154,7 +209,7 @@ const audioInit = () => [
   { type: 'speed', ratio: Math.min(st.speed, MAX_SOUND_RATIO) },
 ];
 async function startAudio(rate) {
-  if (audio.ctx || !rate) return;
+  if (audio.ctx || !rate || q.get('audio') === '0') return; // (?audio=0: no sound at all – diagnostics)
   try {
     audio.ctx = new AudioContext({ sampleRate: Math.round(rate), latencyHint: 'interactive' });
     await audio.ctx.audioWorklet.addModule('/lib/native-audio-worklet.mjs');
@@ -261,8 +316,9 @@ function onEvent(p) {
   try {
     e = JSON.parse(new TextDecoder().decode(p));
   } catch {
-    return;
+    return dbg('bad event', p.length);
   }
+  if (e.event !== 'stats' && e.event !== 'stepped' && e.event !== 'written') dbg('event', JSON.stringify(e).slice(0, 300));
   if (e.event === 'loaded') {
     st.info = e;
     // a mirror for every region the core has (all of it arrives with the first RAM message)
@@ -283,6 +339,7 @@ function onEvent(p) {
   }
 }
 function onSram(p) {
+  dbg('battery save', p.length);
   st.sram = p.slice();
   // as EmulatorJS' saveSaveFiles: the play view takes getSave() to disk now
   post({ type: 'emu-saved' });
@@ -346,6 +403,7 @@ async function pump() {
     buf = buf.subarray(o);
     need = buf.length >= 8 ? 8 + new DataView(buf.buffer, buf.byteOffset, 8).getUint32(4, true) : 8;
   }
+  dbg('stream ended');
   ended();
   if (!st.error) fail(t('native.stopped', 'The game stopped. Close it and start it again.'));
 }
@@ -620,7 +678,7 @@ window.__emu = {
     return ask(waiters.stepped, CMD.STEP, u32(Math.max(1, Math.min(100000, n | 0))), null);
   },
   /** The input as sent last (tests: the next step() runs with it). */
-  flush: () => chain,
+  flush: () => flushCommands(),
 };
 
 // ---- start ----------------------------------------------------------------------------------------------------------
