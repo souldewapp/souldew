@@ -113,6 +113,28 @@ test('a session: the battery save goes to the host as a file, commands are check
   s.stop();
 });
 
+test('a battery save that comes after the page has gone is stored where the play view keeps it – never a blank one', () => {
+  const calls = [];
+  const written = [];
+  const s = new NativeSessions({ spawn: fakeSpawn(calls), writeSave: (target, bytes) => written.push({ target, bytes: [...bytes] }) });
+  const tools = { host: '/t/retrohost', cores: { gb: '/t/gambatte' } };
+  s.startNative({ rom: '/r/red.gb', key: 'k', system: 'gb', tools, saveFile: { path: '/s/red.sav', runId: null } });
+  const out = calls[0].child.stdout;
+  const msg = (type, payload) => Buffer.concat([u32(type), u32(payload.length), payload]);
+  out.write(msg(9, Buffer.from([1, 2, 3]))); // no page attached: stored
+  out.write(msg(9, Buffer.alloc(8, 0xff))); // a blank cartridge: never
+  assert.deepEqual(written, [{ target: { path: '/s/red.sav', runId: null }, bytes: [1, 2, 3] }]);
+  // the host gets a trimmed environment (nothing the app was started with beyond what it needs)
+  process.env.SOULDEW_TEST_SECRET = 'x';
+  assert.equal('SOULDEW_TEST_SECRET' in s.hostEnv(), false);
+  delete process.env.SOULDEW_TEST_SECRET;
+  // a session started without a save target (the save on disk couldn't be read) stores nothing
+  s.startNative({ rom: '/r/red.gb', key: 'k', system: 'gb', tools });
+  calls[1].child.stdout.write(msg(9, Buffer.from([4])));
+  assert.equal(written.length, 1);
+  s.stop();
+});
+
 // ---- the real host --------------------------------------------------------------------------------------------------
 const hosts = []; // the real hosts started here – killed when a test failed half way
 test.after(() => hosts.forEach((p) => p.exitCode === null && p.kill('SIGKILL')));

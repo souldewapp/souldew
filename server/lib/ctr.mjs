@@ -209,13 +209,15 @@ export class CtrSessions {
   /** Start a host (`exe` with `args`) as the current session – shared with the DS / GBA / GB host (native.mjs). */
   launch(exe, args, save) {
     this.stop();
-    const child = this.spawn(exe, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    const env = this.hostEnv?.();
+    const child = this.spawn(exe, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true, ...(env ? { env } : {}) });
     const s = { id: randomBytes(8).toString('hex'), save, child, stream: null, buffered: [], bufferedBytes: 0, events: [], exit: null, closed: false, held: false, log: [] };
     const split = new MessageSplitter();
     child.stdout.on('data', (chunk) => {
       // whole messages only: a page that connects later (or a new one) must start at a message's beginning
       for (const m of split.push(chunk)) {
         if (m.type === MSG.EVENT) this.peek(s, m.data);
+        this.onMessage?.(s, m, writable(s.stream)); // (native.mjs: the last battery save after the page has gone)
         if (writable(s.stream)) {
           // the page reads the host's messages as they are; a slow page holds the host back (no frames pile up)
           if (!s.stream.write(m.data) && !s.held) {

@@ -2,7 +2,7 @@
 // library scanning, patching, randomizing (bundled Java), save files, emulator management,
 // and the live bridge for external emulators. Used by the Electron app and by `npm start`.
 import { createServer } from 'node:http';
-import { readFileSync, existsSync, statSync, createReadStream, createWriteStream, writeFileSync, mkdirSync, rmSync, readdirSync, renameSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, createReadStream, createWriteStream, writeFileSync, mkdirSync, rmSync, readdirSync, renameSync, utimesSync } from 'node:fs';
 import { once } from 'node:events';
 import { join, extname, normalize, resolve, basename, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -440,7 +440,37 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   const live = new LiveBridge(emit);
   // 3DS in souldew's own player (server/lib/ctr.mjs): one game at a time
   const ctr = new CtrSessions();
-  const native = new NativeSessions();
+  // A battery save the host sends after its page has gone (closed right after saving in the game): stored where the
+  // play view would have put it – the run's save (and its HeartGold/SoulSilver watcher) or the solo game's.
+  const native = new NativeSessions({
+    writeSave: ({ path, runId }, bytes) => {
+      writeFileAtomic(path, bytes);
+      const manifest = runId ? readManifest(runId) : null;
+      if (manifest && isHgssRun(manifest) && !watcher.status(runId).watching) {
+        watcher.watch(runId, path);
+        saveConfig({ watches: { ...(loadConfig().watches || {}), [runId]: path } });
+      }
+    },
+  });
+  /** Where the play view keeps the battery save behind `saveUrl` (its GET/PUT address), or null. */
+  const saveTargetFromUrl = (saveUrl) => {
+    let u;
+    try {
+      u = new URL(String(saveUrl || ''), 'http://localhost');
+    } catch {
+      return null;
+    }
+    if (u.pathname === '/api/saves/solo' && u.searchParams.get('id')) {
+      mkdirSync(SOLO_SAVES, { recursive: true });
+      return { path: join(SOLO_SAVES, `${keyOf(u.searchParams.get('id'))}.sav`), runId: null };
+    }
+    const m = u.pathname.match(/^\/api\/runs\/([a-f0-9]{8})\/save\/(p[1-4])$/);
+    if (m) {
+      const p = defaultSavePath(readManifest(m[1]), m[2]);
+      return p ? { path: p, runId: m[1] } : null;
+    }
+    return null;
+  };
   const ctrToolsNow = () => ctrTools({ azaharApp: detectEmulator('azahar', loadConfig().emulatorPaths?.azahar).path || null });
   /** The file behind a ROM URL the page has (/api/library/rom?id=… or a run's /api/runs/<id>/file?name=…). */
   const romPathFromUrl = (src) => {
@@ -483,13 +513,30 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       const file = join(dir, `${createHash('sha1').update(`${abs}\0${entry}\0${st.size}\0${st.mtimeMs}`).digest('hex').slice(0, 20)}${ext}`);
       if (!existsSync(file)) {
         mkdirSync(dir, { recursive: true });
-        const tmp = `${file}.part`;
-        writeFileSync(tmp, loadFile(id, loadConfig()));
-        renameSync(tmp, file);
+        const tmp = `${file}.${process.pid}-${randomBytes(4).toString('hex')}.part`;
+        try {
+          writeFileSync(tmp, loadFile(id, loadConfig()));
+          renameSync(tmp, file);
+        } finally {
+          rmSync(tmp, { force: true });
+        }
+      } else {
+        try {
+          const now = new Date();
+          utimesSync(file, now, now); // (used now: the tidying below goes by when a file was last played)
+        } catch {
+          // read-only – it is only the order of tidying
+        }
       }
       try {
-        const old = readdirSync(dir).filter((n) => /^[0-9a-f]{20}\.[a-z0-9]{1,4}$/.test(n)).map((n) => ({ p: join(dir, n), t: statSync(join(dir, n)).mtimeMs }))
-          .filter((f) => f.p !== file).sort((a, b) => b.t - a.t).slice(1);
+        const playing = native.current && !native.current.exit ? native.current.rom : null;
+        const names = readdirSync(dir);
+        // left over from an unpacking that never finished (a crash): gone after an hour
+        for (const n of names.filter((x) => x.endsWith('.part'))) {
+          if (Date.now() - statSync(join(dir, n)).mtimeMs > 3600000) rmSync(join(dir, n), { force: true });
+        }
+        const old = names.filter((n) => /^[0-9a-f]{20}\.[a-z0-9]{1,4}$/.test(n)).map((n) => ({ p: join(dir, n), t: statSync(join(dir, n)).mtimeMs }))
+          .filter((f) => f.p !== file && f.p !== playing).sort((a, b) => b.t - a.t).slice(1);
         for (const f of old) rmSync(f.p, { force: true });
       } catch {
         // tidying is best effort
@@ -1267,13 +1314,13 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   // ---- DS / GBA / GB in the fast native player (server/lib/native.mjs) -------------------------------------------
   route('GET', /^\/api\/native\/status$/, () => ({ tools: nativeStatus(), session: native.status() }));
   route('POST', /^\/api\/native\/start$/, async (req) => {
-    const { rom, key, system, save } = await readBody(req);
+    const { rom, key, system, save, saveUrl } = await readBody(req);
     if (typeof key !== 'string' || !key || key.length > 600) throw httpError(400, 'Ungültiger Spielstand-Schlüssel', 'badKey');
     if (!Object.hasOwn(NATIVE_CORES, system)) throw httpError(400, 'Kein nativer Kern für dieses System', 'nativeSystem');
     if (save != null && (typeof save !== 'string' || save.length > 6 * 1024 * 1024 || !/^[A-Za-z0-9+/]*={0,2}$/.test(save))) throw httpError(400, 'Ungültiger Spielstand', 'badSave');
     const tools = nativeTools();
     if (!tools.cores?.[system]) throw httpError(409, 'Der schnelle Emulator fehlt für dieses System', 'nativeMissing');
-    const id = native.startNative({ rom: nativeRomPath(rom), key, system, tools, save: save ? Buffer.from(save, 'base64') : null });
+    const id = native.startNative({ rom: nativeRomPath(rom), key, system, tools, save: save ? Buffer.from(save, 'base64') : null, saveFile: saveTargetFromUrl(saveUrl) });
     return { id, core: NATIVE_CORES[system].id };
   });
   route('POST', /^\/api\/native\/stop$/, async (req) => {

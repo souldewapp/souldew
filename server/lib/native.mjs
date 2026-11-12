@@ -116,17 +116,36 @@ export function checkNativeCommands(body) {
   return body;
 }
 
+/** A battery save that is all 0xFF or all 0x00 is an empty cartridge, not a save. */
+export const blankSave = (b) => !b?.length || b.every((x) => x === 0xff) || b.every((x) => x === 0);
+
 export class NativeSessions extends CtrSessions {
-  constructor(opts) {
+  /**
+   * `writeSave(file, bytes)`: stores a battery save the host sends after its page has gone (the player closed right
+   * after the game saved – the page can't wait for the host's last word). Without it such a save is dropped.
+   */
+  constructor({ writeSave = null, ...opts } = {}) {
     super(opts);
     this.keepTypes = [NMSG.EVENT, NMSG.STATE, NMSG.SRAM];
+    this.writeSave = writeSave;
+  }
+
+  onMessage(s, m, attached) {
+    if (m.type !== NMSG.SRAM || attached || !s.saveFile || !this.writeSave) return;
+    const bytes = Buffer.from(m.data.subarray(8));
+    if (blankSave(bytes)) return;
+    try {
+      this.writeSave(s.saveFile, bytes);
+    } catch {
+      // best effort – the page's own copy is on disk already
+    }
   }
 
   /**
    * Start `rom` (a path) on `system` with the core folder of `key`; `save` = the battery save souldew has for it
    * (bytes) or null. Ends a session that still runs.
    */
-  startNative({ rom, key, system, tools, save = null }) {
+  startNative({ rom, key, system, tools, save = null, saveFile = null }) {
     const core = tools.cores?.[system];
     if (!core) throw httpError(409, 'Der schnelle Emulator fehlt für dieses System', 'nativeMissing');
     this.stop();
@@ -143,7 +162,16 @@ export class NativeSessions extends CtrSessions {
     } else {
       rmSync(boot, { force: true }); // no save (yet): the core starts with an empty cartridge
     }
-    return this.launch(tools.host, hostArgs({ system, core, rom, saveDir, systemDir, sram }), saveDir);
+    const id = this.launch(tools.host, hostArgs({ system, core, rom, saveDir, systemDir, sram }), saveDir);
+    this.current.saveFile = saveFile;
+    this.current.rom = rom;
+    return id;
+  }
+
+  /** The host gets only what it needs from the environment (no tokens or the like the app was started with). */
+  hostEnv() {
+    const keep = ['PATH', 'HOME', 'USERPROFILE', 'TMPDIR', 'TEMP', 'TMP', 'SystemRoot', 'windir', 'LANG', 'LC_ALL', 'DISPLAY', 'XDG_RUNTIME_DIR'];
+    return Object.fromEntries(keep.filter((k) => process.env[k] !== undefined).map((k) => [k, process.env[k]]));
   }
 
   check(body) {
@@ -165,6 +193,8 @@ export class NativeSessions extends CtrSessions {
   send(id, body) {
     const s = this.get(id);
     if (s.exit) throw httpError(409, 'Das Spiel ist beendet', 'nativeEnded');
+    // the host reads its commands between frames – a page that floods it waits instead of piling up memory here
+    if (s.child.stdin.writableLength > 128 * 1024 * 1024) throw httpError(503, 'Das Spiel ist beschäftigt', 'nativeBusy');
     s.child.stdin.write(this.check(body));
   }
 }

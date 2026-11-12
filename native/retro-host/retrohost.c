@@ -553,7 +553,7 @@ static void *reader(void *arg) {
       if (h[1] >= 4) {
         float v;
         memcpy(&v, p, 4);
-        speed = isfinite(v) ? (v < 0 ? 0 : v) : v > 0 ? 1000.0f : 1.0f;
+        speed = isfinite(v) ? (v <= 0 ? 0 : v < 0.05f ? 0.05f : v > 1000.0f ? 1000.0f : v) : v > 0 ? 1000.0f : 1.0f;
       }
       break;
     case 3: want_save = 1; break;
@@ -561,7 +561,11 @@ static void *reader(void *arg) {
     case 6: want_quit = 1; break;
     case 7: want_reset = 1; break;
     case 9:
-      if (h[1] > 4 && h[1] <= 4 + 65536 && writes_n < MAX_WRITES) {
+      if (h[1] > 4 && h[1] <= 4 + 65536 && writes_n >= MAX_WRITES) {
+        uint32_t a;
+        memcpy(&a, p, 4);
+        send_event("{\"event\":\"written\",\"addr\":%u,\"len\":%u,\"ok\":false}", a, h[1] - 4); // (too many at once)
+      } else if (h[1] > 4 && h[1] <= 4 + 65536) {
         memcpy(&writes[writes_n].addr, p, 4);
         writes[writes_n].len = h[1] - 4;
         writes[writes_n].b = p; // (freed after it is written)
@@ -721,6 +725,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < opt_bench; i++) {
       want_frame = i == opt_bench - 1 || (i % 60) == 0;
       core.run();
+      audio_n = 0;
       if (opt_bench_speed > 0) {
         next += 1.0 / (fps * opt_bench_speed);
         double w = next - compat_now();
@@ -764,7 +769,13 @@ int main(int argc, char **argv) {
     }
     pthread_mutex_unlock(&cmd_lock);
     if (quit) break;
-    if (sd) { // a battery save given late: into the save memory, then start over with it
+    if (reset || sd) {
+      core.reset();
+      memmap_dirty = 1;
+    }
+    if (sd) {
+      // a battery save given late: the game starts over with it. Written after the reset – melonDS DS builds a new
+      // console there and copies the old one's save into its buffer; the next frame installs what is in it then.
       uint8_t *p;
       size_t n;
       sram_get(&p, &n);
@@ -772,16 +783,13 @@ int main(int argc, char **argv) {
         memset(p, 0xff, n);
         memcpy(p, sd, sl < n ? sl : n);
         sram_sent = sram_seen = fnv(p, n);
-        reset = 1;
       }
       free(sd);
     }
-    if (reset) {
-      core.reset();
-      memmap_dirty = 1;
-    }
     if (ld) {
-      bool ok = core.unserialize(ld, ll);
+      // a state far off the core's own size is no state of this game (cores trust the sizes inside it)
+      const size_t want = core.serialize_size();
+      bool ok = want && ll >= want / 2 && ll <= want * 2 + 65536 && core.unserialize(ld, ll);
       free(ld);
       memmap_dirty = 1;
       send_event("{\"event\":\"stateLoaded\",\"ok\":%s}", ok ? "true" : "false");
@@ -850,7 +858,7 @@ int main(int argc, char **argv) {
     audio_n = 0;
     last_audio = t;
     if (t - last_ram >= 0.1 || nw) last_ram = t, send_ram(); // ten times a second, whatever the speed
-    if (t - last_sram >= 0.5) last_sram = t, check_sram(0);
+    if (t - last_sram >= 0.25) last_sram = t, check_sram(0); // (sent once it held still for a quarter second)
     if (t - stat_t >= 0.25) { // four times a second: the page measures the real speed with the frame count
       const double real = stat_frames / (t - stat_t) / fps;
       ff_k = turbo ? (real < 1 ? 1 : real > 16 ? 16 : real) : 1;
@@ -862,6 +870,7 @@ int main(int argc, char **argv) {
     next += 1.0 / (fps * spd);
     if (next < t - 0.1) next = t; // fell behind: don't race to catch up
     double wait = next - t;
+    if (wait > 0.1) wait = 0.1, next = t + 0.1; // (commands are read between frames – never sleep long)
     if (wait > 0) compat_sleep(wait);
   }
   check_sram(1); // the last of the game's saves
