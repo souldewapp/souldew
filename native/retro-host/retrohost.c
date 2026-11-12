@@ -7,7 +7,9 @@
 //
 // Messages are { u32 type, u32 length, payload } (little-endian), both ways.
 //   host → souldew   2 VIDEO  u16 width, u16 height, u32 format (0 XRGB8888 = BGRA bytes, 2 RGB565), packed pixels
-//                    3 AUDIO  s16 stereo samples (normal speed only)
+//                    3 AUDIO  s16 stereo samples – fast-forward: the sound sped up (time-compressed to the real
+//                             speed, at most 16×, as RetroArch's audio_fastforward_speedup) and never more than
+//                             real time – souldew's turbo mixer (web/lib/turboaudio.mjs) slows it down again
 //                    5 STATE  a save state (answer to SAVE; empty when the core couldn't)
 //                    6 LOG    text
 //                    7 EVENT  json  { event: 'loaded' | 'error' | 'stateLoaded' | 'stats' | 'written', … }
@@ -202,6 +204,38 @@ static int16_t input_state(unsigned port, unsigned device, unsigned index, unsig
 static int16_t *audio_buf;
 static size_t audio_n, audio_cap;
 static int audio_on = 1;
+// fast-forward: the frame's sound averaged down by `ff_k` (box filter, fractional), within a real-time budget
+static double ff_k = 1, ff_acc, ff_sum[2], ff_budget;
+static size_t ff_cnt;
+static int16_t *ff_buf;
+static size_t ff_cap;
+/** The frame's sound sped up by ff_k (n stereo frames in audio_buf → fewer in ff_buf); returns how many. */
+static size_t speed_up_audio(void) {
+  const size_t n = audio_n / 2;
+  if (ff_cap < n / (ff_k > 1 ? (size_t)ff_k : 1) + 4) {
+    size_t cap = n + 4;
+    int16_t *b = realloc(ff_buf, cap * 2 * sizeof *b);
+    if (!b) return 0;
+    ff_buf = b;
+    ff_cap = cap;
+  }
+  size_t out = 0;
+  for (size_t i = 0; i < n; i++) {
+    ff_sum[0] += audio_buf[i * 2];
+    ff_sum[1] += audio_buf[i * 2 + 1];
+    ff_cnt++;
+    ff_acc += 1;
+    if (ff_acc >= ff_k && out < ff_cap) {
+      ff_buf[out * 2] = (int16_t)(ff_sum[0] / (double)ff_cnt);
+      ff_buf[out * 2 + 1] = (int16_t)(ff_sum[1] / (double)ff_cnt);
+      out++;
+      ff_acc -= ff_k;
+      ff_sum[0] = ff_sum[1] = 0;
+      ff_cnt = 0;
+    }
+  }
+  return out;
+}
 static void audio_push(const int16_t *d, size_t frames) {
   if (!audio_on || !frames) return;
   if (audio_n + frames * 2 > audio_cap) {
@@ -708,7 +742,8 @@ int main(int argc, char **argv) {
 
   pthread_t th;
   pthread_create(&th, NULL, reader, NULL);
-  double next = compat_now(), last_frame = 0, last_ram = 0, last_sram = compat_now(), stat_t = compat_now();
+  double next = compat_now(), last_frame = 0, last_ram = 0, last_sram = compat_now(), stat_t = compat_now(), last_audio = compat_now();
+  const double sample_rate = av.timing.sample_rate > 0 ? av.timing.sample_rate : 32768;
   uint64_t stat_frames = 0;
   for (;;) {
     pthread_mutex_lock(&cmd_lock);
@@ -769,10 +804,18 @@ int main(int argc, char **argv) {
       continue;
     }
     const int turbo = spd > 1.01f;
+    static int was_turbo;
+    if (turbo != was_turbo) { // a fresh start for the sped-up sound: the asked-for speed until it is measured
+      was_turbo = turbo;
+      ff_k = turbo ? (spd > 16 ? 16 : spd) : 1;
+      ff_acc = ff_sum[0] = ff_sum[1] = 0;
+      ff_cnt = 0;
+      ff_budget = sample_rate * 0.05;
+    }
     fastforwarding = turbo;
     // turbo: a picture for the screen about 60 times a second, not one per emulated frame
     want_frame = !turbo || t - last_frame >= 1.0 / 62 || steps == 1;
-    audio_on = !turbo; // fast-forward: no sound (souldew plays its own)
+    audio_on = 1;
     core.run();
     frame_no++;
     pthread_mutex_lock(&in_lock);
@@ -791,13 +834,26 @@ int main(int argc, char **argv) {
       send_event("{\"event\":\"stepped\",\"frame\":%llu}", (unsigned long long)frame_no);
     }
     if (want_frame && frame_new) last_frame = t, send_frame();
-    if (audio_n) {
+    if (audio_n && !turbo) {
       send_msg(3, audio_buf, (uint32_t)(audio_n * sizeof *audio_buf));
-      audio_n = 0;
+      ff_budget = 0;
+    } else if (audio_n) {
+      // fast-forward: sped up by the real speed (≤ 16×); what doesn't fit in real time is left out, in whole frames
+      ff_budget += (t - last_audio) * sample_rate;
+      if (ff_budget > sample_rate * 0.2) ff_budget = sample_rate * 0.2;
+      const size_t m = speed_up_audio();
+      if (m && ff_budget >= (double)m) {
+        ff_budget -= (double)m;
+        send_msg(3, ff_buf, (uint32_t)(m * 2 * sizeof *ff_buf));
+      }
     }
+    audio_n = 0;
+    last_audio = t;
     if (t - last_ram >= 0.1 || nw) last_ram = t, send_ram(); // ten times a second, whatever the speed
     if (t - last_sram >= 0.5) last_sram = t, check_sram(0);
     if (t - stat_t >= 0.25) { // four times a second: the page measures the real speed with the frame count
+      const double real = stat_frames / (t - stat_t) / fps;
+      ff_k = turbo ? (real < 1 ? 1 : real > 16 ? 16 : real) : 1;
       send_event("{\"event\":\"stats\",\"fps\":%.1f,\"speed\":%.3f,\"shown\":%llu,\"frame\":%llu}", stat_frames / (t - stat_t), stat_frames / (t - stat_t) / fps, (unsigned long long)frames_shown, (unsigned long long)frame_no);
       stat_t = t;
       stat_frames = 0;

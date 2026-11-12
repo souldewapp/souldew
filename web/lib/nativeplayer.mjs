@@ -138,21 +138,74 @@ addEventListener('resize', layout);
 new ResizeObserver(layout).observe(document.body);
 layout();
 
-// ---- sound ----------------------------------------------------------------------------------------------------------
-const audio = { ctx: null, node: null, gain: null };
+// ---- sound: the host's samples through souldew's turbo mixer (lib/native-audio-worklet.mjs) ------------------------
+// While fast-forwarding the host sends the sound sped up by the real speed (as RetroArch does for player.html); the
+// mixer keeps the music going at normal speed (Settings › sound while fast-forwarding), for DS games synthesized from the
+// ROM's own sound archive (lib/sdat-worker.mjs), as in player.html.
+const MAX_SOUND_RATIO = 16; // the host speeds its fast-forward sound up at most this much
+const audio = { ctx: null, node: null, gain: null, key: null, events: [], probes: [] };
+function tellAudio(m) {
+  audio.node?.port.postMessage(m);
+}
+const audioInit = () => [
+  { type: 'mode', mode: st.turboAudio },
+  { type: 'paused', paused: st.paused },
+  ...(audio.key ? [{ type: 'song', key: audio.key }] : []),
+  { type: 'speed', ratio: Math.min(st.speed, MAX_SOUND_RATIO) },
+];
 async function startAudio(rate) {
   if (audio.ctx || !rate) return;
   try {
     audio.ctx = new AudioContext({ sampleRate: Math.round(rate), latencyHint: 'interactive' });
-    await audio.ctx.audioWorklet.addModule('/lib/ctr-audio-worklet.mjs');
-    audio.node = new AudioWorkletNode(audio.ctx, 'ctr-sink', { outputChannelCount: [2] });
+    await audio.ctx.audioWorklet.addModule('/lib/native-audio-worklet.mjs');
+    audio.node = new AudioWorkletNode(audio.ctx, 'native-audio', { outputChannelCount: [2], processorOptions: { init: audioInit() } });
+    audio.node.port.onmessage = (e) => {
+      const ev = e.data?.e;
+      if (!ev) return;
+      if (ev.type === 'error') st.log.push(`turbo audio: ${ev.message}`);
+      if (ev.type === 'probe') audio.probes.splice(0).forEach((f) => f(ev));
+      if (ev.type === 'state' || ev.type === 'error') {
+        audio.events.push({ t: Math.round(performance.now()), ...ev });
+        if (audio.events.length > 40) audio.events.shift();
+      }
+    };
     audio.gain = audio.ctx.createGain();
     audio.gain.gain.value = st.volume;
     audio.node.connect(audio.gain).connect(audio.ctx.destination);
     audio.ctx.resume().catch(() => {});
+    for (const m of audioInit()) tellAudio(m); // (the state may have changed while the module loaded)
+    startSdat();
   } catch (e) {
     st.log.push(`audio: ${e.message}`);
   }
+}
+// DS games: the ROM's sound archive, read in a worker – the mixer synthesizes the song the game plays
+const sdat = { worker: null, ready: false };
+const sdatSong = (key) => {
+  const id = /^m(\d+)$/.exec(key || '')?.[1];
+  if (sdat.ready && id) sdat.worker.postMessage({ type: 'pack', key, id: Number(id) });
+};
+function startSdat() {
+  if (SYSTEM !== 'nds' || sdat.worker || typeof Worker !== 'function' || !q.get('rom')) return;
+  try {
+    // a blob worker inherits the page's cross-origin isolation (a script of its own would need the headers itself)
+    const src = `import ${JSON.stringify(new URL('/lib/sdat-worker.mjs', location.href).href)};`;
+    sdat.worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })), { type: 'module' });
+  } catch (e) {
+    st.log.push(`sdat: ${e.message}`);
+    return;
+  }
+  sdat.worker.onerror = () => st.log.push('sdat: worker failed');
+  sdat.worker.onmessage = (e) => {
+    const m = e.data || {};
+    if (m.type === 'ready') {
+      sdat.ready = true;
+      tellAudio({ type: 'sdat-ready' });
+      sdatSong(audio.key);
+    } else if (m.type === 'none') st.log.push(`sdat: ${m.why}`);
+    else if (m.type === 'pack' && m.pack) tellAudio({ type: 'sdat', key: m.key, pack: m.pack });
+  };
+  sdat.worker.postMessage({ type: 'rom', url: new URL(q.get('rom'), location.href).href });
 }
 const wake = () => audio.ctx?.state === 'suspended' && audio.ctx.resume().catch(() => {});
 addEventListener('pointerdown', wake);
@@ -218,6 +271,7 @@ function onEvent(p) {
   } else if (e.event === 'stats') {
     st.fps = e.fps;
     st.hostSpeed = e.speed;
+    if (st.speed > 1 && !st.paused && e.speed > 0.5) tellAudio({ type: 'rate', ratio: Math.round(Math.min(e.speed, MAX_SOUND_RATIO) * 100) / 100 });
     if (Number.isFinite(e.frame)) st.hostFrame = e.frame;
   } else if (e.event === 'stepped') {
     if (Number.isFinite(e.frame)) st.hostFrame = e.frame;
@@ -446,25 +500,27 @@ window.__emu = {
   pause() {
     st.paused = true;
     cmd(CMD.SPEED, f32(0));
-    audio.node?.port.postMessage('clear');
+    tellAudio({ type: 'paused', paused: true });
   },
   resume() {
     st.paused = false;
     cmd(CMD.SPEED, f32(speedValue()));
+    tellAudio({ type: 'paused', paused: false });
   },
   togglePause() {
     if (st.paused) this.resume();
     else this.pause();
   },
   restart: () => {
-    audio.node?.port.postMessage('clear');
+    tellAudio('clear');
+    tellAudio({ type: 'cut' });
     return cmd(CMD.RESET);
   },
   /** 1–4, or Infinity: as fast as this computer can. */
   setSpeed(ratio) {
     st.speed = ratio === Infinity ? Infinity : Math.max(1, Number(ratio) || 1);
     if (!st.paused) cmd(CMD.SPEED, f32(speedValue()));
-    audio.node?.port.postMessage('clear');
+    tellAudio({ type: 'speed', ratio: Math.min(st.speed, MAX_SOUND_RATIO) });
   },
   speed: () => st.speed,
   setFullTurbo() {}, // the native host always runs fast-forward at full power – it doesn't hold the page back
@@ -478,7 +534,8 @@ window.__emu = {
   },
   loadState(u8) {
     if (st.ended) return Promise.resolve(false);
-    audio.node?.port.postMessage('clear');
+    tellAudio('clear');
+    tellAudio({ type: 'cut' });
     return ask(waiters.loaded, CMD.LOAD, u8 instanceof Uint8Array ? u8 : new Uint8Array(u8), false);
   },
   async screenshot() {
@@ -504,7 +561,8 @@ window.__emu = {
     const b = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength).slice();
     st.sram = b;
     st.bootSave = 'loaded';
-    audio.node?.port.postMessage('clear');
+    tellAudio('clear');
+    tellAudio({ type: 'cut' });
     cmd(CMD.SRAM, b);
   },
   setVolume(v) {
@@ -512,11 +570,29 @@ window.__emu = {
     if (audio.gain) audio.gain.gain.value = v;
   },
   muted: () => st.volume === 0,
-  // fast-forward is silent in the native player for now (souldew's turbo music needs the browser emulator's mixer)
+  /** What plays while fast-forwarding: 'music' | 'mute' | 'original' | 'plain' (as player.html). */
   setTurboAudio(mode) {
     st.turboAudio = mode;
+    tellAudio({ type: 'mode', mode });
   },
-  songKey() {},
+  /** The music the game plays now (location.mjs musicKey): the turbo mixer follows it. */
+  songKey(key) {
+    if (!key || key === audio.key) return;
+    audio.key = key;
+    tellAudio({ type: 'song', key });
+    sdatSong(key);
+  },
+  /** The mixer's last state changes (diagnostics). */
+  turboAudio: () => ({ mode: st.turboAudio, key: audio.key, sdat: sdat.ready, events: audio.events.slice(-10) }),
+  /** Tests: what the mixer plays right now ({ playing, turbo, key, … }), or null without sound. */
+  audioProbe() {
+    if (!audio.node) return Promise.resolve(null);
+    return new Promise((res) => {
+      audio.probes.push(res);
+      tellAudio({ type: 'probe' });
+      setTimeout(() => res(null), 2000);
+    });
+  },
   perf: () => ({ fps: st.fps, speed: st.hostSpeed, frames: st.hostFrame, shown: st.frames, core: st.core, info: st.info, error: st.error, log: st.log.slice(-20), pacing: { core: st.core, native: true } }),
   setOption(k, v) {
     if (/screens?_layout$/.test(k)) {

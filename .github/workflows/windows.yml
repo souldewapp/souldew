@@ -23,9 +23,14 @@ jobs:
     with:
       platforms: windows
 
+  native:
+    uses: ./.github/workflows/native.yml
+    with:
+      platforms: windows
+
   build:
     name: Build & smoke-test the Windows app
-    needs: ctr
+    needs: [ctr, native]
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
@@ -55,6 +60,15 @@ jobs:
           node scripts/build-ctr.mjs --check
           & tools/ctr/win32-x64/ctrhost.exe; if ($LASTEXITCODE -ne 2) { throw "ctrhost.exe exit $LASTEXITCODE" }
           exit 0 # (Actions' pwsh would otherwise end the step with ctrhost's 2)
+      - name: The fast player part (built by native.yml)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: native-win32-x64
+          path: tools/native/win32-x64
+      - name: The native host runs the Game Boy core here (a ROM made by the test)
+        run: |
+          node scripts/build-native.mjs --check
+          node --test --test-timeout=120000 test/native.test.mjs
 
       - name: Build the installer
         env:
@@ -70,6 +84,7 @@ jobs:
           "{0}  {1:N1} MB" -f $exe, ((Get-Item $exe).Length / 1MB)
           if (-not (Test-Path dist/win-unpacked/resources/tools/jre/win32-x64/bin/java.exe)) { throw 'JRE not bundled' }
           if (-not (Test-Path dist/win-unpacked/resources/tools/ctr/win32-x64/azahar_libretro.dll)) { throw '3DS part not bundled' }
+          if (-not (Test-Path dist/win-unpacked/resources/tools/native/win32-x64/melondsds_libretro.dll)) { throw 'fast player part not bundled' }
 
       - name: Smoke test – unpacked app (incl. one-click melonDS zip + mGBA 7z install through the app)
         run: node scripts/smoke-app.mjs dist/win-unpacked/souldew.exe --screenshot smoke-unpacked.png --emulators

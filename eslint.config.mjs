@@ -24,7 +24,7 @@ export default [
   // the website (site/): a classic browser script, no modules
   { files: ['site/**/*.js'], languageOptions: { ecmaVersion: 2024, sourceType: 'script', globals: globals.browser }, rules: { eqeqeq: ['error', 'always', { null: 'ignore' }], 'no-var': 'error', 'prefer-const': 'error' } },
   // AudioWorkletGlobalScope (not in this version of `globals`)
-  { files: ['web/lib/turboaudio-worklet.mjs', 'web/lib/ctr-audio-worklet.mjs'], languageOptions: { globals: { sampleRate: 'readonly', currentTime: 'readonly', AudioWorkletProcessor: 'readonly', registerProcessor: 'readonly' } } },
+  { files: ['web/lib/turboaudio-worklet.mjs', 'web/lib/ctr-audio-worklet.mjs', 'web/lib/native-audio-worklet.mjs'], languageOptions: { globals: { sampleRate: 'readonly', currentTime: 'readonly', AudioWorkletProcessor: 'readonly', registerProcessor: 'readonly' } } },
   { files: ['server/**/*.mjs', 'electron/**/*.mjs', 'scripts/**/*.mjs', 'test/**/*.mjs', 'eslint.config.mjs'], languageOptions: { globals: globals.node } },
   // the preload script (CommonJS, sandboxed: require + a limited process object)
   { files: ['electron/**/*.cjs'], languageOptions: { sourceType: 'commonjs', globals: globals.node } },

@@ -37,9 +37,9 @@ const only = new Set(String(opt('only', 'nds,gba,gb')).split(','));
 
 /** The sources, at fixed versions (bump them here; SOURCES.txt in the build says which ones went in). */
 export const SOURCES = {
-  nds: { name: 'melonDS DS', repo: 'https://github.com/JesseTG/melonds-ds.git', ref: 'v1.4.0', file: `melondsds_libretro.${ext}` },
-  gba: { name: 'mGBA', repo: 'https://github.com/mgba-emu/mgba.git', ref: '0.10.5', file: `mgba_libretro.${ext}` },
-  gb: { name: 'Gambatte (libretro)', repo: 'https://github.com/libretro/gambatte-libretro.git', ref: '77f2567d718b8973d02caa2daa8dce4953faf811', file: `gambatte_libretro.${ext}` },
+  nds: { name: 'melonDS DS', repo: 'https://github.com/JesseTG/melonds-ds.git', ref: 'v1.4.0', file: `melondsds_libretro.${ext}`, license: ['LICENSE', 'LICENSE-melonds-ds-GPL-3.0.txt'] },
+  gba: { name: 'mGBA', repo: 'https://github.com/mgba-emu/mgba.git', ref: '0.10.5', file: `mgba_libretro.${ext}`, license: ['LICENSE', 'LICENSE-mgba-MPL-2.0.txt'] },
+  gb: { name: 'Gambatte (libretro)', repo: 'https://github.com/libretro/gambatte-libretro.git', ref: '77f2567d718b8973d02caa2daa8dce4953faf811', file: `gambatte_libretro.${ext}`, license: ['COPYING', 'LICENSE-gambatte-GPL-2.0.txt'] },
 };
 const HOST = win ? 'retrohost.exe' : 'retrohost';
 
@@ -98,6 +98,12 @@ function cmakeTarget() {
   return a;
 }
 
+/** The core's license next to it (it ships with the app). */
+function license(key, src) {
+  const [from, to] = SOURCES[key].license;
+  copyFileSync(join(src, from), join(out, to));
+}
+
 function buildNds() {
   const src = source('nds');
   const build = join(src, `build-${plat}`);
@@ -105,6 +111,7 @@ function buildNds() {
   run('cmake', [...cmakeTarget(), '-DENABLE_OPENGL=OFF', '-DENABLE_JIT=ON', '-DENABLE_LTO_RELEASE=OFF', '-DBUILD_TESTING=OFF', '-DTRACY_ENABLE=OFF', '-S', src, '-B', build]);
   run('cmake', ['--build', build, '--parallel', jobs]);
   copyFileSync(join(build, 'src', 'libretro', SOURCES.nds.file), join(out, SOURCES.nds.file));
+  license('nds', src);
 }
 
 function buildGba() {
@@ -115,15 +122,18 @@ function buildGba() {
   run('cmake', [...cmakeTarget(), '-DBUILD_LIBRETRO=ON', '-DBUILD_SHARED=OFF', '-DBUILD_STATIC=OFF', '-DSKIP_LIBRARY=ON', ...off, ...no, '-S', src, '-B', build]);
   run('cmake', ['--build', build, '--parallel', jobs, '--target', 'mgba_libretro']);
   copyFileSync(join(build, SOURCES.gba.file), join(out, SOURCES.gba.file));
+  license('gba', src);
 }
 
 function buildGb() {
   const src = source('gb');
   const platform = win ? 'win' : os === 'darwin' ? 'osx' : 'unix';
-  const extra = os === 'darwin' ? [`ARCHFLAGS=-arch ${arch === 'arm64' ? 'arm64' : 'x86_64'} -mmacosx-version-min=11.0`] : [];
+  // (Windows: winpthread static too – a MinGW build otherwise needs libwinpthread-1.dll next to it)
+  const extra = os === 'darwin' ? [`ARCHFLAGS=-arch ${arch === 'arm64' ? 'arm64' : 'x86_64'} -mmacosx-version-min=11.0`] : win ? ['LDFLAGS=-static -lws2_32'] : ['LDFLAGS=-static-libgcc -static-libstdc++'];
   run('make', ['-C', src, '-f', 'Makefile.libretro', 'clean'], { stdio: 'ignore' });
   run('make', ['-C', src, '-f', 'Makefile.libretro', `platform=${platform}`, 'HAVE_NETWORK=0', `CC=${cc}`, `CXX=${cxx}`, ...extra, `-j${jobs}`]);
   copyFileSync(join(src, SOURCES.gb.file), join(out, SOURCES.gb.file));
+  license('gb', src);
 }
 
 function buildHost() {

@@ -2,6 +2,20 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## Unreleased
+
+- **The fast player: DS, GBA and Game Boy games at full speed, with fast-forward that really reaches 4× and more.**
+  The games now run in the real emulators directly on the computer – melonDS (the same engine as the melonDS app,
+  with its recompiler), mGBA and Gambatte – instead of inside the app's browser engine. A Mac with Apple silicon
+  runs Platinum at about 12× and Black 2 at about 9× of full speed (before: about 1.6× for the heavy DS games), GBA
+  and Game Boy games far beyond that, so weaker PCs keep full speed too. Live tracking, cheats, save states, the
+  in-game save, the touch screen, controllers, screenshots and the partner's mini view work as before. Save states
+  made in the old player can't be loaded in the new one (and the other way round); your in-game saves carry over.
+  Settings › Emulators › "Fast player" switches back to the old player, and a game the fast player can't start opens
+  in the old one by itself.
+- HeartGold/SoulSilver and Black/White (1 and 2) also run in melonDS now: the newer melonDS handles their infrared
+  cartridge.
+
 ## 2.5.0
 
 - **Nintendo 3DS games play inside souldew**: X/Y, Omega Ruby/Alpha Sapphire, Sun/Moon and Ultra Sun/Ultra Moon run
