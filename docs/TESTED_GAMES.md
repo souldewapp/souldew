@@ -34,13 +34,57 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 | **Crystal** | ✅ | ✅ | ✅ | ✅ | ✅ | As Silver; met location and level are read. **Real catch:** Sentret L2 (also Pidgey, Rattata), met location Route 29 → "Route 29". Randomized: Poliwag as the starter, wild Rattata L2 – all read. |
 | **Ruby / Sapphire** | ✅ | ✅ | ✅ | ✅ | – | Torchic L5 (nickname, HP checked on the party screen), Littleroot Town, Route 101, wild Poochyena L2. The starter's met location is Route 101 – the same id the sign reads there. |
 | **Emerald** | ✅ | ✅ | ✅ | ✅ | ✅ | As Ruby, wild Zigzagoon L2. **Real catch:** Poochyena L2 (also Wurmple) on Route 101 → "Route 101". Randomized: Weedle as the starter, all read. |
-| **Feuerrote / Blattgrüne** (German FireRed / LeafGreen, 2.3.1) | ✅ | ✅ | ✅ | ✅ | – | Recognised as `firered_eu` / `leafgreen_eu` (game code BPRD/BPGD, retail CRC). Charmander L5 18/18 "GLUMANDA" from Oak, filed as the starter (met location Pallet Town); the rival's Squirtle L5 as a trainer battle, HP live as on screen (Squirtle 19 → 11, Charmander 18 → 13 / 18 → 7); level-up to 6 read after the fight; wild Rattata L2/L3, Pidgey L4 on Route 1. Place sign: Pallet Town (Alabastia in German – the house, Oak's lab), Route 1. Battle flag (gMain.inBattle at 0x03003479, −0xB0) set in both battles and cleared after them; the English address stays 0. **Real catch:** Rattata → "Route 1", in both games. sCurrentMapMusic 0x03000FC0 holds the map header's music on every map (300 Pallet Town, 301 Oak's lab, 291 Route 1) and the battle music during a battle (297/298) – the turbo music reads the song. Badges aren't read live in any Gen 3 game, and FireRed/LeafGreen have no built-in level caps (as in English). **Fixed:** the Pokémon were read as unknown ones (the German species names) and the German place names came from the Fame Checker ("Arena Marmoria" on Route 1) – see below. |
+| **Feuerrote / Blattgrüne** (German FireRed / LeafGreen, 2.3.1) | ✅ | ✅ | ✅ | ✅ | – | Recognised as `firered_eu` / `leafgreen_eu` (game code BPRD/BPGD, retail CRC). Charmander L5 18/18 "GLUMANDA" from Oak, filed as the starter (met location Pallet Town); the rival's Squirtle L5 as a trainer battle, HP live as on screen (Squirtle 19 → 11, Charmander 18 → 13 / 18 → 7); level-up to 6 read after the fight; wild Rattata L2/L3, Pidgey L4 on Route 1. Place sign: Pallet Town (Alabastia in German – the house, Oak's lab), Route 1. Battle flag (gMain.inBattle at 0x03003479, −0xB0) set in both battles and cleared after them; the English address stays 0. **Real catch:** Rattata → "Route 1", in both games. sCurrentMapMusic 0x03000FC0 holds the map header's music on every map (300 Pallet Town, 301 Oak's lab, 291 Route 1) and the battle music during a battle (297/298) – the turbo music reads the song. Badges weren't read live in any Gen 3 game then (they are now – see below), and FireRed/LeafGreen have no built-in level caps (as in English). **Fixed:** the Pokémon were read as unknown ones (the German species names) and the German place names came from the Fame Checker ("Arena Marmoria" on Route 1) – see below. |
+| **FireRed** (English, 1.0) | ✅ | ✅ | ✅ | ✅ | – | Checked while adding Unbound and Radical Red (their base game): the German plan's steps with the English addresses (gSaveBlock1Ptr 0x03005008, gMain.inBattle 0x03003529). Charmander L5 → "Starter", the rival's Squirtle L5 as a trainer battle (19 → 7 as on screen), Pallet Town, Route 1, a wild Rattata / Pidgey L2. **Real catch:** Rattata, Pidgey → "Route 1" (two runs). Plan: [firered-leafgreen-us.json](../scripts/rom-matrix/plans/firered-leafgreen-us.json). |
 | **Pearl** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Turtwig L5 21/21 from the briefcase at Lake Verity (met location Lake Verity), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity, Sandgem Town (also inside the Mart); wild Starly L2 at the lake, Bidoof / Starly L3 on Route 201. **Real catch:** Bidoof L3 / Starly L3 → "Route 201", 2 of 2 runs. **Fixed (2.3.0):** the battle flag (checked live: 0x2101 / 0x2000) – battles stayed on the panel after running away. Randomized: built ✓, no live run. |
 | **Platinum** | ✅ | ✅ | ✅ | ✅ | – | Turtwig L5 21/21 on Route 201 (met location Route 201), Barry's Chimchar L5 (trainer), Twinleaf Town, Route 201, Verity Lakefront, Lake Verity; wild Starly / Bidoof / Kricketot L3 on Route 201. **Fixed (2.3.0):** the battle flag (checked live: 0x2100 / 0x2800) – a wild battle showed up ~1100 frames late and stayed after running away. **Real catch:** Bidoof L3 (met location Route 201) → "Route 201" (balls thrown on the touch screen). |
 | **Black** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Tepig L5, met location Nuvema Town = the sign's place; zones: bedroom, downstairs, Nuvema Town, Route 1. Rival battles Snivy / Oshawott L5, wild Lillipup / Patrat on Route 1. **Real catch:** Lillipup → "Route 1", 2 of 2 runs. **Fixed (2.3.0):** the opponent's HP stayed at full (now 19 → 14 → 4 as on screen) and your Pokémon's HP during the fight; the battle flag (checked live: 0x2100 / 0x2800). Randomized: built ✓, the plan lost its way at the naming screen. |
 | **White** | ✅ | ✅ | ✅ | ✅ | – | Tepig L5 21/21 from the gift box, filed as the starter; no status condition and no held item, read as such (none came up to check other values); 0 badges → level cap 14 (the Striaton gym's ace). Place sign: Nuvema Town (also in the house and Juniper's lab), Route 1. Rival battles Snivy L5 19 → 14 → 0 HP and Oshawott L5 20 → 15 → 0 HP, Tepig 16/21 as on screen; wild Patrat L2–L4 / Lillipup L2–L3 on Route 1. **Real catch:** Patrat / Lillipup → "Route 1", 4 of 4 runs. **Fixed (2.3.1):** after Professor Juniper's catching demo (her Minccino L7 against a Patrat L2) its Patrat stayed on the panel as a trainer battle until the next real battle (~100 s in the test) – the battle flag (checked live: 0x2100 in battles and also in the demo, 0xF841 elsewhere) now ends it the moment the demo ends. While the demo runs it still shows as a battle (the game sets the battle value for it). Plan: [white.json](../scripts/rom-matrix/plans/white.json). |
 | **Black 2** | ✅ | ✅ | ✅ | ✅ | – | Tepig L5 from Bianca at the Lookout (met location Aspertia City), Aspertia City, Aspertia Gate, Route 19; Hugh's Oshawott L5 (HP going down as on screen), wild Purrloin / Patrat L2. **Real catch:** Purrloin L2 → "Route 19". **Fixed (2.3.0):** Bianca's catching demo (an NPC's battle) showed as the player's trainer battle and stayed after it ended – the battle flag (checked live: 0x2100 / 0x2800). |
 | **White 2** | ✅ | ✅ | ✅ | ✅ | – | As Black 2 (its position sits 0x40 further on); wild Patrat L2. **Real catch:** Patrat L2 → "Route 19". **Fixed (2.3.1):** the battle flag (checked live: 0x2100 in battles, 0xFAE3 elsewhere) – Bianca's catching demo showed as a battle against her Lillipup, and the summary screen (0x88C2, also in Black 2) did too. |
+
+### The matrix after reading types and caps from the ROM (Unreleased)
+
+Every game of the test set played again with `npm run matrix` (the same plans, three games at a time), twice – the
+second time after the ROM's data moved into a worker thread and the audit fixes. Columns: team,
+held items (all named – "hidden" where souldew can't name them: Gen 1/2, Too Many Types), place sign, battle, catch,
+types (a retail ROM's types and chart equal souldew's data; a hack's from its ROM) and level cap (shown with the badges
+read live – "hidden": no cap for that game). "–": the plan doesn't get there (no held item came up, no catch in it).
+
+| Game | Party | Items | Place | Battle | Catch | Types | Cap |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Red | ✅ | hidden | ✅ | ✅ | ✅ | ✅ | ✅ 14 |
+| Silver | ✅ | hidden | ✅ | ✅ | ✅ | ✅ | ✅ 9 |
+| Crystal | ✅ | hidden | ✅ | ✅ | ✅ | ✅ | ✅ 9 |
+| Crystal Legacy 1.3.1 | ✅ | hidden | ✅ | ✅ | – | ✅ | hidden |
+| Ruby | ✅ | – | ✅ | ✅ | – | ✅ | ✅ 15 |
+| Sapphire | ✅ | – | ✅ | ✅ | – | ✅ | ✅ 15 |
+| Emerald | ✅ | – | ✅ | ✅ | ✅ | ✅ | ✅ 15 |
+| FireRed | ✅ | – | ✅ | ✅ | ✅ | ✅ | ✅ 14 |
+| Feuerrote / Blattgrüne | ✅ | – | ✅ | ✅ | ✅ | ✅ | ✅ 14 |
+| Light Platinum 1.0 | ✅ | ✅ | ✅ | ✅ | – | ✅ | hidden |
+| Run & Bun 1.07 | ✅ | – | ✅ | ✅ | ✅ | ✅ | hidden |
+| Unbound (from a save) | ✅ | ✅ | ✅ | – | ✅ | ✅ | hidden |
+| Radical Red 4.1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | hidden |
+| Too Many Types 1.6 (BPS and pre-patched) | ✅ | hidden | ✅ | ✅ | ✅ | ✅ | hidden |
+| Too Many Types 2 1.5.2 / 1.1.1 patch | ✅ | hidden | ✅ | ✅ | ✅ | ✅ | hidden |
+| Pearl | ✅ | – | ✅ | ✅ | ✅ | ✅ | ✅ 14 |
+| Platinum | ✅ | – | ✅ | ✅ | ✅ | ✅ | ✅ 14 |
+| Renegade Platinum 1.3.0 | – | – | – | – | – | ✅ | – |
+| Black / White | ✅ | – | ✅ | ✅ | ✅ | ✅ | ✅ 14 |
+| Black 2 / White 2 | ✅ | – | ✅ | ✅ | ✅ | ✅ | ✅ 13 |
+| Blaze Black 2 Redux 1.4.1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | hidden |
+
+Notes: the cap shown is the one with the badges read at the start (0). Radical Red: a real catch (Master Balls in its
+own bag) – Hoothoot / Poochyena → "Route 1"; the rival's Squirtle read as Water from gBattleMons. Unbound: the save
+stands in the Battle Tower, so no wild battle; the catch is a Pokémon joining its full team (room made in RAM) → "Battle
+Tower". Renegade Platinum: the Platinum plan still stops in the bedroom (its intro differs) – its types (Fairy, 49
+retyped Pokémon) and caps are from the ROM. Some plans needed a second or third attempt in one of the two
+rounds (Light Platinum, Feuerrote, Crystal, the pre-patched Too Many Types 1 – its BPS-patched twin, the same file,
+passed at once –, White's catch): the plans are timing-sensitive while three games run at once. Ruby's plan works only at some times of day: Ruby
+seeds its random numbers from the clock, and at other minutes a person stands in the way at Littleroot's north exit –
+run side by side, the previous version's code and this one passed and failed together. Run & Bun, Too Many Types and Blaze Black 2 Redux held
+items: as before.
 
 ### ROM hacks
 
@@ -52,7 +96,8 @@ right area; "Randomizer" = the same game built with souldew's randomizer and pla
 | **Renegade Platinum 1.3.0** (Platinum) | – | ⚠️ | – | Place names from the ROM (126, the hack's own). **Types (2.3.0):** 49 Pokémon with the hack's types, Fairy in the old "???" slot (Clefairy Fairy, Meganium Grass/Fairy, Altaria Dragon/Fairy …) – the board, the battle panel and the type rule use them, with Fairy's matchups. Not played live: its intro differs and the Platinum plan stops in the bedroom. |
 | **Blaze Black 2 Redux 1.4.1** (Black 2) | ✅ | ✅ | ✅ | **Fixed:** no place sign (its place-name file is padded with empty entries). Now Aspertia City live; 153 names incl. the hack's new "Faraway Island". **Types (2.3.0):** 75 Pokémon with the hack's types (Fairy as type 17). Tepig L5 21/21 (the hack changed its stats), Aspertia City / Aspertia Gate / Route 19, Hugh's Oshawott L5 21 → 15, wild Venonat L5 / Patrat L4 with live HP. The hack's key bearer blocks the way to the Lookout until you talk to her. **Real catch:** Venonat / Patrat → "Route 19", 2 of 2 runs. |
 | **Run & Bun 1.07** (Emerald) | ✅ | ✅ | ⚠️ | **New (2.3.0):** read live although it runs on an expanded engine: species by name (1233 in National Dex order, forms after them), the team searched for in RAM (0x02023A98), the place through SaveBlock1 and the ROM's own map table. Chimchar L5, Littleroot Town / Route 101, the wild (Galarian) Zigzagoon L2 with its HP. Before 2.3.0 it said "not supported". **Fixed (2.3.1, issue #3):** the starter and catches were never filed – Run & Bun keeps the IVs one bit further on, so bit 30 (the retail egg flag) is the top of the Sp. Def IV and about every second Pokémon read as an egg (the starter in the 2.3.0 round, too: "encounters: []"); the egg flag now comes from the header. The play view also gave up searching after ~30 s without a team – long before the starter. Now: Chimchar → "Starter", **real catch:** Zigzagoon L3 (met location Route 101) → "Route 101" (Poké Balls written into the bag, thrown by the game). 10 Pokémon whose names the game shortens to 10 letters (Corviknight → "Corvknight", Crabominable, Fletchinder …) are matched; the species picker offers everything up to #905 (the Sinnoh starters included). The title screen no longer shows "Petalburg City" (an empty SaveBlock1). **Fixed (2.3.1): battles.** The battle panel didn't know who was out: after a switch it kept the lead – its moves, its matchups and its HP, which didn't move while the other Pokémon took the hits (the team's own HP was live all along: measured, the party struct follows every hit) – a trainer's Pokémon was guessed as the first one standing, and a trainer with a single Pokémon (the rival's Mudkip) read as a wild battle. Now gBattleMons is searched for in RAM by the team's PIDs and OT IDs (pokeemerald-expansion's 0x5C-byte BattlePokemon; Run & Bun 0x020233FC, the address its code uses third most often, like gBattleMons in the base game) and says who is out on both sides; wild or trainer comes from the opponent's OT ID (a wild Pokémon carries the player's). Checked in the game: Birch's Zigzagoon (Chimchar 20 → 19), a wild Skitty with a switch to Poochyena (13 → 4 → 0, the panel follows the switch, also in the battle's party menu, which reorders the team), and the rival's Mudkip on Route 103 → trainer, Chimchar 23 → 11 → 0 as on screen. |
-| **Unbound 2.1.1** (FireRed) | ❌ | ❌ | ❌ | **Not tested: no FireRed ROM was available** (the UPS patch needs FireRed 1.0, CRC32 DD88761C). As a CFRU hack it gets the same treatment as Run & Bun (species by name, the team searched for); if its team can't be found the play view says the hack isn't supported – unverified. |
+| **Unbound** (FireRed, official UPS patch, result CRC32 4B3D4957) | ✅ | ✅ | ✅ | **Fixed – nothing was read (a player's report: nothing synced; its team was never found).** Complete FireRed Upgrade (CFRU) like Radical Red: its species table starts with "??????" instead of the retail "??????????", so no table was found; its place names are written in mixed case (the retail scan wanted capitals); and it keeps the Pokémon data unencrypted (checksum 0, the four blocks always in the order Growth, Attacks, EVs, Misc), which read as a checksum error – every Pokémon a Bad Egg. FireRed's RAM layout is kept: the team at 0x02024284 (count 0x02024029), gEnemyParty 0x0202402C, gBattleMons 0x02023BE4 with FireRed's 0x58-byte battlers, gMapHeader and gSaveBlock1Ptr where FireRed has them. Now: species by the game's names (1293, its forms under their species, "Unown B" … as Unown), held items by the game's item table (729 entries, some named through a pointer – "Wishing Piece"), moves in the app's numbering (CFRU sorts the moves after #354 its own way). Checked with a save (a Lv 100 team of six): the team with its items (Life Orb, Assault Vest, Leftovers …) and moves as on the summary screen, already-caught Pokémon filed by their met location under the game's place names; the place sign in the Battle Frontier, the Battle Tower and Icy Hole (as the game's own pop-up); a wild Golbat L47 in Icy Hole (137 → 0 as on screen, Life Orb's recoil on Infernape 293 → 264 read after the battle); a Battle Tower trainer (Black Belt) – trainer from the opponents' ID, Alolan Rattata as Rattata, 201 → 0, Infernape 293 → 202 → 173, a U-turn switch to Tyranitar (index 1, the panel follows) and the next opponent (Snubbull 290/290). The matrix plan starts from a save next to the patch (any save standing where wild Pokémon appear): ✅ party, place (Icy Hole) and a wild battle (Jynx L49, Hariyama L48). Its optional level cap isn't read (see below). Plan: [unbound.json](../scripts/rom-matrix/plans/unbound.json). Also from a new game (3DS branch, with this code): the warehouse crate's starter – Gible L10 33/33 live the moment it is chosen – and the grunt's double battle → "Trainer", Inkay L7. |
+| **Radical Red 4.1** (FireRed, pre-patched ROM CRC32 FBA55DD8) | ✅ | ✅ | ✅ | **Fixed – as Unbound** (CFRU, the same RAM and data layout). Its species table starts with a single "?" (1375 species up to Gen 9), and it keeps a copy of FireRed's table with the names in mixed case – that one was taken, so it read as plain FireRed's 411. The longest table wins now. A pre-patched ROM is recognised as Radical Red (library, play view, new run) – it stood in for FireRed before. Checked from a new game (the matrix plan): "play without custom options", Mom's question about starters from another region (No), Charmander L5 holding an Oran Berry → "Starter", the rival's Squirtle L5 → trainer (20 → 10 as on screen, Charmander's HP live), Pallet Town, Route 1, a wild Pokémon (Seedot, Zigzagoon or Pidgey, L2–4; Galarian Zigzagoon L3 15 → 9 as on screen, Charmander 20 → 17), then run. The game gives no Poké Balls this early and its bag isn't FireRed's, so there's no catch in the plan. Plan: [radical-red.json](../scripts/rom-matrix/plans/radical-red.json). |
 | **Too Many Types 1.6** (Emerald) | ✅ | ✅ | ✅ | **Checked (2.3.1, issue #3)** with the v1.6 BPS (source Emerald 1F1C08FB, result E91FEF2D – byte for byte the pre-patched ROM from the hack's site, which the library now recognises by that CRC32). pokeemerald-expansion like Run & Bun: species by name (1235, National Dex order), the team searched for in RAM (0x02023644), the place through SaveBlock1 (pointer 0x03005D9C). Starts in the bedroom: Fennekin from Birch's bag → "Starter", Littleroot Town / Route 101 / Route 103, the wild Poochyena L2 13 → 6 → 0 as on screen. **Fixed:** its battlers are 0x60 bytes, not Run & Bun's 0x5C – gBattleMons (0x020230F8) wasn't found, so the panel didn't know who was out; the size is now found with it. Checked: a switch to Poochyena (index 1, 16/16), May's Popplio L5 on Route 103 → trainer (20 → 11 as on screen, Fennekin 10/19). **Real catch:** Poochyena L3 → "Route 101" (Poké Balls written into the bag; TMT1 keeps the bag's key at the base game's 0xAC). **Types:** its own (57 besides "???", e.g. Fennekin is Fire + type 36) – shown as none, see below. The matrix plan plays the same route on its own (starter, the wild Poochyena, Route 101 and the catch, all ✅ with the BPS-patched ROM; the pre-patched one is the same file). It answers the battle menu with A only: in these hacks B (and START) jump to RUN, a second B flees, and an A while a text prints starts the text again. Plan: [too-many-types.json](../scripts/rom-matrix/plans/too-many-types.json). |
 | **Too Many Types 2 1.5.2** (Emerald) | ✅ | ✅ | ✅ | **Checked (2.3.1, issue #3)** with a pre-patched v1.5.2 ROM (D25FBCCC) and an older BPS patch ("1.1.1 mirror", result 69ECC373 – identified from its checksums, the library links it to the hack). **Fixed – it read as plain Emerald before:** a newer pokeemerald-expansion keeps the species names inside gSpeciesInfo (0x104 bytes per species, 1543 of them incl. its own Ligmiblin, Regisus …), so no species table was found; its team has no count byte in front and gEnemyParty sits before gPlayerParty (0x02032A3C / 0x02032C94, now named by the code: the pair 600 bytes apart it uses most); gMain moved to 0x03004084 (the battle flag at +0x439, found next to that literal in the code); the species field carries the Tera type in its top bits (Chimchar reads 0x5986). Now: Lilycove City (where the story starts), Chimchar L5 from Mom's package → "Starter", the rival's Froakie L5 at the west exit → trainer (19 → 11, Chimchar 17/20 as on screen), Route 121, a wild Sewaddle → wild, a switch (index 1). **Real catch:** Sewaddle L2 → "Route 121". The matrix plan plays this on its own – ✅ for party, place, battle and catch with v1.5.2 and with the 1.1.1 patch applied by souldew's patcher (Chimchar, the rival's Froakie, a catch on Route 121). The species picker offers everything up to #1024 plus the hack's own Pokémon (TMT1: up to #905). Plan: [too-many-types-2.json](../scripts/rom-matrix/plans/too-many-types-2.json). |
 
@@ -119,7 +164,7 @@ Not checked: X/Alpha Sapphire/Moon/Ultra Moon (same code as their pairs).
 
 ### Not in the test set
 
-Blue, Yellow, Gold, the English FireRed and LeafGreen, Diamond, HeartGold, SoulSilver and all non-English ROMs except
+Blue, Yellow, Gold, the English LeafGreen, Diamond, HeartGold, SoulSilver and all non-English ROMs except
 German FireRed/LeafGreen weren't part of this round (HeartGold US, Definitive HeartGold and Silver were checked live
 before 2.2.1). FireRed/LeafGreen's place-name table is now checked with the German ROMs only (108 of 109 names as in
 souldew's German table).
@@ -160,6 +205,62 @@ bag by the test, the game itself throws and catches):
 - **Types from hack ROMs** (Gen 3 base stats, Gen 4/5 personal data), Fairy matchups for hacks that add the type.
 - **Run & Bun** is read live (expanded engine).
 
+Unbound and Radical Red (Complete FireRed Upgrade) – read live now:
+
+- **Species tables behind a shorter row of '?'** ("??????", "?"), of all the tables found the longest (Radical Red
+  keeps FireRed's, renamed); Unown's forms ("Unown !", "UNOWNB") are Unown, and a shortened name is matched once per
+  Pokémon, whichever language fits.
+- **Place names in mixed case**: FireRed's pointer table rewritten by the hack ("Frozen Heights", "Route 1") – taken
+  when no capitals table is there, at most as many names as a section byte can number from 0x58 on.
+- **Unencrypted Pokémon data** (checksum 0, fixed block order) – only in an expanded engine and only where the block
+  reads as one.
+- **FireRed's own addresses first**: an expanded engine's team is looked for at its base game's address before the
+  search (which in FireRed's layout would take gEnemyParty – three bytes behind the player's count – for the team),
+  and gBattleMons in FireRed's 0x58-byte layout too.
+- **Item names and moves from the ROM**: the item table (44 bytes per item, some names through a pointer) and the move
+  names, mapped to the app's move numbers by name in the ROM's language (CFRU sorts the moves after #354 its own way;
+  pokeemerald-expansion keeps the National order and is left as it was).
+
+Read from the ROM instead of per-game data (Unreleased) – the matrix gained columns for held items, types and level
+caps, and every game in the test set was played again (see "The matrix after reading types and caps from the ROM"):
+
+- **Types from the ROM, for every game** (`shared/live/romtypes.mjs`): the type names, each species' types and the type
+  chart, validated against the retail chart (at most 2 cells off; Gen 6's Steel change allowed). Every retail ROM in
+  the set reads exactly as souldew's own data – 0 Pokémon and 0 chart cells different (Red, Silver, Crystal, Ruby,
+  Sapphire, Emerald, FireRed, Feuerrote, Blattgrüne, Pearl, Platinum, Black 2 …). Charts found: retail triples (GBA,
+  Gen 4 in overlay 16 of Platinum / 11 of Pearl, Game Boy with its Foresight marker), Unbound's CFRU triples with Fairy
+  as type 23, Radical Red's 24 × 24 byte matrix (0 = ×1, 1 = ×0 – the leftover FireRed chart next to it is passed
+  over), Run & Bun's 19 × 19 4.12 halfwords, Too Many Types 1's 63 × 63 halfwords (×3 / ×4 matchups too), Too Many Types
+  2's 81 × 81 4.12 words with TYPE_NONE first, Blaze Black 2 Redux's 18 × 18 Gen 5 matrix in overlay 167. Renegade
+  Platinum keeps the retail chart: its Fairy (the old '???' slot) gets Gen 6's matchups. Too Many Types now shows its
+  own types under the game's names (44 / 59 used by Pokémon: "Monke", "Anime" …) with their matchups. Moves' types come
+  from gBattleMoves where it is found (retail GBA, Light Platinum, Unbound 557, Radical Red 553); pokeemerald-expansion
+  packs them differently – its moves keep souldew's types (Gen 6's for a Fairy hack), and a hack with types of its own
+  shows matchups by type only.
+- **The battle's current types** (Gen 3): from gBattleMons (type1/type2 at +0x21 in the retail and CFRU layout, three at
+  +0x22 in pokeemerald-expansion), trusted once the player's battler read as its species' types – Radical Red's
+  rival Squirtle read as Water in the matrix run.
+- **Level caps from the game's trainers** (`shared/live/romcaps.mjs`): leaders, Elite Four and champion by class name
+  (five languages and the hacks' spellings), each leader's weakest team, ordered by the badge flags the leaders'
+  scripts set (Gen 3, with the leader's name) or by ace (DS – shown as "Gym n": Pearl's Maylene and Wake share an ace
+  of 30, so a name could be the wrong one). Derived (cap with 0 … 7 badges, then the champion's):
+  Ruby / Sapphire 15, 18, 23, 28, 31, 33, 42, 43 → 58 · Emerald 15, 19, 24, 29, 31, 33, 42, 46 → 58 · FireRed / LeafGreen
+  (English, German) 14, 21, 24, 29, 43, 43, 47, 50 → 63 · Pearl 14, 22, 30, 30, 36, 39, 42, 49 → 66 · Platinum 14, 22, 26,
+  32, 37, 41, 44, 50 → 62 · Renegade Platinum 16, 26, 33, 39, 44, 53, 56, 62 → 78 (as in the hack's own trainer list) ·
+  Black 2 13, 18, 24, 30, 33, 39, 48, 51 → 59 (the curated list, which wins, has the same aces). Not derived, no cap
+  shown: Unbound (a leader's teams a few levels apart – its difficulty settings), Radical Red and Light Platinum (a
+  second set of leaders: Johto's / another region's), Blaze Black 2 Redux (Challenge Mode leaders two levels above the
+  normal ones), Run & Bun and Too Many Types (their trainer struct isn't the retail one), Crystal Legacy (Game Boy:
+  curated lists only). No game's own hard cap was found (none of the hacks keeps a badge-flag → level table).
+- **Badges** are read in GBA games (SaveBlock1's badge flags – FireRed 0x820…, Emerald 0x867…, Ruby/Sapphire 0x807… –
+  trusted while "has a Pokémon" is set and SaveBlock2's trainer ID is the team's; German Ruby/Sapphire keep their RAM
+  elsewhere and weren't checked – no badges there) and in Diamond / Pearl / Platinum (the trainer data in RAM, trusted
+  while its trainer ID is the team's).
+- **Catches in CFRU hacks**: Radical Red – Master Balls written into its own bag (gBagPockets 0x0203988C points outside
+  SaveBlock1; the balls are pocket 2 of 450 / 75 / 50 / 128 / 75 slots, quantity key 0) and a real catch on Route 1
+  (Poochyena L4 → "Route 1"). Unbound – the save at hand stands in the Battle Tower (no wild Pokémon there): room made
+  in its full team in RAM and a sixth Pokémon joining, filed under "Battle Tower".
+
 German FireRed/LeafGreen (2.3.1, issue #16) – the memory table was right, two readers of the ROM file weren't:
 
 - **Species names in the game's language:** the species table read from a GBA ROM was matched by English names only,
@@ -179,12 +280,23 @@ German FireRed/LeafGreen (2.3.1, issue #16) – the memory table was right, two 
   opponent's PID instead (checked live) – it's only used when it is one of yours. Switching in a battle wasn't checked
   in White (one Pokémon in the test team).
 - Run & Bun: double battles aren't read as such – the panel follows the left Pokémon of each side, and its partner once the left one is down; both at once aren't shown (no double battle in the test run, checked with a test only).
-- Expanded-engine hacks (Run & Bun, Too Many Types …): the Rare Candy cheat is off (other item numbers).
-- Hacks with types of their own (Too Many Types: 57 / 80 types, found from the ROM's type-name table) show no types,
-  matchups or type rule for their Pokémon – souldew doesn't know them, and the official ones would be wrong (TMT2's
-  Chimchar hits Froakie super-effectively with Scratch). The battle panel and the library say so.
-- Too Many Types 1/2: only the start of each game was played (to the first catch); double battles weren't met.
-- Moves of hacks that retype them (Fairy moves in Renegade Platinum / Blaze Black 2 Redux) come from souldew's move
-  data; the Pokémon's types come from the ROM.
+- Expanded-engine hacks (Run & Bun, Too Many Types, Unbound, Radical Red …): the Rare Candy cheat is off (other item numbers).
+- Too Many Types 1/2: only the start of each game was played (to the first catch); double battles weren't met. Their
+  moves' types aren't read (pokeemerald-expansion packs gBattleMoves differently): the battle helper shows matchups by
+  the Pokémon's types only, not per move.
+- Unbound / Radical Red / Light Platinum / Blaze Black 2 Redux / Run & Bun / Too Many Types: no level cap (see above).
+  Unbound's optional hard cap isn't read. The Rare Candy cheat is off in the CFRU hacks (the bag isn't FireRed's).
+  Unbound: no wild battle and no real catch in this round – the save at hand stands in the Battle Tower; the catch was
+  checked by a Pokémon joining the team in RAM.
+- Moves of DS hacks that retype them (Fairy moves in Renegade Platinum / Blaze Black 2 Redux) come from souldew's move
+  data (Gen 6's types for a Fairy hack); the Pokémon's types and the chart come from the ROM.
+- The battle's current types are read in GBA games only; DS and Game Boy battles use the species' types from the ROM.
+- Gen 3 PC boxes aren't read live: a catch sent to the PC (a full team) is filed once it joins the team.
+- German Ruby/Sapphire: no badges are read (their RAM sits elsewhere than in the English games and no German ROM was at
+  hand to check), so no level cap either.
+- The ROM's data is worked out in a background thread the first time a game is opened (a few seconds for a big ROM);
+  a damaged file or a scan over 3 minutes counts as "not known" until the file changes.
+- Level caps: Game Boy hacks (Crystal Legacy) get none (the Game Boy trainer data isn't read yet). A ROM's caps need its
+  badges read live – an expanded GBA engine only through badge flags its own scripts name.
 - The input plans are timing-sensitive (inputs land a frame or two apart from run to run); the matrix script retries a
   game whose plan loses its way (`--attempts`). DS plans take 10–25 minutes each.

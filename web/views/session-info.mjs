@@ -5,7 +5,7 @@ import { html, useState, useEffect, useRef } from '/vendor/htm-preact.mjs';
 import { useApp, Sprite, Types, HpBar, Modal, useFocusTrap } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t } from '../lib/i18n.mjs';
-import { speciesName, typeLabel, moveName, romOwnTypesNow } from '../lib/data.mjs';
+import { speciesName, typeLabel, moveName, romTypesNow } from '../lib/data.mjs';
 import {
   party as partyAreas, live, pairState, encounter, levelCap, rules as getRules, dupeOf, players as getPlayers,
   areaName, causeText, slotsOf, othersOf, openAreas, isNuzlocke, pairTypeClash, typeHelpOn,
@@ -81,8 +81,8 @@ export function RunStrip({ mine, onRules }) {
         <span class="cap-k">${t('cap.title', 'Level cap')}</span><b class="num">${cap}</b>
         ${boss?.name && html`<span class="cap-boss">${boss.name}</span>`}
         ${top > 0 && html`<span class="cap-top">${t('cap.yourTop', 'yours: Lv {lv}', { lv: top })}</span>`}
-      </div>` : r.levelCaps ? html`<div class="cap"><span class="cap-k">${t('cap.title', 'Level cap')}</span><span class="cap-top">${t('cap.unknown', 'unknown for this game')}</span></div>`
-        : html`<div class="cap"><span class="cap-k">${t('cap.off', 'No level caps')}</span></div>`}
+      </div>` : !r.levelCaps ? html`<div class="cap"><span class="cap-k">${t('cap.off', 'No level caps')}</span></div>`
+        : html`<span class="grow"></span>`}
       <button class="btn small ghost rs-rules" onClick=${onRules} title=${t('session.rulesHint', 'Change the run rules without leaving the game')}><${Icon} name="scroll" size=${14} />${t('session.rules', 'Rules')}</button>
     </div>
     ${state === 'near' && html`<p class="rs-warn near">${top === cap ? t('cap.at', 'At the cap – don’t level further before {boss}.', { boss: boss?.name || '' }) : t('cap.near', 'Close to the cap: {n} level left.|Close to the cap: {n} levels left.', { n: cap - top, count: cap - top })}</p>`}
@@ -279,31 +279,45 @@ const monName = (m) => (m ? m.nickname || speciesName(m.species) : '');
  * Battle helper: who is out there, how your moves land, what hits you, how the rest of your team would fare, and
  * whether you may catch it. `side` / `collapsed` / `onPrefs`: where the player put it (useBattlePanelPrefs).
  */
-export function BattlePanel({ battle, mine, gen, isRun, side = 'left', collapsed = false, onPrefs }) {
+export function BattlePanel({ battle, mine, gen, isRun, side = 'left', collapsed = false, onPrefs, noMoves = false }) {
   const { doc, manifest, me, runData } = useApp();
   const moves = useMoves();
   const foe = battle?.enemy;
   if (!foe) return null;
   const slot = me || 'p1';
-  const typesOf = (id) => (runData ? runData.types(id, slot) : []);
+  const team = (mine || []).filter(Boolean);
+  // the types a Pokémon has right now: the battle's own (a type change in battle – the reader has them where it can
+  // tell, shared/live/parse.mjs), else the game's types of its species (read from the ROM, web/lib/data.mjs)
+  const actives = battle.actives?.length ? battle.actives : [battle.active];
+  const typesOf = (id, mon = null) => {
+    const a = mon && actives.find((x) => x?.types?.length && team[x.index] === mon);
+    return a ? a.types : runData ? runData.types(id, slot) : [];
+  };
   const fairy = !!runData?.fairy; // a hack that added the type
+  // the game's own types (romtypes.mjs): a hack with types of its own needs its chart (else no matchups) and its moves'
+  // types (else no move-based ones); a Fairy hack's moves without the ROM's types: the types of Gen 6 on
+  const rt = runData?.romTypes || romTypesNow();
+  const matchups = runData ? runData.matchupsKnown : !rt || !!rt.chart || !rt.own;
+  const moveGen = rt?.fairy && !rt.moves ? Math.max(gen, 6) : gen;
   // everyone the reader sees out there (a double battle: both), the one it follows first
   const foes = (battle.foes?.length ? battle.foes : [foe]).filter((f) => f?.species);
-  const foeTypes = typesOf(foe.species);
-  const team = (mine || []).filter(Boolean);
+  const foeTypesOf = (f) => (f.types?.length ? f.types : typesOf(f.species));
+  const foeTypes = foeTypesOf(foe);
   // the player's Pokémon that are out – the reader's active slots (they follow a switch); unknown → the first one that
   // can fight, as the game sends it out
-  const outIdx = [...new Set((battle.actives?.length ? battle.actives : [battle.active]).map((a) => a?.index).filter((i) => Number.isInteger(i) && team[i]))];
+  const outIdx = [...new Set(actives.map((a) => a?.index).filter((i) => Number.isInteger(i) && team[i]))];
   const lead = team.find((m) => !m.isEgg && !fainted(m)) || team[0];
   const outs = outIdx.length ? outIdx.map((i) => team[i]) : lead ? [lead] : [];
-  const movesOf = (list, damaging) => (list || []).map((id) => ({ id, info: moveInfo(moves, id, gen) })).filter((m) => m.info && (!damaging || m.info.power > 0));
-  const foeData = foes.map((f) => ({ f, types: typesOf(f.species), moves: movesOf(f.moves, true) }));
+  // (noMoves: this game's moves can't be named with confidence – shared/live/features.mjs)
+  const movesOf = (list, damaging) => (noMoves || (rt?.own && !rt.moves) ? [] : (list || []).map((id) => {
+    const info = moveInfo(moves, id, moveGen);
+    return { id, info: info && rt?.moves?.[id] ? { ...info, type: rt.moves[id] } : info };
+  }).filter((m) => m.info && (!damaging || m.info.power > 0)));
+  const foeData = foes.map((f) => ({ f, types: foeTypesOf(f), moves: movesOf(f.moves, true) }));
   const r = isRun && doc ? getRules(doc, manifest) : null;
   const solo = isRun && isNuzlocke(manifest);
   // the host can switch the matchup help off for the whole run: then only who's out there and the catch rules stay
   const help = !isRun || typeHelpOn(doc, manifest);
-  // a hack with types of its own (Too Many Types): souldew knows neither them nor their matchups – it says so instead
-  const ownTypes = runData ? runData.typesUnknown : !!romOwnTypesNow();
   let rule = null;
   const notes = [];
   if (battle.kind === 'wild' && r) {
@@ -373,17 +387,17 @@ export function BattlePanel({ battle, mine, gen, isRun, side = 'left', collapsed
     ${ruleLine}
     ${notes.length > 0 && html`<div class="bt-notes">${notes.map((x) => html`<span class="rs-chip honour" title=${t('nz.honourHint', 'The app can’t check this – it only reminds you. Keep it yourself.')}>${x}</span>`)}</div>`}
     ${!help && html`<p class="tiny faint bt-nohelp">${t('battle.helpOff', 'Type matchup help is off in this run.')}</p>`}
-    ${help && ownTypes && html`<p class="tiny faint bt-nohelp">${t('battle.ownTypes', 'This ROM hack has types of its own that souldew doesn’t know – so it shows no types, matchups or type rule here rather than wrong ones.')}</p>`}
-    ${help && !ownTypes && outs.map((m) => html`<${OutHelp} key=${m.key || m.species} mon=${m} foes=${foeData} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`)}
-    ${help && !ownTypes && html`<${TeamCheck} team=${team} out=${new Set(outs)} foe=${foeData.find(({ f }) => !(f.maxHp > 0 && f.hp === 0)) || foeData[0]} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`}
-    ${help && !ownTypes && foeData.map(({ f, types }) => types.length > 0 && html`<${TypeChart} key=${`c${f.species}`} title=${t('battle.chart', '{mon} against types', { mon: speciesName(f.species) })} chart=${defenseChart(types, gen, { fairy })} />`)}
-    ${help && !ownTypes && outs.map((m) => typesOf(m.species).length > 0 && html`<${TypeChart} key=${`m${m.key || m.species}`} title=${t('battle.myChart', 'Your {mon} against types', { mon: monName(m) })} chart=${defenseChart(typesOf(m.species), gen, { fairy })} mine />`)}
+    ${help && !matchups && html`<p class="tiny faint bt-nohelp">${t('battle.noChart', 'souldew couldn’t read this ROM hack’s type chart – it shows the types, but no matchups rather than wrong ones.')}</p>`}
+    ${help && matchups && outs.map((m) => html`<${OutHelp} key=${m.key || m.species} mon=${m} foes=${foeData} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`)}
+    ${help && matchups && html`<${TeamCheck} team=${team} out=${new Set(outs)} foe=${foeData.find(({ f }) => !(f.maxHp > 0 && f.hp === 0)) || foeData[0]} typesOf=${typesOf} movesOf=${movesOf} gen=${gen} />`}
+    ${help && matchups && foeData.map(({ f, types }) => types.length > 0 && html`<${TypeChart} key=${`c${f.species}`} title=${t('battle.chart', '{mon} against types', { mon: speciesName(f.species) })} chart=${defenseChart(types, gen, { fairy })} />`)}
+    ${help && matchups && outs.map((m) => typesOf(m.species, m).length > 0 && html`<${TypeChart} key=${`m${m.key || m.species}`} title=${t('battle.myChart', 'Your {mon} against types', { mon: monName(m) })} chart=${defenseChart(typesOf(m.species, m), gen, { fairy })} mine />`)}
   </section>`;
 }
 
 /** One of your Pokémon that is out: how its moves land on every opponent, and what hits it. */
 function OutHelp({ mon, foes, typesOf, movesOf, gen }) {
-  const monTypes = typesOf(mon.species);
+  const monTypes = typesOf(mon.species, mon);
   const myMoves = movesOf(mon.moves, false);
   const many = foes.length > 1;
   // incoming: the opponents' known damaging moves, else what their own types would do (STAB)
@@ -419,7 +433,7 @@ function TeamCheck({ team, out, foe, typesOf, movesOf, gen }) {
     <h4>${t('battle.teamCheck', 'Your team against {mon}', { mon: speciesName(foe.f.species) })}</h4>
     <div class="bt-team-head" aria-hidden="true"><span></span><span>${t('battle.deals', 'deals')}</span><span>${t('battle.takes', 'takes')}</span></div>
     <ul>${list.map((m) => {
-      const mu = matchup({ types: typesOf(m.species), moves: movesOf(m.moves, false).map(({ id, info }) => ({ id, ...info })) }, foeSide, gen);
+      const mu = matchup({ types: typesOf(m.species, m), moves: movesOf(m.moves, false).map(({ id, info }) => ({ id, ...info })) }, foeSide, gen);
       const down = fainted(m);
       const isOut = out.has(m);
       const dealsTip = mu.deals == null ? '' : t('battle.dealsTip', 'Best hit: {move} ({mult})', { move: label(mu.dealsBy), mult: multText(mu.deals) });

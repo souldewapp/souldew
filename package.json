@@ -1,6 +1,6 @@
 {
   "name": "souldew",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "private": true,
   "description": "souldew – Pokémon SoulLinks (2–4 players) and Nuzlockes with a built-in emulator, live sync and a game library",
   "license": "GPL-3.0-or-later",
@@ -26,7 +26,8 @@
     "dist": "node scripts/fetch-jre.mjs arm64 && node scripts/build-ctr.mjs --check && CUSTOM_DMGBUILD_PATH=scripts/dmgbuild-wrapper.mjs electron-builder --mac dmg --arm64",
     "dist:win": "node scripts/fetch-jre.mjs x64 && node scripts/build-ctr.mjs --check && electron-builder --win nsis --x64",
     "dist:linux": "node scripts/fetch-jre.mjs x64 && node scripts/build-ctr.mjs --check && electron-builder --linux AppImage deb --x64",
-    "release": "node scripts/release.mjs"
+    "release": "node scripts/release.mjs",
+    "matrix": "node scripts/rom-matrix.mjs --live"
   },
   "updates": {
     "repo": "souldewapp/souldew",

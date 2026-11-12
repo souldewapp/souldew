@@ -203,3 +203,22 @@ export function vanillaCapFor(family, badgeCount) {
   const last = f.after.at(-1);
   return { cap: last.cap, boss: { key: last.name.toLowerCase(), name: last.name } };
 }
+
+/**
+ * The cap with `badges` from the caps read from the game's own trainers (shared/live/romcaps.mjs: { caps, leaders,
+ * final }, filed per player as `romcaps:<slot>` by the play view): the ace of the leader of badge n + 1, after the last
+ * badge the champion's. → { cap, boss: { key, badge?, leader?, name? } } or null (no caps, badges unknown, nothing after
+ * the last badge).
+ */
+export function romCapFor(rc, badges) {
+  if (!Array.isArray(rc?.caps) || !rc.caps.length || !Number.isInteger(badges) || badges < 0) return null;
+  if (badges < rc.caps.length) {
+    const cap = rc.caps[badges];
+    return Number.isInteger(cap) ? { cap, boss: { key: `gym${badges + 1}`, badge: badges, leader: typeof rc.leaders?.[badges] === 'string' ? rc.leaders[badges] : null } } : null;
+  }
+  const f = rc.final;
+  return f && Number.isInteger(f.cap) ? { cap: f.cap, boss: { key: f.name === 'Champion' ? 'champion' : 'elite four', name: f.name } } : null;
+}
+
+/** A trainer name as the game writes it, for display: "BROCK" → "Brock", "LT. SURGE" → "Lt. Surge" (mixed case stays). */
+export const prettyTrainer = (s) => (s && s === s.toUpperCase() ? s.toLowerCase().replace(/(^|[\s.&-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()) : s || '');

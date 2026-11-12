@@ -22,6 +22,40 @@
 - A 3DS game that stops (or can't start) says so in the player in the app's language, and a quick save / load in that
   moment no longer waits forever.
 
+## 2.4.0
+
+- **Pokémon Unbound and Radical Red are read live** (a player's report: neither synced anything). Your team with its
+  held items, the place sign with the games' own place names, the battle panel and new catches now work in both.
+  Checked in the games: Radical Red from a new game (starter, the rival, Route 1, a real catch), Unbound with a save
+  (a team of six, the Battle Frontier, the Battle Tower, Icy Hole, wild and trainer battles, a new team member filed).
+- **Types come from the game itself**, for every game: each Pokémon's types, the type chart and, where the game has
+  them, the moves' types. Hacks that added Fairy (Unbound, Radical Red, Run & Bun, Renegade Platinum, Blaze Black 2
+  Redux) or retyped Pokémon show what the game really uses, with its matchups. **Too Many Types** shows its own types
+  under the game's names, with their matchups, instead of none. In a GBA battle the helper follows a type change during
+  the battle.
+- **Level caps for more games**, worked out from the game's own trainers: Ruby, Sapphire, Emerald, FireRed and LeafGreen
+  (also German), Diamond, Pearl, Platinum and Renegade Platinum – with badges now read live in those games. Where the
+  caps can't be told with confidence (Unbound's difficulty settings, Radical Red's and Light Platinum's second set of
+  leaders, Blaze Black 2 Redux's Challenge Mode, Run & Bun, Too Many Types) no cap is shown rather than a wrong one, and
+  "Level cap: unknown for this game" is gone – the cap only shows when it's known and the run uses caps.
+- **The app stays responsive the first time you open a big game**: reading the ROM (place names, types, caps) runs in
+  the background, so nothing else waits for it, and a damaged ROM file can no longer hang souldew.
+- **The library says what souldew can read for each game** – team, held items, place, battles, catches, types and
+  level caps – worked out from your ROM. In the game, held items and moves that can't be named are left out instead of
+  showing wrong ones, and "Save diagnostics" records what was confirmed.
+- The battle helper shows the moves Unbound and Radical Red really have (they number newer moves their own way), and a
+  pre-patched Radical Red ROM or the official Unbound patch is recognised as that hack in the library, when you play it
+  and in a new run.
+- Not for Unbound / Radical Red yet: the Rare Candy cheat.
+
+### Known issues
+
+- Unbound's own level cap (its difficulty settings) isn't read yet, so no cap is shown there.
+- In GBA games a catch sent straight to the PC is filed once that Pokémon joins your team.
+- In DS and Game Boy battles the type helper uses the Pokémon's own types, not type changes made during the battle.
+- German Ruby/Sapphire: badges and level caps stay off until their save layout is confirmed.
+
+## 2.3.1
 
 - **OBS overlays keep working from run to run** (#8): the links on
   the Stream page now follow the current run – the one open in souldew – so a new run, a joined SoulLink or another

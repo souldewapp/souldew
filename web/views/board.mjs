@@ -86,7 +86,7 @@ function PlayerTag({ slot, right }) {
         // each fact stays in one piece when the line wraps in a narrow head card ("cap 17", not "cap ⏎ 17")
         ? [l.source === 'live' ? t('board.liveNow', 'live') : t('board.fromSave', 'from save'), ago(l.at),
           l.badges !== undefined ? t('board.badges', '{n} badge|{n} badges', { n: l.badges, count: l.badges }) : null,
-          cap.cap ? t('board.cap', 'cap {n}', { n: cap.cap }) : null].filter(Boolean)
+          cap.cap && getRules(doc, manifest).levelCaps ? t('board.cap', 'cap {n}', { n: cap.cap }) : null].filter(Boolean)
           .map((x, i) => html`${i ? ' · ' : ''}<span class="fact">${x}</span>`)
         : playingHere ? t('board.playingNoTeam', 'playing – no team yet')
           : slot === me ? t('board.startPlaying', 'Start the game to go live')
@@ -423,8 +423,8 @@ function SoloTeam({ team, areaOf, isDead }) {
       typesOf=${(id) => runData.types(id, 'p1')} isDead=${isDead}
       caption=${(m) => `${areaOf(m)}${cap && r.levelCaps && m.level > cap ? ` · ${t('solo.overCap', 'over the cap')}` : ''}`} />
     <aside class="solo-side panel">
-      <div class=${`solo-cap ${over ? 'over' : ''}`}><span class="small muted">${t('cap.title', 'Level cap')}</span>
-        <b class="num">${cap || '–'}</b><span class="small">${boss?.name || (cap ? '' : t('cap.unknown', 'unknown for this game'))}</span></div>
+      ${cap && r.levelCaps ? html`<div class=${`solo-cap ${over ? 'over' : ''}`}><span class="small muted">${t('cap.title', 'Level cap')}</span>
+        <b class="num">${cap}</b><span class="small">${boss?.name || ''}</span></div>` : null}
       ${over > 0 && html`<p class="warning error">${t('solo.overCapN', '{n} Pokémon over the cap – box them before the boss.|{n} Pokémon over the cap – box them before the boss.', { n: over, count: over })}</p>`}
       <dl class="solo-facts">
         <dt>${t('solo.box', 'In the box')}</dt><dd class="num">${l?.boxCount ?? '–'}</dd>

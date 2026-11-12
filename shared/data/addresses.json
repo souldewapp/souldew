@@ -1219,6 +1219,11 @@
     "pidOffsetFromSaveBase": "0x47620",
     "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua playerBattleMonPID (offset from *(*(0x02000BA8)+0x20), the saveData pointer) + BattleHandlerGen4.lua _getBattleMonPID (community) – Platinum value, not checked against a decomp.",
     "validation": "only trusted when the PID is one of the player's party PIDs"
+   },
+   "badges": {
+    "generalOffsetFromSaveBase": "0x14",
+    "trainerOffset": "0x68",
+    "source": "save general block in RAM (saveBase+0x14 as for the boxes); PKHeX SAV4Pt Trainer1 0x68: TID +0x10, SID +0x12, badges +0x1A (bit per badge)"
    }
   },
   {
@@ -1284,6 +1289,11 @@
     "pidOffsetFromSaveBase": "0x485E8",
     "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua playerBattleMonPID (offset from *(*(0x02000B70)+0x20), the saveData pointer) + BattleHandlerGen4.lua _getBattleMonPID (community) – Diamond/Pearl value, not checked against a decomp.",
     "validation": "only trusted when the PID is one of the player's party PIDs"
+   },
+   "badges": {
+    "generalOffsetFromSaveBase": "0x214",
+    "trainerOffset": "0x64",
+    "source": "save general block in RAM (saveBase+0x214 as for the boxes); PKHeX SAV4DP Trainer1 0x64: TID +0x10, SID +0x12, badges +0x1A (bit per badge)"
    }
   },
   {
@@ -1353,6 +1363,11 @@
     "pidOffsetFromSaveBase": "0x485E8",
     "source": "NDS-Ironmon-Tracker constants/MemoryAddresses.lua playerBattleMonPID (offset from *(*(0x02000B70)+0x20), the saveData pointer) + BattleHandlerGen4.lua _getBattleMonPID (community) – Diamond/Pearl value, not checked against a decomp.",
     "validation": "only trusted when the PID is one of the player's party PIDs"
+   },
+   "badges": {
+    "generalOffsetFromSaveBase": "0x214",
+    "trainerOffset": "0x64",
+    "source": "save general block in RAM (saveBase+0x214 as for the boxes); PKHeX SAV4DP Trainer1 0x64: TID +0x10, SID +0x12, badges +0x1A (bit per badge)"
    }
   },
   {

@@ -1,0 +1,187 @@
+{
+"id": "unbound",
+"hacks": [
+"unbound"
+],
+"save": true,
+"note": "Unbound from a save (its intro is long): the official UPS patch on FireRed (U) 1.0 and Pokemon Unbound Official.sav next to it \u2013 any save that stands where wild Pok\u00e9mon appear (a cave or tall grass; checked with one in Icy Hole). Continue, read the team (species by the game's own names, held items by its own item names, moves in the app's numbering) and the place sign, walk until a wild Pok\u00e9mon appears, then run. Complete FireRed Upgrade keeps FireRed's RAM layout (team at 0x02024284, gBattleMons at 0x02023BE4 with FireRed's 0x58-byte battlers) and stores the Pok\u00e9mon data unencrypted. pos: SaveBlock1 through gSaveBlock1Ptr 0x03005008. probe: gMain.inBattle, gBattleTypeFlags, the party count. The catch: a save with a full team gets room for a sixth in RAM (the count to 5, the sixth struct cleared) and a Pokemon joins there met at the current place \u2013 the save this was checked with stands in the Battle Tower, where no wild Pokemon appear (the wild battle is then not required).",
+"pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005008,4))))",
+"probe": "({inBattle: read(0x03003529,1)[0] & 2, btf: Array.from(read(0x02022B4C,4)), count: read(0x02024029,1)[0]})",
+"steps": [
+{
+"do": "wait",
+"frames": 600
+},
+{
+"do": "mash",
+"keys": [
+[
+"START"
+],
+[
+"A"
+]
+],
+"max": 3000,
+"until": "overworld",
+"note": "title screen, Continue"
+},
+{
+"do": "wait",
+"frames": 120
+},
+{
+"do": "check",
+"name": "save"
+},
+{
+"do": "shot",
+"name": "save"
+},
+{
+"do": "poke",
+"addr": "0x02024029",
+"bytes": [
+5
+],
+"note": "a full team: room for a sixth \u2013 gPlayerPartyCount 6 \u2192 5 (RAM only, the save stays as it is)"
+},
+{
+"do": "poke",
+"addr": "0x02024478",
+"bytes": "new Array(100).fill(0)",
+"note": "and the sixth struct of gPlayerParty (0x02024284 + 5 * 100) cleared"
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "check",
+"name": "room"
+},
+{
+"do": "poke",
+"addr": "0x02024478",
+"bytes": "(()=>{const b=Array.from(read(0x02024284,100));b[0]=(b[0]+1)&255;b[69]=read(0x02036DFC+0x14,1)[0];return b;})()",
+"note": "a sixth Pokemon joins (met here)"
+},
+{
+"do": "poke",
+"addr": "0x02024029",
+"bytes": [
+6
+]
+},
+{
+"do": "wait",
+"frames": 60
+},
+{
+"do": "check",
+"name": "joined"
+},
+{
+"do": "mash",
+"keys": [
+[
+"LEFT"
+],
+[
+"RIGHT"
+],
+[
+"UP"
+],
+[
+"DOWN"
+]
+],
+"hold": 20,
+"every": 10,
+"max": 12000,
+"until": "battle",
+"note": "walk until a wild Pok\u00e9mon appears",
+"required": false
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 500
+},
+{
+"do": "check",
+"name": "wild"
+},
+{
+"do": "shot",
+"name": "wild"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+],
+[
+"RIGHT"
+],
+[
+"DOWN"
+],
+[
+"A"
+]
+],
+"every": 30,
+"max": 6000,
+"until": "nobattle",
+"note": "Run"
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 300
+},
+{
+"do": "check",
+"name": "fled"
+},
+{
+"do": "shot",
+"name": "fled"
+}
+],
+"expect": {
+"save": {
+"party": {},
+"place": true
+},
+"room": {
+"party": {}
+},
+"joined": {
+"catch": {
+"area": true
+}
+},
+"wild": {
+"battle": {
+"kind": "wild"
+},
+"optional": true
+},
+"fled": {
+"battle": null,
+"party": {}
+}
+}
+}
