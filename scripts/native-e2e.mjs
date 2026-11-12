@@ -96,8 +96,8 @@ if (!process.versions.electron) {
         res.speed.max = await measure(Infinity);
         await frameJs('(e.setSpeed(1), true)');
         res.live = await js("document.querySelector('.live-state, [data-live]')?.textContent?.trim().slice(0, 80) || null");
-        const st = await frameJs('e.getState().then((s) => s ? s.length : 0)');
-        const back = st ? await frameJs('e.getState().then((s) => e.loadState(s))') : false;
+        const st = await frameJs('Promise.resolve(e.getState()).then((s) => (s ? s.length : 0))');
+        const back = st ? await frameJs('Promise.resolve(e.getState()).then((s) => Promise.resolve(e.loadState(s)).then((r) => r !== false))') : false;
         res.state = { bytes: st, loaded: back };
         const shot = await win.capturePage();
         const file = join(out, `${r.name.replace(/[^\w.-]+/g, '_').slice(0, 60)}${flag('off') ? '-off' : flag('broken') ? '-broken' : ''}.png`);
