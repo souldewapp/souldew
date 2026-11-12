@@ -2,7 +2,7 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
-## Unreleased
+## 2.4.0
 
 - **Pokémon Unbound and Radical Red are read live** (a player's report: neither synced anything). Your team with its
   held items, the place sign with the games' own place names, the battle panel and new catches now work in both.
@@ -27,6 +27,13 @@
   pre-patched Radical Red ROM or the official Unbound patch is recognised as that hack in the library, when you play it
   and in a new run.
 - Not for Unbound / Radical Red yet: the Rare Candy cheat.
+
+### Known issues
+
+- Unbound's own level cap (its difficulty settings) isn't read yet, so no cap is shown there.
+- In GBA games a catch sent straight to the PC is filed once that Pokémon joins your team.
+- In DS and Game Boy battles the type helper uses the Pokémon's own types, not type changes made during the battle.
+- German Ruby/Sapphire: badges and level caps stay off until their save layout is confirmed.
 
 ## 2.3.1
 
