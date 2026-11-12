@@ -3,7 +3,7 @@
 // the app's live readers (shared/live/*) – the same code the play view runs. Writes one JSON result per ROM.
 // Not started by hand: node scripts/rom-matrix.mjs <rom-dir> --live
 import { app, BrowserWindow } from 'electron';
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, appendFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -42,6 +42,17 @@ async function runOne(url, t) {
     win.showInactive();
   }
   win.webContents.setAudioMuted(true);
+  // the page's console (the plan's progress, errors) next to the results – a run that stops can be followed up
+  const consoleLog = [];
+  win.webContents.on('console-message', (...a) => {
+    const e = a[0] && typeof a[0] === 'object' && 'message' in a[0] ? a[0] : { message: a[2], level: a[1] };
+    const line = `${new Date().toISOString()} ${e.level ?? ''} ${e.message}`;
+    consoleLog.push(line);
+    if (consoleLog.length > 4000) consoleLog.splice(0, 1000);
+    try {
+      appendFileSync(join(job.outDir, `${t.key}-console.log`), `${line}\n`); // (as it comes: a run that hangs still leaves it)
+    } catch { /* best effort */ }
+  });
   if (job.native) {
     // the plans' conditions are expressions (new Function) – the fast player's page doesn't allow eval (it has no
     // emulator in the page); for the matrix only, its policy gets 'unsafe-eval' added
@@ -100,6 +111,12 @@ async function runOne(url, t) {
     if (job.battery && out.sav) writeFileSync(join(job.outDir, `${t.key}.sav`), Buffer.from(out.sav, 'base64'));
   } catch (e) {
     res.error = String(e?.message || e);
+  }
+  if (job.native) {
+    // how the native host ended (or that it still runs) and the last of what it wrote to stderr
+    try {
+      res.host = await fetch(`${url}/api/native/status`).then((x) => x.json()).then((j) => j.session);
+    } catch { /* server gone */ }
   }
   delete res.shots;
   delete res.state;

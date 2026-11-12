@@ -241,6 +241,7 @@ function helper() {
         break;
       }
       const at = e.frames();
+      console.log(`[plan] ${Math.round(performance.now() - t0)} ms, frame ${at}: ${JSON.stringify(s).slice(0, 160)}`);
       // s.while: only while the condition holds (a throw after the catch would walk around in the overworld)
       if (s.while && !cond(s.while)) {
         log.push({ do: s.do, skipped: true, note: s.note });

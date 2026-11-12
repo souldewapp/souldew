@@ -150,6 +150,12 @@ export class NativeSessions extends CtrSessions {
     return checkNativeCommands(body);
   }
 
+  /** The session for the status: plus the last of what the host wrote to stderr (diagnostics, the ROM matrix). */
+  status() {
+    const st = super.status();
+    return st && { ...st, stderr: this.current.log.join('').slice(-2000) };
+  }
+
   get(id) {
     const s = this.current;
     if (!s || s.id !== id) throw httpError(404, 'Keine laufende Sitzung', 'noNativeSession');
