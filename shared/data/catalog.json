@@ -1624,11 +1624,7 @@
    "uprCompatible": "no",
    "uprNote": "CFRU/DPE-expanded ROM (new species tables, engine); UPR ZX cannot randomize it.",
    "color": "#9C3B32",
-   "notes": "Thread title states version 4.1 (first post last edited 2024-03-22). Patch must be applied to FireRed USA 1.0 (not Rev 1). The 4.1 patch from the author's patcher (patch.radicalred.net/patches/4.1.zip → 4.1.ups) on FireRed 1.0 gives FBA55DD8.",
-   "romCrc32": [
-    "FBA55DD8"
-   ],
-   "patchSha1": "58c3b534d0dd8ad664315b8edfa42f0ee9bca7ab"
+   "notes": "Thread title states version 4.1 (first post last edited 2024-03-22). Patch must be applied to FireRed USA 1.0 (not Rev 1)."
   },
   {
    "id": "unbound",
@@ -1637,7 +1633,7 @@
    "baseGameId": "pokemon-firered",
    "baseCrc32": "DD88761C",
    "system": "gba",
-   "patchFormat": "ups",
+   "patchFormat": "bps",
    "latestVersion": "2.1.1.1",
    "descriptionEn": "A complete FireRed-based adventure in the new Borrius region with a new story, modern mechanics and several difficulty settings.",
    "descriptionDe": "Ein vollständiges Abenteuer auf FireRed-Basis in der neuen Region Borrius mit eigener Story, modernen Mechaniken und mehreren Schwierigkeitsstufen.",
@@ -1654,12 +1650,11 @@
    "uprCompatible": "no",
    "uprNote": "CFRU/DPE-expanded ROM; UPR ZX cannot randomize it.",
    "color": "#3F4E7A",
-   "notes": "Version 2.1.1.1 is the newest listed in the first post (last edited 2025-04-14). Its official patch (MediaFire link in the first post: Pokemon_Unbound_Official_Patch_2.1.1+.zip → Pokemon Unbound Official.ups) on FireRed 1.0 gives 4B3D4957.",
-   "romCrc32": [
-    "4B3D4957"
-   ],
-   "patchSha1": "e48b5d5b30c41522b78641e64e0f5a92d859d4f9",
-   "region": "Borrius"
+   "notes": "Version 2.1.1.1 is the newest listed in the first post (last edited 2025-04-14).",
+   "uncertain": true,
+   "uncertainFields": [
+    "patchFormat"
+   ]
   },
   {
    "id": "gaia",

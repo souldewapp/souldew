@@ -18,7 +18,7 @@ import { isCtrExt } from '../../shared/romid.mjs';
 import { identifyCtr } from '../../shared/ctr.mjs';
 import { ctrZonePlaces } from '../../shared/live/ctrzones.mjs';
 
-const VERSION = 14; // bump when romLocations() / romSpecies() / ctrData() change what they find (13: CFRU species tables, 14: ownRegion)
+const VERSION = 12; // bump when romLocations() / romSpecies() / ctrData() change what they find
 const memo = new Map();
 let tables = null;
 
@@ -26,12 +26,7 @@ function opts(sharedDir) {
   if (!tables) {
     const j = (f) => JSON.parse(readFileSync(join(sharedDir, 'data', f), 'utf8'));
     const retail = new Set();
-    const catalog = j('catalog.json');
-    for (const g of catalog.games || []) for (const c of g.crc32 || []) retail.add(String(c).toUpperCase());
-    // a hack in a region of its own (Unbound: Borrius), by the checksum of its patched ROM – its places aren't the base
-    // game's, so without names read from the ROM the place sign stays empty
-    const ownRegion = new Map();
-    for (const h of catalog.hacks || []) if (h.region) for (const c of h.romCrc32 || []) ownRegion.set(String(c).toUpperCase(), h.region);
+    for (const g of j('catalog.json').games || []) for (const c of g.crc32 || []) retail.add(String(c).toUpperCase());
     const gen3Index = [];
     for (const [k, v] of Object.entries(j('gen3_index_to_dex.json').map || {})) gen3Index[Number(k)] = v;
     const api = j('pokeapi.json');
@@ -41,7 +36,7 @@ function opts(sharedDir) {
       const k = past ? Object.keys(past).map(Number).sort((a, b) => a - b).find((x) => x >= gen) : undefined;
       return k !== undefined ? past[k] : api.types?.[id] || [];
     };
-    tables = { ownRegion, gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: api.names?.en || [], dexNamesOther: ['de', 'fr', 'es', 'it'].map((l) => api.names?.[l]).filter(Boolean), addresses: j('addresses.json'), maps: j('maps.json'), baseTypes };
+    tables = { gen3Charset: j('charset_gen3.json'), gen4Chars: j('gen4.json').chars, retail, gen3Index, dexNames: api.names?.en || [], dexNamesOther: ['de', 'fr', 'es', 'it'].map((l) => api.names?.[l]).filter(Boolean), addresses: j('addresses.json'), maps: j('maps.json'), baseTypes };
   }
   return tables;
 }
@@ -56,11 +51,8 @@ export function romCrc(bytes) {
 export function romData(u8, sharedDir) {
   const o = opts(sharedDir);
   let vanilla = false;
-  let ownRegion = null;
   try {
-    const crc = romCrc(u8);
-    vanilla = o.retail.has(crc);
-    ownRegion = o.ownRegion.get(crc) || null;
+    vanilla = o.retail.has(romCrc(u8));
   } catch {
     // no checksum: treated as modified
   }
@@ -75,7 +67,7 @@ export function romData(u8, sharedDir) {
   // matchups – the app shows no types for its Pokémon rather than the official ones (web/lib/data.mjs)
   const names = !vanilla && species ? gen3TypeNames(u8, o.gen3Charset) : null;
   const ownTypes = names && names.count > OWN_TYPES_ABOVE ? { count: names.names.filter((n) => n !== '???').length, names: names.names } : null;
-  return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, ownTypes, vanilla, ownRegion };
+  return { data, species, wram: vanilla ? null : gbShift(u8, o), types: types && (types.fairy || Object.keys(types.types).length) ? types : null, ownTypes, vanilla };
 }
 
 /** Game Boy hacks: where the code says the party, the battle and the map variables are (shared/live/romwram.mjs). */
@@ -117,10 +109,10 @@ export function ctrData(file) {
   }
 }
 
-export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, ownTypes: null, vanilla: null, ownRegion: null });
+export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, types: null, ownTypes: null, vanilla: null });
 /** A disk-cache entry back into romDataFor's result (every field of ROMDATA_NONE – a missing one would be lost on the
  * next start, as the own types of Too Many Types were). */
-export const fromRomCache = (v) => ({ data: v.data ?? null, species: v.species ?? null, wram: v.wram ?? null, types: v.types ?? null, ownTypes: v.ownTypes ?? null, vanilla: v.vanilla ?? null, ownRegion: v.ownRegion ?? null });
+export const fromRomCache = (v) => ({ data: v.data ?? null, species: v.species ?? null, wram: v.wram ?? null, types: v.types ?? null, ownTypes: v.ownTypes ?? null, vanilla: v.vanilla ?? null });
 
 export function romDataFor({ file = null, bytes = null, key = null }, { sharedDir, cacheDir }) {
   const none = { ...ROMDATA_NONE };
