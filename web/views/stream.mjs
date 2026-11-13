@@ -249,7 +249,9 @@ function PokelinkCard({ run, follow, slots, names }) {
         <span class="code sm-ok ellipsis grow" title=${param(user)}>${param(user)}</span>
         <button type="button" class="btn small" onClick=${() => copy(param(user))}>${t('common.copy', 'Copy')}</button></div>`;
     })}</div>
-      <p class="tiny faint">${t('stream.plNote', 'Instead of the name, user=p1 … p4 works too. Themes show what Pokélink’s data has: team, levels, HP, status, items, moves and badges.')}</p>`}
+      <p class="tiny faint">${t('stream.plNote', 'Instead of the name, user=p1 … p4 works too. Themes show what Pokélink’s data has: team, levels, HP, status, items, moves and badges.')}</p>
+      <label class="check small"><input type="checkbox" checked=${!!st?.localPages} disabled=${busy || !st} onChange=${(e) => save({ localPages: e.target.checked })} />
+        <span>${t('stream.plLocal', 'Also themes from another web server on this computer (localhost, any port) – themes opened from disk or from Pokélink’s website work without it')}</span></label>`}
   </section>`;
 }
 

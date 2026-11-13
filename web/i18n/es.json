@@ -1751,6 +1751,7 @@
   "stream.plBusy": "El puerto {port} está ocupado: ¿está abierto el propio Pokélink? Ciérralo o elige otro puerto.",
   "stream.plClients": "un tema conectado|{count} temas conectados",
   "stream.plFail": "El puente no se ha iniciado.",
+  "stream.plLocal": "También temas de otro servidor web de este ordenador (localhost, cualquier puerto): los temas abiertos desde el disco o desde la web de Pokélink funcionan sin esto",
   "stream.plNote": "En lugar del nombre también vale user=p1 … p4. Los temas muestran lo que dan los datos de Pokélink: equipo, niveles, PS, estado, objetos, movimientos y medallas.",
   "stream.plOffHint": "Apagado: nada escucha hasta que lo actives.",
   "stream.plOn": "Puente Pokélink",

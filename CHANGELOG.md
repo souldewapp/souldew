@@ -26,6 +26,13 @@ Security fixes – all found in a code review and reported by @Never-lab:
   people are talking to each other, but the host could press Allow without comparing them. Now the host types in the
   digits the joining player's app shows; Allow stays off until they match, and the app sends the invite only with the
   matching digits. Joining between this version and 2.5.0 keeps working (the digits are computed the same way).
+- **The Pokélink bridge answers fewer pages** (#25): it used to let any page served from this computer
+  (`localhost` on any port – a dev server, another program's web page) read your teams. Now it answers themes opened
+  from disk, Pokélink's own sites and souldew's own pages; a theme served by another local web server needs the new
+  switch **Also themes from another web server on this computer** on the Stream page. A theme added in OBS with
+  **Local file** ticked now connects too (OBS serves those from its own `http://absolute/` address, which the bridge
+  didn't know). SECURITY.md lists what the stream features show on purpose (teams and other spoilers) and what they
+  never do (keys, codes, paths).
 
 ## 2.5.0
 

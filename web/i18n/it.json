@@ -1751,6 +1751,7 @@
   "stream.plBusy": "La porta {port} è occupata – è aperto Pokélink stesso? Chiudilo o scegli un’altra porta.",
   "stream.plClients": "un tema connesso|{count} temi connessi",
   "stream.plFail": "Il ponte non è partito.",
+  "stream.plLocal": "Anche temi da un altro server web di questo computer (localhost, qualsiasi porta): i temi aperti dal disco o dal sito di Pokélink funzionano anche senza",
   "stream.plNote": "Al posto del nome funziona anche user=p1 … p4. I temi mostrano ciò che i dati di Pokélink offrono: squadra, livelli, PS, stato, strumenti, mosse e medaglie.",
   "stream.plOffHint": "Spento – nulla è in ascolto finché non lo attivi.",
   "stream.plOn": "Ponte Pokélink",

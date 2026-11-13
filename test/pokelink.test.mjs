@@ -76,9 +76,21 @@ test('game ids: catalog ids → Pokélink’s cartridge titles; deaths between t
   assert.deepEqual(newDeaths(after, after), []);
 });
 
-test('origins: themes from disk, this computer and Pokélink’s hosting – no other website', () => {
-  for (const o of [undefined, 'null', 'http://localhost:8080', 'http://127.0.0.1', 'https://themes.pokelink.xyz', 'https://pokelink.app']) assert.ok(originAllowed(o), o);
-  for (const o of ['https://evil.example', 'https://pokelink.xyz.evil.example', 'http://localhost.evil.example']) assert.ok(!originAllowed(o), o);
+test('origins: themes from disk, souldew’s own pages and Pokélink’s hosting – other local servers only when switched on (#25)', () => {
+  const own = { ports: [47390, 3000] };
+  for (const o of [undefined, 'null', 'http://absolute', 'http://localhost:47390', 'http://127.0.0.1:3000', 'http://[::1]:47390', 'https://themes.pokelink.xyz', 'https://pokelink.app', 'https://pokelinkapp.github.io']) {
+    assert.ok(originAllowed(o, own), o);
+  }
+  for (const o of ['https://evil.example', 'https://pokelink.xyz.evil.example', 'http://localhost.evil.example', 'http://pokelink.xyz', 'https://pokelink.xyz:8443']) {
+    assert.ok(!originAllowed(o, own), o);
+    assert.ok(!originAllowed(o, { ...own, localPages: true }), `${o} (local pages on)`);
+  }
+  // another page on this computer (a dev server, another program's web page): not by default
+  for (const o of ['http://localhost:8080', 'http://127.0.0.1', 'https://localhost', 'http://localhost:5173']) {
+    assert.ok(!originAllowed(o, own), o);
+    assert.ok(originAllowed(o, { ...own, localPages: true }), `${o} (local pages on)`);
+  }
+  assert.ok(!originAllowed('http://localhost:8080'), 'no settings – the strict default');
 });
 
 /** A raw GET (node's fetch won't let a test set Host). */
@@ -175,6 +187,23 @@ test('bridge: another website or a foreign Host name gets nothing', async (t) =>
   assert.equal(pna.headers['access-control-allow-private-network'], 'true');
 });
 
+test('bridge: a page of another local web server only gets in once the Stream page allows it (#25)', async (t) => {
+  let localPages = false;
+  const bridge = await startPokelinkBridge({ port: 0, players: () => [], access: () => ({ appPort: 47390, localPages }) });
+  t.after(() => bridge.close());
+  const poll = (origin) => get(bridge.port, '/socket.io/?EIO=3&transport=polling&t=1', { Origin: origin });
+  const dev = await poll('http://localhost:5173');
+  assert.notEqual(dev.status, 200);
+  assert.ok(!dev.headers['access-control-allow-origin']);
+  assert.equal((await poll('http://localhost:47390')).status, 200, 'souldew’s own page');
+  assert.equal((await poll(`http://127.0.0.1:${bridge.port}`)).status, 200, 'the bridge’s own address');
+  assert.equal((await poll('null')).status, 200, 'a theme opened from disk');
+  localPages = true;
+  const later = await poll('http://localhost:5173');
+  assert.equal(later.status, 200);
+  assert.equal(later.headers['access-control-allow-origin'], 'http://localhost:5173');
+});
+
 const freePort = () => new Promise((resolve) => {
   const s = netServer().listen(0, '127.0.0.1', () => {
     const { port } = s.address();
@@ -198,6 +227,14 @@ test('app API: the Stream page switches the bridge on and off; it serves the run
   assert.equal(on.run, 'c0ffee01');
   const open = await get(port, '/socket.io/?EIO=3&transport=polling&t=1', { Origin: 'null' });
   assert.equal(open.status, 200);
+  // souldew's own page may read; another local server only after the switch, which takes effect at once
+  const appPort = new URL(url).port;
+  assert.equal((await get(port, '/socket.io/?EIO=3&transport=polling&t=2', { Origin: `http://localhost:${appPort}` })).status, 200);
+  assert.equal(on.localPages, false);
+  assert.notEqual((await get(port, '/socket.io/?EIO=3&transport=polling&t=3', { Origin: 'http://localhost:5173' })).status, 200);
+  assert.equal((await api('POST', { localPages: true })).localPages, true);
+  assert.equal((await get(port, '/socket.io/?EIO=3&transport=polling&t=4', { Origin: 'http://localhost:5173' })).status, 200);
+  assert.equal((await api('POST', { localPages: false })).localPages, false);
   const off = await api('POST', { enabled: false });
   assert.equal(off.running, false);
   await assert.rejects(get(port, '/', {}), 'the port is closed again');

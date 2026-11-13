@@ -1751,6 +1751,7 @@
   "stream.plBusy": "Port {port} ist belegt – ist Pokélink selbst offen? Schließ es oder wähl einen anderen Port.",
   "stream.plClients": "ein Theme verbunden|{count} Themes verbunden",
   "stream.plFail": "Die Bridge ist nicht gestartet.",
+  "stream.plLocal": "Auch Themes von einem anderen Webserver auf diesem Computer (localhost, jeder Port) – Themes von der Festplatte oder von Pokélinks Website gehen auch ohne",
   "stream.plNote": "Statt des Namens geht auch user=p1 … p4. Themes zeigen, was Pokélinks Daten hergeben: Team, Level, KP, Status, Items, Attacken und Orden.",
   "stream.plOffHint": "Aus – nichts hört mit, bis du sie einschaltest.",
   "stream.plOn": "Pokélink-Bridge",

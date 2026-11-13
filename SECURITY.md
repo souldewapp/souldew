@@ -27,3 +27,23 @@ about:
 - **Electron shell** (`electron/`): navigation, IPC or permission handling that lets web content escape the sandbox.
 
 Out of scope: problems that need an attacker who already controls your computer, and anything inside the emulated games.
+
+## What the stream features show on purpose
+
+The OBS overlays, the open stream API (`/api/v1`) and the Pokélink bridge exist to put the run on stream, so what they
+serve is readable by design – to the pages and programs listed in [docs/STREAMING.md](docs/STREAMING.md) and
+[docs/STREAM_API.md](docs/STREAM_API.md):
+
+- **Readable (spoiler-class, by design):** player names and colours, teams with nicknames, levels, HP, status, held
+  items (and moves for Pokélink themes), badges, play time, location and current battle, encounters, links, the
+  graveyard and the log. In a randomized run that tells what everybody got – that's what a stream shows.
+- **Never served:** room keys and secrets, invite codes, device IDs, the Discord webhook, the spoiler log, ROMs, saves,
+  savestates, file names and folders.
+- **Pokélink bridge** (`server/lib/pokelink.mjs`): readable to themes opened from disk (`file://`, Origin `null`),
+  Pokélink's own sites and souldew's own pages; pages of other local web servers only after the switch on the Stream
+  page. Because a page opened from disk sends Origin `null` – which a sandboxed frame on a website sends too – a
+  browser that lets public websites reach `127.0.0.1` could let such a frame read the teams while the bridge is on.
+  The bridge is off until you switch it on.
+
+A way to read anything from the "never" list, or to read the stream data from a page or machine that isn't allowed
+there, is a vulnerability we want to hear about.

@@ -568,7 +568,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     pokelink.error = null;
     if (want.enabled && !pokelink.bridge) {
       try {
-        pokelink.bridge = await startPokelinkBridge({ port, players: pokelinkList });
+        pokelink.bridge = await startPokelinkBridge({ port, players: pokelinkList, access: () => ({ appPort: server.address()?.port, localPages: !!loadConfig().pokelink?.localPages }) });
       } catch (e) {
         pokelink.error = e.code === 'EADDRINUSE' ? 'portInUse' : 'failed';
       }
@@ -576,7 +576,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   };
   const pokelinkState = () => {
     const c = loadConfig().pokelink || {};
-    return { enabled: !!c.enabled, port: pokelink.bridge?.port || c.port || POKELINK_PORT, running: !!pokelink.bridge, error: pokelink.error,
+    return { enabled: !!c.enabled, port: pokelink.bridge?.port || c.port || POKELINK_PORT, running: !!pokelink.bridge, error: pokelink.error, localPages: !!c.localPages,
       run: pokelink.bridge ? pokelink.run : c.run || null, pinned: c.run || null, clients: pokelink.bridge?.clients() || 0 };
   };
   const overlayLang = (v) => (['en', 'de', 'fr', 'es', 'it'].includes(String(v || '').slice(0, 2)) ? String(v).slice(0, 2) : 'en');
@@ -1066,6 +1066,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       enabled: typeof body.enabled === 'boolean' ? body.enabled : !!c.enabled,
       port: Number.isInteger(port) && port >= 1024 && port < 65536 ? port : c.port || POKELINK_PORT,
       run: body.run === null ? null : /^[a-f0-9]{8}$/.test(String(body.run || '')) ? body.run : c.run || null,
+      // themes served by another local web server (localhost on any port) – off unless switched on (pokelink.mjs)
+      localPages: typeof body.localPages === 'boolean' ? body.localPages : !!c.localPages,
     } });
     await pokelinkApply();
     pokelink.bridge?.push();
