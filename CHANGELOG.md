@@ -7,14 +7,17 @@
 - **The fast player: DS, GBA and Game Boy games at full speed, with fast-forward that really reaches 4× and more.**
   The games now run in the real emulators directly on the computer – melonDS (the same engine as the melonDS app,
   with its recompiler), mGBA and Gambatte – instead of inside the app's browser engine. A Mac with Apple silicon
-  runs Platinum at about 12× and Black 2 at about 9× of full speed (before: about 1.6× for the heavy DS games), GBA
-  and Game Boy games far beyond that, so weaker PCs keep full speed too. Live tracking, cheats, save states, the
+  runs Platinum at about 9× and Black 2 at about 7× of full speed (before: about 1.6× for the heavy DS games), GBA
+  and Game Boy games far beyond that – headroom that weaker PCs need for full speed. Live tracking, cheats, save states, the
   in-game save, the touch screen, controllers, screenshots and the partner's mini view work as before. Save states
   made in the old player can't be loaded in the new one (and the other way round); your in-game saves carry over.
   Settings › Emulators › "Fast player" switches back to the old player, and a game the fast player can't start opens
   in the old one by itself.
-- HeartGold/SoulSilver and Black/White (1 and 2) also run in melonDS now: the newer melonDS handles their infrared
-  cartridge.
+- Black/White (1 and 2) run in the fast player with their in-game save: saving and starting again from that save was
+  checked in Black. HeartGold/SoulSilver use the same melonDS version but haven't been tested in it yet.
+- Fast-forward music (Settings › Turbo music) works in the fast player too.
+- The 3DS player sends its commands to the emulator in batches, like the fast player – long sessions no longer pile up
+  memory in the app's page.
 
 ## 2.5.0
 
