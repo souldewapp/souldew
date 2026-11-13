@@ -359,6 +359,8 @@
   "err.notCtr": "Ce n’est pas un jeu Nintendo 3DS",
   "err.notInArchive": "« {entry} » introuvable dans l’archive",
   "err.notInLibrary": "Le fichier n’est pas dans un dossier de la bibliothèque",
+  "err.pathNotApproved": "{name} n’est pas dans un dossier que souldew peut lire – ajoute-le plutôt avec « Ajouter des fichiers »",
+  "err.folderNotApproved": "Le dossier {name} n’a pas été choisi dans la fenêtre de souldew – choisis-le avec « Utiliser un dossier »",
   "err.notPatch": "Pas un fichier de patch",
   "err.notRom": "Pas un fichier ROM",
   "err.packBroken": "Le paquet de run est endommagé ({what})",

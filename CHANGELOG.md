@@ -42,6 +42,11 @@ Security fixes – all found in a code review and reported by @Never-lab:
   - The app's own requests for the run pack (room key), a run's files and spoiler log, the Discord webhook, the stream
     token and the folder list now need to come from the app itself (its header or a same-origin request) – a typed
     URL or another program gets nothing. The OBS overlays don't use any of them.
+- **The library only copies from places you chose** (#23): adding games took any file path the page sent, and
+  "Use a folder" any folder. Now files come only from the places "Search my Mac / PC" looks through, folders already
+  in your library, and files or folders you picked in souldew's own file dialog (the app registers those itself – a
+  page can't). "Use a folder" takes only a folder picked there. In the browser version (`npm start`) "Search" and
+  uploading files work as before; see `docs/DEVELOPMENT.md` for including a folder there.
 
 ## 2.5.0
 

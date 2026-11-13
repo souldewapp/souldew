@@ -19,6 +19,15 @@ npm run dist:win       # Windows: build the NSIS installer (fetches the Windows 
 npm run dist:linux     # Linux: build the AppImage and the .deb (fetches the Linux Java runtime on first run)
 ```
 
+**Library paths.** The page can only hand the server path strings, so the library takes them from approved places
+only (`server/lib/library.mjs` `approvedImportPath` / `approvedFolder`, `server/lib/grants.mjs`): "Add files" and
+"Search my Mac / PC" import from the folders discovery looks through (Downloads, Desktop, Documents, game and emulator
+folders …), from folders already in the library, and from files or folders picked in the app's native dialog this
+session – the Electron main process registers those from the dialog's result, the page can't. "Use a folder" /
+"Include a folder" takes only a folder picked in that dialog. In the browser (`npm start`) there is no native dialog:
+"Search my Mac / PC" and uploading files work as before; to include a folder, add it to `libraryFolders` in
+`runs/config.json` (the data folder's `config.json` with `SLS_DATA_DIR`) while the server is stopped.
+
 | Command | Purpose |
 |---|---|
 | `PORT=… SLS_DATA_DIR=… NO_OPEN=1 node server/index.mjs` | A second instance with its own data folder – e.g. to test several players on one machine |

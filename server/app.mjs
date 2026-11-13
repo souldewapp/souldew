@@ -12,7 +12,7 @@ import { detectJava, uprStatus, installUpr, runBridge } from './lib/toolchain.mj
 import { preparePatchedRom, KNOWN_PATCHES } from './lib/roms.mjs';
 import { ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../shared/romid.mjs';
 import { ALL_SLOTS, slotsOf, runMode } from '../shared/slots.mjs';
-import { scanLibrary, catalog, loadFile, importFiles, uploadTarget, resolveId, discoverRoms } from './lib/library.mjs';
+import { scanLibrary, catalog, loadFile, importFiles, uploadTarget, resolveId, discoverRoms, approvedFolder } from './lib/library.mjs';
 import { saveCover, deleteCover, coverFile, customCovers, coverUrl, COVER_LIMIT } from './lib/covers.mjs';
 import { buildRun, listRuns, readManifest, writeManifest, runDir, runPack, runSummary, trashRun, checkPack, stripLocalRules, isDiscordWebhook, mergeDocEntries, renamePlayers } from './lib/build.mjs';
 import { SaveWatcher } from './lib/savewatch.mjs';
@@ -813,9 +813,11 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   // ---- library & catalog ----------------------------------------------------------
   route('GET', /^\/api\/catalog$/, () => catalog());
   route('GET', /^\/api\/library$/, () => withCustomCovers(scanLibrary(loadConfig())));
+  // Paths from the page only from approved places (library.mjs approvedImportPath): "Search my Mac / PC"'s folders,
+  // the library's folders, and files / folders picked in the native dialog this session (electron/main.mjs).
   route('POST', /^\/api\/library\/import$/, async (req) => {
     const { paths } = await readBody(req);
-    return { added: importFiles(paths || []) };
+    return { added: importFiles(paths || [], loadConfig()) };
   });
   // Search this Mac / PC for ROMs (the usual folders) – the import below then copies the ones the player picked.
   route('POST', /^\/api\/library\/discover$/, () => discoverRoms({ known: scanLibrary(loadConfig()).roms }));
@@ -844,7 +846,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const { add, remove } = await readBody(req);
     const cfg = loadConfig();
     let folders = new Set(cfg.libraryFolders || []);
-    if (add) folders.add(resolve(String(add)));
+    if (add) folders.add(approvedFolder(add, cfg)); // picked in the native dialog this session (library.mjs)
     if (remove) folders.delete(resolve(String(remove)));
     folders = [...folders].filter((f) => existsSync(f));
     saveConfig({ libraryFolders: folders });

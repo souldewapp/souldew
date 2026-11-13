@@ -7,6 +7,7 @@ import { readFileSync, mkdirSync } from 'node:fs';
 import { setupUpdater } from './updater.mjs';
 import { appImageFromEnv, appImageRelaunch } from './update-core.mjs';
 import { writeFileAtomic } from '../server/lib/fsutil.mjs';
+import { grantPicked } from '../server/lib/grants.mjs';
 import { chromiumSwitches, startDecision, crashDecision, gpuInfoSummary } from '../shared/gpu.mjs';
 import { sameOrigin, safeExternalUrl, subframeNavigationAllowed, permissionAllowed, isTrustedIpcSender, titleBarColors, initialWindowSize } from './guards.mjs';
 
@@ -355,7 +356,11 @@ handle('pick-files', async (e, opts) => {
       { name: 'ROMs, Patches & Archive', extensions: ['gb', 'gbc', 'gba', 'nds', '3ds', 'cci', 'cxi', 'cia', '3dsx', 'zcci', 'zcxi', 'z3dsx', 'zip', 'xdelta', 'vcdiff', 'bps', 'ups', 'ips', 'json'] },
     ],
   });
-  return r.canceled ? [] : r.filePaths;
+  if (r.canceled) return [];
+  // What the player picked here may be imported / included by the library (server/lib/grants.mjs) – registered from the
+  // dialog's own result in this process, so the page can't add paths of its choosing.
+  grantPicked(r.filePaths, { folder: !!opts.folder });
+  return r.filePaths;
 });
 handle('reveal', (e, path) => {
   // an absolute local path of this platform (/Users/… on macOS, C:\… on Windows, /home/… on Linux) – no network or device paths

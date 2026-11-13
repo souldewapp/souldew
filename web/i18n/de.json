@@ -359,6 +359,8 @@
   "err.notCtr": "Kein Nintendo-3DS-Spiel",
   "err.notInArchive": "„{entry}“ nicht im Archiv gefunden",
   "err.notInLibrary": "Die Datei liegt nicht in einem Bibliotheksordner",
+  "err.pathNotApproved": "{name} liegt in keinem Ordner, den souldew lesen darf – füg die Datei über „Dateien hinzufügen“ hinzu",
+  "err.folderNotApproved": "Der Ordner {name} wurde nicht in souldews Ordnerauswahl gewählt – wähl ihn über „Ordner verwenden“",
   "err.notPatch": "Keine Patch-Datei",
   "err.notRom": "Keine ROM-Datei",
   "err.packBroken": "Das Run-Paket ist beschädigt ({what})",

@@ -15,7 +15,8 @@ about:
 - **Local server** (`server/`): requests from other websites or other machines reaching the API (host check, origin
   and `Sec-Fetch-Site` check and the app header in `server/lib/guard.mjs`; GETs that hand out the run pack, a run's
   files, the spoiler log, the Discord webhook, the stream token or folders additionally need the app header or a
-  same-origin request – `PRIVATE_GETS`), path traversal in file routes, the
+  same-origin request – `PRIVATE_GETS`), library paths from the page reaching files outside the approved places
+  (discovery folders, library folders, picks in the native dialog – see docs/DEVELOPMENT.md, "Library paths"), path traversal in file routes, the
   overlay API or the Pokélink bridge leaking room keys, file paths or spoilers.
 - **Invite codes** (`web/lib/invitecode.mjs`): ways to join a run without the host's approval, guessing or reusing a
   code, reading the run pack from the relay, or getting the pack without the host typing in the 4 confirmation digits
