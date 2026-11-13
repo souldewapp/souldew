@@ -58,6 +58,8 @@ export class SlowWatch {
 
 /**
  * What helps, best first, for a game that runs too slowly in the built-in emulator:
+ * - 'native'   – the fast player is there but off (or this game runs in the browser emulator): it runs the same
+ *                melonDS / mGBA / Gambatte natively, DS games with the JIT – far faster, with live sync kept
  * - 'external' – a DS game: the standalone melonDS (souldew installs it and syncs the run on every in-game save) has
  *                a just-in-time compiler and runs DS games at full speed on computers where the built-in one can't
  * - 'graphics' – Windows and Linux: another graphics backend (Settings › General) – it helped players whose emulator
@@ -66,10 +68,14 @@ export class SlowWatch {
  * Switching the DS core is no tip: DeSmuME needs as long per frame there as melonDS (Platinum, Route 201, M1:
  * 11.5–12.5 ms against 11.7–14.4 ms, with frame skipping 11.0–12.7 ms – not the factor of two such a PC lacks).
  * `system`: 'nds' | 'gba' | …, `backends`: the graphics backends this platform offers (shared/gpu.mjs gpuBackends).
+ * `native`: the game runs in the fast player already – then only the power tip is left (it is the melonDS app's own
+ * engine, and the graphics backend doesn't draw the game there); `nativeOff`: the fast player could take it.
  */
-export function slowTips({ system, backends = [] }) {
+export function slowTips({ system, backends = [], native = false, nativeOff = false }) {
+  if (native) return ['power'];
   const tips = [];
-  if (system === 'nds') tips.push('external');
+  if (nativeOff) tips.push('native');
+  else if (system === 'nds') tips.push('external');
   if (backends.length > 1) tips.push('graphics');
   tips.push('power');
   return tips;

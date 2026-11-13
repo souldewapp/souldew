@@ -6,6 +6,24 @@ function helper() {
   const BTN = { B: 0, Y: 1, SELECT: 2, START: 3, UP: 4, DOWN: 5, LEFT: 6, RIGHT: 7, A: 8, X: 9, L: 10, R: 11 };
   const e = window.__emu;
   const gm = () => window.EJS_emulator.gameManager;
+  // the fast player (playernative.html): the host runs exactly the frames asked for and then waits – a plan's input
+  // lands on its frame there, every time
+  const NATIVE = !!e.native;
+  // The plans were tuned in player.html, where waiting polls the frame counter while the core races at full speed and
+  // overshoots by a few frames each time (a Game Boy core more than a DS one). Running exactly n frames, a walk is
+  // checked before its step has ended – so the fast player runs the frames the plans had in practice.
+  const SLACK = { gb: 8, gbc: 8, gba: 4, nds: 1 }[e.system?.()] ?? 2;
+  // ...and the same frames every time: a person walking in the way on the first attempt walks there on every one. From
+  // the second attempt on each wait runs 0–3 frames more (a fixed sequence per attempt), as player.html's waits vary.
+  let jitter = () => 0;
+  function seedJitter(attempt) {
+    if (!NATIVE || attempt <= 1) return;
+    let x = (attempt * 2654435761) >>> 0;
+    jitter = () => {
+      x = (x * 1664525 + 1013904223) >>> 0;
+      return x >>> 30;
+    };
+  }
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   let ctx = null;
 
@@ -121,6 +139,10 @@ function helper() {
   }
 
   async function frames(n) {
+    if (NATIVE) {
+      if (n > 0 && (await e.step(n + SLACK + jitter())) === null) throw new Error('emulator stopped');
+      return;
+    }
     const end = e.frames() + n;
     const t0 = performance.now();
     while (e.frames() < end) {
@@ -130,6 +152,13 @@ function helper() {
   }
 
   async function press(keys, hold = 6, gap = 14) {
+    if (NATIVE) {
+      e.hold(keys);
+      await frames(hold);
+      e.hold([]);
+      await frames(gap);
+      return;
+    }
     for (const k of keys) gm().simulateInput(0, BTN[k], 1);
     await frames(hold);
     for (const k of keys) gm().simulateInput(0, BTN[k], 0);
@@ -137,6 +166,13 @@ function helper() {
   }
 
   async function shot(name) {
+    if (NATIVE) {
+      const b = await e.screenshot();
+      if (!b) return null;
+      let s = '';
+      for (let k = 0; k < b.length; k += 0x8000) s += String.fromCharCode.apply(null, b.subarray(k, k + 0x8000));
+      return { name, png: btoa(s) };
+    }
     const g = gm();
     try { g.FS.unlink('/screenshot.png'); } catch { /* none yet */ }
     g.functions.screenshot();
@@ -154,6 +190,13 @@ function helper() {
 
   // DS touch screen: (x, y) in the bottom screen's own pixels (256 × 192), sent as mouse events to the core's canvas
   async function tap(x, y, hold = 6) {
+    if (NATIVE) {
+      e.touch((x + 0.5) / 256, (192 + y + 0.5) / 384, true);
+      await frames(hold);
+      e.touch((x + 0.5) / 256, (192 + y + 0.5) / 384, false);
+      await frames(12);
+      return;
+    }
     const c = e.canvas();
     const r = c.getBoundingClientRect();
     // screens stacked top/bottom, letterboxed into the canvas at 256:384
@@ -186,7 +229,8 @@ function helper() {
     return false;
   }
 
-  async function run({ plan, romSrc, timeoutMs }) {
+  async function run({ plan, romSrc, timeoutMs, attempt = 1 }) {
+    seedJitter(attempt);
     const t0 = performance.now();
     const log = [];
     const shots = [];
@@ -209,6 +253,7 @@ function helper() {
         break;
       }
       const at = e.frames();
+      console.log(`[plan] ${Math.round(performance.now() - t0)} ms, frame ${at}: ${JSON.stringify(s).slice(0, 160)}`);
       // s.while: only while the condition holds (a throw after the catch would walk around in the overworld)
       if (s.while && !cond(s.while)) {
         log.push({ do: s.do, skipped: true, note: s.note });
@@ -240,6 +285,7 @@ function helper() {
         let side = 0;
         for (let n = 0; n < (s.max || 300); n++) {
           let p = pos();
+          if (window.__rmDebug) console.log(`[go] ${n} pos ${JSON.stringify(p)} frame ${e.frames()}`);
           if (done(p)) {
             ok = true;
             break;
@@ -375,7 +421,7 @@ function helper() {
       } else if (s.do === 'log') {
         log.push({ do: 'log', name: s.name, value: new Function('read', 'place', 'team', 'ctx', `return (${s.expr});`)(e.read, place, team, ctx) });
         continue;
-      } else if (s.do === 'saveState') state = e.getState();
+      } else if (s.do === 'saveState') state = await e.getState(); // (the fast player answers with a promise)
       else if (s.do === 'loadState' && state) e.loadState(state);
       log.push({ do: s.do, frames: e.frames() - at, note: s.note });
     }
@@ -387,7 +433,17 @@ function helper() {
       for (let k = 0; k < st.length; k += 0x8000) s += String.fromCharCode.apply(null, st.subarray(k, k + 0x8000));
       b64 = btoa(s);
     } catch { /* no state */ }
-    return { info, log, shots: shots.filter(Boolean), state: b64, frames: e.frames(), ms: Math.round(performance.now() - t0) };
+    // the battery save as the game left it (--battery: a plan that saved in the game hands it to the next one)
+    let sav = null;
+    try {
+      const b = e.getSave();
+      if (b?.length) {
+        let s = '';
+        for (let k = 0; k < b.length; k += 0x8000) s += String.fromCharCode.apply(null, b.subarray(k, k + 0x8000));
+        sav = btoa(s);
+      }
+    } catch { /* none */ }
+    return { info, log, shots: shots.filter(Boolean), state: b64, sav, frames: e.frames(), ms: Math.round(performance.now() - t0) };
   }
 
   window.__rm = { run, press, tap, frames, shot, team, place, setup, cond };

@@ -756,6 +756,196 @@
 "required": false
 },
 {
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 240,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+},
+"note": "Littleroot exit: a girl walks around there \u2013 let her move on"
+},
+{
+"do": "go",
+"x": 12,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 240,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+},
+"note": "Littleroot exit: a girl walks around there \u2013 let her move on"
+},
+{
+"do": "go",
+"x": 9,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 240,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+},
+"note": "Littleroot exit: a girl walks around there \u2013 let her move on"
+},
+{
+"do": "go",
+"x": 11,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 240,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+},
+"note": "Littleroot exit: a girl walks around there \u2013 let her move on"
+},
+{
+"do": "go",
+"x": 10,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "mash",
+"keys": [
+[
+"B"
+]
+],
+"max": 240,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+},
+"note": "Littleroot exit: a girl walks around there \u2013 let her move on"
+},
+{
+"do": "go",
+"x": 12,
+"y": 1,
+"order": "xy",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
+"do": "go",
+"y": -2,
+"order": "y",
+"map": 9,
+"leave": true,
+"required": false,
+"patience": 6,
+"while": {
+"expr": "(((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4)))))[0]===9"
+}
+},
+{
 "do": "wait",
 "frames": 60
 },

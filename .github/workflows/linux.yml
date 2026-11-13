@@ -18,9 +18,11 @@ on:
       - 'scripts/smoke-app.mjs'
       - 'scripts/fetch-jre.mjs'
       - 'scripts/build-ctr.mjs'
+      - 'scripts/build-native.mjs'
       - 'native/**'
       - '.github/workflows/linux.yml'
       - '.github/workflows/ctr.yml'
+      - '.github/workflows/native.yml'
 
 permissions:
   contents: read
@@ -35,9 +37,14 @@ jobs:
     with:
       platforms: linux
 
+  native:
+    uses: ./.github/workflows/native.yml
+    with:
+      platforms: linux
+
   build:
     name: Build & smoke-test the Linux app
-    needs: ctr
+    needs: [ctr, native]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -73,6 +80,12 @@ jobs:
           name: ctr-linux-x64
           path: tools/ctr/linux-x64
       - run: chmod +x tools/ctr/linux-x64/ctrhost && node scripts/build-ctr.mjs --check
+      - name: The fast player part (built by native.yml)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: native-linux-x64
+          path: tools/native/linux-x64
+      - run: chmod +x tools/native/linux-x64/retrohost && node scripts/build-native.mjs --check
 
       - name: Smoke test – `npm run app` from the checkout
         run: xvfb-run -a node scripts/smoke-app.mjs --dev

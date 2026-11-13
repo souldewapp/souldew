@@ -1,0 +1,113 @@
+name: Fast player part (Windows, Linux)
+
+# Builds souldew's fast player part – the native host (native/retro-host) and the libretro cores melonDS DS, mGBA and
+# Gambatte (scripts/build-native.mjs, fixed tags) – for Windows and Linux, as tools/native/<platform>/ artifacts the app
+# packages bundle (release.yml, windows.yml and linux.yml call this workflow). macOS: `npm run native` on a Mac.
+# Linux is built on Ubuntu 22.04 (an older glibc – the .so files load on newer systems too); Windows is cross-compiled
+# with MinGW-w64 and linked statically (nothing but Windows' own DLLs), exactly as on a developer's Mac.
+
+on:
+  workflow_call:
+    inputs:
+      platforms:
+        description: 'linux, windows or both (comma-separated)'
+        type: string
+        default: 'linux,windows'
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'linux, windows or both (comma-separated)'
+        type: string
+        default: 'linux,windows'
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Fast player part for Linux
+    if: contains(inputs.platforms, 'linux')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Cached build (same sources)
+        id: cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: tools/native/linux-x64
+          key: native-linux-x64-${{ hashFiles('native/retro-host/**', 'native/ctr-host/compat.h', 'native/ctr-host/libretro.h', 'scripts/build-native.mjs') }}
+      - name: Tools
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends ninja-build gcc-12 g++-12 cmake make git
+      - name: Build the host and the cores
+        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          CC: gcc-12
+          CXX: g++-12
+        run: |
+          node scripts/build-native.mjs
+          strip -s tools/native/linux-x64/*.so tools/native/linux-x64/retrohost
+      - run: node scripts/build-native.mjs --check
+      - name: The host runs the Game Boy core (test/native.test.mjs – a ROM made by the test)
+        run: |
+          npm ci --ignore-scripts
+          node --test --test-timeout=120000 test/native.test.mjs
+      - name: Only system libraries
+        run: for f in tools/native/linux-x64/*.so tools/native/linux-x64/retrohost; do ldd "$f"; done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: native-linux-x64
+          path: tools/native/linux-x64/
+          if-no-files-found: error
+
+  windows:
+    name: Fast player part for Windows
+    if: contains(inputs.platforms, 'windows')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Cached build (same sources)
+        id: cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: tools/native/win32-x64
+          key: native-win32-x64-${{ hashFiles('native/retro-host/**', 'native/ctr-host/compat.h', 'native/ctr-host/libretro.h', 'scripts/build-native.mjs') }}
+      - name: Tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends ninja-build cmake make git mingw-w64 binutils-mingw-w64-x86-64
+      - name: Cross-compile the host and the cores (MinGW-w64, posix threads, static)
+        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          CC: x86_64-w64-mingw32-gcc-posix
+          CXX: x86_64-w64-mingw32-g++-posix
+        run: |
+          node scripts/build-native.mjs --platform win32-x64
+          x86_64-w64-mingw32-strip -s tools/native/win32-x64/*.dll tools/native/win32-x64/retrohost.exe
+      - name: Complete, and nothing but Windows' own DLLs
+        run: |
+          node scripts/build-native.mjs --platform win32-x64 --check
+          for f in tools/native/win32-x64/*.dll tools/native/win32-x64/retrohost.exe; do
+            deps=$(x86_64-w64-mingw32-objdump -p "$f" | sed -n 's/.*DLL Name: //p' | grep -viE '^(kernel32|user32|advapi32|ws2_32|iphlpapi|shell32|ole32|winmm|bcrypt|ntdll|api-ms-win-.*)\.dll$' || true)
+            echo "$f: ${deps:-ok}"
+            if [ -n "$deps" ]; then echo "::error::$f needs $deps"; exit 1; fi
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: native-win32-x64
+          path: tools/native/win32-x64/
+          if-no-files-found: error

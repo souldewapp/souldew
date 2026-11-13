@@ -14,6 +14,7 @@ npm test               # all tests (node --test "test/*.test.mjs")
 npm run lint           # ESLint (eslint.config.mjs)
 node scripts/extract-i18n.mjs   # sync UI strings, list missing/stale translations
 npm run ctr            # macOS: build the 3DS part (see "Nintendo 3DS" below)
+npm run native         # build the fast player part (see "Fast player" below)
 npm run dist           # macOS: build the DMG (fetches the Java runtime on first run; needs the 3DS part)
 npm run dist:win       # Windows: build the NSIS installer (fetches the Windows Java runtime on first run)
 npm run dist:linux     # Linux: build the AppImage and the .deb (fetches the Linux Java runtime on first run)
@@ -45,6 +46,36 @@ SOULDEW_CHROMIUM_FLAGS="use_angle=vulkan ignore-gpu-blocklist" npm run app -- --
 (PowerShell: `$env:SOULDEW_CHROMIUM_FLAGS="use_angle=vulkan"; npm run app -- --user-data-dir="$env:TEMP\souldew-gfx"`.)
 
 New visible text always goes through `t('area.key', 'English default', { vars })`; then translate it for de/fr/es/it – `node scripts/extract-i18n.mjs` must end with "0 missing, 0 stale" for every language. See [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+## Fast player (DS, GBA, Game Boy)
+
+DS, GBA and Game Boy games play in the fast player when its part is there: a native host
+(`native/retro-host/retrohost.c`) runs melonDS DS (with its JIT), mGBA or Gambatte as a native program, and
+`web/playernative.html` / `web/lib/nativeplayer.mjs` offer the play view the same `window.__emu` API as the
+EmulatorJS player. The host speaks the 3DS host's protocol plus a few messages (header of `retrohost.c`): the game's RAM
+regions are mirrored in the page (what changed, ten times a second, between two frames – the live reader reads them
+synchronously as before), the battery save comes out when the game saved (and settled) and goes in at the start,
+cheats are written between frames, `STEP n` runs exactly n frames (the ROM matrix). `server/lib/native.mjs` knows the
+cores, their RAM and options and reuses the 3DS sessions (`/api/native/*`). Settings › "Fast player" switches it off
+(`config.nativeCore`); when the host can't start a game the play view falls back to `player.html` by itself. Save
+states carry the core id (`melonds-native`, `mgba-native`, `gambatte-native`) – the other player's states aren't offered.
+
+```sh
+brew install cmake ninja                        # (Windows cross build: brew install mingw-w64)
+npm run native                                  # host + melonDS DS v1.4.0 + mGBA 0.10.5 + Gambatte, into tools/native/<platform>-<arch>/
+node scripts/build-native.mjs --host-only       # only the host (after changing retrohost.c)
+node scripts/build-native.mjs --platform win32-x64   # the Windows part, cross-compiled and statically linked
+node --test test/native.test.mjs                # the real host on a Game Boy ROM the test makes (skipped when not built)
+node scripts/rom-matrix.mjs <roms> --live --native   # the ROM matrix in the fast player
+node scripts/native-e2e.mjs <roms>              # the app UI: native player taken, speeds 1×/2×/4×/Max, save states
+```
+
+Sources are cloned at their tags into `_ref/native/` (not in the repository). The cores are built without OpenGL (the
+page draws the picture), the DS core with its Wi-Fi switched off at run time. `npm run dist` checks the folder
+(`build-native.mjs --check`); `SLS_NO_NATIVE=1 npm run dist` builds without it – everything then plays in the browser
+emulator. Windows and Linux: `.github/workflows/native.yml` (Ubuntu 22.04 for Linux, MinGW-w64 cross build for Windows,
+checked for foreign DLLs) feeds `release.yml`, `windows.yml` and `linux.yml`. macOS: the app is ad-hoc signed without
+the hardened runtime, so the JIT's executable memory (MAP_JIT) needs no entitlement.
 
 ## Nintendo 3DS
 

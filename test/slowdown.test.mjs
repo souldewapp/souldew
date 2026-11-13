@@ -34,4 +34,8 @@ test('tips: the melonDS app for DS games, the graphics backend where there is a 
   assert.deepEqual(slowTips({ system: 'nds', backends: ['auto'] }), ['external', 'power']); // macOS
   assert.deepEqual(slowTips({ system: 'gba', backends: ['auto', 'gl', 'vulkan'] }), ['graphics', 'power']);
   assert.deepEqual(slowTips({ system: 'gb' }), ['power']);
+  // the fast player: already in it – only the power tip; there but off – it comes first, instead of the melonDS app
+  assert.deepEqual(slowTips({ system: 'nds', backends: ['auto', 'gl'], native: true }), ['power']);
+  assert.deepEqual(slowTips({ system: 'nds', backends: ['auto'], nativeOff: true }), ['native', 'power']);
+  assert.deepEqual(slowTips({ system: 'gba', backends: ['auto', 'gl'], nativeOff: true }), ['native', 'graphics', 'power']);
 });

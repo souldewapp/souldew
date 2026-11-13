@@ -3,7 +3,7 @@
 // the app's live readers (shared/live/*) – the same code the play view runs. Writes one JSON result per ROM.
 // Not started by hand: node scripts/rom-matrix.mjs <rom-dir> --live
 import { app, BrowserWindow } from 'electron';
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, appendFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -42,6 +42,40 @@ async function runOne(url, t) {
     win.showInactive();
   }
   win.webContents.setAudioMuted(true);
+  // the page's console (the plan's progress, errors) next to the results – a run that stops can be followed up
+  const consoleLog = [];
+  win.webContents.on('console-message', (...a) => {
+    const e = a[0] && typeof a[0] === 'object' && 'message' in a[0] ? a[0] : { message: a[2], level: a[1] };
+    const line = `${new Date().toISOString()} ${e.level ?? ''} ${e.message}`;
+    consoleLog.push(line);
+    if (consoleLog.length > 4000) consoleLog.splice(0, 1000);
+    try {
+      appendFileSync(join(job.outDir, `${t.key}-console.log`), `${line}\n`); // (as it comes: a run that hangs still leaves it)
+    } catch { /* best effort */ }
+  });
+  // a renderer that dies (out of memory, a crash) would leave executeJavaScript waiting for ever: note why, and the
+  // page's memory every 30 s
+  let gone = null;
+  win.webContents.on('render-process-gone', (_e, d) => {
+    gone = d;
+    try {
+      appendFileSync(join(job.outDir, `${t.key}-console.log`), `${new Date().toISOString()} RENDERER GONE ${JSON.stringify(d)}\n`);
+    } catch { /* best effort */ }
+  });
+  const memTimer = setInterval(() => {
+    const pid = win.webContents.getOSProcessId?.();
+    const m = app.getAppMetrics().find((x) => x.pid === pid);
+    if (m) try { appendFileSync(join(job.outDir, `${t.key}-console.log`), `${new Date().toISOString()} MEM renderer ${Math.round(m.memory.workingSetSize / 1024)} MB\n`); } catch { /* best effort */ }
+  }, 30000);
+  if (job.native) {
+    // the plans' conditions are expressions (new Function) – the fast player's page doesn't allow eval (it has no
+    // emulator in the page); for the matrix only, its policy gets 'unsafe-eval' added
+    win.webContents.session.webRequest.onHeadersReceived((d, cb) => {
+      const h = { ...d.responseHeaders };
+      for (const k of Object.keys(h)) if (k.toLowerCase() === 'content-security-policy' && /playernative/.test(d.url)) h[k] = h[k].map((v) => v.replace("script-src 'self'", "script-src 'self' 'unsafe-eval'"));
+      cb({ responseHeaders: h });
+    });
+  }
   const rom = `/api/library/rom?id=${encodeURIComponent(t.file)}`;
   const q = new URLSearchParams({ system: t.system, rom, name: `matrix-${t.key}`, threads: '0', volume: '0' });
   if (t.core) q.set('core', t.core);
@@ -62,7 +96,12 @@ async function runOne(url, t) {
     // (a fresh window right after the previous game's was closed sometimes reports ERR_FAILED once)
     for (let i = 0; ; i++) {
       try {
-        await win.loadURL(`${url}/player.html?${q}`);
+        if (job.native) {
+          // the fast player: the host opens the ROM itself, the save comes the same way
+          const nq = new URLSearchParams({ system: t.system, rom, key: `matrix-${t.key}`, name: `matrix-${t.key}`, debug: '1', ...(process.env.MATRIX_NO_AUDIO ? { audio: '0' } : {}) });
+          if (q.get('save')) nq.set('save', q.get('save'));
+          await win.loadURL(`${url}/playernative.html?${nq}`);
+        } else await win.loadURL(`${url}/player.html?${q}`);
         break;
       } catch (err) {
         if (i >= 2) throw err;
@@ -75,7 +114,8 @@ async function runOne(url, t) {
       await sleep(300);
     }
     await win.webContents.executeJavaScript(PAGE_HELPER);
-    const out = await win.webContents.executeJavaScript(`window.__rm.run(${JSON.stringify({ plan: t.plan, romSrc: rom, timeoutMs: job.timeoutMs || 600000 })})`);
+    const died = new Promise((_, rej) => win.webContents.once('render-process-gone', (_e, d) => rej(new Error(`renderer gone: ${d.reason}`))));
+    const out = await Promise.race([win.webContents.executeJavaScript(`window.__rm.run(${JSON.stringify({ plan: t.plan, romSrc: rom, timeoutMs: job.timeoutMs || 600000, attempt: job.attempt || 1 })})`), died]);
     Object.assign(res, out);
     for (const s of out.shots || []) {
       const p = join(job.outDir, `${t.key}-${s.name}.png`);
@@ -83,11 +123,21 @@ async function runOne(url, t) {
       shots.push(p);
     }
     if (job.saveStates && out.state) writeFileSync(join(job.outDir, `${t.key}.state`), Buffer.from(out.state, 'base64'));
+    if (job.battery && out.sav) writeFileSync(join(job.outDir, `${t.key}.sav`), Buffer.from(out.sav, 'base64'));
   } catch (e) {
     res.error = String(e?.message || e);
   }
+  clearInterval(memTimer);
+  if (gone) res.error = `${res.error ? `${res.error}; ` : ''}renderer gone: ${gone.reason}`;
+  if (job.native) {
+    // how the native host ended (or that it still runs) and the last of what it wrote to stderr
+    try {
+      res.host = await fetch(`${url}/api/native/status`).then((x) => x.json()).then((j) => j.session);
+    } catch { /* server gone */ }
+  }
   delete res.shots;
   delete res.state;
+  delete res.sav;
   res.shots = shots;
   win.destroy();
   return res;
