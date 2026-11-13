@@ -3,10 +3,12 @@
 // the top left, a sheen and an engraved emblem, in the metal of its tier, on a ribbon in its category colour.
 import { html } from '/vendor/htm-preact.mjs';
 
-const W = 24;
-const H = 31;
-const CX = 11.5;
-const CY = 19.5;
+// An odd width with the centre on a whole cell, so the body has a middle column (and row) and an emblem can sit
+// exactly in it – on an even grid every emblem ended up half a cell right of and below the middle.
+const W = 25;
+const H = 32;
+const CX = 12;
+const CY = 20;
 
 /** outline, shadow, base, light, highlight */
 export const METALS = {
@@ -69,6 +71,24 @@ const SHAPE_OF = { journey: 'circle', collection: 'hexagon', skill: 'star', soul
 
 const cache = new Map();
 
+/** The emblem cut down to the rows and columns that have ink. */
+export function emblemInk(rows) {
+  const ys = rows.map((r, j) => (r.includes('#') ? j : -1)).filter((j) => j >= 0);
+  const xs = rows.flatMap((r) => [...r].map((ch, i) => (ch === '#' ? i : -1))).filter((i) => i >= 0);
+  if (!ys.length) return ['.'];
+  const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
+  return rows.slice(Math.min(...ys), Math.max(...ys) + 1).map((r) => r.slice(x0, x1 + 1));
+}
+
+/** Which emblem a medal gets and where its top-left cell goes. */
+export function emblemPlace(kind, gen) {
+  const em = emblemInk(kind === 'dex' ? NUMERALS[gen] || NUMERALS[1] : EMBLEMS[kind] || EMBLEMS.journey);
+  return { em, ox: CX - Math.ceil((em[0].length - 1) / 2), oy: CY - Math.ceil((em.length - 1) / 2) };
+}
+
+/** Body centre and size, for tests and layout: the medal is drawn around (CX, CY) on a W×H grid. */
+export const MEDAL_GRID = { W, H, CX, CY };
+
 /** The pixels of one medal: [[color, path], …] – computed once per look. */
 export function medalPixels(kind, tier, gen) {
   const key = `${kind}:${tier}:${gen || ''}`;
@@ -83,7 +103,7 @@ export function medalPixels(kind, tier, gen) {
   // the tails lean outwards towards the top; a V notch is cut into each end
   for (let y = 0; y < 13; y++) {
     const lean = Math.round((12 - y) / 4);
-    const tails = [[4 - lean, 10 - lean], [13 + lean, 19 + lean]];
+    const tails = [[4 - lean, 10 - lean], [14 + lean, 20 + lean]];
     for (const [a, b] of tails) {
       const mid = (a + b) / 2;
       for (let x = a; x <= b; x++) {
@@ -118,11 +138,9 @@ export function medalPixels(kind, tier, gen) {
     }
   }
   // the emblem: grooves in the shadow colour with a light edge below-right (engraved look)
-  const em = kind === 'dex' ? NUMERALS[gen] || NUMERALS[1] : EMBLEMS[kind] || EMBLEMS.journey;
-  const ew = em[0].length;
-  const eh = em.length;
-  const ox = Math.round(CX - ew / 2 + 0.5);
-  const oy = Math.round(CY - eh / 2 + 0.5);
+  // Centred by its ink, not by its 9×9 box (the rings and the crown don't fill their box): the drawn part's middle
+  // goes onto the body's middle; an even extent leans up/left, which the light lip below-right evens out.
+  const { em, ox, oy } = emblemPlace(kind, gen);
   const groove = locked ? pal[1] : pal[0];
   const lip = locked ? pal[3] : pal[4];
   em.forEach((row, j) => [...row].forEach((ch, i) => {
