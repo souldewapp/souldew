@@ -14,6 +14,10 @@ Security fixes – all found in a code review and reported by @Never-lab:
   souldew start, serve or overwrite a file outside the run. Every such path is now checked, also after following
   links. Along the way: a 3DS run no longer offers its ROM as "Save my save file" (3DS saves live in the player's
   own folder).
+- **An installed app never takes an unsigned update** (#24): a build without the release's public key (a fork, or a
+  build made without `--init-key`) used to accept an update feed that was only protected by HTTPS. Installed apps now
+  refuse to look for updates without the key; only development (`npm run app`) may check an unsigned feed. The
+  official releases always carried the key and are not affected.
 
 ## 2.5.0
 

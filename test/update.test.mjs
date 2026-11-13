@@ -291,9 +291,40 @@ test('fetchFeed checks the signature before using the feed when a public key is 
     for (const p of ['/unsigned.json', '/tampered.json', '/sha.json']) {
       await assert.rejects(fetchFeed(`${b}${p}`, { allowLocal: true, publicKey: pub }), (e) => e.code === 'BAD_SIGNATURE', p);
     }
-    // No key configured: today's behaviour (HTTPS + validation only), sig is simply ignored.
+    // No key passed (development, see feedKeyPolicy): HTTPS + validation only, sig is simply ignored.
     assert.equal((await fetchFeed(`${b}/unsigned.json`, { allowLocal: true })).version, '2.1.0');
     assert.equal('sig' in (await fetchFeed(`${b}/signed.json`, { allowLocal: true })), false);
+  });
+});
+
+test('an installed app without an update key fails closed; only development may check an unsigned feed (#24)', async () => {
+  const { feedKeyPolicy } = await import('../electron/update-core.mjs');
+  const { generateKeyPairSync } = await import('node:crypto');
+  const { signFeed, publicKeyBase64 } = await import('../electron/update-core.mjs');
+  const { privateKey } = generateKeyPairSync('ed25519');
+  const pub = publicKeyBase64(privateKey);
+  assert.deepEqual(feedKeyPolicy({ publicKey: ` ${pub} ` }, { packaged: true }), { publicKey: pub, requireSignature: true });
+  assert.deepEqual(feedKeyPolicy({}, { packaged: true }), { publicKey: null, requireSignature: true });
+  assert.deepEqual(feedKeyPolicy({ publicKey: '  ' }, { packaged: true }), { publicKey: null, requireSignature: true });
+  assert.deepEqual(feedKeyPolicy(undefined, { packaged: false }), { publicKey: null, requireSignature: false });
+  let asked = 0;
+  const bodies = { '/unsigned.json': feed(), '/signed.json': signFeed(feed(), privateKey) };
+  await withServer((req, res) => {
+    asked++;
+    return bodies[req.url] ? res.end(JSON.stringify(bodies[req.url])) : res.writeHead(404).end();
+  }, async (b) => {
+    // packaged, no key: refused before anything is downloaded – signed or not
+    for (const p of ['/unsigned.json', '/signed.json']) {
+      const policy = feedKeyPolicy({}, { packaged: true });
+      await assert.rejects(fetchFeed(`${b}${p}`, { allowLocal: true, ...policy }), (e) => e.code === 'NO_KEY', p);
+    }
+    assert.equal(asked, 0, 'no request without a key');
+    // packaged with the key: signed feeds only
+    const keyed = feedKeyPolicy({ publicKey: pub }, { packaged: true });
+    assert.equal((await fetchFeed(`${b}/signed.json`, { allowLocal: true, ...keyed })).version, '2.1.0');
+    await assert.rejects(fetchFeed(`${b}/unsigned.json`, { allowLocal: true, ...keyed }), (e) => e.code === 'BAD_SIGNATURE');
+    // development without a key: the soft path
+    assert.equal((await fetchFeed(`${b}/unsigned.json`, { allowLocal: true, ...feedKeyPolicy({}, { packaged: false }) })).version, '2.1.0');
   });
 });
 
