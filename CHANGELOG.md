@@ -18,6 +18,10 @@ Security fixes – all found in a code review and reported by @Never-lab:
   build made without `--init-key`) used to accept an update feed that was only protected by HTTPS. Installed apps now
   refuse to look for updates without the key; only development (`npm run app`) may check an unsigned feed. The
   official releases always carried the key and are not affected.
+- **Overlay texts are escaped for every place they can go** (#26): the OBS overlays escaped names for element text
+  and double-quoted attributes, not for single quotes or backticks. No overlay used such a place, but now the escape
+  covers them too, a player slot reaches the overlay's styles only as p1–p4, and the emulator page's "Click to start"
+  label is set as plain text. The example in `docs/STREAM_API.md` escapes the same way.
 
 ## 2.5.0
 

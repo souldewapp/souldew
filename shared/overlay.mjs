@@ -133,6 +133,17 @@ export function overlaySnapshot(manifest, doc, { lang = 'en', speciesName = null
 // ---- reading a snapshot (the overlay page) -----------------------------------------------------------------
 
 /** A level worth showing: 1–100 (same rule as web/views/party.mjs shownLevel). */
+/**
+ * Text made safe for HTML built as a string (the overlay page's widgets): & < > " ' and ` become entities, so it
+ * can go into element text and into attributes in double or single quotes alike. Partner-controlled names
+ * (players, nicknames, run name) pass through here.
+ */
+const HTML_ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' };
+export const escHtml = (s) => String(s ?? '').replace(/[&<>"'`]/g, (c) => HTML_ESC[c]);
+
+/** A player slot for CSS (`var(--p1)` …): anything but p1–p4 becomes p1. */
+export const slotVar = (slot) => `var(--${/^p[1-4]$/.test(slot) ? slot : 'p1'})`;
+
 export const validLevel = (l) => (Number.isInteger(l) && l >= 1 && l <= 100 ? l : null);
 
 /** slp/psn/tox/brn/frz/par/fnt or '' – the same rule as web/views/party.mjs statusOf. */

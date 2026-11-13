@@ -276,3 +276,20 @@ test('server: overlay snapshot, live push after a doc upload, test alerts and th
     server.close();
   }
 });
+
+test('overlay escaping covers quotes of both kinds and backticks; slots reach CSS only as p1–p4 (#26)', async () => {
+  const { escHtml, slotVar } = await import('../shared/overlay.mjs');
+  assert.equal(escHtml(`<img src=x onerror="a">'b'\`c\`&`), '&lt;img src=x onerror=&quot;a&quot;&gt;&#39;b&#39;&#96;c&#96;&amp;');
+  assert.equal(escHtml(null), '');
+  assert.equal(escHtml(42), '42');
+  // a name in a single-quoted attribute can't close it
+  const name = "x' onmouseover='alert(1)";
+  assert.ok(!`<b title='${escHtml(name)}'>`.includes("' onmouseover"));
+  assert.equal(slotVar('p3'), 'var(--p3)');
+  for (const bad of ['"x', 'p5', '', undefined, 'p1;color:red']) assert.equal(slotVar(bad), 'var(--p1)', String(bad));
+  // the page uses the shared helpers, no copy of its own
+  const { readFileSync } = await import('node:fs');
+  const page = readFileSync(new URL('../web/overlay.html', import.meta.url), 'utf8');
+  assert.match(page, /const esc = escHtml;/);
+  assert.ok(!/replace\(\/\[&<>"\]\/g/.test(page));
+});

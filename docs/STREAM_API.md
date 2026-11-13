@@ -221,7 +221,8 @@ is yours.
   const LANG = 'en';                           // en, de, fr, es, it
   const TOKEN = '';                            // only if you switched on "Require a token"
   const q = `?lang=${LANG}${TOKEN ? `&token=${TOKEN}` : ''}`;
-  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // names and nicknames come from the players – escape them before they go into HTML
+  const esc = (s) => String(s ?? '').replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
 
   function render(state) {
     document.getElementById('out').innerHTML = state.players.map((p) => `
