@@ -149,7 +149,12 @@ img.pixel, .sprite img { image-rendering: pixelated; }
 .update-bar { height: 5px; border-radius: 3px; background: #0b0a0d; overflow: hidden; box-shadow: inset 0 0 0 1px #000; }
 .update-bar > i { display: block; height: 100%; background: var(--tri); transition: width 0.2s linear; }
 .update-bar > i.busy { animation: led-blink 1.2s steps(2, jump-none) infinite; }
-.update-notes { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-2); }
+.update-notes { overflow-wrap: anywhere; color: var(--ink-2); line-height: 1.5; }
+.update-notes ul { margin: 0 0 10px; padding-left: 18px; }
+.update-notes li { margin: 0 0 8px; }
+.update-notes p { margin: 0 0 10px; }
+.update-notes strong { color: var(--ink); }
+.update-notes code { font-size: .92em; }
 @media (max-width: 860px) { .update-card { max-width: 320px; } }
 @media (prefers-reduced-motion: reduce) { .update-card, .update-bar > i.busy { animation: none; } }
 

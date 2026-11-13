@@ -5,6 +5,7 @@ import { t } from '../lib/i18n.mjs';
 import { Modal, Led, openExternal, useApp } from '../lib/ui.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { PLATFORM, shortcut } from '../lib/platform.mjs';
+import { parseNotes, inlineNotes } from '/shared/notes.mjs';
 
 const bridge = () => window.sls?.update || null;
 
@@ -59,9 +60,22 @@ const STEPS = () => ({
 const isWin = (s) => (s?.platform || PLATFORM) === 'win32';
 const isLinux = (s) => (s?.platform || PLATFORM) === 'linux';
 
+const Inline = ({ text }) => inlineNotes(text).map((p) =>
+  p.type === 'bold' ? html`<strong>${p.text}</strong>` : p.type === 'code' ? html`<code>${p.text}</code>` : p.text);
+
+/** The release notes (CHANGELOG markdown: bullets, **bold**, `code`) as a list – never as HTML. */
+export function Notes({ text }) {
+  const blocks = parseNotes(text || '');
+  if (!blocks.length) return html`<div class="update-notes small">${t('upd.noNotes', 'No release notes.')}</div>`;
+  return html`<div class="update-notes small">${blocks.map((b) =>
+    b.type === 'list' ? html`<ul>${b.items.map((i) => html`<li><${Inline} text=${i} /></li>`)}</ul>`
+    : b.type === 'heading' ? html`<p class="update-notes-h"><strong><${Inline} text=${b.text} /></strong></p>`
+    : html`<p><${Inline} text=${b.text} /></p>`)}</div>`;
+}
+
 function NotesModal({ u, open, onClose, footer }) {
   return html`<${Modal} open=${open} onClose=${onClose} title=${t('upd.notesTitle', 'What’s new in {version}', { version: u?.version })} footer=${footer}>
-    <div class="update-notes small">${u?.notes?.trim() || t('upd.noNotes', 'No release notes.')}</div>
+    <${Notes} text=${u?.notes} />
   <//>`;
 }
 
