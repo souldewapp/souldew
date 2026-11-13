@@ -2,7 +2,7 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
-## Unreleased
+## 2.6.0
 
 - **The fast player: DS, GBA and Game Boy games at full speed, with fast-forward that really reaches 4× and more.**
   The games now run in the real emulators directly on the computer – melonDS (the same engine as the melonDS app,
@@ -14,7 +14,8 @@
   Settings › Emulators › "Fast player" switches back to the old player, and a game the fast player can't start opens
   in the old one by itself.
 - Black/White (1 and 2) run in the fast player with their in-game save: saving and starting again from that save was
-  checked in Black. HeartGold/SoulSilver use the same melonDS version but haven't been tested in it yet.
+  checked in Black. HeartGold starts in it and holds 4× in a first short test on a Mac; a full HeartGold/SoulSilver
+  run hasn't been checked yet.
 - Fast-forward music (Settings › Turbo music) works in the fast player too.
 - The 3DS player sends its commands to the emulator in batches, like the fast player – long sessions no longer pile up
   memory in the app's page.
@@ -26,7 +27,15 @@
   partner shared it first. The link only lives on your computer (not in runs, invites, exports or diagnostics), the
   page never sees it, and streamer mode covers your Discord name. Nothing is posted unless you press the button.
 - A death read live now keeps the place it happened at (the place sign), not only the battle it fell in.
-Security fixes – all found in a code review and reported by @Never-lab:
+- **"What's new" after an update is easy to read:** the release notes show as a list with bold headings instead of
+  raw text that broke lines in the middle of sentences. The update feed carries them unwrapped too, so older versions
+  show the next notes in whole lines.
+- The symbols on the trophy medals sit exactly in the middle (they were half a pixel right and low; the rings and the
+  crown sat too high).
+- Starting a run again when its game is gone: the hint now names the real button, "Adjust settings …".
+### Security
+
+All found in a code review and reported by @Never-lab – thank you:
 
 - **Run data saved by the app can't be pinned with a date far in the future** (#19): the app already ignored a change
   that claimed to be made days ahead (it would win over every later change of that entry), but the copy souldew keeps
