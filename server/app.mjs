@@ -4,10 +4,10 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, createReadStream, createWriteStream, writeFileSync, mkdirSync, rmSync, readdirSync, renameSync } from 'node:fs';
 import { once } from 'node:events';
-import { join, extname, normalize, resolve, basename, dirname } from 'node:path';
+import { join, extname, resolve, basename, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { WEB_DIR, SHARED_DIR, CACHE_DIR, DATA_DIR, CONFIG_PATH, NODE_MODULES, DEV, LIBRARY_DIR } from './lib/paths.mjs';
-import { writeFileAtomic, httpError, safeFileName } from './lib/fsutil.mjs';
+import { writeFileAtomic, httpError, safeFileName, safeJoin } from './lib/fsutil.mjs';
 import { detectJava, uprStatus, installUpr, runBridge } from './lib/toolchain.mjs';
 import { preparePatchedRom, KNOWN_PATCHES } from './lib/roms.mjs';
 import { ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../shared/romid.mjs';
@@ -24,7 +24,7 @@ import { moveToGraveyard, parseHgssSave } from '../shared/gen4save.mjs';
 import { listPresets, savePreset, deletePreset } from './lib/presets.mjs';
 import { pageHeaders } from './lib/csp.mjs';
 import { gpuBackends, validBackend, fallbackNotice } from '../shared/gpu.mjs';
-import { hostAllowed, apiRequestError } from './lib/guard.mjs';
+import { hostAllowed, apiRequestError, sensitiveGetError } from './lib/guard.mjs';
 import { overlaySnapshot, TEST_SPECIES, currentRunId } from '../shared/overlay.mjs';
 import { startPokelinkBridge, pokelinkPlayers, POKELINK_PORT } from './lib/pokelink.mjs';
 import { romDataFor } from './lib/romloc.mjs';
@@ -168,13 +168,12 @@ function serveFile(res, path, extraHeaders = {}, head = false) {
 /** Only HeartGold/SoulSilver battery saves can be parsed (shared/gen4save.mjs). */
 const isHgssRun = (m) => /^IP[KG]/i.test(m?.game?.code || '') || /heartgold|soulsilver/i.test(m?.game?.id || '');
 
-function safeJoin(base, rel) {
-  const p = normalize(join(base, rel));
-  if (p !== base && !p.startsWith(base + '/') && !p.startsWith(base + '\\')) return null;
-  return p;
-}
-
 const keyOf = (s) => createHash('sha1').update(String(s)).digest('hex').slice(0, 16);
+
+const denySensitive = (req) => {
+  const reason = sensitiveGetError(req);
+  if (reason) throw httpError(403, reason);
+};
 
 /** Save files of solo games (not part of a run) live here, keyed by the library id. */
 const SOLO_SAVES = join(DATA_DIR, DEV ? 'runs/.saves' : 'Saves');
@@ -416,6 +415,10 @@ function handleExport(req, res, path, url) {
       name = 'run-pack.soullink.json';
       downloadName = `${manifest.name || 'SoulLink'}.soullink.json`;
     } else return send(res, 400, { error: 'what muss rom, save, spoiler oder pack sein' });
+    if (what === 'spoiler' || what === 'pack') {
+      const denied = sensitiveGetError(req);
+      if (denied) return send(res, 403, { error: denied });
+    }
     if (!name) return send(res, 404, { error: 'Datei nicht vorhanden' });
     const file = safeJoin(runDir(run[1]), name);
     if (!file) return send(res, 400, { error: 'bad name' });
@@ -950,6 +953,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
 
   route('GET', /^\/api\/runs\/([a-f0-9]{8})$/, (req, m) => {
+    denySensitive(req); // pack includes room/secret
     if (readManifest(m[1])) discordWebhookFor(m[1]); // one-time migration out of the shared rules
     const manifest = readManifest(m[1]);
     if (!manifest) throw httpError(404, 'Run nicht gefunden', 'runNotFound');
@@ -1013,7 +1017,10 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const s = streamSettings(loadConfig());
     return { ...s, base: `http://127.0.0.1:${port}/api/v1`, docs: LINKS.streamApiDocs, clients: streamHub.clients(), current: currentRun() };
   };
-  route('GET', /^\/api\/stream$/, () => streamState(server.address()?.port));
+  route('GET', /^\/api\/stream$/, (req) => {
+    denySensitive(req); // may include the stream token
+    return streamState(server.address()?.port);
+  });
   route('POST', /^\/api\/stream$/, async (req) => {
     const body = await readBody(req);
     const cur = loadConfig().stream || {};
@@ -1168,7 +1175,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       const manifest = readManifest(runId);
       const out = manifest?.outputs?.[slot];
       if (!out) throw httpError(409, 'ROM für diesen Spieler wurde noch nicht gebaut', 'romNotBuilt');
-      romPath = join(runDir(runId), out.rom);
+      romPath = safeJoin(runDir(runId), out.rom);
+      if (!romPath) throw httpError(400, 'Ungültiger ROM-Pfad', 'badPath');
       const sav = defaultSavePath(manifest, slot);
       if (sav && isHgssRun(manifest) && !watcher.status(runId).watching) watcher.watch(runId, sav);
     } else {
@@ -1235,6 +1243,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
 
   // ---- Discord webhook: local to this computer (config.discordWebhooks[runId]), never in the shared rules ----
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/discord$/, (req, m) => {
+    denySensitive(req);
     if (!readManifest(m[1])) throw httpError(404, 'Run nicht gefunden', 'runNotFound');
     return { webhook: discordWebhookFor(m[1]) };
   });
@@ -1525,7 +1534,8 @@ export function readDoc(runId) {
 
 function defaultSavePath(manifest, slot) {
   const out = manifest?.outputs?.[slot];
-  if (!out) return null;
-  return join(runDir(manifest.id), out.rom.replace(/\.(nds|gba|gbc|gb)$/i, '.sav'));
+  if (!out?.rom) return null;
+  const savName = basename(String(out.rom)).replace(/\.(nds|gba|gbc|gb)$/i, '.sav');
+  return safeJoin(runDir(manifest.id), savName);
 }
 

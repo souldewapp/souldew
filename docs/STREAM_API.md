@@ -19,11 +19,15 @@ If port 47390 is taken, souldew picks another one – the Stream page always sho
 - **Only what a stream may show.** No ROMs, saves, savestates, file names or folders, no invite codes, room keys or
   device IDs, no spoiler log, no Discord webhook, no moves.
 - **Who may read:** OBS browser sources (URL or local file), `curl`/scripts, pages opened from disk (`file://`) and
-  pages served from `localhost` / `127.0.0.1`. Pages of other websites get `403`.
+  pages served from `localhost` / `127.0.0.1`. Pages of other websites get `403`. With no token, a browser request
+  that sends `Sec-Fetch-Site: cross-site` is also refused (same idea as the main `/api/` gate); other localhost
+  ports (`same-site`) stay allowed for local layouts.
 - **Optional token.** Switch on **Require a token** on the Stream page: then every data request needs it – from
   anywhere, which also lets a layout hosted on a website read the API. Pass it as `?token=…` (the only way for
   `EventSource` and `<img>`), `Authorization: Bearer …` or `X-Souldew-Token: …`. The token is covered in streamer
-  mode. Sprites, the QR code and the legendary list are public pictures/data and never need it.
+  mode. Sprites, the QR code and the legendary list are public pictures/data and never need it. Without a token,
+  any allowed local page can read spoiler-class run state – turn the token on if other software on this machine
+  should not.
 - **CORS** is on: answers carry `Access-Control-Allow-Origin` for the asking page; preflights (and Chrome's
   Private Network Access check) are answered.
 

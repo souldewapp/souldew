@@ -1,6 +1,6 @@
 // Small filesystem helpers shared by the server modules.
-import { writeFileSync, renameSync, rmSync } from 'node:fs';
-import { extname, posix, win32 } from 'node:path';
+import { writeFileSync, renameSync, rmSync, existsSync, realpathSync } from 'node:fs';
+import { extname, posix, win32, resolve } from 'node:path';
 
 /**
  * rename that rides out Windows' transient locks: an antivirus scanner or the search indexer briefly opening the
@@ -73,6 +73,28 @@ export function isInside(child, parent, platform = process.platform) {
   const p = platform === 'win32' ? win32 : posix;
   const rel = p.relative(p.resolve(parent), p.resolve(child));
   return !!rel && rel !== '..' && !rel.startsWith(`..${p.sep}`) && !p.isAbsolute(rel);
+}
+
+/**
+ * Join `rel` under `base` and refuse anything that escapes the folder (including via `..`). When the path
+ * already exists, resolve symlinks and re-check with `isInside` so a link cannot leave the tree.
+ * Empty `rel` yields `base` itself (reveal-folder callers). Returns null when containment fails.
+ */
+export function safeJoin(base, rel) {
+  const root = resolve(String(base));
+  const p = resolve(root, String(rel ?? ''));
+  if (p !== root && !isInside(p, root)) return null;
+  try {
+    const realRoot = existsSync(root) ? realpathSync.native(root) : root;
+    if (existsSync(p)) {
+      const realP = realpathSync.native(p);
+      if (realP !== realRoot && !isInside(realP, realRoot)) return null;
+      return realP;
+    }
+  } catch {
+    return null;
+  }
+  return p;
 }
 
 /**

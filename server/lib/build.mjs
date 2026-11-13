@@ -223,13 +223,21 @@ const UNSAFE_DOC_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
  */
 export function mergeDocEntries(stored, incoming) {
   const out = Object.create(null);
+  // Same clamp as web/lib/doc.mjs RunDoc.merge: a huge t must not win every later edit of that key on disk.
+  const maxT = Date.now() + 86400000;
   const valid = (e) => e && typeof e === 'object' && typeof e.t === 'number' && Number.isFinite(e.t);
+  const shape = (e) => ({
+    v: e.v === undefined ? null : e.v,
+    t: Math.min(e.t, maxT),
+    by: typeof e.by === 'string' ? e.by.slice(0, 64) : '',
+  });
   const newer = (a, b) => !b || a.t > b.t || (a.t === b.t && String(a.by ?? '') > String(b.by ?? ''));
   for (const src of [stored, incoming]) {
     if (!src || typeof src !== 'object' || Array.isArray(src)) continue;
     for (const [k, e] of Object.entries(src)) {
       if (UNSAFE_DOC_KEYS.has(k) || !valid(e)) continue;
-      if (newer(e, out[k])) out[k] = e;
+      const n = shape(e);
+      if (newer(n, out[k])) out[k] = n;
     }
   }
   return { ...out };

@@ -32,3 +32,18 @@ export function apiRequestError(req, port) {
   if (!safe && h['x-soullink'] !== '1') return 'Missing app header';
   return null;
 }
+
+/**
+ * Extra gate for GETs that return secrets (room/pack, spoilers, Discord webhook, stream token).
+ * Browsers always send Sec-Fetch-Site; the app header covers scripted clients. Bare GETs with neither
+ * are rejected so a same-machine client cannot quietly scrape those routes without looking like the app.
+ */
+export function sensitiveGetError(req) {
+  const method = req.method || 'GET';
+  if (method !== 'GET' && method !== 'HEAD') return null;
+  const h = req.headers || {};
+  if (h['x-soullink'] === '1') return null;
+  const site = h['sec-fetch-site'];
+  if (site === 'same-origin' || site === 'none') return null;
+  return 'Sensitive route needs app header or same-origin fetch';
+}

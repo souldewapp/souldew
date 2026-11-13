@@ -7,7 +7,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createServer, connect } from 'node:net';
 import { deflateRawSync } from 'node:zlib';
-import { hostAllowed, apiRequestError } from '../server/lib/guard.mjs';
+import { hostAllowed, apiRequestError, sensitiveGetError } from '../server/lib/guard.mjs';
+import { safeJoin } from '../server/lib/fsutil.mjs';
 import { validCustomPath } from '../server/lib/emulator.mjs';
 import { LiveBridge, parseHello, looksLikeHttp, luaScript } from '../server/lib/livebridge.mjs';
 import { readZipEntry, listZip } from '../server/lib/zip.mjs';
@@ -42,6 +43,32 @@ test('request gate: only the app origin reaches the API', () => {
   // state-changing requests still need the app header
   assert.ok(apiRequestError(req('POST', { 'sec-fetch-site': 'same-origin' }), P));
   assert.ok(apiRequestError(req('DELETE', {}), P));
+});
+
+test('sensitive GETs need Sec-Fetch-Site same-origin|none or the app header', () => {
+  assert.ok(sensitiveGetError(req('GET')));
+  assert.ok(sensitiveGetError(req('GET', { 'sec-fetch-site': 'cross-site' })));
+  assert.ok(sensitiveGetError(req('GET', { 'sec-fetch-site': 'same-site' })));
+  assert.equal(sensitiveGetError(req('GET', { 'sec-fetch-site': 'same-origin' })), null);
+  assert.equal(sensitiveGetError(req('GET', { 'sec-fetch-site': 'none' })), null);
+  assert.equal(sensitiveGetError(req('GET', { 'x-soullink': '1' })), null);
+  assert.equal(sensitiveGetError(req('POST')), null);
+});
+
+test('safeJoin keeps relative paths inside the base folder', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sls-join-'));
+  try {
+    const run = join(dir, 'run');
+    mkdirSync(run);
+    writeFileSync(join(run, 'game.nds'), '');
+    const joined = safeJoin(run, 'game.nds');
+    assert.ok(joined && joined.endsWith('game.nds'));
+    assert.equal(safeJoin(run, '../secret.nds'), null);
+    assert.equal(safeJoin(run, 'sub/../../secret.nds'), null);
+    assert.ok(safeJoin(run, ''));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('custom emulator path: only a matching .app bundle or emulator executable', () => {

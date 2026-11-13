@@ -107,7 +107,7 @@ test('server: an overlay on run=current follows the run being played – live, w
     await fetch(`${url}/api/runs/bbbb0002/doc`, { method: 'PUT', headers: { 'content-type': 'application/json', 'x-soullink': '1' }, body: JSON.stringify({ 'pair:route-29': e({ state: 'dead' }, 99) }) });
     assert.equal((await obs.next('snapshot')).doc['pair:route-29'].state, 'dead');
     await assert.rejects(pinned.next('snapshot', 400), /no snapshot/);
-    assert.equal((await (await fetch(`${url}/api/stream`)).json()).current, 'bbbb0002', 'the Stream page knows which run is current');
+    assert.equal((await (await fetch(`${url}/api/stream`, { headers: { 'sec-fetch-site': 'same-origin' } })).json()).current, 'bbbb0002', 'the Stream page knows which run is current');
 
     // the open run is deleted: back to the one played last
     assert.equal((await fetch(`${url}/api/runs/bbbb0002`, { method: 'DELETE', headers: { 'x-soullink': '1' } })).status, 200);

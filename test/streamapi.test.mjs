@@ -250,9 +250,14 @@ test('access: pages from this computer, OBS and curl may read; other sites need 
   assert.equal(v1AccessError(req(undefined), url), null);
   assert.equal(v1AccessError(req('https://evil.example'), url).status, 403);
   assert.equal(v1AccessError(req('https://evil.example'), url, { open: true }), null, 'sprites and the QR code are open');
+  // Without a token, reject browser cross-site (same gate as /api/); same-site localhost layouts stay allowed.
+  assert.equal(v1AccessError(req(undefined, { 'sec-fetch-site': 'cross-site' }), url).status, 403);
+  assert.equal(v1AccessError(req('http://localhost:8080', { 'sec-fetch-site': 'same-site' }), url), null);
+  assert.equal(v1AccessError(req(undefined, { 'sec-fetch-site': 'none' }), url), null);
   const token = 'abcdefghijklmnopqrstuv';
   assert.equal(v1AccessError(req(undefined), url, { token }).status, 401, 'with a token, everyone needs it');
   assert.equal(v1AccessError(req('https://my.layout.example'), new URL(`http://127.0.0.1/api/v1?token=${token}`), { token }), null);
+  assert.equal(v1AccessError(req('https://my.layout.example', { 'sec-fetch-site': 'cross-site' }), new URL(`http://127.0.0.1/api/v1?token=${token}`), { token }), null, 'token overrides site');
   assert.equal(v1AccessError(req(undefined, { authorization: `Bearer ${token}` }), url, { token }), null);
   assert.equal(requestToken(req(undefined, { 'x-souldew-token': 'x' }), url), 'x');
   assert.equal(v1AccessError(req(undefined, { authorization: 'Bearer wrong' }), url, { token }).status, 401);
@@ -370,7 +375,7 @@ test('server: /api/v1 JSON, CORS, token, read-only, sprites, live events and the
 
     // settings: on by default, corner, token
     const set = (body) => fetch(`${url}/api/stream`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-soullink': '1' }, body: JSON.stringify(body) }).then((x) => x.json());
-    const s0 = await (await fetch(`${url}/api/stream`)).json();
+    const s0 = await (await fetch(`${url}/api/stream`, { headers: { 'sec-fetch-site': 'same-origin' } })).json();
     assert.deepEqual([s0.coffee, s0.corner, s0.token], [true, 'bl', '']);
     assert.match(s0.base, /^http:\/\/127\.0\.0\.1:\d+\/api\/v1$/);
     assert.equal((await set({ corner: 'tr' })).corner, 'tr');

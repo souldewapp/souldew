@@ -66,6 +66,10 @@ export function v1AccessError(req, url, { token = '', open = false } = {}) {
   const origin = req.headers?.origin;
   if (token) return sameToken(requestToken(req, url), token) ? null : apiError('tokenRequired');
   if (!localOrigin(origin)) return apiError('foreignOrigin');
+  // Align with /api/ when no token: a real website's Sec-Fetch-Site: cross-site must not read run state
+  // even if Origin were omitted. same-site (other localhost ports) stays allowed for OBS layouts.
+  const site = req.headers?.['sec-fetch-site'];
+  if (site === 'cross-site') return apiError('foreignOrigin');
   return null;
 }
 

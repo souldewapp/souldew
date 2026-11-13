@@ -60,6 +60,14 @@ test('doc upload merges per key: newer wins, an older upload cannot roll entries
   assert.deepEqual(mergeDocEntries(null, { k: { v: 1, t: 1, by: '' } }), { k: { v: 1, t: 1, by: '' } });
 });
 
+test('doc upload clamps far-future timestamps like RunDoc.merge', () => {
+  const far = Date.now() + 365 * 86400000;
+  const m = mergeDocEntries({ k: { v: 1, t: 10, by: 'a' } }, { k: { v: 2, t: far, by: 'b'.repeat(80) } });
+  assert.equal(m.k.v, 2);
+  assert.ok(m.k.t <= Date.now() + 86400000 + 1000);
+  assert.equal(m.k.by.length, 64);
+});
+
 test('a damaged doc.json reads as null and is kept as a copy', async () => {
   const dir = join(DATA, 'runs', '66666666');
   mkdirSync(dir, { recursive: true });

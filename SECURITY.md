@@ -13,8 +13,9 @@ souldew runs a local HTTP server and talks to other players over public relays. 
 about:
 
 - **Local server** (`server/`): requests from other websites or other machines reaching the API (host check, origin
-  and `Sec-Fetch-Site` check and the app header in `server/lib/guard.mjs`), path traversal in file routes, the
-  overlay API or the Pokélink bridge leaking room keys, file paths or spoilers.
+  and `Sec-Fetch-Site` check and the app header in `server/lib/guard.mjs`; sensitive GETs for pack/room, spoilers,
+  Discord webhook and stream settings also need same-origin/`none` or the app header), path traversal in file routes,
+  the overlay API or the Pokélink bridge leaking room keys, file paths or spoilers.
 - **Invite codes** (`web/lib/invitecode.mjs`): ways to join a run without the host's approval, guessing or reusing a
   code, or reading the run pack from the relay.
 - **Sync** (`web/lib/sync.mjs`, `web/lib/doc.mjs`): reading or forging another run's data without its key, or a
