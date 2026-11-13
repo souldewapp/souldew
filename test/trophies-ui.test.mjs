@@ -14,7 +14,7 @@ registerHooks({
 });
 const { ACHIEVEMENTS, CATEGORIES, TIERS } = await import('../shared/trophies.mjs');
 const { achIds, achText } = await import('../web/lib/trophytexts.mjs');
-const { medalPixels } = await import('../web/lib/medals.mjs');
+const { medalPixels, emblemPlace, emblemInk, MEDAL_GRID } = await import('../web/lib/medals.mjs');
 const i18n = (lang) => JSON.parse(readFileSync(new URL(`../web/i18n/${lang}.json`, import.meta.url), 'utf8'));
 
 test('every achievement has a name and a description – and no text is left without a rule', () => {
@@ -91,4 +91,32 @@ test('watchRun: live moments of my player – 1 HP, a badge won underleveled, Bi
   assert.deepEqual([badge.n, badge.top, badge.cap, badge.runId], [1, 7, 9, 'abcd1234']);
   assert.deepEqual(body.seen, [163]);
   assert.deepEqual(unlocked, ['oneHp'], 'fresh unlocks reach the toast listeners');
+});
+
+test('medals: the emblem sits in the middle of the medal (by its ink, at most half a cell up/left)', () => {
+  const { CX, CY, W } = MEDAL_GRID;
+  assert.ok(Number.isInteger(CX) && Number.isInteger(CY) && W === 2 * CX + 1, 'the body has a middle column');
+  assert.deepEqual(emblemInk(['.....', '.##..', '.#...', '.....']), ['##', '#.']);
+  const kinds = [['journey'], ['collection'], ['skill'], ['soullink'], ['randomizer'], ['fun'], ['champion'], ...[1, 2, 3, 4, 5, 6, 7].map((g) => ['dex', g])];
+  for (const [kind, gen] of kinds) {
+    const { em, ox, oy } = emblemPlace(kind, gen);
+    const midX = ox + (em[0].length - 1) / 2;
+    const midY = oy + (em.length - 1) / 2;
+    assert.ok(midX <= CX && CX - midX <= 0.5, `${kind}${gen || ''}: x ${midX} vs ${CX}`);
+    assert.ok(midY <= CY && CY - midY <= 0.5, `${kind}${gen || ''}: y ${midY} vs ${CY}`);
+    assert.ok(em.every((r) => r.length === em[0].length) && em[0].includes('#') && em.at(-1).includes('#'), `${kind}: trimmed to its ink`);
+  }
+});
+
+test('medals: the body is mirror-symmetric around the middle column', () => {
+  const { W, CX } = MEDAL_GRID;
+  for (const kind of ['journey', 'collection', 'soullink', 'randomizer', 'dex', 'champion']) {
+    const cells = new Set();
+    for (const [, d] of medalPixels(kind, 'locked', 1)) for (const m of d.matchAll(/M(\d+) (\d+)h(\d+)/g)) for (let x = +m[1]; x < +m[1] + +m[3]; x++) cells.add(`${x},${m[2]}`);
+    for (const c of cells) {
+      const [x, y] = c.split(',').map(Number);
+      if (y < 13) continue; // the ribbon tails lean, the body below them must be symmetric
+      assert.ok(cells.has(`${2 * CX - x},${y}`), `${kind}: ${x},${y} has no mirror (W ${W})`);
+    }
+  }
 });
