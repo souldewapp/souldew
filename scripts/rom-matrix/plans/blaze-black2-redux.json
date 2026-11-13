@@ -1122,6 +1122,15 @@
 "max": 20
 },
 {
+"do": "go",
+"x": 37,
+"order": "x",
+"required": false,
+"patience": 6,
+"hold": 16,
+"note": "next to Bianca (a short press only turns round)"
+},
+{
 "do": "press",
 "keys": "LEFT",
 "hold": 4,
