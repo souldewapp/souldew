@@ -102,7 +102,7 @@ jobs:
         run: |
           node scripts/build-native.mjs --platform win32-x64 --check
           for f in tools/native/win32-x64/*.dll tools/native/win32-x64/retrohost.exe; do
-            deps=$(x86_64-w64-mingw32-objdump -p "$f" | sed -n 's/.*DLL Name: //p' | grep -viE '^(kernel32|user32|advapi32|ws2_32|iphlpapi|shell32|ole32|winmm|bcrypt|ntdll|api-ms-win-.*)\.dll$' || true)
+            deps=$(x86_64-w64-mingw32-objdump -p "$f" | sed -n 's/.*DLL Name: //p' | grep -viE '^(kernel32|user32|advapi32|ws2_32|iphlpapi|shell32|ole32|winmm|bcrypt|ntdll|msvcrt|api-ms-win-.*)\.dll$' || true)
             echo "$f: ${deps:-ok}"
             if [ -n "$deps" ]; then echo "::error::$f needs $deps"; exit 1; fi
           done
