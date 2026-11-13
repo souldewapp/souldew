@@ -355,7 +355,11 @@ handle('pick-files', async (e, opts) => {
       { name: 'ROMs, Patches & Archive', extensions: ['gb', 'gbc', 'gba', 'nds', '3ds', 'cci', 'cxi', 'cia', '3dsx', 'zcci', 'zcxi', 'z3dsx', 'zip', 'xdelta', 'vcdiff', 'bps', 'ups', 'ips', 'json'] },
     ],
   });
-  return r.canceled ? [] : r.filePaths;
+  if (r.canceled || !r.filePaths?.length) return [];
+  // Only dialog-picked paths (plus Search-my-PC / library roots) may hit /api/library/import|folders.
+  const { approveLibraryPaths } = await import('../server/lib/library.mjs');
+  approveLibraryPaths(r.filePaths);
+  return r.filePaths;
 });
 handle('reveal', (e, path) => {
   // an absolute local path of this platform (/Users/… on macOS, C:\… on Windows, /home/… on Linux) – no network or device paths

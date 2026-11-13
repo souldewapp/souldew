@@ -33,6 +33,36 @@ export function libraryRoots(config = {}) {
   return [...new Set(roots.map((r) => resolve(r)))];
 }
 
+// Paths returned by Electron's native file/folder dialog (pick-files). A compromised renderer cannot
+// invent absolute paths for import / folder-add without a prior dialog pick (or a Search-my-PC / library root).
+const dialogApproved = new Set();
+
+/** Remember paths the desktop app just picked in a native dialog. */
+export function approveLibraryPaths(paths = []) {
+  for (const p of paths) {
+    if (typeof p !== 'string' || !p) continue;
+    dialogApproved.add(resolve(p));
+  }
+}
+
+/** Test helper – drop dialog approvals. */
+export function clearApprovedLibraryPaths() {
+  dialogApproved.clear();
+}
+
+/**
+ * May this absolute path be imported or added as a library folder?
+ * Trusted if: native-dialog approved, under an existing library root, or under a Search-my-PC discover root.
+ */
+export function isTrustedLibraryPath(abs, config = {}, opts = {}) {
+  const resolved = resolve(String(abs));
+  for (const a of dialogApproved) {
+    if (samePath(resolved, a) || isInside(resolved, a)) return true;
+  }
+  const roots = [...libraryRoots(config), ...discoverRoots(opts.home, opts)];
+  return roots.some((r) => samePath(resolved, r) || isInside(resolved, r));
+}
+
 function loadIndex() {
   try {
     return JSON.parse(readFileSync(INDEX_PATH, 'utf8'));

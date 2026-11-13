@@ -11,7 +11,7 @@ import { crc32 } from '../shared/checksum.mjs';
 const DATA = mkdtempSync(join(tmpdir(), 'sls-fix-'));
 process.env.SLS_DATA_DIR = DATA;
 const { listRuns, readManifest, runSummary, mergeDocEntries, buildRun } = await import('../server/lib/build.mjs');
-const { uploadTarget, scanLibrary, resolveId } = await import('../server/lib/library.mjs');
+const { uploadTarget, scanLibrary, resolveId, isTrustedLibraryPath, approveLibraryPaths, clearApprovedLibraryPaths } = await import('../server/lib/library.mjs');
 const { readDoc, streamToFile } = await import('../server/app.mjs');
 test.after(() => rmSync(DATA, { recursive: true, force: true }));
 
@@ -220,4 +220,16 @@ test('search this Mac: finds ROMs in the usual folders (also inside zips), skips
   } finally {
     rmSync(home, { recursive: true, force: true });
   }
+});
+
+test('library paths: only dialog-approved or library/discover roots are trusted', () => {
+  clearApprovedLibraryPaths();
+  const outside = join(tmpdir(), `sls-untrusted-${Date.now()}`, 'secret.gba');
+  assert.equal(isTrustedLibraryPath(outside, {}), false, 'arbitrary absolute path refused');
+  approveLibraryPaths([outside]);
+  assert.equal(isTrustedLibraryPath(outside, {}), true, 'native dialog pick unlocks the path');
+  clearApprovedLibraryPaths();
+  assert.equal(isTrustedLibraryPath(outside, {}), false);
+  const underLibrary = join(DATA, 'library', 'rom.gba');
+  assert.equal(isTrustedLibraryPath(underLibrary, {}), true, 'paths under the library dir stay allowed');
 });
