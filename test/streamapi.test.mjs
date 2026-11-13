@@ -375,6 +375,12 @@ test('server: /api/v1 JSON, CORS, token, read-only, sprites, live events and the
 
     // settings: on by default, corner, token
     const set = (body) => fetch(`${url}/api/stream`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-soullink': '1' }, body: JSON.stringify(body) }).then((x) => x.json());
+    // sensitive GETs: bare curl (no Sec-Fetch-Site / x-soullink) is refused; the app header is enough
+    assert.equal((await fetch(`${url}/api/stream`)).status, 403);
+    assert.equal((await fetch(`${url}/api/runs/c0ffee02`)).status, 403);
+    assert.equal((await fetch(`${url}/api/runs/c0ffee02/log/p1`)).status, 403);
+    assert.equal((await fetch(`${url}/api/runs/c0ffee02/data/p1`)).status, 403);
+    assert.equal((await fetch(`${url}/api/runs/c0ffee02/log/p1`, { headers: { 'x-soullink': '1' } })).status, 200);
     const s0 = await (await fetch(`${url}/api/stream`, { headers: { 'sec-fetch-site': 'same-origin' } })).json();
     assert.deepEqual([s0.coffee, s0.corner, s0.token], [true, 'bl', '']);
     assert.match(s0.base, /^http:\/\/127\.0\.0\.1:\d+\/api\/v1$/);

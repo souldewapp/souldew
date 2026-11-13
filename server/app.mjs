@@ -2,12 +2,12 @@
 // library scanning, patching, randomizing (bundled Java), save files, emulator management,
 // and the live bridge for external emulators. Used by the Electron app and by `npm start`.
 import { createServer } from 'node:http';
-import { readFileSync, existsSync, statSync, createReadStream, createWriteStream, writeFileSync, mkdirSync, rmSync, readdirSync, renameSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, createReadStream, createWriteStream, writeFileSync, mkdirSync, rmSync, readdirSync, renameSync, realpathSync } from 'node:fs';
 import { once } from 'node:events';
 import { join, extname, resolve, basename, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { WEB_DIR, SHARED_DIR, CACHE_DIR, DATA_DIR, CONFIG_PATH, NODE_MODULES, DEV, LIBRARY_DIR } from './lib/paths.mjs';
-import { writeFileAtomic, httpError, safeFileName, safeJoin } from './lib/fsutil.mjs';
+import { writeFileAtomic, httpError, safeFileName, safeJoin, isInside } from './lib/fsutil.mjs';
 import { detectJava, uprStatus, installUpr, runBridge } from './lib/toolchain.mjs';
 import { preparePatchedRom, KNOWN_PATCHES } from './lib/roms.mjs';
 import { ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../shared/romid.mjs';
@@ -992,10 +992,12 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
 
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/data\/(p[1-4])$/, (req, m) => {
+    denySensitive(req); // randomizer data / spoilers
     const p = join(runDir(m[1]), `${m[2]}.data.json`);
     return existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null;
   });
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/log\/(p[1-4])$/, (req, m) => {
+    denySensitive(req); // spoiler log text
     const name = readManifest(m[1])?.outputs?.[m[2]]?.log;
     const p = name ? safeJoin(runDir(m[1]), name) : null;
     return p && existsSync(p) ? readFileSync(p, 'utf8') : '';
@@ -1175,8 +1177,12 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       const manifest = readManifest(runId);
       const out = manifest?.outputs?.[slot];
       if (!out) throw httpError(409, 'ROM für diesen Spieler wurde noch nicht gebaut', 'romNotBuilt');
-      romPath = safeJoin(runDir(runId), out.rom);
-      if (!romPath) throw httpError(400, 'Ungültiger ROM-Pfad', 'badPath');
+      // empty / '.' would safeJoin to the run folder itself – refuse anything that is not a file inside it
+      const rawRoot = runDir(runId);
+      const runRoot = existsSync(rawRoot) ? realpathSync.native(rawRoot) : rawRoot;
+      if (typeof out.rom !== 'string' || !out.rom) throw httpError(400, 'Ungültiger ROM-Pfad', 'badPath');
+      romPath = safeJoin(runRoot, out.rom);
+      if (!romPath || !isInside(romPath, runRoot)) throw httpError(400, 'Ungültiger ROM-Pfad', 'badPath');
       const sav = defaultSavePath(manifest, slot);
       if (sav && isHgssRun(manifest) && !watcher.status(runId).watching) watcher.watch(runId, sav);
     } else {

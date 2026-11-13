@@ -2,13 +2,13 @@
 // pack import checks, local-only Discord webhook, doc merge hardening, randomizer properties.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createServer, connect } from 'node:net';
 import { deflateRawSync } from 'node:zlib';
 import { hostAllowed, apiRequestError, sensitiveGetError } from '../server/lib/guard.mjs';
-import { safeJoin } from '../server/lib/fsutil.mjs';
+import { safeJoin, isInside } from '../server/lib/fsutil.mjs';
 import { validCustomPath } from '../server/lib/emulator.mjs';
 import { LiveBridge, parseHello, looksLikeHttp, luaScript } from '../server/lib/livebridge.mjs';
 import { readZipEntry, listZip } from '../server/lib/zip.mjs';
@@ -58,14 +58,24 @@ test('sensitive GETs need Sec-Fetch-Site same-origin|none or the app header', ()
 test('safeJoin keeps relative paths inside the base folder', () => {
   const dir = mkdtempSync(join(tmpdir(), 'sls-join-'));
   try {
-    const run = join(dir, 'run');
-    mkdirSync(run);
+    mkdirSync(join(dir, 'run'));
+    // realpath so Windows short/long names match what safeJoin returns for existing files
+    const run = realpathSync.native(join(dir, 'run'));
     writeFileSync(join(run, 'game.nds'), '');
     const joined = safeJoin(run, 'game.nds');
     assert.ok(joined && joined.endsWith('game.nds'));
+    assert.ok(isInside(joined, run));
+    // crafted outputs.*.rom from a hand-edited run.json
     assert.equal(safeJoin(run, '../secret.nds'), null);
     assert.equal(safeJoin(run, 'sub/../../secret.nds'), null);
-    assert.ok(safeJoin(run, ''));
+    if (process.platform === 'win32') assert.equal(safeJoin(run, '..\\secret.nds'), null);
+    // empty / '.' resolve to the folder itself – fine for reveal-folder, not a ROM file path
+    const empty = safeJoin(run, '');
+    assert.ok(empty);
+    assert.ok(!isInside(empty, run));
+    const dot = safeJoin(run, '.');
+    assert.ok(dot);
+    assert.ok(!isInside(dot, run));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
