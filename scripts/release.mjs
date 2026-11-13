@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { generateKeyPairSync, createPrivateKey } from 'node:crypto';
 import { parseVersion, validateFeed, feedUrlFrom, dmgAssetName, winAssetName, linuxAssetName, debAssetName } from '../shared/update.mjs';
 import { sha256File, signFeed, publicKeyBase64, verifyFeedSignature } from '../electron/update-core.mjs';
+import { unwrapNotes } from '../shared/notes.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -192,7 +193,7 @@ Apps built from now on only install updates signed with this key.`);
   const win = winExe ? await stage(winExe, out, winAssetName(version)) : null;
   const linux = appImage ? await stage(appImage, out, linuxAssetName(version)) : null;
   const debPkg = deb ? await stage(deb, out, debAssetName(version)) : null;
-  let clean = buildFeed({ version, notes, repo, dmg: mac, win, linux, minVersion: a['min-version'] || null });
+  let clean = buildFeed({ version, notes: unwrapNotes(notes), repo, dmg: mac, win, linux, minVersion: a['min-version'] || null });
   if (signing) {
     clean = signFeed(clean, signing.key);
     verifyFeedSignature(JSON.parse(JSON.stringify(clean)), signing.publicKey); // exactly what the apps will do
