@@ -706,6 +706,8 @@ function b64(bytes) {
   return btoa(s);
 }
 
+const BOOT_TIMEOUT_MS = Number(q.get('bootTimeout')) || 30000;
+
 async function start() {
   const [status, save] = await Promise.all([fetch('/api/status').then((r) => r.json()).catch(() => null), bootSaveBytes()]);
   await setLang(status?.config?.lang || guessLang()).catch(() => {});
@@ -731,6 +733,13 @@ async function start() {
   st.bootSave = save.state;
   const stop = () => fetch('/api/native/stop', { method: 'POST', keepalive: true, headers: { 'content-type': 'application/json', 'x-soullink': '1' }, body: JSON.stringify({ id: st.id }) }).catch(() => {});
   addEventListener('pagehide', stop);
+  // A game that never shows a picture (a core stuck while loading it) goes to the browser emulator instead of leaving
+  // the player black – the biggest DS games load in a second or two.
+  setTimeout(() => {
+    if (st.ready || st.error) return;
+    fail(t('native.noStart', 'The game didn’t start in the fast player.'));
+    stop();
+  }, BOOT_TIMEOUT_MS);
   pump().catch((e) => {
     ended();
     fail(t('native.failed', 'The game can’t run in the fast player: {why}', { why: e.message }));

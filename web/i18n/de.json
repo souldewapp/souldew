@@ -1927,6 +1927,7 @@
   "nag.c4": "Kostenlose Updates auf Lebenszeit (deine oder die deines Teams – je nachdem, was zuerst endet)",
   "nag.was": "34,22 €",
   "native.failed": "Das Spiel kann im schnellen Player nicht laufen: {why}",
+  "native.noStart": "Das Spiel ist im schnellen Player nicht gestartet.",
   "native.stopped": "Das Spiel wurde beendet. Schließe es und starte es neu.",
   "nag.pay": "Du zahlst:",
   "nag.payWhat": "so viel, wie ein Kaffee kostet",

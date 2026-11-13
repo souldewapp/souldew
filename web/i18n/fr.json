@@ -1927,6 +1927,7 @@
   "nag.c4": "Mises à jour gratuites à vie (la tienne ou celle de ton équipe, selon ce qui finit en premier)",
   "nag.was": "34,22 €",
   "native.failed": "Le jeu ne peut pas tourner dans le lecteur rapide : {why}",
+  "native.noStart": "Le jeu n’a pas démarré dans le lecteur rapide.",
   "native.stopped": "Le jeu s’est arrêté. Ferme-le et relance-le.",
   "nag.pay": "Tu paies :",
   "nag.payWhat": "le prix d’un café",

@@ -1927,6 +1927,7 @@
   "nag.c4": "Actualizaciones gratis de por vida (la tuya o la de tu equipo, lo que acabe antes)",
   "nag.was": "34,22 €",
   "native.failed": "El juego no puede ejecutarse en el reproductor rápido: {why}",
+  "native.noStart": "El juego no se inició en el reproductor rápido.",
   "native.stopped": "El juego se ha detenido. Ciérralo y vuelve a iniciarlo.",
   "nag.pay": "Tú pagas:",
   "nag.payWhat": "lo que cueste un café",

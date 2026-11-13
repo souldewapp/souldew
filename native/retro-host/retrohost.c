@@ -693,6 +693,19 @@ int main(int argc, char **argv) {
   if (sys.need_fullpath == false) { // the core wants the bytes (mGBA, Gambatte)
     rom_data = read_file(opt_rom, &info.size);
     if (!rom_data) die("game not readable: %s", opt_rom);
+    // A DS cartridge is a power of two in size; a trimmed or patched ROM (Renegade Platinum: 104,923,028 bytes) isn't.
+    // melonDS rounds the size up and then reads past the end of the buffer – it crashes inside its fault handler and
+    // hangs. Padded with 0xFF, as an unused cartridge area reads, the game starts.
+    if (sys.library_name && strstr(sys.library_name, "melonDS") && info.size > 0 && (info.size & (info.size - 1))) {
+      size_t want = 1;
+      while (want < info.size) want <<= 1;
+      void *b = realloc(rom_data, want);
+      if (!b) die("not enough memory for the game");
+      memset((uint8_t *)b + info.size, 0xff, want - info.size);
+      fprintf(stderr, "retrohost: ROM padded from %zu to %zu bytes\n", info.size, want);
+      rom_data = b;
+      info.size = want;
+    }
     info.data = rom_data;
   }
   if (!core.load_game(&info)) die("the core couldn't load the game");

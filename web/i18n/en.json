@@ -1088,6 +1088,7 @@
   "nag.trial": "You’ve opened souldew {n} time. Your free trial ends: never. Nothing gets locked – this window is the entire business model.|You’ve opened souldew {n} times. Your free trial ends: never. Nothing gets locked – this window is the entire business model.",
   "nag.was": "$34.22",
   "native.failed": "The game can’t run in the fast player: {why}",
+  "native.noStart": "The game didn’t start in the fast player.",
   "native.stopped": "The game stopped. Close it and start it again.",
   "nav.aria": "Sections",
   "nav.countHint": "Things to check on the board",

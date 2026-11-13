@@ -1927,6 +1927,7 @@
   "nag.c4": "Aggiornamenti gratis a vita (la tua o quella della tua squadra, quale finisce prima)",
   "nag.was": "34,22 €",
   "native.failed": "Il gioco non può funzionare nel lettore veloce: {why}",
+  "native.noStart": "Il gioco non si è avviato nel lettore veloce.",
   "native.stopped": "Il gioco si è fermato. Chiudilo e riavvialo.",
   "nag.pay": "Tu paghi:",
   "nag.payWhat": "quanto costa un caffè",
