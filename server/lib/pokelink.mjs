@@ -14,6 +14,8 @@ export const POKELINK_PORT = 3000; // what the themes connect to unless their UR
 
 // Pages that may read the teams: themes opened from disk (file:// → "null"), served from this computer, or from
 // Pokélink's own hosting. Any other website gets no CORS answer, so it can't read what the bridge sends.
+// Spoiler-class only (teams/nicknames/deaths) – never room keys or paths. Other localhost pages can read that
+// state by design while the bridge is on; see docs/STREAMING.md.
 const ORIGINS = [/^null$/, /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/, /^https:\/\/([a-z0-9-]+\.)*pokelink\.(xyz|app)$/, /^https:\/\/pokelinkapp\.github\.io$/];
 export const originAllowed = (o) => o === undefined || ORIGINS.some((r) => r.test(String(o)));
 

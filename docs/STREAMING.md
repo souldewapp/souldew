@@ -77,3 +77,5 @@ Switch on the **Pokélink bridge** on the Stream page. souldew then also listens
 - `pokemon`: `pid, species, speciesName` (English – themes build the sprite name from it), `nickname, level, hp: { current, max }, isShiny, isEgg, isFemale, isGenderless` (0/1), `heldItem` (the game's item ID), `status: { psn, slp, par, frz, brn }`, `dead, types: [{ label }], move1`–`move4: { name, type }, locationMet` (area name). Values souldew doesn't read (EXP, nature, ability, IVs/EVs, Pokérus) come empty or 0.
 
 Allowed are themes opened from disk (`file://`), from this computer and from Pokélink's own sites (`*.pokelink.xyz`, `pokelink.app`); other websites get no readable answer. If Pokélink itself is running, port 3000 is taken – close it or pick another port in souldew.
+
+**Trust model:** the bridge never sends room keys, file paths or other secrets – only team / nickname / death-style run state (the same spoiler class OBS overlays show). Any other page on this machine that can open a `localhost` / `file://` origin may read that state while the bridge is on. That matches “themes and OBS on this computer”; turn the bridge off when you do not need it.

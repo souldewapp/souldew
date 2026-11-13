@@ -14,7 +14,9 @@ about:
 
 - **Local server** (`server/`): requests from other websites or other machines reaching the API (host check, origin
   and `Sec-Fetch-Site` check and the app header in `server/lib/guard.mjs`), path traversal in file routes, the
-  overlay API or the Pokélink bridge leaking room keys, file paths or spoilers.
+  overlay API or the Pokélink bridge leaking room keys or file paths. (Pokélink intentionally allows other
+  localhost / `file://` pages to read spoiler-class team data while the bridge is on – see `docs/STREAMING.md`;
+  room keys and paths must still never appear there.)
 - **Invite codes** (`web/lib/invitecode.mjs`): ways to join a run without the host's approval, guessing or reusing a
   code, or reading the run pack from the relay.
 - **Sync** (`web/lib/sync.mjs`, `web/lib/doc.mjs`): reading or forging another run's data without its key, or a
