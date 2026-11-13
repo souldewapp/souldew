@@ -40,7 +40,7 @@ test('a request is answered while a ROM is being scanned; the scan\'s result arr
       return { status: r.status, body: await r.json() };
     });
     await new Promise((r) => setTimeout(r, 150));
-    const status = await fetch(`${url}/api/status`);
+    const status = await fetch(`${url}/api/status`, { headers: { 'x-soullink': '1' } }); // the app's own page asks
     const statusAt = Date.now();
     assert.equal(status.status, 200);
     assert.ok(statusAt - t0 < 1000, `the other request waited ${statusAt - t0} ms`);

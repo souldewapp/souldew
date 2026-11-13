@@ -1310,7 +1310,9 @@
     if (!ctx || ctx.state !== 'suspended') return;
     const tap = document.createElement('button');
     tap.id = 'tap';
-    tap.innerHTML = `<span>▶ ${(q.get('tap') || 'Click to start').replace(/[<&>]/g, '')}</span>`;
+    const label = document.createElement('span');
+    label.textContent = `▶ ${q.get('tap') || 'Click to start'}`; // text from the URL – never parsed as HTML
+    tap.append(label);
     const go = () => {
       ctx.resume().catch(() => {});
       tap.remove();

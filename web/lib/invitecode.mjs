@@ -20,9 +20,17 @@
 //  - Garbage or a wrong pad → no key → counted: 3 failed or declined attempts or 8 requests lock the code. It
 //    expires after 15 minutes (latecomers are told so for another 30 while the host app stays open) and is
 //    single-use (after "Allow" nobody else gets an answer).
+//  - The 4 confirmation digits (confirmationCode) are enforced, not just shown: "Allow" only seals and sends the
+//    pack when the host typed the digits the partner's app shows and they equal the host's own (allow({ confirm })).
+//    Somebody in the middle runs two separate exchanges, so the digits differ unless they get lucky (1 in 10^4)
+//    or grind their own key against them – see the residual risks.
 //  - Residual risk: a GPU attacker who cracks the topic in time and whose made-up name the host allows gets the
-//    pack (= the room key) – like somebody grabbing a forwarded invite file. Flooding the topic or forging error
-//    replies (denial of service) is always possible on a public broker.
+//    pack (= the room key) only if they also tell the host the right 4 digits – i.e. if the host takes the digits
+//    from them instead of from the person they gave the code to. Somebody in the middle who can keep the partner's
+//    messages from the host (a public relay rarely allows that: two requests cancel the code) could pick their
+//    ephemeral key until both sides show the same digits – nothing commits a side to its key before it sees the
+//    other's; closing that needs a commit-then-reveal step, i.e. a new wire version. Flooding the topic or forging
+//    error replies (denial of service) is always possible on a public broker.
 // Relay only, no Trystero: its room password would be the bare 6-digit code, and the handshake is a few messages.
 //
 // Wire format, <T> = slstudio/invite/v1/<topic id>, rid = the partner's random request id, nothing retained:
@@ -95,6 +103,12 @@ export function normalizeCode(s) {
 }
 
 export const formatCode = (c) => `${c.slice(0, 3)} ${c.slice(3)}`;
+
+/** The 4 confirmation digits as typed: "12 34", " 1234 " → "1234"; anything else → null. */
+export function normalizeConfirm(s) {
+  const d = String(s ?? '').replace(/[\s\-–.]/g, '');
+  return /^\d{4}$/.test(d) ? d : null;
+}
 
 /** Code → rendezvous topic + 32-byte pad that masks the X25519 keys. Slow on purpose (see the threat model). */
 export async function deriveCodeKeys(code, iterations = KDF_ITERATIONS) {
@@ -212,7 +226,9 @@ function seatOf(msg, pack) {
 }
 
 /**
- * Host side. new CodeHost({ pack, onState, seat? }).start(); then allow() / decline() / cancel().
+ * Host side. new CodeHost({ pack, onState, seat? }).start(); then allow({ confirm }) / decline() / cancel().
+ * allow() needs the 4 digits the partner's app shows (typed by the host) and refuses – nothing is sealed or sent,
+ * returns false – unless they equal request.confirm; the host may correct them and try again, or decline.
  * seat (optional): (requestName) → { slot, taken } – evaluated on "Allow", sent along with the pack.
  * state: { phase, code, expiresAt, request: { rid, name, confirm } | null, fails, admitted (name), seat, acked, error }
  * phase: starting → waiting ⇄ request → sending → done; or expired | locked | conflict | cancelled | error.
@@ -335,9 +351,12 @@ export class CodeHost {
     if (this.fails >= MAX_FAILS) this._close('locked');
   }
 
-  async allow() {
+  async allow({ confirm } = {}) {
     const r = this.requests.get(this.state.request?.rid);
-    if (!r || r.state !== 'pending' || this.state.phase !== 'request') return;
+    if (!r || r.state !== 'pending' || this.state.phase !== 'request') return false;
+    // The room key only goes to the person who sees our digits: a request whose digits the host didn't confirm –
+    // not typed, mistyped, or the other ones somebody in the middle produces – gets nothing.
+    if (!r.confirm || normalizeConfirm(confirm) !== r.confirm) return false;
     r.state = 'sent'; // single use: from here on every other request is answered with 'used'
     clearTimeout(this.timer);
     let seat = null;
@@ -352,6 +371,7 @@ export class CodeHost {
     if (this.stopped) return;
     this.relay?.send('pack', r.rid, r.packMsg);
     this.timer = setTimeout(() => this._close('done', { acked: false }), ACK_WAIT);
+    return true;
   }
 
   async decline() {
@@ -408,7 +428,7 @@ function codeError(code) {
 /**
  * Partner side: joinWithCode(code, { name, onState }) → { promise (→ run pack), cancel() }.
  * onState(phase, info): 'deriving' → 'connecting' → 'searching' → 'waiting' (for the host's "Allow") → 'received';
- * with 'waiting' info = { confirm }: the 4-digit code the host must see next to the request too;
+ * with 'waiting' info = { confirm }: the 4 digits the joining player tells the host – the host types them to allow;
  * with 'received' info = { slot, taken }: the player the host suggests (see suggestSlot) – right before the
  * promise resolves. Older hosts send no hint: then slot is the first player whose name matches, else null.
  * Test-only options: importers, iterations, noHostMs, ttl, hostGoneMs.

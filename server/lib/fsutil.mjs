@@ -1,5 +1,5 @@
 // Small filesystem helpers shared by the server modules.
-import { writeFileSync, renameSync, rmSync } from 'node:fs';
+import { writeFileSync, renameSync, rmSync, realpathSync } from 'node:fs';
 import { extname, posix, win32 } from 'node:path';
 
 /**
@@ -73,6 +73,51 @@ export function isInside(child, parent, platform = process.platform) {
   const p = platform === 'win32' ? win32 : posix;
   const rel = p.relative(p.resolve(parent), p.resolve(child));
   return !!rel && rel !== '..' && !rel.startsWith(`..${p.sep}`) && !p.isAbsolute(rel);
+}
+
+/**
+ * `rel` joined onto the folder `base`, or null when the result leaves it (`..`, an absolute part that resolves
+ * elsewhere, a Windows drive). The folder itself counts as inside. Works on the names only – see `realInside` for
+ * links.
+ */
+export function safeJoin(base, rel, platform = process.platform) {
+  const p = platform === 'win32' ? win32 : posix;
+  const joined = p.normalize(p.join(base, String(rel ?? '')));
+  return samePath(joined, base, platform) || isInside(joined, base, platform) ? joined : null;
+}
+
+/**
+ * The real path of `path` with symbolic links (and on Windows junctions) resolved. A path that doesn't exist yet (a
+ * save about to be written) resolves its nearest existing parent folder and keeps the rest of the name.
+ */
+export function realPathOf(path, { realpath = realpathSync.native, platform = process.platform } = {}) {
+  const p = platform === 'win32' ? win32 : posix;
+  let dir = p.resolve(path);
+  const rest = [];
+  for (;;) {
+    try {
+      return p.join(realpath(dir), ...rest);
+    } catch (e) {
+      const up = p.dirname(dir);
+      if (e.code !== 'ENOENT' || up === dir) throw e;
+      rest.unshift(p.basename(dir));
+      dir = up;
+    }
+  }
+}
+
+/**
+ * Is `path` inside the folder `base` (or the folder itself) after following links? A link inside the folder that
+ * points elsewhere answers false. Unreadable paths answer false.
+ */
+export function realInside(path, base, { realpath = realpathSync.native, platform = process.platform } = {}) {
+  try {
+    const realBase = realPathOf(base, { realpath, platform });
+    const real = realPathOf(path, { realpath, platform });
+    return samePath(real, realBase, platform) || isInside(real, realBase, platform);
+  } catch {
+    return false;
+  }
 }
 
 /**

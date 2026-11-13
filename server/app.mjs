@@ -4,15 +4,15 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, createReadStream, createWriteStream, writeFileSync, mkdirSync, rmSync, readdirSync, renameSync, utimesSync } from 'node:fs';
 import { once } from 'node:events';
-import { join, extname, normalize, resolve, basename, dirname } from 'node:path';
+import { join, extname, resolve, basename, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { WEB_DIR, SHARED_DIR, CACHE_DIR, DATA_DIR, CONFIG_PATH, NODE_MODULES, DEV, LIBRARY_DIR } from './lib/paths.mjs';
-import { writeFileAtomic, httpError, safeFileName } from './lib/fsutil.mjs';
+import { writeFileAtomic, httpError, safeFileName, safeJoin, realInside } from './lib/fsutil.mjs';
 import { detectJava, uprStatus, installUpr, runBridge } from './lib/toolchain.mjs';
 import { preparePatchedRom, KNOWN_PATCHES } from './lib/roms.mjs';
 import { ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../shared/romid.mjs';
 import { ALL_SLOTS, slotsOf, runMode } from '../shared/slots.mjs';
-import { scanLibrary, catalog, loadFile, importFiles, uploadTarget, resolveId, discoverRoms } from './lib/library.mjs';
+import { scanLibrary, catalog, loadFile, importFiles, uploadTarget, resolveId, discoverRoms, approvedFolder } from './lib/library.mjs';
 import { saveCover, deleteCover, coverFile, customCovers, coverUrl, COVER_LIMIT } from './lib/covers.mjs';
 import { buildRun, listRuns, readManifest, writeManifest, runDir, runPack, runSummary, trashRun, checkPack, stripLocalRules, isDiscordWebhook, mergeDocEntries, renamePlayers } from './lib/build.mjs';
 import { SaveWatcher } from './lib/savewatch.mjs';
@@ -25,11 +25,11 @@ import { moveToGraveyard, parseHgssSave } from '../shared/gen4save.mjs';
 import { listPresets, savePreset, deletePreset } from './lib/presets.mjs';
 import { pageHeaders } from './lib/csp.mjs';
 import { gpuBackends, validBackend, fallbackNotice } from '../shared/gpu.mjs';
-import { hostAllowed, apiRequestError } from './lib/guard.mjs';
+import { hostAllowed, apiRequestError, privateRequestError } from './lib/guard.mjs';
 import { overlaySnapshot, TEST_SPECIES, currentRunId } from '../shared/overlay.mjs';
 import { startPokelinkBridge, pokelinkPlayers, POKELINK_PORT } from './lib/pokelink.mjs';
 import { romDataFor } from './lib/romloc.mjs';
-import { createStreamHub, streamSettings } from './lib/streamapi.mjs';
+import { createStreamHub, streamSettings, streamMigration } from './lib/streamapi.mjs';
 import { COFFEE_CORNERS } from '../shared/coffee.mjs';
 import { LINKS } from '../shared/links.mjs';
 import { randomBytes } from 'node:crypto';
@@ -170,10 +170,14 @@ function serveFile(res, path, extraHeaders = {}, head = false) {
 /** Only HeartGold/SoulSilver battery saves can be parsed (shared/gen4save.mjs). */
 const isHgssRun = (m) => /^IP[KG]/i.test(m?.game?.code || '') || /heartgold|soulsilver/i.test(m?.game?.id || '');
 
-function safeJoin(base, rel) {
-  const p = normalize(join(base, rel));
-  if (p !== base && !p.startsWith(base + '/') && !p.startsWith(base + '\\')) return null;
-  return p;
+/**
+ * A file in a run's folder by name (a query parameter, or a name from run.json – which can be damaged or edited by
+ * hand): null unless it stays inside that folder, also after following links. '' is the folder itself.
+ */
+export function runPath(runId, name) {
+  const dir = runDir(runId);
+  const p = safeJoin(dir, name);
+  return p && realInside(p, dir) ? p : null;
 }
 
 const keyOf = (s) => createHash('sha1').update(String(s)).digest('hex').slice(0, 16);
@@ -413,13 +417,16 @@ function handleExport(req, res, path, url) {
     let downloadName = null;
     if (what === 'rom') name = out?.rom;
     else if (what === 'spoiler') name = out?.log;
-    else if (what === 'save') name = out?.rom ? basename(defaultSavePath(manifest, slot)) : null;
+    else if (what === 'save') {
+      const sav = defaultSavePath(manifest, slot);
+      name = sav ? basename(sav) : null;
+    }
     else if (what === 'pack') {
       name = 'run-pack.soullink.json';
       downloadName = `${manifest.name || 'SoulLink'}.soullink.json`;
     } else return send(res, 400, { error: 'what muss rom, save, spoiler oder pack sein' });
     if (!name) return send(res, 404, { error: 'Datei nicht vorhanden' });
-    const file = safeJoin(runDir(run[1]), name);
+    const file = runPath(run[1], name);
     if (!file) return send(res, 400, { error: 'bad name' });
     return sendDownload(req, res, downloadName || name, file);
   }
@@ -432,6 +439,15 @@ function handleExport(req, res, path, url) {
  */
 export function startServer({ port = 7373, host = '127.0.0.1', background = true } = {}) {
   const GEN4 = JSON.parse(readFileSync(join(SHARED_DIR, 'data', 'gen4.json'), 'utf8'));
+  // The stream API's localPages switch (server/lib/streamapi.mjs streamMigration): an install set up before it
+  // existed keeps reading from local pages without a token, a new one starts strict. A config that can't be read
+  // is left alone (saveConfig would replace it with this one patch).
+  try {
+    const patch = streamMigration(existsSync(CONFIG_PATH) ? JSON.parse(readFileSync(CONFIG_PATH, 'utf8')) : {});
+    if (patch) saveConfig(patch);
+  } catch {
+    // unreadable config – streamSettings reads localPages as off
+  }
   const sseClients = new Set();
   const emit = (event, data) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -488,7 +504,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     }
     const run = u.pathname.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
     if (run) {
-      const f = safeJoin(runDir(run[1]), u.searchParams.get('name') || '');
+      const f = runPath(run[1], u.searchParams.get('name') || '');
       if (!f || !existsSync(f)) throw httpError(404, 'ROM nicht gefunden', 'romNotFound');
       return f;
     }
@@ -650,7 +666,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     pokelink.error = null;
     if (want.enabled && !pokelink.bridge) {
       try {
-        pokelink.bridge = await startPokelinkBridge({ port, players: pokelinkList });
+        pokelink.bridge = await startPokelinkBridge({ port, players: pokelinkList, access: () => ({ appPort: server.address()?.port, localPages: !!loadConfig().pokelink?.localPages }) });
       } catch (e) {
         pokelink.error = e.code === 'EADDRINUSE' ? 'portInUse' : 'failed';
       }
@@ -658,7 +674,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   };
   const pokelinkState = () => {
     const c = loadConfig().pokelink || {};
-    return { enabled: !!c.enabled, port: pokelink.bridge?.port || c.port || POKELINK_PORT, running: !!pokelink.bridge, error: pokelink.error,
+    return { enabled: !!c.enabled, port: pokelink.bridge?.port || c.port || POKELINK_PORT, running: !!pokelink.bridge, error: pokelink.error, localPages: !!c.localPages,
       run: pokelink.bridge ? pokelink.run : c.run || null, pinned: c.run || null, clients: pokelink.bridge?.clients() || 0 };
   };
   const overlayLang = (v) => (['en', 'de', 'fr', 'es', 'it'].includes(String(v || '').slice(0, 2)) ? String(v).slice(0, 2) : 'en');
@@ -889,9 +905,11 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   // ---- library & catalog ----------------------------------------------------------
   route('GET', /^\/api\/catalog$/, () => catalog());
   route('GET', /^\/api\/library$/, () => withCustomCovers(scanLibrary(loadConfig())));
+  // Paths from the page only from approved places (library.mjs approvedImportPath): "Search my Mac / PC"'s folders,
+  // the library's folders, and files / folders picked in the native dialog this session (electron/main.mjs).
   route('POST', /^\/api\/library\/import$/, async (req) => {
     const { paths } = await readBody(req);
-    return { added: importFiles(paths || []) };
+    return { added: importFiles(paths || [], loadConfig()) };
   });
   // Search this Mac / PC for ROMs (the usual folders) – the import below then copies the ones the player picked.
   route('POST', /^\/api\/library\/discover$/, () => discoverRoms({ known: scanLibrary(loadConfig()).roms }));
@@ -920,7 +938,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const { add, remove } = await readBody(req);
     const cfg = loadConfig();
     let folders = new Set(cfg.libraryFolders || []);
-    if (add) folders.add(resolve(String(add)));
+    if (add) folders.add(approvedFolder(add, cfg)); // picked in the native dialog this session (library.mjs)
     if (remove) folders.delete(resolve(String(remove)));
     folders = [...folders].filter((f) => existsSync(f));
     saveConfig({ libraryFolders: folders });
@@ -955,7 +973,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const env = { sharedDir: SHARED_DIR, cacheDir: CACHE_DIR };
     const run = src.pathname.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
     if (run) {
-      const file = safeJoin(runDir(run[1]), src.searchParams.get('name') || '');
+      const file = runPath(run[1], src.searchParams.get('name') || '');
       if (!file) throw httpError(400, 'bad name');
       return romDataFor({ file }, env);
     }
@@ -1085,7 +1103,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/log\/(p[1-4])$/, (req, m) => {
     const name = readManifest(m[1])?.outputs?.[m[2]]?.log;
-    const p = name ? safeJoin(runDir(m[1]), name) : null;
+    const p = name ? runPath(m[1], name) : null;
     return p && existsSync(p) ? readFileSync(p, 'utf8') : '';
   });
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/doc$/, (req, m) => readDoc(m[1]));
@@ -1114,6 +1132,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     if (COFFEE_CORNERS.includes(body.corner)) next.corner = body.corner;
     if (body.token === 'new') next.token = randomBytes(18).toString('base64url');
     else if (body.token === '') next.token = '';
+    if (typeof body.localPages === 'boolean') next.localPages = body.localPages; // pages from disk / localhost without the token
     saveConfig({ stream: next });
     return streamState(server.address()?.port);
   });
@@ -1151,6 +1170,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       enabled: typeof body.enabled === 'boolean' ? body.enabled : !!c.enabled,
       port: Number.isInteger(port) && port >= 1024 && port < 65536 ? port : c.port || POKELINK_PORT,
       run: body.run === null ? null : /^[a-f0-9]{8}$/.test(String(body.run || '')) ? body.run : c.run || null,
+      // themes served by another local web server (localhost on any port) – off unless switched on (pokelink.mjs)
+      localPages: typeof body.localPages === 'boolean' ? body.localPages : !!c.localPages,
     } });
     await pokelinkApply();
     pokelink.bridge?.push();
@@ -1240,7 +1261,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
 
   route('POST', /^\/api\/runs\/([a-f0-9]{8})\/reveal$/, async (req, m) => {
     const { file } = await readBody(req);
-    const target = file ? safeJoin(runDir(m[1]), file) : runDir(m[1]);
+    const target = file ? runPath(m[1], String(file)) : runDir(m[1]);
     if (!target || !existsSync(target)) throw httpError(500, 'Datei nicht gefunden', 'fileNotFound');
     revealInFileManager(target);
     return { ok: true };
@@ -1260,7 +1281,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       const manifest = readManifest(runId);
       const out = manifest?.outputs?.[slot];
       if (!out) throw httpError(409, 'ROM für diesen Spieler wurde noch nicht gebaut', 'romNotBuilt');
-      romPath = join(runDir(runId), out.rom);
+      romPath = typeof out.rom === 'string' && out.rom ? runPath(runId, out.rom) : null;
+      if (!romPath) throw httpError(409, 'ROM für diesen Spieler wurde noch nicht gebaut', 'romNotBuilt');
       const sav = defaultSavePath(manifest, slot);
       if (sav && isHgssRun(manifest) && !watcher.status(runId).watching) watcher.watch(runId, sav);
     } else {
@@ -1470,7 +1492,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       if ((path === '/api/v1' || path.startsWith('/api/v1/')) && await streamHub.handle(req, res, path, url)) return;
       if (path.startsWith('/api/')) {
         // Origin / Sec-Fetch-Site / x-soullink checks (server/lib/guard.mjs) – before any API route, SSE included.
-        const denied = apiRequestError(req, server.address()?.port);
+        const denied = apiRequestError(req, server.address()?.port) || privateRequestError(req, path);
         if (denied) return send(res, 403, { error: denied });
       }
       const overlayEvents = path.match(/^\/api\/runs\/(current|[a-f0-9]{8})\/overlay\/events$/);
@@ -1505,7 +1527,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         const download = path.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
         if (download && (req.method === 'GET' || req.method === 'HEAD')) {
           const name = url.searchParams.get('name') || '';
-          const file = safeJoin(runDir(download[1]), name);
+          const file = runPath(download[1], name);
           if (!file) return send(res, 400, { error: 'bad name' });
           return serveFile(res, file, url.searchParams.get('inline') ? {} : { 'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(name)}` }, req.method === 'HEAD');
         }
@@ -1650,9 +1672,14 @@ export function readDoc(runId) {
   return null;
 }
 
-function defaultSavePath(manifest, slot) {
-  const out = manifest?.outputs?.[slot];
-  if (!out) return null;
-  return join(runDir(manifest.id), out.rom.replace(/\.(nds|gba|gbc|gb)$/i, '.sav'));
+/**
+ * The battery save next to a run's ROM ("<ROM name>.sav"), or null: no ROM yet, a game without battery saves (3DS
+ * saves live in the player's own folder – the ROM itself must never be served or overwritten as its "save"), or a
+ * name in run.json that would leave the run's folder.
+ */
+export function defaultSavePath(manifest, slot) {
+  const rom = manifest?.outputs?.[slot]?.rom;
+  if (typeof rom !== 'string' || !/\.(nds|gba|gbc|gb)$/i.test(rom)) return null;
+  return runPath(manifest.id, rom.replace(/\.(nds|gba|gbc|gb)$/i, '.sav'));
 }
 

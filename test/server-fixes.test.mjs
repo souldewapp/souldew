@@ -10,7 +10,8 @@ import { crc32 } from '../shared/checksum.mjs';
 
 const DATA = mkdtempSync(join(tmpdir(), 'sls-fix-'));
 process.env.SLS_DATA_DIR = DATA;
-const { listRuns, readManifest, runSummary, mergeDocEntries, buildRun } = await import('../server/lib/build.mjs');
+const { listRuns, readManifest, runSummary, mergeDocEntries, DOC_MAX_SKEW_MS, buildRun } = await import('../server/lib/build.mjs');
+const { RunDoc } = await import('../web/lib/doc.mjs');
 const { uploadTarget, scanLibrary, resolveId } = await import('../server/lib/library.mjs');
 const { readDoc, streamToFile } = await import('../server/app.mjs');
 test.after(() => rmSync(DATA, { recursive: true, force: true }));
@@ -58,6 +59,50 @@ test('doc upload merges per key: newer wins, an older upload cannot roll entries
   assert.equal(mergeDocEntries({ k: { v: 1, t: 5, by: 'a' } }, { k: { v: 2, t: 5, by: 'b' } }).k.v, 2);
   assert.equal(mergeDocEntries({ k: { v: 1, t: 5, by: 'b' } }, { k: { v: 2, t: 5, by: 'a' } }).k.v, 1);
   assert.deepEqual(mergeDocEntries(null, { k: { v: 1, t: 1, by: '' } }), { k: { v: 1, t: 1, by: '' } });
+});
+
+test('doc upload clamps timestamps far in the future and long device ids, like RunDoc.merge (#19)', () => {
+  const now = Date.now();
+  const far = now + 1000 * DOC_MAX_SKEW_MS;
+  const m = mergeDocEntries({ k: { v: 'old', t: now - 5, by: 'a' } }, { k: { v: 'evil', t: far, by: 'x'.repeat(500) }, n: { v: 1, t: now, by: 7 } });
+  assert.equal(m.k.v, 'evil'); // still newer than the stored one …
+  assert.ok(m.k.t <= Date.now() + DOC_MAX_SKEW_MS && m.k.t >= now + DOC_MAX_SKEW_MS); // … but only up to now + 1 day
+  assert.equal(m.k.by.length, 64);
+  assert.equal(m.n.by, ''); // a non-string device id counts as none
+  // a normal edit made a day and a bit later wins again (unclamped, the far timestamp would win for 1000 days)
+  const realNow = Date.now;
+  Date.now = () => realNow() + DOC_MAX_SKEW_MS + 60000;
+  try {
+    assert.equal(mergeDocEntries(m, { k: { v: 'fixed', t: Date.now(), by: 'a' } }).k.v, 'fixed');
+  } finally {
+    Date.now = realNow;
+  }
+  // a huge timestamp already on disk (written by an older version) is clamped too
+  assert.ok(mergeDocEntries({ k: { v: 1, t: far, by: 'a' } }, {}).k.t < far);
+  // extra fields are dropped, undefined values become tombstones
+  assert.deepEqual(Object.keys(mergeDocEntries(null, { k: { v: 1, t: 1, by: 'a', x: 'junk' } }).k), ['v', 't', 'by']);
+  assert.equal(mergeDocEntries(null, { k: { t: 1, by: 'a' } }).k.v, null);
+});
+
+test('server and browser merge the same upload to the same entries (#19)', () => {
+  const now = Date.now();
+  const remote = {
+    a: { v: 1, t: now + 10 * DOC_MAX_SKEW_MS, by: 'long-'.repeat(30) },
+    b: { v: { x: 1 }, t: now, by: 'b' },
+    c: { t: 5, by: null },
+    d: { v: 2, t: Infinity, by: 'd' },
+    e: 'broken',
+  };
+  const doc = new RunDoc('x');
+  doc._persistSoon = () => {};
+  doc.merge(structuredClone(remote));
+  const server = mergeDocEntries(null, structuredClone(remote));
+  assert.deepEqual(Object.keys(server).sort(), Object.keys(doc.entries).sort());
+  for (const k of Object.keys(server)) {
+    assert.equal(server[k].by, doc.entries[k].by, k);
+    assert.deepEqual(server[k].v, doc.entries[k].v, k);
+    assert.ok(Math.abs(server[k].t - doc.entries[k].t) < 1000, k); // both clamp to their own "now + 1 day"
+  }
 });
 
 test('a damaged doc.json reads as null and is kept as a copy', async () => {

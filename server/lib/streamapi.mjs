@@ -3,10 +3,12 @@
 // encounters (shared/coffee.mjs) – which the app's own overlays (web/overlay.html) show as well.
 //
 // Safe by default: the server only listens on 127.0.0.1 (server/app.mjs), nothing here writes, and the data is the
-// same stream-safe subset the overlays get (shared/streamapi.mjs). Pages from this computer (localhost, a file
-// opened in a browser, OBS's local-file sources) may read it; other websites only with the optional token.
+// same stream-safe subset the overlays get (shared/streamapi.mjs). Without the optional token: OBS (its browser
+// sources and local-file sources), scripts and souldew's own pages may read it; pages opened in a browser from disk and
+// pages of other local web servers only when the Stream page allows them (`stream.localPages`); other websites never.
 
 import { timingSafeEqual } from 'node:crypto';
+import { appOrigins } from './guard.mjs';
 import { buildState, eventsBetween, legendaryEncounters, spriteSource, spriteUrls, apiLang, API_VERSION, API_PREFIX, EVENT_TYPES, PLAYER_COLORS } from '../../shared/streamapi.mjs';
 import { decideCoffee, recordCoffee, coffeeTexts, coffeeJokeId, COFFEE, COFFEE_CORNERS, DEFAULT_CORNER, COFFEE_URL, COFFEE_SHORT } from '../../shared/coffee.mjs';
 import { legendaryKind, legendariesUpTo, LEGENDARY, MYTHICAL } from '../../shared/legendaries.mjs';
@@ -14,20 +16,37 @@ import { qrSvg } from '../../shared/qr.mjs';
 import { runGen } from '../../shared/overlay.mjs';
 import { slotsOf, runMode } from '../../shared/slots.mjs';
 
-/** The stream settings in config.json (`stream`): token ('' = none), coffee pop-up on/off and its corner. */
+/**
+ * The stream settings in config.json (`stream`): token ('' = none), coffee pop-up on/off and its corner, and
+ * localPages: whether pages opened from disk and pages of other local web servers may read without the token (off
+ * unless switched on – installs from before the switch existed get it on once, see streamMigration).
+ */
 export function streamSettings(config) {
   const s = config?.stream && typeof config.stream === 'object' ? config.stream : {};
   return {
     token: typeof s.token === 'string' && /^[A-Za-z0-9_-]{16,128}$/.test(s.token) ? s.token : '',
     coffee: s.coffee !== false,
     corner: COFFEE_CORNERS.includes(s.corner) ? s.corner : DEFAULT_CORNER,
+    localPages: s.localPages === true,
   };
+}
+
+/**
+ * The config patch that brings `stream.localPages` in, or null when it is there. Up to 2.5.0 every page on this
+ * computer could read the API without a token, and streamers built layouts on that (a page opened from disk, a local
+ * web server): an install that was set up before (onboarded) keeps that, a new one starts with the stricter rule.
+ */
+export function streamMigration(config) {
+  const s = config?.stream && typeof config.stream === 'object' ? config.stream : {};
+  if (typeof s.localPages === 'boolean') return null;
+  return { stream: { ...s, localPages: !!config?.onboarded } };
 }
 
 // The API's errors – for other people's layouts, not shown in souldew's UI: { error, code } with this status.
 export const API_ERRORS = {
   tokenRequired: [401, 'This stream API needs its token (?token=… or Authorization: Bearer …)'],
   foreignOrigin: [403, 'Only pages from this computer may read the stream API – or set a token in souldew'],
+  localPage: [403, 'Pages opened from disk or served by another local web server need the token – or switch on "Pages on this computer without a token" on souldew’s Stream page'],
   readOnly: [405, 'The stream API is read-only'],
   noSprite: [404, 'No such sprite'],
   noSpecies: [404, 'Unknown species'],
@@ -40,6 +59,18 @@ const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d{1,5})?$/i
 
 /** An Origin that belongs to this computer: none (OBS, curl), `null` (a file opened in a browser), localhost, OBS's local files. */
 export const localOrigin = (origin) => origin === undefined || origin === 'null' || origin === 'http://absolute' || LOCAL_ORIGIN.test(String(origin));
+
+/**
+ * Who reads without the token no matter what: requests without an Origin (OBS's browser sources, curl, scripts,
+ * <img>), OBS's "Local file" sources (OBS serves them from http://absolute/<path>) and souldew's own pages (the
+ * port in the request's Host). `null` – a file opened in a browser, but also a sandboxed frame on any website – and
+ * other localhost ports are left to the localPages switch.
+ */
+export function trustedOrigin(origin, hostHeader) {
+  if (origin === undefined || origin === 'http://absolute') return true;
+  const port = Number(String(hostHeader || '').match(/:(\d{1,5})$/)?.[1] || 80);
+  return appOrigins(port).includes(String(origin).toLowerCase());
+}
 
 /** The token a request carries: ?token=, `Authorization: Bearer …` or `X-Souldew-Token`. */
 export function requestToken(req, url) {
@@ -58,15 +89,17 @@ const sameToken = (a, b) => {
 
 /**
  * May this request read the API's data? `public` assets (sprites, the QR code, the legendary list) are open to any
- * page. Data: with a token set, the token is required (from anywhere); without one, only pages from this computer.
+ * page. Data: with a token set, the token is required (from anywhere); without one, OBS, scripts and souldew's own
+ * pages (trustedOrigin), plus – with localPages – pages opened from disk and other localhost pages; never websites.
  * → null (fine) or { status, error, code }.
  */
-export function v1AccessError(req, url, { token = '', open = false } = {}) {
+export function v1AccessError(req, url, { token = '', open = false, localPages = false } = {}) {
   if (open) return null;
   const origin = req.headers?.origin;
   if (token) return sameToken(requestToken(req, url), token) ? null : apiError('tokenRequired');
+  if (trustedOrigin(origin, req.headers?.host)) return null;
   if (!localOrigin(origin)) return apiError('foreignOrigin');
-  return null;
+  return localPages ? null : apiError('localPage');
 }
 
 /** CORS headers for an answer: the asking origin (or *), never credentials. */
@@ -284,7 +317,7 @@ export function createStreamHub(deps) {
     const sprite = sub.match(/^\/sprites\/([a-z0-9]+)\/([a-z-]+)\/(\d{1,4})\.(png|gif)$/);
     const open = !!sprite || sub === '/coffee/qr.svg' || sub === '/legendaries';
     const s = settings();
-    const denied = v1AccessError(req, url, { token: s.token, open });
+    const denied = v1AccessError(req, url, { token: s.token, open, localPages: s.localPages });
     if (denied) {
       return json(req, res, denied.status, { error: denied.error, code: denied.code });
     }
@@ -306,7 +339,7 @@ export function createStreamHub(deps) {
       if (sub === '/') {
         let current = null;
         try { current = deps.activeRun() || null; } catch { /* no run */ }
-        return json(req, res, 200, { api: API_VERSION, name: 'souldew stream API', docs: deps.docs, currentRun: current, auth: { token: !!s.token }, languages: ['en', 'de', 'fr', 'es', 'it'], endpoints: ENDPOINTS, events: EVENT_TYPES });
+        return json(req, res, 200, { api: API_VERSION, name: 'souldew stream API', docs: deps.docs, currentRun: current, auth: { token: !!s.token, localPages: !s.token && s.localPages }, languages: ['en', 'de', 'fr', 'es', 'it'], endpoints: ENDPOINTS, events: EVENT_TYPES });
       }
       if (sub === '/runs') {
         const current = deps.activeRun();

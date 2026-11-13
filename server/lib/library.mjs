@@ -1,7 +1,7 @@
 // Game library: scans the library folder(s) for ROMs and patches (also inside .zip files),
 // identifies them by header + CRC32 and matches them to the catalog. Results are cached.
 import { readdirSync, statSync, readFileSync, existsSync, mkdirSync, copyFileSync, openSync, readSync, closeSync, realpathSync } from 'node:fs';
-import { join, extname, basename, resolve, dirname, posix, win32 } from 'node:path';
+import { join, extname, basename, resolve, dirname, isAbsolute, posix, win32 } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { listZip, readZipEntry } from './zip.mjs';
@@ -10,6 +10,7 @@ import { crc32Hex } from '../../shared/checksum.mjs';
 import { writeFileAtomic, httpError, safeFileName, isInside, samePath } from './fsutil.mjs';
 import { identifyRom, matchCatalog, ROM_EXTENSIONS, PATCH_EXTENSIONS, CTR_EXTENSIONS, isCtrExt } from '../../shared/romid.mjs';
 import { identifyCtr } from '../../shared/ctr.mjs';
+import { wasPicked, insideAny } from './grants.mjs';
 import { describePatch, detectPatchFormat } from '../../shared/patchers.mjs';
 
 const INDEX_PATH = join(DATA_DIR, DEV ? 'runs/library-index.json' : 'library-index.json');
@@ -453,11 +454,47 @@ function parseReadmeCrc(text) {
   return m ? m[1].toUpperCase() : null;
 }
 
-/** Copy files into the library folder (the user's originals stay untouched). */
-export function importFiles(paths) {
+/**
+ * Folders a path from the page may come from without a pick in the native dialog: the library folder, the folders
+ * included in it (config.libraryFolders) and the places "Search my Mac / PC" looks through (discoverRoots).
+ */
+export function importRoots(config = {}, { roots = discoverRoots() } = {}) {
+  return [...libraryRoots(config), ...roots];
+}
+
+/**
+ * A path the page asks to import (#23): absolute, and inside importRoots or picked in the native dialog this session
+ * (server/lib/grants.mjs) – links followed. → the resolved path; otherwise 400 badPath / 403 pathNotApproved.
+ */
+export function approvedImportPath(p, config = {}, { roots } = {}) {
+  if (typeof p !== 'string' || !p || p.length > 4096 || p.includes('\0') || !isAbsolute(p)) throw httpError(400, 'Ungültiger Pfad', 'badPath');
+  if (wasPicked(p) || insideAny(p, roots || importRoots(config))) return resolve(p);
+  throw httpError(403, `Nicht freigegeben: ${basename(p)} – über „Dateien hinzufügen“ auswählen`, 'pathNotApproved', { name: basename(p) });
+}
+
+/**
+ * A folder the page asks to include in the library (#23): one picked in the native dialog this session (or a
+ * folder inside it), or one that is included already. Included folders are scanned and their files served to the
+ * emulator (resolveId), so a raw path from the page is never enough. → the resolved path, else 400 / 403.
+ */
+export function approvedFolder(p, config = {}) {
+  if (typeof p !== 'string' || !p || p.length > 4096 || p.includes('\0') || !isAbsolute(p)) throw httpError(400, 'Ungültiger Pfad', 'badPath');
+  const abs = resolve(p);
+  if (wasPicked(abs) || (config.libraryFolders || []).some((f) => samePath(f, abs))) return abs;
+  throw httpError(403, `Ordner nicht freigegeben: ${basename(abs)} – über „Ordner verwenden“ auswählen`, 'folderNotApproved', { name: basename(abs) });
+}
+
+/**
+ * Copy files into the library folder (the user's originals stay untouched). Every path must be approved
+ * (approvedImportPath) – checked for all of them before the first one is copied.
+ */
+export function importFiles(paths, config = {}, { roots } = {}) {
+  if (!Array.isArray(paths)) throw httpError(400, 'Ungültiger Pfad', 'badPath');
+  const allowedRoots = roots || importRoots(config);
+  const files = paths.map((p) => approvedImportPath(p, config, { roots: allowedRoots }));
   mkdirSync(LIBRARY_DIR, { recursive: true });
   const added = [];
-  for (const p of paths) {
+  for (const p of files) {
     const ext = extname(p).slice(1).toLowerCase();
     if (![...ROM_EXTENSIONS, ...CTR_EXTENSIONS, ...PATCH_EXTENSIONS, 'zip'].includes(ext)) continue;
     const target = join(LIBRARY_DIR, basename(p));

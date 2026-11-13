@@ -339,7 +339,7 @@
   <div id="popups" class="popups" aria-live="polite"></div>
   <div id="net" class="net" hidden></div>
   <script type="module">
-    import { teamOf, groupsOf, countersOf, alertsBetween, pickSlots, playTimeText, overlayRun, overlayBox, TEAM_SLOTS, WIDGETS } from '/shared/overlay.mjs';
+    import { teamOf, groupsOf, countersOf, alertsBetween, pickSlots, playTimeText, overlayRun, overlayBox, escHtml, slotVar, TEAM_SLOTS, WIDGETS } from '/shared/overlay.mjs';
     import { coffeeTexts, COFFEE_URL, COFFEE_CORNERS, DEFAULT_CORNER } from '/shared/coffee.mjs';
     import { qrMatrix, qrPath } from '/shared/qr.mjs';
 
@@ -420,7 +420,7 @@
     const L = STRINGS[lang];
     document.documentElement.lang = lang;
     const fill = (s, vars) => s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] ?? m));
-    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const esc = escHtml; // & < > " ' ` – safe in text and in quoted attributes of either kind
 
     let S = null; // the latest snapshot
     const spriteSrc = (id, shiny) => {
@@ -432,7 +432,7 @@
     const species = (id) => S?.species?.[id] || (id ? `#${id}` : '');
     const monName = (m) => m.nick || species(m.species);
     const nameOf = (slot) => S?.players?.[slot]?.name || String(slot || '').toUpperCase();
-    const acc = (slot) => `var(--${slot || 'p1'})`;
+    const acc = slotVar; // only p1–p4 reach the style attribute
     const hpClass = (p) => (p > 50 ? '' : p > 20 ? 'mid' : 'low');
 
     // ---- keyed updates: a cell is only rebuilt when what it shows changed (HP bars glide, animations keep running) ----

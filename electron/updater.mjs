@@ -8,7 +8,7 @@ import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { feedUrlFrom, updateAction, actionFor, assetFor, dmgAssetName, winAssetName, linuxAssetName } from '../shared/update.mjs';
 import {
-  fetchFeed, downloadFile, verifyFile, bundleFromExe, canReplace, cleanupStaging, stageFromDmg, swapBundle,
+  feedKeyPolicy, fetchFeed, downloadFile, verifyFile, bundleFromExe, canReplace, cleanupStaging, stageFromDmg, swapBundle,
   nsisInstallDir, launchInstaller, windowsInstallPlan, cleanupWorkDir,
   appImageFromEnv, appImageStagedPath, canReplaceAppImage, makeExecutable, swapAppImage, cleanupAppImageStaging, appImageRelaunch,
 } from './update-core.mjs';
@@ -51,10 +51,14 @@ export function setupUpdater({ send, trusted = () => false }) {
   const appImage = app.isPackaged && LINUX ? appImageFromEnv() : null;
   const workDir = join(app.getPath('temp'), 'souldew Update');
   const repo = typeof cfg.repo === 'string' ? cfg.repo.trim() : '';
-  // Ed25519 key the feed must be signed with (see scripts/release.mjs --init-key). Without it the feed is only
-  // protected by HTTPS – kept working for older setups, but said out loud.
-  const publicKey = typeof cfg.publicKey === 'string' && cfg.publicKey.trim() ? cfg.publicKey.trim() : null;
-  if (feedUrl && !publicKey) console.warn('update: no updates.publicKey in package.json – the update feed is NOT signature-checked (run `npm run release -- --init-key`)');
+  // Ed25519 key the feed must be signed with (see scripts/release.mjs --init-key). An installed app without one
+  // refuses every feed (fetchFeed → NO_KEY); only development may check an unsigned feed, and says so out loud.
+  const { publicKey, requireSignature } = feedKeyPolicy(cfg, { packaged: app.isPackaged });
+  if (feedUrl && !publicKey) {
+    console.warn(requireSignature
+      ? 'update: no updates.publicKey in package.json – this build cannot verify updates and will not install any (run `npm run release -- --init-key`)'
+      : 'update: no updates.publicKey in package.json – the update feed is NOT signature-checked (development only; run `npm run release -- --init-key`)');
+  }
   const pageFor = (u) => u.page || (repo ? `https://github.com/${repo}/releases/tag/v${u.version}` : u.url);
   const target = { platform: process.platform, arch: process.arch };
 
@@ -123,14 +127,14 @@ export function setupUpdater({ send, trusted = () => false }) {
     const prev = state.phase;
     set({ phase: 'checking', checkError: null });
     try {
-      const feed = await fetchFeed(feedUrl, { allowLocal, publicKey });
+      const feed = await fetchFeed(feedUrl, { allowLocal, publicKey, requireSignature });
       // A release without a download for this platform (e.g. macOS only) is no update here.
       const action = actionFor(feed, current, target); // (minVersion never sends Windows to the manual route)
       if (action === 'none') return set({ phase: 'uptodate', update: null, checkedAt: Date.now() });
       const asset = assetFor(feed, target.platform, target.arch);
       return set({ phase: 'available', update: { ...feed, action, asset, page: pageFor(feed) }, error: null, checkedAt: Date.now() });
     } catch (e) {
-      if (!manual || e.code === 'BAD_SIGNATURE') console.warn('update check failed:', e.code || '', e.message);
+      if (!manual || e.code === 'BAD_SIGNATURE' || e.code === 'NO_KEY') console.warn('update check failed:', e.code || '', e.message);
       // A refused signature is shown in the sidebar too (UpdateBanner); nothing of that feed is used.
       return set({ phase: prev === 'available' || prev === 'error' ? prev : 'idle', checkError: { code: e.code || null, message: e.message }, checkedAt: Date.now() });
     }

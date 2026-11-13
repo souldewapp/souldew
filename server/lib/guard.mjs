@@ -32,3 +32,28 @@ export function apiRequestError(req, port) {
   if (!safe && h['x-soullink'] !== '1') return 'Missing app header';
   return null;
 }
+
+/**
+ * GETs that hand out secrets or private paths: a run with its invite pack (room key and secret), a run's files (ROM,
+ * save, spoiler log, the pack itself), the randomizer data and spoiler log, the run doc (device ids), the Discord
+ * webhook, the stream API token and the status (library and emulator folders). The OBS overlays never ask for these.
+ */
+export const PRIVATE_GETS = [
+  /^\/api\/runs\/[a-f0-9]{8}$/,
+  /^\/api\/runs\/[a-f0-9]{8}\/(download|file|doc|discord|log\/p[1-4]|data\/p[1-4])$/,
+  /^\/api\/(stream|status)$/,
+];
+
+/**
+ * The stricter half of the gate for PRIVATE_GETS (after apiRequestError): the request must come from one of the app's
+ * own pages – a fetch with the `x-soullink: 1` header (web/lib/api.mjs sends it on every call) or a same-origin request
+ * (the app's download links, the emulator page loading the run's ROM). A typed URL or bookmark (Sec-Fetch-Site: none)
+ * and a client that sends neither header (another program, an old browser) get nothing. Returns null or a reason.
+ */
+export function privateRequestError(req, path) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return null; // other methods already need the app header
+  if (!PRIVATE_GETS.some((r) => r.test(path))) return null;
+  const h = req.headers || {};
+  if (h['x-soullink'] === '1' || h['sec-fetch-site'] === 'same-origin') return null;
+  return 'App request required';
+}

@@ -216,19 +216,25 @@ export function runSummary(id, manifest) {
 }
 
 const UNSAFE_DOC_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+/** Timestamps are clamped to now + 1 day and device ids to 64 characters – the same bounds as RunDoc.merge. */
+export const DOC_MAX_SKEW_MS = 86400000;
+const DOC_MAX_BY = 64;
 /**
  * Merge an uploaded run doc ({ key: { v, t, by } }) into the copy on disk with the same last-writer-wins rule as
  * web/lib/doc.mjs: the larger (t, by) pair wins per key. Two tabs, or an older upload that arrives after a newer one,
- * can then never roll entries back. Returns the merged object.
+ * can then never roll entries back. Like RunDoc.merge, a timestamp far in the future is clamped (one would otherwise
+ * win every later edit of that key on disk forever) and entries keep only { v, t, by }. Returns the merged object.
  */
 export function mergeDocEntries(stored, incoming) {
   const out = Object.create(null);
+  const maxT = Date.now() + DOC_MAX_SKEW_MS;
   const valid = (e) => e && typeof e === 'object' && typeof e.t === 'number' && Number.isFinite(e.t);
-  const newer = (a, b) => !b || a.t > b.t || (a.t === b.t && String(a.by ?? '') > String(b.by ?? ''));
+  const newer = (a, b) => !b || a.t > b.t || (a.t === b.t && a.by > b.by);
   for (const src of [stored, incoming]) {
     if (!src || typeof src !== 'object' || Array.isArray(src)) continue;
-    for (const [k, e] of Object.entries(src)) {
-      if (UNSAFE_DOC_KEYS.has(k) || !valid(e)) continue;
+    for (const [k, raw] of Object.entries(src)) {
+      if (UNSAFE_DOC_KEYS.has(k) || !valid(raw)) continue;
+      const e = { v: raw.v === undefined ? null : raw.v, t: Math.min(raw.t, maxT), by: typeof raw.by === 'string' ? raw.by.slice(0, DOC_MAX_BY) : '' };
       if (newer(e, out[k])) out[k] = e;
     }
   }

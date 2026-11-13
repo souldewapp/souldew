@@ -26,6 +26,49 @@
   partner shared it first. The link only lives on your computer (not in runs, invites, exports or diagnostics), the
   page never sees it, and streamer mode covers your Discord name. Nothing is posted unless you press the button.
 - A death read live now keeps the place it happened at (the place sign), not only the battle it fell in.
+Security fixes – all found in a code review and reported by @Never-lab:
+
+- **Run data saved by the app can't be pinned with a date far in the future** (#19): the app already ignored a change
+  that claimed to be made days ahead (it would win over every later change of that entry), but the copy souldew keeps
+  on disk accepted it. Both now apply the same limit (one day ahead at most).
+- **Files of a run stay in the run's folder** (#20): the ROM, save and spoiler log of a run are looked up by name in
+  its `run.json`; a damaged or hand-edited name (`../…`) or a link inside the folder that points elsewhere could make
+  souldew start, serve or overwrite a file outside the run. Every such path is now checked, also after following
+  links. Along the way: a 3DS run no longer offers its ROM as "Save my save file" (3DS saves live in the player's
+  own folder).
+- **An installed app never takes an unsigned update** (#24): a build without the release's public key (a fork, or a
+  build made without `--init-key`) used to accept an update feed that was only protected by HTTPS. Installed apps now
+  refuse to look for updates without the key; only development (`npm run app`) may check an unsigned feed. The
+  official releases always carried the key and are not affected.
+- **Overlay texts are escaped for every place they can go** (#26): the OBS overlays escaped names for element text
+  and double-quoted attributes, not for single quotes or backticks. No overlay used such a place, but now the escape
+  covers them too, a player slot reaches the overlay's styles only as p1–p4, and the emulator page's "Click to start"
+  label is set as plain text. The example in `docs/STREAM_API.md` escapes the same way.
+- **"Allow" for an invite code checks the 4 digits** (#22): both apps show the same 4 digits when the right two
+  people are talking to each other, but the host could press Allow without comparing them. Now the host types in the
+  digits the joining player's app shows; Allow stays off until they match, and the app sends the invite only with the
+  matching digits. Joining between this version and 2.5.0 keeps working (the digits are computed the same way).
+- **The Pokélink bridge answers fewer pages** (#25): it used to let any page served from this computer
+  (`localhost` on any port – a dev server, another program's web page) read your teams. Now it answers themes opened
+  from disk, Pokélink's own sites and souldew's own pages; a theme served by another local web server needs the new
+  switch **Also themes from another web server on this computer** on the Stream page. A theme added in OBS with
+  **Local file** ticked now connects too (OBS serves those from its own `http://absolute/` address, which the bridge
+  didn't know). SECURITY.md lists what the stream features show on purpose (teams and other spoilers) and what they
+  never do (keys, codes, paths).
+- **Stream API and the app's private data are tighter** (#21):
+  - Without a token the stream API (`/api/v1`) now answers OBS (browser sources and **Local file** sources), scripts
+    and souldew itself. Layouts opened from disk in a browser and pages of other local web servers need the token or
+    the new switch **Pages on this computer without a token, too** on the Stream page – a page from disk can't be told
+    apart from a sandboxed frame on a website. Installs from before keep the old rule (the switch starts on), so
+    existing layouts keep working; new installs start with it off.
+  - The app's own requests for the run pack (room key), a run's files and spoiler log, the Discord webhook, the stream
+    token and the folder list now need to come from the app itself (its header or a same-origin request) – a typed
+    URL or another program gets nothing. The OBS overlays don't use any of them.
+- **The library only copies from places you chose** (#23): adding games took any file path the page sent, and
+  "Use a folder" any folder. Now files come only from the places "Search my Mac / PC" looks through, folders already
+  in your library, and files or folders you picked in souldew's own file dialog (the app registers those itself – a
+  page can't). "Use a folder" takes only a folder picked there. In the browser version (`npm start`) "Search" and
+  uploading files work as before; see `docs/DEVELOPMENT.md` for including a folder there.
 
 ## 2.5.0
 

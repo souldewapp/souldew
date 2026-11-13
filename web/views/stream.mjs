@@ -249,7 +249,9 @@ function PokelinkCard({ run, follow, slots, names }) {
         <span class="code sm-ok ellipsis grow" title=${param(user)}>${param(user)}</span>
         <button type="button" class="btn small" onClick=${() => copy(param(user))}>${t('common.copy', 'Copy')}</button></div>`;
     })}</div>
-      <p class="tiny faint">${t('stream.plNote', 'Instead of the name, user=p1 … p4 works too. Themes show what Pokélink’s data has: team, levels, HP, status, items, moves and badges.')}</p>`}
+      <p class="tiny faint">${t('stream.plNote', 'Instead of the name, user=p1 … p4 works too. Themes show what Pokélink’s data has: team, levels, HP, status, items, moves and badges.')}</p>
+      <label class="check small"><input type="checkbox" checked=${!!st?.localPages} disabled=${busy || !st} onChange=${(e) => save({ localPages: e.target.checked })} />
+        <span>${t('stream.plLocal', 'Also themes from another web server on this computer (localhost, any port) – themes opened from disk or from Pokélink’s website work without it')}</span></label>`}
   </section>`;
 }
 
@@ -287,8 +289,10 @@ function ApiCard({ run, stream, saveStream }) {
       ${stream?.token ? html`<span class="code ellipsis api-tok" title=${t('stream.apiTokenHint', 'Hidden in streamer mode')}>${stream.token}</span>
         <button type="button" class="btn small" onClick=${() => copy(stream.token)}>${t('common.copy', 'Copy')}</button>
         <button type="button" class="btn small ghost" onClick=${() => saveStream({ token: 'new' })}>${t('stream.apiNewToken', 'New token')}</button>`
-        : html`<span class="small muted">${t('stream.apiOpen', 'Without a token, pages from this computer may read (OBS, files, localhost) – other websites can’t.')}</span>`}
+        : html`<span class="small muted">${t('stream.apiOpenObs', 'Without a token, OBS (also local files), scripts and souldew may read – other websites can’t.')}</span>`}
     </div>
+    ${!stream?.token && html`<label class="check small"><input type="checkbox" checked=${!!stream?.localPages} disabled=${!stream} onChange=${(e) => saveStream({ localPages: e.target.checked })} />
+      <span>${t('stream.apiLocal', 'Pages on this computer without a token, too: layouts opened from disk in a browser and other local web servers (localhost)')}</span></label>`}
     <p class="tiny faint">${t('stream.apiSafe', 'Read-only and on this computer only (127.0.0.1): no ROMs, saves, file names, invite codes or spoilers. Run: {name}', { name: run.name })}</p>
   </section>`;
 }

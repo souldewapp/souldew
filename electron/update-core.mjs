@@ -136,10 +136,22 @@ async function get(url, { timeoutMs, allowLocal, signal, fetchImpl = fetch }) {
 const abortReason = (ctl, e) => (ctl.signal.aborted && ctl.signal.reason instanceof Error ? ctl.signal.reason : e);
 
 /**
- * Downloads and validates latest.json. With `publicKey` (base64 SPKI) the feed must carry a valid `sig`
- * (code BAD_SIGNATURE otherwise) – checked before any of its fields are used.
+ * The feed key from package.json's `updates` and whether a signature is required. An installed (packaged) app
+ * fails closed: without a key it can't tell a forged feed from a real one, so it doesn't use any feed. Only
+ * development (`npm run app`) may check an unsigned feed (a fork testing its own releases before --init-key).
  */
-export async function fetchFeed(url, { timeoutMs = 15000, allowLocal = false, fetchImpl, publicKey = null } = {}) {
+export function feedKeyPolicy(cfg, { packaged }) {
+  const publicKey = typeof cfg?.publicKey === 'string' && cfg.publicKey.trim() ? cfg.publicKey.trim() : null;
+  return { publicKey, requireSignature: !!packaged };
+}
+
+/**
+ * Downloads and validates latest.json. With `publicKey` (base64 SPKI) the feed must carry a valid `sig`
+ * (code BAD_SIGNATURE otherwise) – checked before any of its fields are used. `requireSignature` without a key
+ * refuses before anything is downloaded (code NO_KEY).
+ */
+export async function fetchFeed(url, { timeoutMs = 15000, allowLocal = false, fetchImpl, publicKey = null, requireSignature = false } = {}) {
+  if (requireSignature && !publicKey) throw fail('NO_KEY', 'This build has no update key (package.json → updates.publicKey), so it cannot verify updates and does not look for them');
   const { res, ctl, cleanup } = await get(url, { timeoutMs, allowLocal, fetchImpl });
   const timer = setTimeout(() => ctl.abort(fail('TIMEOUT', 'The update server did not answer in time')), timeoutMs);
   try {

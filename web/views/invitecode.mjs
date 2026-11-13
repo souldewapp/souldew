@@ -8,7 +8,7 @@ import { Icon } from '../lib/icons.mjs';
 import { t } from '../lib/i18n.mjs';
 import { api } from '../lib/api.mjs';
 import { slotsOf, players as getPlayers } from '../lib/run.mjs';
-import { CodeHost, joinWithCode, normalizeCode, formatCode, inviteCodeSupported, suggestSlot } from '../lib/invitecode.mjs';
+import { CodeHost, joinWithCode, normalizeCode, normalizeConfirm, formatCode, inviteCodeSupported, suggestSlot } from '../lib/invitecode.mjs';
 import { isStreamer } from '../lib/streamer.mjs';
 
 // One code per run, kept outside the component: closing the invite dialog doesn't kill a code somebody may
@@ -136,13 +136,7 @@ export function HostCode({ manifest }) {
         <span class="small muted" role="timer">${st.phase === 'sending' ? t('code.used', 'used') : t('code.validFor', 'valid for {time}', { time: mmss(st.expiresAt - now) })}</span>
       </div>
     </div>
-    ${req ? html`<div class="code-request" role="alert">
-        <p><b>${t('code.request', '{name} wants to join – allow?', { name: req.name || t('code.someone', 'Someone') })}</b></p>
-        ${req.confirm && html`<p class="confirm-code"><b>${t('code.confirmHint', 'Check that {name} sees the same code: {code}', { code: req.confirm, name: req.name || t('code.someone', 'Someone') })}</b></p>`}
-        <p class="small muted">${t('code.requestHint', 'Only allow it if you gave this person the code. They get the key to your run.')}</p>
-        <div class="row"><button class="btn primary" onClick=${() => session.host.allow()}><${Icon} name="check" size=${14} />${t('code.allow', 'Allow')}</button>
-          <button class="btn ghost" onClick=${() => session.host.decline()}>${t('code.decline', 'Decline')}</button></div>
-      </div>`
+    ${req ? html`<${CodeRequest} key=${req.rid} req=${req} host=${session.host} />`
       : html`<div class="row nowrap"><${Led} on blink /><span class="small">${st.phase === 'sending' ? t('code.sending', 'Sending the invite to {name} …', { name: st.admitted || partner })
         : st.phase === 'starting' ? t('code.starting', 'Creating the code …') : t('code.waiting', 'Waiting for {name} …', { name: partner })}</span></div>`}
     ${st.fails > 0 && html`<p class="small faint">${t('code.attempts', 'Declined or failed attempts: {count} of 3 – after that the code is blocked.', { count: st.fails })}</p>`}
@@ -152,6 +146,31 @@ export function HostCode({ manifest }) {
       <li>${t('code.s3', 'You allow the request – {name}’s app gets the invite and builds the game from their own copy.', { name: partner })}</li>
     </ol>
     ${st.phase !== 'sending' && html`<div><button class="btn small ghost" onClick=${() => session.host.cancel()}>${t('code.cancel', 'Cancel code')}</button></div>`}
+  </div>`;
+}
+
+/**
+ * "… wants to join": the host types the 4 digits the joining player's app shows. "Allow" stays off until they equal
+ * the host's own (CodeHost.allow checks them again) – the host's digits are not shown, so they can't just be copied
+ * from this screen: they have to come from the person the code was given to.
+ */
+function CodeRequest({ req, host }) {
+  const [digits, setDigits] = useState('');
+  const who = req.name || t('code.someone', 'Someone');
+  const typed = normalizeConfirm(digits);
+  const match = !!typed && typed === req.confirm;
+  const allow = () => match && host.allow({ confirm: typed });
+  return html`<div class="code-request" role="alert">
+    <p><b>${t('code.request', '{name} wants to join – allow?', { name: who })}</b></p>
+    <label class="field confirm-field"><span>${t('code.confirmAsk', 'Ask {name} for the 4 digits their souldew shows and type them here:', { name: who })}</span>
+      <input type="text" class="confirm-code-input" inputmode="numeric" autocomplete="off" maxLength="4" placeholder="0000" value=${digits}
+        aria-invalid=${typed && !match ? 'true' : 'false'}
+        onInput=${(e) => setDigits(e.target.value.replace(/\D/g, '').slice(0, 4))}
+        onKeyDown=${(e) => e.key === 'Enter' && allow()} /></label>
+    ${typed && !match && html`<p class="warning error small" role="alert">${t('code.confirmMismatch', 'These digits don’t match. Check them with {name} once more – if their souldew really shows these, somebody else is in between: decline.', { name: who })}</p>`}
+    <p class="small muted">${t('code.requestHint', 'Only allow it if you gave this person the code. They get the key to your run.')}</p>
+    <div class="row"><button class="btn primary" disabled=${!match} title=${match ? '' : t('code.confirmFirst', 'Type the 4 digits first')} onClick=${allow}><${Icon} name="check" size=${14} />${t('code.allow', 'Allow')}</button>
+      <button class="btn ghost" onClick=${() => host.decline()}>${t('code.decline', 'Decline')}</button></div>
   </div>`;
 }
 
@@ -181,7 +200,7 @@ export function JoinCode({ onPack }) {
   const [name, setName] = useState(status?.config?.playerName || '');
   const [code, setCode] = useState('');
   const [phase, setPhase] = useState(null); // null | deriving | connecting | searching | waiting
-  const [confirm, setConfirm] = useState(null); // 4 digits the host sees next to "… wants to join" too
+  const [confirm, setConfirm] = useState(null); // 4 digits the host has to type in to allow us
   const [err, setErr] = useState(null);
   const job = useRef(null);
   useEffect(() => {
@@ -240,7 +259,7 @@ export function JoinCode({ onPack }) {
     ${busy ? html`<div class="row nowrap"><${Led} on blink /><span class="small grow">${phase === 'waiting' ? t('code.waitAllow', 'Found! Waiting for the host to let you in …')
         : phase === 'searching' ? t('code.searching', 'Looking for the host …') : t('code.connecting', 'Connecting …')}</span>
         <button class="btn small ghost" onClick=${() => job.current?.cancel()}>${t('common.cancel', 'Cancel')}</button></div>
-      ${phase === 'waiting' && confirm && html`<p class="confirm-code" role="status"><b>${t('code.confirmHintJoin', 'Check that the host sees the same code: {code}', { code: confirm })}</b></p>`}`
+      ${phase === 'waiting' && confirm && html`<p role="status"><span class="small">${t('code.confirmTellHost', 'Tell the host these 4 digits – they type them in to let you in:')}</span> <b class="confirm-code">${confirm}</b></p>`}`
       : html`<div><button class="btn primary big" disabled=${!normalizeCode(code)} onClick=${go}><${Icon} name="link" size=${16} />${t('code.join', 'Join with code')}</button></div>`}
   </div>`;
 }

@@ -20,6 +20,15 @@ npm run dist:win       # Windows: build the NSIS installer (fetches the Windows 
 npm run dist:linux     # Linux: build the AppImage and the .deb (fetches the Linux Java runtime on first run)
 ```
 
+**Library paths.** The page can only hand the server path strings, so the library takes them from approved places
+only (`server/lib/library.mjs` `approvedImportPath` / `approvedFolder`, `server/lib/grants.mjs`): "Add files" and
+"Search my Mac / PC" import from the folders discovery looks through (Downloads, Desktop, Documents, game and emulator
+folders …), from folders already in the library, and from files or folders picked in the app's native dialog this
+session – the Electron main process registers those from the dialog's result, the page can't. "Use a folder" /
+"Include a folder" takes only a folder picked in that dialog. In the browser (`npm start`) there is no native dialog:
+"Search my Mac / PC" and uploading files work as before; to include a folder, add it to `libraryFolders` in
+`runs/config.json` (the data folder's `config.json` with `SLS_DATA_DIR`) while the server is stopped.
+
 | Command | Purpose |
 |---|---|
 | `PORT=… SLS_DATA_DIR=… NO_OPEN=1 node server/index.mjs` | A second instance with its own data folder – e.g. to test several players on one machine |
@@ -172,7 +181,7 @@ Your data stays untouched on both.
 
 **By hand** (same result, no workflow): build the DMG (`npm run dist`) on the Mac, the installer (`npm run dist:win`) on Windows and the AppImage + .deb (`npm run dist:linux`) on Linux – or download them from a run of the [Windows](../.github/workflows/windows.yml) / [Linux workflow](../.github/workflows/linux.yml) – and put them into `dist/`. Then `npm run release` (or `npm run release -- --notes "…"`; `--dmg path` / `--win-exe path` / `--appimage path` / `--deb path` for other locations) hashes them, writes and signs `latest.json` and prints the `gh release create …` command with all files. Without a Windows installer or an AppImage in `dist/` it warns and leaves that platform out of the feed (those apps then don't see that version; `--no-win` / `--no-linux` silence the warning). The release must not be a draft or prerelease, otherwise "latest" doesn't point to it.
 
-The app verifies the Ed25519 signature of `latest.json` before using its download URL or checksum; an unsigned or altered feed is rejected. It only accepts HTTPS, refuses downgrades and only installs a DMG with the matching checksum, bundle ID and exact announced version, or an installer with the matching checksum and size. `"minVersion"` in the feed (`npm run release -- --min-version 2.1.0`) sends older installs to the download page instead. Pushing commits alone doesn't reach the apps – only a published release does.
+The app verifies the Ed25519 signature of `latest.json` before using its download URL or checksum; an unsigned or altered feed is rejected. An installed build without `updates.publicKey` (a fork that never ran `--init-key`) doesn't look for updates at all – Settings says why; only `npm run app` may check an unsigned feed while you test. It only accepts HTTPS, refuses downgrades and only installs a DMG with the matching checksum, bundle ID and exact announced version, or an installer with the matching checksum and size. `"minVersion"` in the feed (`npm run release -- --min-version 2.1.0`) sends older installs to the download page instead. Pushing commits alone doesn't reach the apps – only a published release does.
 
 ## Project layout
 

@@ -67,7 +67,7 @@ try {
   const started = Date.now();
   while (Date.now() - started < timeoutMs && exited === null) {
     try {
-      const res = await fetch(`${base}/api/status`);
+      const res = await fetch(`${base}/api/status`, { headers: { 'x-soullink': '1' } }); // the status is for the app's own pages
       if (res.ok) {
         status = await res.json();
         break;
@@ -112,7 +112,7 @@ try {
         // unpacking runs on a worker thread: the app keeps answering meanwhile
         await sleep(1500);
         const t1 = Date.now();
-        const alive = await fetch(`${base}/api/status`).then((r) => r.ok, () => false);
+        const alive = await fetch(`${base}/api/status`, { headers: { 'x-soullink': '1' } }).then((r) => r.ok, () => false);
         check(alive && Date.now() - t1 < 3000, `app stays responsive while ${id} installs (${Date.now() - t1} ms)`);
         const res = await install;
         const r = await res.json().catch(() => ({}));

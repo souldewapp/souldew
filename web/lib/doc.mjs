@@ -26,7 +26,8 @@ export function deviceId() {
 const newer = (a, b) => !b || a.t > b.t || (a.t === b.t && a.by > b.by);
 /** Keys that would reach Object.prototype through plain-object access. */
 const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-/** Remote timestamps are clamped to now + 1 day. */
+/** Remote timestamps are clamped to now + 1 day (the server's merge of uploads, mergeDocEntries in
+ *  server/lib/build.mjs, uses the same bounds). */
 const MAX_SKEW = 86400000;
 
 export class RunDoc {
