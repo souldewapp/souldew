@@ -1427,3 +1427,17 @@ dialog.nag[open] { animation: nag-in .16s steps(3, end); }
   border: 1px solid; border-color: #fff #404040 #404040 #fff; box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #dfdfdf; }
 .nag-btn:active { border-color: #404040 #fff #fff #404040; box-shadow: inset 1px 1px 0 #808080; }
 @media (max-width: 560px) { .nag-body { flex-direction: column; gap: 10px; } .nag-icon svg { width: 40px; height: auto; } }
+
+/* "Share to Discord" (Live runs, web/views/liveshare.mjs): Discord's blurple, dimmed to sit in the night shell */
+.btn.live-share { color: #c9cdfb; border-color: #3c3f73; background: linear-gradient(#34376a, #2a2c55); }
+.btn.live-share:hover:not(:disabled) { background: linear-gradient(#3d4180, #323466); }
+.btn.live-share.ghost { background: transparent; border-color: #3c3f73; }
+.btn.live-share.done { color: var(--ok-ink); border-color: #2f4a3f; background: #1d2a25; opacity: 1; }
+.btn.live-share svg { flex: none; }
+.live-share-done { display: inline-flex; gap: 6px; align-items: center; }
+.grave .btn.live-share { margin-top: 4px; font-size: 11.5px; padding: 3px 9px; }
+.live-runs h3 { margin: 0; }
+.live-runs .live-steps { margin: 0; padding-left: 20px; }
+.live-runs .live-code { width: 11ch; font-family: var(--font-mono); font-size: 16px; letter-spacing: .12em; text-transform: uppercase; }
+.live-runs .live-linked { gap: 8px 12px; align-items: center; }
+.modal-foot > .btn.live-share, .modal-foot > .live-share-done { margin-right: auto; }

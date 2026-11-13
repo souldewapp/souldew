@@ -394,6 +394,9 @@ function pathFor(name) {
   return d;
 }
 
+/** An icon's 16×16 bitmap as SVG path data – for drawing it elsewhere (the share card's canvas: Path2D). */
+export const pixelIconPath = (name) => pathFor(name);
+
 export function Icon({ name, size, title }) {
   return html`<svg viewBox="0 0 16 16" width=${size} height=${size} shape-rendering="crispEdges" aria-hidden=${title ? undefined : 'true'} role=${title ? 'img' : undefined}>
     ${title && html`<title>${title}</title>`}<path d=${pathFor(name)} fill="currentColor" />

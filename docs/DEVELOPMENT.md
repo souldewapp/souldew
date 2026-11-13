@@ -81,6 +81,32 @@ stores states as core `azahar-n3ds` and refuses others). The host exits with `_e
 `CTRHOST_DEBUG=1` logs the input it reads; `ctrhost --bench N --dump` runs a game without souldew. Windows and Linux
 are built by CI only (see above). Research notes: [research/azahar.md](../research/azahar.md).
 
+## Live runs ("Share to Discord")
+
+A player links souldew to their Discord account once (Settings › Discord › "Live runs", with the code from `/live connect`)
+and can then post a card of a death, a wipe or a won run to `#live-runs` on the souldew Discord. The bot is a separate
+Cloudflare Worker; its contract (v1) is: `POST /live/link` (code → token), `GET /live/me`, `DELETE /live/link` and
+`POST /live/post` (multipart: `meta` JSON + `image` 1200×675 PNG ≤ 1.5 MB).
+
+| Part | What it does |
+|---|---|
+| `shared/liveruns.mjs` | Event ids (`run-<runId>:<kind>:…`, the same for every player of a run – a partner's post makes the bot answer 409), the `meta` limits and filters (no links, no control characters, no file names), the link code, the PNG check |
+| `server/lib/liveruns.mjs` | The only code that talks to the bot and the only code that sees the token. `/api/liveruns` (state), `/api/liveruns/link` (POST link, DELETE unlink), `/api/liveruns/post` |
+| `web/lib/liveshare.mjs` | The card model from the run doc (headline, the killer from `pair.killer`, the place sign stored with the death as `pair.place`, every player's live team), the post's text, the share |
+| `web/lib/livecard.mjs` | Paints the card on a canvas: the app's fonts, colours, app mark and sprites |
+| `web/views/liveshare.mjs` | The "Share to Discord" button (death notice, graveyard, run-over notice) and the Settings block |
+
+**No secrets in the app.** souldew is open source: it ships no key, token, password or signing secret – only the bot's
+public address (`LIVE_RUNS_URL`). Each player's token comes from linking and is kept in `live-runs.json` in the data folder
+(file mode 0600; in development `runs/live-runs.json`), never in `config.json`, a run folder, a run pack, diagnostics, a log
+line or anything the page can read. Requests to the bot never follow redirects. `test/secrets.test.mjs` scans the app,
+the scripts and the tests for anything that looks like a credential.
+
+| Command | Purpose |
+|---|---|
+| `SOULDEW_LIVE_URL=http://127.0.0.1:8787 npm run app -- --user-data-dir=/tmp/souldew-live` | Against a local bot (`wrangler dev`) or a mock – https anywhere, plain http only on this computer |
+| `npx electron scripts/render-live-cards.mjs <out folder> [--lang de]` | Paints the cards of `test/fixtures/livecards.mjs` (SoulLink of 2, 3 and 4, solo Nuzlocke; death, wipe, victory) with a throwaway data folder |
+
 ## Releasing updates
 
 The app checks `https://github.com/souldewapp/souldew/releases/latest/download/latest.json` at start and every four hours (also via **Settings › About › Check for updates**). One feed serves every platform: the macOS DMG at the top level (all that souldew ≤ 2.0 reads), the Windows installer under `assets["win32-x64"]` and the Linux AppImage under `assets["linux-x64"]` (each `{ name, url, sha256, size }`). Older apps ignore `assets` (2.0) or the keys they don't know (2.1 drops `linux-x64`), and the signature covers every field, so they accept the new feed unchanged (proven in `test/update.test.mjs` and `test/linux.test.mjs` with the released code in `test/fixtures/update-2.0.0/` and `update-2.1.0/`). The .deb is uploaded to the release but isn't in the feed.

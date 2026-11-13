@@ -2,6 +2,17 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## Unreleased
+
+- **Share to Discord (Live runs):** link souldew to your Discord account once (Settings › Discord, with the code from
+  `/live connect`) and share big moments to #live-runs on the souldew Discord – from the death notice, a graveyard
+  entry and the notice when a run is wiped, over or won. Each post is a card in souldew's look: the headline, what the
+  Pokémon fell to (species, level, wild or trainer battle, the place sign where it happened), every player's team side
+  by side with the fallen group marked, and the run in numbers. Shared moments stay marked "Shared ✓" – also when a
+  partner shared it first. The link only lives on your computer (not in runs, invites, exports or diagnostics), the
+  page never sees it, and streamer mode covers your Discord name. Nothing is posted unless you press the button.
+- A death read live now keeps the place it happened at (the place sign), not only the battle it fell in.
+
 ## 2.5.0
 
 - **Nintendo 3DS games play inside souldew**: X/Y, Omega Ruby/Alpha Sapphire, Sun/Moon and Ultra Sun/Ultra Moon run

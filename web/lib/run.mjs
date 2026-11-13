@@ -290,14 +290,15 @@ export function setEncounter(doc, manifest, area, slot, data, { quiet, by } = {}
 
 /**
  * The group of `area` dies (every player's mon there). Optional: `level` at death, `killer` {species, level, kind}
- * (the opponent of the battle it fell in). The boss segment it died in is kept for the stats. In a deathless
- * Nuzlocke the first death ends the run.
+ * (the opponent of the battle it fell in), `place` {gen, id, name} (the place sign where it fell – the share card
+ * shows it). The boss segment it died in is kept for the stats. In a deathless Nuzlocke the first death ends the run.
  */
-export function markDead(doc, manifest, area, { slot, cause = '', level = null, killer = null } = {}) {
+export function markDead(doc, manifest, area, { slot, cause = '', level = null, killer = null, place = null } = {}) {
   const p = doc.get(`pair:${area}`) || {};
   if (p.state === 'dead') return false;
   const segment = levelCap(doc, manifest, slot || 'p1').boss?.key ?? null;
-  doc.set(`pair:${area}`, { ...p, state: 'dead', diedAt: Date.now(), cause, by: slot, level, killer, segment });
+  const where = place?.name ? { gen: place.gen ?? null, id: place.id ?? null, name: String(place.name).slice(0, 40) } : null;
+  doc.set(`pair:${area}`, { ...p, state: 'dead', diedAt: Date.now(), cause, by: slot, level, killer, segment, ...(where ? { place: where } : {}) });
   const n = slotsOf(manifest).length;
   const text = n === 1 ? msg('feed.deathSolo', '{area}: the Pokémon died', { area: { area } })
     : n > 2 ? msg('feed.deathGroup', '{area}: the linked group died', { area: { area } })
@@ -839,7 +840,8 @@ export function applySnapshot(doc, manifest, gen, slot, snap, { auto = true, rd 
             ? msg('feed.faintedBy', '{name} fainted against {enemy} (Lv. {lv}, {kind})', { name, enemy: { species: foe.species }, lv: foe.level ?? '?', kind })
             : msg('feed.faintedCause', '{name} fainted', { name });
           const killer = foe ? { species: foe.species, level: foe.level ?? null, kind: fight.kind || null } : null;
-          if (markDead(doc, manifest, k.area, { slot, cause, level: m.level ?? null, killer })) deaths.push(k.area);
+          // where it fell: the place sign read with this snapshot (play view → snap.here)
+          if (markDead(doc, manifest, k.area, { slot, cause, level: m.level ?? null, killer, place: snap.here || null })) deaths.push(k.area);
         } else alerts.push({ type: 'fainted', area: k.area, mon: m });
       }
       continue;

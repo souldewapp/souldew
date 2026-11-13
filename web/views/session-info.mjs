@@ -14,6 +14,8 @@ import { statusOf, statusLabel, shownLevel } from './party.mjs';
 import { effectiveness, defenseChart, moveInfo, matchup } from '/shared/typechart.mjs';
 import { isLegendary } from '/shared/legendaries.mjs';
 import { RestartModal } from './restart.mjs';
+import { ShareButton } from './liveshare.mjs';
+import { deathEvent } from '../lib/liveshare.mjs';
 
 // legendary or mythical, Gen 1–9 (PokeAPI's split)
 export { isLegendary };
@@ -548,7 +550,7 @@ export function DeathAlert({ alert, onClose }) {
         : t('death.alertOtherGroupAlone', '{name}’s {mon} fell – this area’s group is lost for you too.', { name, mon: sp(by) });
   }
   return html`<${Modal} open=${true} onClose=${onClose} title=${n === 1 ? t('death.alertTitleSolo', 'A Pokémon died') : n > 2 ? t('death.alertTitleGroup', 'A group died') : t('death.alertTitle', 'A pair died')}
-    footer=${html`<button class="btn danger" onClick=${onClose}>${t('death.alertOk', 'Rest in peace')}</button>`}>
+    footer=${html`<${ShareButton} event=${deathEvent(doc, manifest, alert.area)} /><button class="btn danger" onClick=${onClose}>${t('death.alertOk', 'Rest in peace')}</button>`}>
     <div class="death-alert">
       <div class=${`death-mons n${slots.length}`}>
         ${slots.map((s) => st.encs[s]?.species && html`<div class="death-mon" style=${`--acc:var(--${s})`}><${Sprite} id=${st.encs[s].species} size=${72} gen=${gen} /><span>${st.encs[s].nickname || sp(st.encs[s])}</span></div>`)}

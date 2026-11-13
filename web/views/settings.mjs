@@ -11,6 +11,7 @@ import { SHORTCUTS, buttonLabel } from './guide.mjs';
 import { UpdateSection } from './update.mjs';
 import { PLATFORM } from '../lib/platform.mjs';
 import { gpuBackends } from '/shared/gpu.mjs';
+import { LiveRunsSettings } from './liveshare.mjs';
 
 const SYSTEMS = [['gb', 'Game Boy'], ['gbc', 'Game Boy Color'], ['gba', 'Game Boy Advance'], ['nds', 'Nintendo DS'], ['3ds', 'Nintendo 3DS']];
 /** Systems the built-in player runs only with an extra part: 3DS needs souldew's 3DS host (status.ctr). */
@@ -369,6 +370,11 @@ export function SettingsView() {
         const paths = await window.sls.pickFiles({ folder: true, title: t('set.addFolder', 'Include a folder') });
         if (paths?.[0]) await folders({ add: paths[0] });
       }}><${Icon} name="plus" size=${14} />${t('set.addFolder', 'Include a folder')}</button></div>`}
+    </section>
+
+    <section class="panel stack">
+      <h2>Discord</h2>
+      <${LiveRunsSettings} />
     </section>
 
     <section class="panel stack">

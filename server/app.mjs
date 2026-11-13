@@ -33,6 +33,7 @@ import { COFFEE_CORNERS } from '../shared/coffee.mjs';
 import { LINKS } from '../shared/links.mjs';
 import { randomBytes } from 'node:crypto';
 import { syncTrophies } from './lib/trophies.mjs';
+import * as liveRuns from './lib/liveruns.mjs';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -1262,6 +1263,18 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     });
     if (!r.ok) throw new Error(`Discord antwortete ${r.status}`);
     return { ok: true };
+  });
+
+  // ---- "Share to Discord" (Live runs, server/lib/liveruns.mjs): the token stays here, the page gets the outcome ----
+  route('GET', /^\/api\/liveruns$/, (req, m, url) => (url.searchParams.get('check') === '1' ? liveRuns.status() : liveRuns.publicState()));
+  route('POST', /^\/api\/liveruns\/link$/, async (req) => {
+    const { code } = await readBody(req);
+    return liveRuns.link(typeof code === 'string' ? code : '');
+  });
+  route('DELETE', /^\/api\/liveruns\/link$/, () => liveRuns.unlink());
+  route('POST', /^\/api\/liveruns\/post$/, async (req) => {
+    const { meta, image } = await readBody(req);
+    return liveRuns.post({ meta, image });
   });
 
   // ---- images: sprites & covers (cached, offline after first fetch) ------------------

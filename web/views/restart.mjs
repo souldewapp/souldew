@@ -9,6 +9,8 @@ import { Icon } from '../lib/icons.mjs';
 import { t } from '../lib/i18n.mjs';
 import { restartRun, mySlotIn } from '../lib/restart.mjs';
 import { api } from '../lib/api.mjs';
+import { ShareButton } from './liveshare.mjs';
+import { endEvent } from '../lib/liveshare.mjs';
 import { numberedName, baseName, newAttempt, restartPlan, RESTART_KEY, CLAIM_TTL } from '/shared/restart.mjs';
 
 /**
@@ -203,7 +205,7 @@ export function RunOverNotice({ status, onClose }) {
   const st = solo ? runStats(doc, manifest, 'p1') : null;
   const killer = st?.deadliest?.[0];
   return html`<${Modal} open=${true} onClose=${onClose} title=${won ? t('over.wonTitle', 'Run won!') : t('over.failedTitle', 'Run failed')}
-    footer=${html`${!won && html`<button class="btn ghost" onClick=${() => { resumeRun(doc, me); onClose(); }}
+    footer=${html`<${ShareButton} event=${endEvent(manifest, status)} />${!won && html`<button class="btn ghost" onClick=${() => { resumeRun(doc, me); onClose(); }}
         title=${t('over.resumeHint', 'Undo: the run goes on as before, tracking resumes.')}>${t('over.resume', 'Mistake – play on')}</button>`}
       <button class="btn ghost" onClick=${() => { onClose(); navigate('soullink', { run: manifest.id }); }}>${t('over.board', 'To the board')}</button>
       ${!won && html`<button class="btn primary" onClick=${() => setRestart(true)}><${Icon} name="reset" size=${14} />${t('over.again', 'New attempt …')}</button>`}`}>
