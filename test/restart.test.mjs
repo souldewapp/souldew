@@ -81,3 +81,28 @@ test('run names count up from the base name', () => {
   assert.equal(restartRequest({ ...old, name: 'Lou & Noa #2' }, { library, runs: [{ name: 'Lou & Noa' }, { name: 'Lou & Noa #2' }] }).name, 'Lou & Noa #3');
   assert.equal(numberedName('A (b)', [{ name: 'A (b)' }]), 'A (b) #2');
 });
+
+test('joining a plain run: any release of the same game fits, the exact one first; randomized/patched runs need the exact one', async () => {
+  const { needsIdenticalRom } = await import('../shared/restart.mjs');
+  const rootOf = (id) => ({ 'pokemon-platinum-eu': 'pokemon-platinum', 'pokemon-platinum-de': 'pokemon-platinum' }[id] || id);
+  const roms = [
+    { id: 'rev1', crc: '69D628E8', gameId: 'pokemon-platinum' },
+    { id: 'eu', crc: '71ACA63A', gameId: 'pokemon-platinum-eu' },
+    { id: 'hack', crc: 'AAAAAAAA', gameId: 'pokemon-platinum', hackId: 'renegade-platinum' },
+    { id: 'pearl', crc: 'BBBBBBBB', gameId: 'pokemon-pearl' },
+    { id: 'rev0', crc: '9253921d', gameId: 'pokemon-platinum' },
+  ];
+  const plain = { base: { crc: '9253921D' }, game: { id: 'pokemon-platinum', system: 'nds' }, randomizer: { enabled: false }, patch: null };
+  assert.equal(needsIdenticalRom(plain), false);
+  assert.deepEqual(baseRomsFor(plain, roms, rootOf).map((r) => r.id), ['rev0', 'rev1', 'eu']);
+  assert.deepEqual(baseRomsFor({ ...plain, base: { crc: '00000000' } }, roms, rootOf).map((r) => r.id), ['rev1', 'eu', 'rev0'], 'host’s release missing: the other ones');
+  const randomized = { ...plain, randomizer: { enabled: true } };
+  assert.equal(needsIdenticalRom(randomized), true);
+  assert.deepEqual(baseRomsFor(randomized, roms, rootOf).map((r) => r.id), ['rev0']);
+  assert.deepEqual(baseRomsFor({ ...randomized, base: { crc: '00000000' } }, roms, rootOf), []);
+  const patched = { ...plain, patch: { name: 'Hack', sha1: 'x' } };
+  assert.equal(needsIdenticalRom(patched), true);
+  assert.deepEqual(baseRomsFor(patched, roms, rootOf).map((r) => r.id), ['rev0']);
+  // without rootOf (restarting your own run) it stays exact
+  assert.deepEqual(baseRomsFor(plain, roms).map((r) => r.id), ['rev0']);
+});

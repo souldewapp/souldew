@@ -17,13 +17,26 @@ export function numberedName(base, runs) {
  * CRC32 (the files are 1–4 GB, never read whole – its `base.crc` is null): the same game by its catalog id, else by its
  * game code – never just any 3DS file (every one of them has the CRC null).
  */
-export function baseRomsFor(m, roms) {
+export function baseRomsFor(m, roms, rootOf = null) {
   const crc = String(m?.base?.crc || '').toUpperCase();
-  if (crc) return (roms || []).filter((r) => String(r.crc || '').toUpperCase() === crc);
+  if (crc) {
+    const exact = (roms || []).filter((r) => String(r.crc || '').toUpperCase() === crc);
+    // Everybody plays their own game, so a plain run (no randomizer, no patch) works with any release of it: Rev 0 or
+    // Rev 1, another region or language. Only randomized or patched runs need byte-identical ROMs. The exact release
+    // still comes first. rootOf maps a library ROM's catalog id to its main game (variants → their base).
+    if (!rootOf || needsIdenticalRom(m) || !m?.game?.id) return exact;
+    const same = (roms || []).filter((r) => !exact.includes(r) && !r.hackId && r.gameId && rootOf(r.gameId) === m.game.id);
+    return [...exact, ...same];
+  }
   if (m?.game?.system !== '3ds') return [];
   const id = m.game.id;
   const code = String(m.game.code || '').toUpperCase();
   return (roms || []).filter((r) => r.system === '3ds' && (id ? r.gameId === id : !!code && String(r.code || '').toUpperCase() === code));
+}
+
+/** Randomized or patched runs: every player must build the same bytes, so only the exact base release fits. */
+export function needsIdenticalRom(m) {
+  return !!(m?.randomizer?.enabled || m?.patch);
 }
 
 /** The old run's base name without a "#n" suffix. */

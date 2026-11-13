@@ -448,9 +448,12 @@ async function buildInto(opts, onLog) {
     };
     if (manifest.outputs[slot].expectedSha1) {
       manifest.outputs[slot].matchesFriend = manifest.outputs[slot].expectedSha1 === sha1;
+      // Only randomized or patched runs need byte-identical ROMs – a plain run may use another release of the game.
+      const mustMatch = !!(manifest.randomizer?.enabled || manifest.patch);
       onLog(manifest.outputs[slot].matchesFriend
         ? `✔ ROM für ${player.name} ist byte-identisch mit dem deines Freundes`
-        : `⚠ ROM für ${player.name} weicht vom Run-Paket ab (anderes Basis-ROM/Version?)`);
+        : mustMatch ? `⚠ ROM für ${player.name} weicht vom Run-Paket ab (anderes Basis-ROM/Version?)`
+          : `ℹ ROM für ${player.name} ist eine andere Fassung des Spiels als beim Host – passt, jeder spielt seine eigene Kopie`);
     }
   }
 

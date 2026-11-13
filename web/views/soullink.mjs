@@ -8,7 +8,7 @@ import { PRESETS, DEFAULT_VALUES, localizeRandomizer, randomSeed, sameSettings, 
 import { Cart, coverOf } from './library.mjs';
 import { RestartModal } from './restart.mjs';
 import { mySlotIn } from '../lib/restart.mjs';
-import { numberedName, baseRomsFor } from '/shared/restart.mjs';
+import { numberedName, baseRomsFor, needsIdenticalRom } from '/shared/restart.mjs';
 import { ALL_SLOTS, slotsOf, runMode, othersOf, defaultRunName } from '/shared/slots.mjs';
 import { NUZLOCKE_RULES, joinNames } from '../lib/run.mjs';
 import { suggestSlot } from '../lib/invitecode.mjs';
@@ -704,7 +704,18 @@ function JoinRun() {
   const [log, setLog] = useState([]);
   const baseCrc = pack?.base?.crc;
   // (by CRC32 – a 3DS game, which has none, by its game: never just the first 3DS file of the library)
-  const rom = pack ? baseRomsFor(pack, library?.roms)[0] : undefined;
+  const cat = catalog();
+  const rootOf = (id) => cat.games.find((g) => g.id === id)?.variantOf || id;
+  const rom = pack ? baseRomsFor(pack, library?.roms, rootOf)[0] : undefined;
+  // The release behind a CRC32, e.g. "Pokemon - Platinum Version (USA) (Rev 1)" – for messages a person can act on.
+  const releaseOf = (crc) => {
+    const c = String(crc || '').toUpperCase();
+    for (const g of cat.games) for (const d of g.dumps || []) if (String(d.crc32 || '').toUpperCase() === c) return d.noIntroName || g.noIntroName || gameTitle(g);
+    return null;
+  };
+  const otherRelease = rom && baseCrc && String(rom.crc || '').toUpperCase() !== String(baseCrc).toUpperCase();
+  // own copies of this game in another release (shown when the run needs the exact one)
+  const ownReleases = pack && needsIdenticalRom(pack) ? (library?.roms || []).filter((r) => !r.hackId && r.gameId && rootOf(r.gameId) === pack.game?.id) : [];
   const patch = pack?.patch ? library?.patches?.find((p) => p.sha1 === pack.patch.sha1) || (baseCrc && library?.patches?.find((p) => p.expectedCrc === baseCrc)) : null;
 
   // seat: the host's hint with a code invite – { slot, taken } (see JoinCode); none with an invite file
@@ -773,8 +784,12 @@ function JoinRun() {
     </section>
     ${pack && html`<section class="panel stack">
       <h2>${t('join.step2', '2 · Your game')}</h2>
-      ${rom ? html`<p class="small"><span class="chip ok">${t('join.found', 'Found in your library')}</span> <span class="mono">${rom.name}</span></p>`
-        : html`<p class="warning">${baseCrc ? t('join.missing', 'Add your own copy of the base game (CRC32 {crc}) to the library first.', { crc: baseCrc })
+      ${rom ? html`<p class="small"><span class="chip ok">${t('join.found', 'Found in your library')}</span> <span class="mono">${rom.name}</span></p>
+        ${otherRelease && html`<p class="small muted">${t('join.otherRelease', 'Another release than the host’s ({host}) – that’s fine: everyone plays their own copy in this run.', { host: releaseOf(baseCrc) || `CRC32 ${baseCrc}` })}</p>`}`
+        : html`<p class="warning">${baseCrc && needsIdenticalRom(pack) ? t('join.missingExact', 'This run is {kind}, so everyone needs exactly the same release: {release}. Add it to your library first.', {
+            kind: pack.patch ? t('join.kindPatched', 'a ROM hack') : t('join.kindRandom', 'randomized'), release: releaseOf(baseCrc) || `CRC32 ${baseCrc}` })
+            + (ownReleases.length ? ' ' + t('join.youHave', 'You have: {list}.', { list: ownReleases.map((r) => releaseOf(r.crc) || r.name).join(', ') }) : '')
+          : baseCrc && !gameById(pack.game?.id) ? t('join.missing', 'Add your own copy of the base game (CRC32 {crc}) to the library first.', { crc: baseCrc })
           : t('join.missingGame', 'Add your own copy of {game} to the library first.', { game: gameById(pack.game?.id) ? gameTitle(gameById(pack.game.id)) : pack.game?.title || pack.game?.code || '?' })}</p>
           <div><button class="btn" onClick=${() => navigate('library')}>${t('nav.library', 'Library')}</button></div>`}
       ${pack.patch && (patch ? html`<p class="small"><span class="chip ok">${t('join.patchFound', 'Patch found')}</span> <span class="mono">${patch.name}</span></p>`

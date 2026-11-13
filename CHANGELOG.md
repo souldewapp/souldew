@@ -2,6 +2,15 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## 2.6.1
+
+- **Joining a SoulLink works with another release of the same game.** A normal run (no randomizer, no ROM hack) used
+  to accept only the host's exact release, so e.g. Platinum Rev 1 couldn't join a run hosted with the original
+  Platinum, although everyone plays their own copy anyway. Now any release of the game fits – another revision,
+  region or language; the host's exact release is still picked first if you have it. Randomized and patched runs
+  still need the exact release (everyone builds the same bytes there), and the message now names it – e.g.
+  "Pokemon - Platinum Version (USA)" – and lists the releases you have, instead of only a CRC32.
+
 ## 2.6.0
 
 - **The fast player: DS, GBA and Game Boy games at full speed, with fast-forward that really reaches 4× and more.**
