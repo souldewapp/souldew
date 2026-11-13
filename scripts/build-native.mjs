@@ -83,12 +83,28 @@ function source(key) {
   return dir;
 }
 
+/**
+ * melonDS DS links `-lonecore`, but uses nothing from it (the built DLL imports only the CRT, KERNEL32, WS2_32 and
+ * IPHLPAPI). Newer MinGW-w64 (Homebrew) ships libonecore.a, Ubuntu's doesn't – there an empty stand-in lets the link
+ * go through. Returns the extra linker flag, or ''.
+ */
+function onecoreStub() {
+  const found = spawnSync(cc, ['-print-file-name=libonecore.a'], { encoding: 'utf8' }).stdout?.trim() || '';
+  if (found && found !== 'libonecore.a' && existsSync(found)) return '';
+  const dir = join(root, '_ref', 'native', 'stub-libs');
+  mkdirSync(dir, { recursive: true });
+  const lib = join(dir, 'libonecore.a');
+  if (!existsSync(lib)) run(cross ? `${MINGW}-ar` : 'ar', ['rcs', lib]);
+  console.log(`(no libonecore.a in the toolchain – linking against an empty stand-in in ${dir})`);
+  return ` -L${dir}`;
+}
+
 /** CMake arguments for the target platform (the compiler, Windows cross build, a static runtime). */
 function cmakeTarget() {
   const a = ['-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'];
   if (os === 'darwin') a.push(`-DCMAKE_OSX_ARCHITECTURES=${arch === 'arm64' ? 'arm64' : 'x86_64'}`, '-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0');
   if (win) {
-    const st = '-static -static-libgcc -static-libstdc++';
+    const st = `-static -static-libgcc -static-libstdc++${onecoreStub()}`;
     a.push(`-DCMAKE_C_COMPILER=${cc}`, `-DCMAKE_CXX_COMPILER=${cxx}`, `-DCMAKE_SHARED_LINKER_FLAGS=${st}`, `-DCMAKE_MODULE_LINKER_FLAGS=${st}`);
     if (cross) a.push('-DCMAKE_SYSTEM_NAME=Windows', '-DCMAKE_SYSTEM_PROCESSOR=x86_64', `-DCMAKE_RC_COMPILER=${MINGW}-windres`, `-DCMAKE_FIND_ROOT_PATH=/usr/${MINGW}`,
       '-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER', '-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY', '-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY', '-DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY');
