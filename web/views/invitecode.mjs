@@ -73,6 +73,7 @@ export function HostCode({ manifest }) {
   const [st, setSt] = useState(() => session?.host.state || null);
   const [ok, setOk] = useState(true);
   const [now, setNow] = useState(Date.now());
+  const [confirmOk, setConfirmOk] = useState(false);
   useEffect(() => {
     inviteCodeSupported().then(setOk);
   }, []);
@@ -128,6 +129,9 @@ export function HostCode({ manifest }) {
     </div>`;
   }
   const req = st.phase === 'request' ? st.request : null;
+  useEffect(() => {
+    if (!req) setConfirmOk(false);
+  }, [req?.rid]);
   return html`<div class="stack">
     <div class="invite-code-box">
       <div class="invite-code" aria-label=${t('code.aria', 'Invite code {code}', { code: st.code.split('').join(' ') })}>${formatCode(st.code)}</div>
@@ -140,7 +144,8 @@ export function HostCode({ manifest }) {
         <p><b>${t('code.request', '{name} wants to join – allow?', { name: req.name || t('code.someone', 'Someone') })}</b></p>
         ${req.confirm && html`<p class="confirm-code"><b>${t('code.confirmHint', 'Check that {name} sees the same code: {code}', { code: req.confirm, name: req.name || t('code.someone', 'Someone') })}</b></p>`}
         <p class="small muted">${t('code.requestHint', 'Only allow it if you gave this person the code. They get the key to your run.')}</p>
-        <div class="row"><button class="btn primary" onClick=${() => session.host.allow()}><${Icon} name="check" size=${14} />${t('code.allow', 'Allow')}</button>
+        ${req.confirm && html`<label class="check"><input type="checkbox" checked=${confirmOk} onChange=${(e) => setConfirmOk(e.target.checked)} /><span>${t('code.confirmCheck', 'The codes match – I checked with them')}</span></label>`}
+        <div class="row"><button class="btn primary" disabled=${!!(req.confirm && !confirmOk)} onClick=${() => session.host.allow({ confirmed: true })}><${Icon} name="check" size=${14} />${t('code.allow', 'Allow')}</button>
           <button class="btn ghost" onClick=${() => session.host.decline()}>${t('code.decline', 'Decline')}</button></div>
       </div>`
       : html`<div class="row nowrap"><${Led} on blink /><span class="small">${st.phase === 'sending' ? t('code.sending', 'Sending the invite to {name} …', { name: st.admitted || partner })

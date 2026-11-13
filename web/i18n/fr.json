@@ -146,6 +146,7 @@
   "code.aria": "Code d’invitation {code}",
   "code.attempts": "Tentatives refusées ou échouées : {count} sur 3 – ensuite, le code est bloqué.",
   "code.cancel": "Annuler le code",
+  "code.confirmCheck": "Les codes correspondent – je l’ai vérifié avec cette personne",
   "code.confirmHint": "Vérifie que {name} voit le même code : {code}",
   "code.confirmHintJoin": "Vérifie que l’hôte voit le même code : {code}",
   "code.conflict": "Deux personnes différentes ont utilisé ce code – il a été annulé par sécurité.",

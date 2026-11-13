@@ -146,6 +146,7 @@
   "code.aria": "Codice d’invito {code}",
   "code.attempts": "Tentativi rifiutati o falliti: {count} su 3 – dopo, il codice viene bloccato.",
   "code.cancel": "Annulla codice",
+  "code.confirmCheck": "I codici corrispondono – l’ho controllato con questa persona",
   "code.confirmHint": "Controlla che {name} veda lo stesso codice: {code}",
   "code.confirmHintJoin": "Controlla che l’host veda lo stesso codice: {code}",
   "code.conflict": "Due persone diverse hanno usato questo codice – è stato annullato per sicurezza.",

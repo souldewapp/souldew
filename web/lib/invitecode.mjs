@@ -335,9 +335,14 @@ export class CodeHost {
     if (this.fails >= MAX_FAILS) this._close('locked');
   }
 
-  async allow() {
+  /**
+   * Seal and send the run pack. When a confirmation code is shown, the host must pass
+   * `{ confirmed: true }` (UI checkbox / typed match) – display-only digits are not enough.
+   */
+  async allow({ confirmed = false } = {}) {
     const r = this.requests.get(this.state.request?.rid);
     if (!r || r.state !== 'pending' || this.state.phase !== 'request') return;
+    if (this.state.request?.confirm && !confirmed) return;
     r.state = 'sent'; // single use: from here on every other request is answered with 'used'
     clearTimeout(this.timer);
     let seat = null;

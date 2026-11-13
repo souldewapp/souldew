@@ -146,6 +146,7 @@
   "code.aria": "Einladungscode {code}",
   "code.attempts": "Abgelehnte oder fehlgeschlagene Versuche: {count} von 3 – danach wird der Code gesperrt.",
   "code.cancel": "Code abbrechen",
+  "code.confirmCheck": "Die Codes stimmen überein – ich habe nachgefragt",
   "code.confirmHint": "Prüft, ob {name} denselben Code sieht: {code}",
   "code.confirmHintJoin": "Prüft, ob der Host denselben Code sieht: {code}",
   "code.conflict": "Zwei verschiedene Personen haben diesen Code benutzt – er wurde sicherheitshalber abgebrochen.",

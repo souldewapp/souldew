@@ -372,6 +372,7 @@
   "code.aria": "Invite code {code}",
   "code.attempts": "Declined or failed attempts: {count} of 3 – after that the code is blocked.",
   "code.cancel": "Cancel code",
+  "code.confirmCheck": "The codes match – I checked with them",
   "code.confirmHint": "Check that {name} sees the same code: {code}",
   "code.confirmHintJoin": "Check that the host sees the same code: {code}",
   "code.conflict": "Two different people used this code – it was cancelled to be safe.",
