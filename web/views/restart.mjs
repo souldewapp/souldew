@@ -86,8 +86,8 @@ export function RestartModal({ r, rules, onClose }) {
       onClose();
       navigate('soullink', { run: res.manifest.id });
     } catch (e) {
-      setError(e.code === 'no-rom' ? t('restart.noRom', 'The game of this run isn’t in your library anymore. Add it again or pick another one under “Change settings first”.')
-        : e.code === 'no-patch' ? t('restart.noPatch', 'The ROM hack of this run isn’t in your library anymore. Add it again or pick another one under “Change settings first”.')
+      setError(e.code === 'no-rom' ? t('restart.noRom', 'The game of this run isn’t in your library anymore. Add it again or pick another one under “Adjust settings …”.')
+        : e.code === 'no-patch' ? t('restart.noPatch', 'The ROM hack of this run isn’t in your library anymore. Add it again or pick another one under “Adjust settings …”.')
         : e.message);
       setBusy(false);
     }
