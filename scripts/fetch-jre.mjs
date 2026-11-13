@@ -7,6 +7,7 @@ import { mkdirSync, rmSync, writeFileSync, existsSync, readdirSync } from 'node:
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const arch = process.argv[2] || process.arch;
@@ -18,15 +19,24 @@ if (existsSync(javaBin)) {
   console.log('Runtime already present:', target);
   process.exit(0);
 }
-const url = `https://api.adoptium.net/v3/binary/latest/17/ga/${os}/${apiArch}/jdk/hotspot/normal/eclipse`;
-console.log('Downloading JDK', url);
-const res = await fetch(url);
+// Adoptium's asset list names the archive and its SHA-256 – the download is checked against it before it's unpacked,
+// so a tampered or broken file can't end up inside the app.
+const meta = `https://api.adoptium.net/v3/assets/latest/17/hotspot?architecture=${apiArch}&image_type=jdk&os=${os}&vendor=eclipse`;
+const assets = await (await fetch(meta)).json();
+const pkg = Array.isArray(assets) ? assets[0]?.binary?.package : null;
+if (!pkg?.link || !/^[0-9a-f]{64}$/i.test(pkg.checksum || '')) throw new Error(`no JDK package with a checksum in ${meta}`);
+console.log('Downloading JDK', pkg.name, `(${assets[0].version?.semver || '?'})`);
+const res = await fetch(pkg.link);
 if (!res.ok) throw new Error(`download failed ${res.status}`);
 const tmp = join(root, 'tools', 'jre', 'download');
 rmSync(tmp, { recursive: true, force: true });
 mkdirSync(tmp, { recursive: true });
 const archive = join(tmp, os === 'windows' ? 'jdk.zip' : 'jdk.tar.gz');
-writeFileSync(archive, Buffer.from(await res.arrayBuffer()));
+const bytes = Buffer.from(await res.arrayBuffer());
+const sha = createHash('sha256').update(bytes).digest('hex');
+if (sha.toLowerCase() !== pkg.checksum.toLowerCase()) throw new Error(`JDK checksum mismatch: got ${sha}, Adoptium says ${pkg.checksum}`);
+console.log('SHA-256 ok', sha);
+writeFileSync(archive, bytes);
 // Windows: the system's bsdtar reads zip (Git's GNU tar, often first in PATH on CI, doesn't) – PowerShell as fallback.
 const winTar = join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
 const psQuote = (p) => `'${p.replace(/'/g, "''")}'`;
