@@ -13,6 +13,17 @@ function helper() {
   // overshoots by a few frames each time (a Game Boy core more than a DS one). Running exactly n frames, a walk is
   // checked before its step has ended – so the fast player runs the frames the plans had in practice.
   const SLACK = { gb: 8, gbc: 8, gba: 4, nds: 1 }[e.system?.()] ?? 2;
+  // ...and the same frames every time: a person walking in the way on the first attempt walks there on every one. From
+  // the second attempt on each wait runs 0–3 frames more (a fixed sequence per attempt), as player.html's waits vary.
+  let jitter = () => 0;
+  function seedJitter(attempt) {
+    if (!NATIVE || attempt <= 1) return;
+    let x = (attempt * 2654435761) >>> 0;
+    jitter = () => {
+      x = (x * 1664525 + 1013904223) >>> 0;
+      return x >>> 30;
+    };
+  }
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   let ctx = null;
 
@@ -129,7 +140,7 @@ function helper() {
 
   async function frames(n) {
     if (NATIVE) {
-      if (n > 0 && (await e.step(n + SLACK)) === null) throw new Error('emulator stopped');
+      if (n > 0 && (await e.step(n + SLACK + jitter())) === null) throw new Error('emulator stopped');
       return;
     }
     const end = e.frames() + n;
@@ -218,7 +229,8 @@ function helper() {
     return false;
   }
 
-  async function run({ plan, romSrc, timeoutMs }) {
+  async function run({ plan, romSrc, timeoutMs, attempt = 1 }) {
+    seedJitter(attempt);
     const t0 = performance.now();
     const log = [];
     const shots = [];

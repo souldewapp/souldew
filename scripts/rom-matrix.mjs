@@ -365,6 +365,8 @@ async function runLive(list) {
     for (let a = 1; a <= attempts; a++) {
       log(`  ${r.name}${a > 1 ? ` (attempt ${a})` : ''} …`);
       rmSync(resultFile, { force: true });
+      // (the fast player runs a plan the same way to the frame every time – a later attempt varies its timing, see page.mjs)
+      writeFileSync(join(out, 'job.json'), JSON.stringify({ ...job, attempt: a }));
       await new Promise((done) => {
         const p = spawn(electron, [join(root, 'scripts', 'rom-matrix', 'live.mjs'), join(out, 'job.json')], { stdio: ['ignore', 'pipe', 'pipe'] });
         p.stdout.on('data', () => {});

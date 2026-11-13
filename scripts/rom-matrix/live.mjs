@@ -115,7 +115,7 @@ async function runOne(url, t) {
     }
     await win.webContents.executeJavaScript(PAGE_HELPER);
     const died = new Promise((_, rej) => win.webContents.once('render-process-gone', (_e, d) => rej(new Error(`renderer gone: ${d.reason}`))));
-    const out = await Promise.race([win.webContents.executeJavaScript(`window.__rm.run(${JSON.stringify({ plan: t.plan, romSrc: rom, timeoutMs: job.timeoutMs || 600000 })})`), died]);
+    const out = await Promise.race([win.webContents.executeJavaScript(`window.__rm.run(${JSON.stringify({ plan: t.plan, romSrc: rom, timeoutMs: job.timeoutMs || 600000, attempt: job.attempt || 1 })})`), died]);
     Object.assign(res, out);
     for (const s of out.shots || []) {
       const p = join(job.outDir, `${t.key}-${s.name}.png`);

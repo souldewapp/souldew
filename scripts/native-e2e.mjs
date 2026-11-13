@@ -12,7 +12,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, mkdirSync, readdirSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -49,7 +49,7 @@ if (!process.versions.electron) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   app.whenReady().then(async () => {
-    const { startServer } = await import(join(root, 'server', 'app.mjs'));
+    const { startServer } = await import(pathToFileURL(join(root, 'server', 'app.mjs')).href);
     const { url } = await startServer({ port: 0 });
     const lib = await fetch(`${url}/api/library`).then((r) => r.json());
     const roms = (lib.roms || []).filter((r) => ['nds', 'gba', 'gb', 'gbc'].includes(r.system) && (!opt('only') || r.name.toLowerCase().includes(opt('only').toLowerCase())));
