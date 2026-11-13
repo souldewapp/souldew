@@ -2,6 +2,14 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## Unreleased
+
+Security fixes – all found in a code review and reported by @Never-lab:
+
+- **Run data saved by the app can't be pinned with a date far in the future** (#19): the app already ignored a change
+  that claimed to be made days ahead (it would win over every later change of that entry), but the copy souldew keeps
+  on disk accepted it. Both now apply the same limit (one day ahead at most).
+
 ## 2.5.0
 
 - **Nintendo 3DS games play inside souldew**: X/Y, Omega Ruby/Alpha Sapphire, Sun/Moon and Ultra Sun/Ultra Moon run
