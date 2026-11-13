@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseVersion, compareVersions, isNewer, isAllowedUrl, validateFeed, updateAction, digestsMatch, feedUrlFrom, dmgAssetName, winAssetName, assetFor, platformKey, actionFor } from '../shared/update.mjs';
 import { fetchChecked, nsisInstallDir, installerArgs, launchInstaller, windowsInstallPlan, cleanupWorkDir } from '../electron/update-core.mjs';
-import { sha256File, verifyFile, fetchFeed, downloadFile, bundleFromExe, isTranslocated, stagingDirFor, canReplace, swapBundle, cleanupStaging } from '../electron/update-core.mjs';
+import { sha256File, verifyFile, fetchFeed, downloadFile, bundleFromExe, isTranslocated, stagingDirFor, canReplace, swapBundle, cleanupStaging, requirePackagedPublicKey } from '../electron/update-core.mjs';
 import { changelogSection, buildFeed } from '../scripts/release.mjs';
 
 const TMP = mkdtempSync(join(tmpdir(), 'sls-update-'));
@@ -277,6 +277,13 @@ test('signed feed: round trip, canonical form, tampering and missing signatures'
   assert.throws(() => parsePublicKey(rsa), (e) => e.code === 'BAD_SIGNATURE');
   // Re-signing replaces an old sig instead of signing it.
   assert.ok(verifyFeedSignature(signFeed({ ...signed, notes: 'new' }, privateKey), pub));
+});
+
+test('packaged builds refuse updates when updates.publicKey is missing; dev may omit it', () => {
+  assert.throws(() => requirePackagedPublicKey(true, null), (e) => e.code === 'NO_PUBLIC_KEY');
+  assert.throws(() => requirePackagedPublicKey(true, '  '), (e) => e.code === 'NO_PUBLIC_KEY');
+  assert.doesNotThrow(() => requirePackagedPublicKey(true, 'MCowBQYDK2VwAyEANG4Ng/ROJT1UWYJ0XQ0k3ZfY3mYKKmiiF0tunuAzlBA='));
+  assert.doesNotThrow(() => requirePackagedPublicKey(false, null));
 });
 
 test('fetchFeed checks the signature before using the feed when a public key is set', async () => {

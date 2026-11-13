@@ -11,6 +11,7 @@ import {
   fetchFeed, downloadFile, verifyFile, bundleFromExe, canReplace, cleanupStaging, stageFromDmg, swapBundle,
   nsisInstallDir, launchInstaller, windowsInstallPlan, cleanupWorkDir,
   appImageFromEnv, appImageStagedPath, canReplaceAppImage, makeExecutable, swapAppImage, cleanupAppImageStaging, appImageRelaunch,
+  requirePackagedPublicKey,
 } from './update-core.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -51,10 +52,10 @@ export function setupUpdater({ send, trusted = () => false }) {
   const appImage = app.isPackaged && LINUX ? appImageFromEnv() : null;
   const workDir = join(app.getPath('temp'), 'souldew Update');
   const repo = typeof cfg.repo === 'string' ? cfg.repo.trim() : '';
-  // Ed25519 key the feed must be signed with (see scripts/release.mjs --init-key). Without it the feed is only
-  // protected by HTTPS – kept working for older setups, but said out loud.
+  // Ed25519 key the feed must be signed with (see scripts/release.mjs --init-key). Packaged builds require it;
+  // without it in dev the feed is only protected by HTTPS – warn so forks notice.
   const publicKey = typeof cfg.publicKey === 'string' && cfg.publicKey.trim() ? cfg.publicKey.trim() : null;
-  if (feedUrl && !publicKey) console.warn('update: no updates.publicKey in package.json – the update feed is NOT signature-checked (run `npm run release -- --init-key`)');
+  if (feedUrl && !publicKey && !app.isPackaged) console.warn('update: no updates.publicKey in package.json – the update feed is NOT signature-checked (run `npm run release -- --init-key`)');
   const pageFor = (u) => u.page || (repo ? `https://github.com/${repo}/releases/tag/v${u.version}` : u.url);
   const target = { platform: process.platform, arch: process.arch };
 
@@ -123,6 +124,7 @@ export function setupUpdater({ send, trusted = () => false }) {
     const prev = state.phase;
     set({ phase: 'checking', checkError: null });
     try {
+      requirePackagedPublicKey(app.isPackaged, publicKey);
       const feed = await fetchFeed(feedUrl, { allowLocal, publicKey });
       // A release without a download for this platform (e.g. macOS only) is no update here.
       const action = actionFor(feed, current, target); // (minVersion never sends Windows to the manual route)
@@ -130,8 +132,8 @@ export function setupUpdater({ send, trusted = () => false }) {
       const asset = assetFor(feed, target.platform, target.arch);
       return set({ phase: 'available', update: { ...feed, action, asset, page: pageFor(feed) }, error: null, checkedAt: Date.now() });
     } catch (e) {
-      if (!manual || e.code === 'BAD_SIGNATURE') console.warn('update check failed:', e.code || '', e.message);
-      // A refused signature is shown in the sidebar too (UpdateBanner); nothing of that feed is used.
+      if (!manual || e.code === 'BAD_SIGNATURE' || e.code === 'NO_PUBLIC_KEY') console.warn('update check failed:', e.code || '', e.message);
+      // A refused signature / missing key is shown in the sidebar too (UpdateBanner); nothing of that feed is used.
       return set({ phase: prev === 'available' || prev === 'error' ? prev : 'idle', checkError: { code: e.code || null, message: e.message }, checkedAt: Date.now() });
     }
   }

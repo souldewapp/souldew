@@ -136,6 +136,16 @@ async function get(url, { timeoutMs, allowLocal, signal, fetchImpl = fetch }) {
 const abortReason = (ctl, e) => (ctl.signal.aborted && ctl.signal.reason instanceof Error ? ctl.signal.reason : e);
 
 /**
+ * Packaged builds must carry `updates.publicKey` so the feed cannot be used unsigned.
+ * Dev (`npm run app`) may omit the key; callers should warn instead.
+ */
+export function requirePackagedPublicKey(isPackaged, publicKey) {
+  if (!isPackaged) return;
+  if (typeof publicKey === 'string' && publicKey.trim()) return;
+  throw fail('NO_PUBLIC_KEY', 'Packaged builds require updates.publicKey – refuse unsigned update feeds');
+}
+
+/**
  * Downloads and validates latest.json. With `publicKey` (base64 SPKI) the feed must carry a valid `sig`
  * (code BAD_SIGNATURE otherwise) – checked before any of its fields are used.
  */
