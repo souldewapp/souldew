@@ -15,6 +15,8 @@ import { HostCode } from './invitecode.mjs';
 import { RestartModal } from './restart.mjs';
 import { useStreamer } from '../lib/streamer.mjs';
 import { NuzlockeRules, Choice, TypeHelpRule } from './nuzrules.mjs';
+import { ShareButton } from './liveshare.mjs';
+import { deathEvent } from '../lib/liveshare.mjs';
 
 
 /** Is `slot` connected right now? Per player once the app tracks it (`onlineSlots`), before that "any partner". */
@@ -727,6 +729,7 @@ function GravesTab() {
           ${p.killer?.species && html`<span class="grave-killer tiny"><${Sprite} id=${p.killer.species} size=${24} gen=${runData.gen} />${killerText(p.killer)}</span>`}
           ${cause && !p.killer?.species && html`<span class="tiny faint">${cause}</span>`}
           ${p.diedAt && html`<time class="tiny faint">${ago(p.diedAt)}</time>`}
+          <${ShareButton} event=${deathEvent(doc, manifest, a.key)} small />
         </div>`;
       })}</div>`}
   </div>`;
