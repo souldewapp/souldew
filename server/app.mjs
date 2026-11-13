@@ -4,10 +4,10 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, createReadStream, createWriteStream, writeFileSync, mkdirSync, rmSync, readdirSync, renameSync } from 'node:fs';
 import { once } from 'node:events';
-import { join, extname, normalize, resolve, basename, dirname } from 'node:path';
+import { join, extname, resolve, basename, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { WEB_DIR, SHARED_DIR, CACHE_DIR, DATA_DIR, CONFIG_PATH, NODE_MODULES, DEV, LIBRARY_DIR } from './lib/paths.mjs';
-import { writeFileAtomic, httpError, safeFileName } from './lib/fsutil.mjs';
+import { writeFileAtomic, httpError, safeFileName, safeJoin, realInside } from './lib/fsutil.mjs';
 import { detectJava, uprStatus, installUpr, runBridge } from './lib/toolchain.mjs';
 import { preparePatchedRom, KNOWN_PATCHES } from './lib/roms.mjs';
 import { ROM_EXTENSIONS, PATCH_EXTENSIONS } from '../shared/romid.mjs';
@@ -168,10 +168,14 @@ function serveFile(res, path, extraHeaders = {}, head = false) {
 /** Only HeartGold/SoulSilver battery saves can be parsed (shared/gen4save.mjs). */
 const isHgssRun = (m) => /^IP[KG]/i.test(m?.game?.code || '') || /heartgold|soulsilver/i.test(m?.game?.id || '');
 
-function safeJoin(base, rel) {
-  const p = normalize(join(base, rel));
-  if (p !== base && !p.startsWith(base + '/') && !p.startsWith(base + '\\')) return null;
-  return p;
+/**
+ * A file in a run's folder by name (a query parameter, or a name from run.json – which can be damaged or edited by
+ * hand): null unless it stays inside that folder, also after following links. '' is the folder itself.
+ */
+export function runPath(runId, name) {
+  const dir = runDir(runId);
+  const p = safeJoin(dir, name);
+  return p && realInside(p, dir) ? p : null;
 }
 
 const keyOf = (s) => createHash('sha1').update(String(s)).digest('hex').slice(0, 16);
@@ -411,13 +415,16 @@ function handleExport(req, res, path, url) {
     let downloadName = null;
     if (what === 'rom') name = out?.rom;
     else if (what === 'spoiler') name = out?.log;
-    else if (what === 'save') name = out?.rom ? basename(defaultSavePath(manifest, slot)) : null;
+    else if (what === 'save') {
+      const sav = defaultSavePath(manifest, slot);
+      name = sav ? basename(sav) : null;
+    }
     else if (what === 'pack') {
       name = 'run-pack.soullink.json';
       downloadName = `${manifest.name || 'SoulLink'}.soullink.json`;
     } else return send(res, 400, { error: 'what muss rom, save, spoiler oder pack sein' });
     if (!name) return send(res, 404, { error: 'Datei nicht vorhanden' });
-    const file = safeJoin(runDir(run[1]), name);
+    const file = runPath(run[1], name);
     if (!file) return send(res, 400, { error: 'bad name' });
     return sendDownload(req, res, downloadName || name, file);
   }
@@ -455,7 +462,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     }
     const run = u.pathname.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
     if (run) {
-      const f = safeJoin(runDir(run[1]), u.searchParams.get('name') || '');
+      const f = runPath(run[1], u.searchParams.get('name') || '');
       if (!f || !existsSync(f)) throw httpError(404, 'ROM nicht gefunden', 'romNotFound');
       return f;
     }
@@ -863,7 +870,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     const env = { sharedDir: SHARED_DIR, cacheDir: CACHE_DIR };
     const run = src.pathname.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
     if (run) {
-      const file = safeJoin(runDir(run[1]), src.searchParams.get('name') || '');
+      const file = runPath(run[1], src.searchParams.get('name') || '');
       if (!file) throw httpError(400, 'bad name');
       return romDataFor({ file }, env);
     }
@@ -993,7 +1000,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   });
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/log\/(p[1-4])$/, (req, m) => {
     const name = readManifest(m[1])?.outputs?.[m[2]]?.log;
-    const p = name ? safeJoin(runDir(m[1]), name) : null;
+    const p = name ? runPath(m[1], name) : null;
     return p && existsSync(p) ? readFileSync(p, 'utf8') : '';
   });
   route('GET', /^\/api\/runs\/([a-f0-9]{8})\/doc$/, (req, m) => readDoc(m[1]));
@@ -1148,7 +1155,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
 
   route('POST', /^\/api\/runs\/([a-f0-9]{8})\/reveal$/, async (req, m) => {
     const { file } = await readBody(req);
-    const target = file ? safeJoin(runDir(m[1]), file) : runDir(m[1]);
+    const target = file ? runPath(m[1], String(file)) : runDir(m[1]);
     if (!target || !existsSync(target)) throw httpError(500, 'Datei nicht gefunden', 'fileNotFound');
     revealInFileManager(target);
     return { ok: true };
@@ -1168,7 +1175,8 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       const manifest = readManifest(runId);
       const out = manifest?.outputs?.[slot];
       if (!out) throw httpError(409, 'ROM für diesen Spieler wurde noch nicht gebaut', 'romNotBuilt');
-      romPath = join(runDir(runId), out.rom);
+      romPath = typeof out.rom === 'string' && out.rom ? runPath(runId, out.rom) : null;
+      if (!romPath) throw httpError(409, 'ROM für diesen Spieler wurde noch nicht gebaut', 'romNotBuilt');
       const sav = defaultSavePath(manifest, slot);
       if (sav && isHgssRun(manifest) && !watcher.status(runId).watching) watcher.watch(runId, sav);
     } else {
@@ -1384,7 +1392,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         const download = path.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
         if (download && (req.method === 'GET' || req.method === 'HEAD')) {
           const name = url.searchParams.get('name') || '';
-          const file = safeJoin(runDir(download[1]), name);
+          const file = runPath(download[1], name);
           if (!file) return send(res, 400, { error: 'bad name' });
           return serveFile(res, file, url.searchParams.get('inline') ? {} : { 'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(name)}` }, req.method === 'HEAD');
         }
@@ -1523,9 +1531,14 @@ export function readDoc(runId) {
   return null;
 }
 
-function defaultSavePath(manifest, slot) {
-  const out = manifest?.outputs?.[slot];
-  if (!out) return null;
-  return join(runDir(manifest.id), out.rom.replace(/\.(nds|gba|gbc|gb)$/i, '.sav'));
+/**
+ * The battery save next to a run's ROM ("<ROM name>.sav"), or null: no ROM yet, a game without battery saves (3DS
+ * saves live in the player's own folder – the ROM itself must never be served or overwritten as its "save"), or a
+ * name in run.json that would leave the run's folder.
+ */
+export function defaultSavePath(manifest, slot) {
+  const rom = manifest?.outputs?.[slot]?.rom;
+  if (typeof rom !== 'string' || !/\.(nds|gba|gbc|gb)$/i.test(rom)) return null;
+  return runPath(manifest.id, rom.replace(/\.(nds|gba|gbc|gb)$/i, '.sav'));
 }
 

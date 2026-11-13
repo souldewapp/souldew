@@ -9,6 +9,11 @@ Security fixes – all found in a code review and reported by @Never-lab:
 - **Run data saved by the app can't be pinned with a date far in the future** (#19): the app already ignored a change
   that claimed to be made days ahead (it would win over every later change of that entry), but the copy souldew keeps
   on disk accepted it. Both now apply the same limit (one day ahead at most).
+- **Files of a run stay in the run's folder** (#20): the ROM, save and spoiler log of a run are looked up by name in
+  its `run.json`; a damaged or hand-edited name (`../…`) or a link inside the folder that points elsewhere could make
+  souldew start, serve or overwrite a file outside the run. Every such path is now checked, also after following
+  links. Along the way: a 3DS run no longer offers its ROM as "Save my save file" (3DS saves live in the player's
+  own folder).
 
 ## 2.5.0
 
