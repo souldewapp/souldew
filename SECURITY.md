@@ -16,7 +16,10 @@ about:
   and `Sec-Fetch-Site` check and the app header in `server/lib/guard.mjs`), path traversal in file routes, the
   overlay API or the Pokélink bridge leaking room keys, file paths or spoilers.
 - **Invite codes** (`web/lib/invitecode.mjs`): ways to join a run without the host's approval, guessing or reusing a
-  code, or reading the run pack from the relay.
+  code, reading the run pack from the relay, or getting the pack without the host typing in the 4 confirmation digits
+  the joining player's app shows. (Known limit: nothing commits either side to its key before it sees the other's, so
+  somebody in the middle who can keep the real partner's messages from the host could pick a key until the digits
+  match – closing that needs a new wire version.)
 - **Sync** (`web/lib/sync.mjs`, `web/lib/doc.mjs`): reading or forging another run's data without its key, or a
   partner's data causing code execution or damage on your machine (e.g. through names or run packs).
 - **Updater** (`electron/updater.mjs`): installing an update that isn't signed with the release key or doesn't match

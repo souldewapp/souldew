@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { newCode, normalizeCode, formatCode, deriveCodeKeys, inviteCodeSupported, CodeHost, joinWithCode, confirmationCode, suggestSlot } from '../web/lib/invitecode.mjs';
+import { newCode, normalizeCode, normalizeConfirm, formatCode, deriveCodeKeys, inviteCodeSupported, CodeHost, joinWithCode, confirmationCode, suggestSlot } from '../web/lib/invitecode.mjs';
 
 /** In-memory MQTT broker: every client subscribed to `prefix/#` gets every publish (async, like a socket). */
 function fakeMqtt() {
@@ -101,7 +101,7 @@ test('host allows → partner receives the pack; the relay never sees it, the co
   await until(() => host.state.phase === 'request');
   assert.equal(host.state.request.name, 'Robin');
   assert.ok(phases.includes('waiting'));
-  await host.allow();
+  await host.allow({ confirm: host.state.request?.confirm });
   const got = await g.promise;
   assert.deepEqual(got, pack());
   await until(() => host.state.phase === 'done');
@@ -201,7 +201,7 @@ test('single use: once allowed, a second partner gets "used"', async () => {
     const pub = c.publish;
     c.publish = (topic, ...rest) => (topic.includes('/ack/') ? undefined : pub(topic, ...rest));
   }
-  await host.allow();
+  await host.allow({ confirm: host.state.request?.confirm });
   assert.equal((await g1.promise).secret, pack().secret);
   assert.equal(host.state.phase, 'sending');
   await assert.rejects(guest(broker, host.code, { name: 'Mallory' }).promise, { code: 'used' });
@@ -230,8 +230,56 @@ test('partner gives up while waiting → the host goes back to waiting, no false
   await until(() => host.state.phase === 'waiting');
   const g2 = guest(broker, host.code);
   await until(() => host.state.phase === 'request');
-  await host.allow();
+  await host.allow({ confirm: host.state.request?.confirm });
   assert.equal((await g2.promise).secret, pack().secret);
+});
+
+test('"Allow" needs the 4 digits the partner sees: missing or wrong ones send nothing (#22)', async () => {
+  const broker = fakeMqtt();
+  const { host, states } = await hostOn(broker);
+  let seen = null;
+  const phases = [];
+  const g = guest(broker, host.code, { onState: (p, info) => { phases.push(p); if (p === 'waiting') seen = info?.confirm; } });
+  await until(() => host.state.phase === 'request' && seen);
+  const right = host.state.request.confirm;
+  const wrong = String((Number(right) + 1) % 10000).padStart(4, '0');
+  for (const confirm of [undefined, '', '123', wrong, `${right}5`, 'abcd']) {
+    assert.equal(await host.allow({ confirm }), false, String(confirm));
+  }
+  assert.equal(await host.allow(), false, 'no argument at all (an older caller)');
+  await new Promise((r) => setTimeout(r, 30));
+  assert.equal(host.state.phase, 'request', 'still deciding – a wrong try is not a decline');
+  assert.ok(!states.some((s) => s.phase === 'sending'));
+  assert.ok(!leaked(broker, 'SECRET-ROOM-KEY'), 'nothing was sealed for the partner');
+  assert.ok(!phases.includes('received'));
+  // the digits as the host types them from what the partner reads out (spaces allowed)
+  assert.equal(await host.allow({ confirm: `${seen.slice(0, 2)} ${seen.slice(2)}` }), true);
+  assert.equal((await g.promise).secret, pack().secret);
+  assert.equal(await host.allow({ confirm: right }), false, 'single use');
+  assert.equal(normalizeConfirm(' 12-34 '), '1234');
+  assert.equal(normalizeConfirm('12345'), null);
+  assert.equal(normalizeConfirm(null), null);
+});
+
+test('somebody in the middle: the host sees other digits than the partner, and typing the partner’s digits can’t allow the middle (#22)', async () => {
+  // The middle runs its own exchange with the host (it knows the code). The real partner's digits come from a
+  // different exchange, so typing them in can't allow the middle's request.
+  const broker = fakeMqtt();
+  const { host } = await hostOn(broker);
+  const other = fakeMqtt();
+  const { host: fake } = await hostOn(other); // the middle, playing host towards the real partner
+  let partnerSees = null;
+  const real = guest(other, fake.code, { onState: (p, info) => p === 'waiting' && (partnerSees = info?.confirm) });
+  real.promise.catch(() => {});
+  const middle = guest(broker, host.code, { name: 'Robin' });
+  middle.promise.catch(() => {});
+  await until(() => host.state.phase === 'request' && partnerSees);
+  if (partnerSees !== host.state.request.confirm) { // 1 in 10^4 they collide by chance
+    assert.equal(await host.allow({ confirm: partnerSees }), false);
+    assert.ok(!leaked(broker, 'SECRET-ROOM-KEY'));
+  }
+  host.cancel();
+  fake.cancel();
 });
 
 test('confirmation code: host and partner see the same 4 digits, other sessions see other ones', async () => {
@@ -242,7 +290,7 @@ test('confirmation code: host and partner see the same 4 digits, other sessions 
   await until(() => host.state.phase === 'request' && seen);
   assert.match(host.state.request.confirm, /^\d{4}$/);
   assert.equal(seen, host.state.request.confirm, 'both sides derive the same confirmation code');
-  await host.allow();
+  await host.allow({ confirm: host.state.request?.confirm });
   await g.promise;
 
   // pure derivation: deterministic, bound to the secret, the request id and both masked keys
@@ -287,7 +335,7 @@ test('the partner reloads their app while asking and tries again → no false "s
   // the same person again, with a new request: no conflict, the new one is shown and can be allowed
   const g2 = guest(broker, host.code);
   await until(() => host.state.phase === 'request' && host.state.request.rid !== rid1);
-  await host.allow();
+  await host.allow({ confirm: host.state.request?.confirm });
   assert.equal((await g2.promise).secret, pack().secret);
 });
 
@@ -328,7 +376,7 @@ test('third player: the host sends the pack with all players plus a seat hint; o
   let got = null;
   const g = guest(broker, host.code, { name: 'Mika', onState: (p, info) => p === 'received' && (got = info) });
   await until(() => host.state.phase === 'request');
-  await host.allow();
+  await host.allow({ confirm: host.state.request?.confirm });
   const p = await g.promise;
   assert.deepEqual(Object.keys(p.players), ['p1', 'p2', 'p3', 'p4']);
   assert.deepEqual(got, { slot: 'p3', taken: ['p1', 'p2'] });
@@ -344,7 +392,7 @@ test('third player: the host sends the pack with all players plus a seat hint; o
   const g2 = guest(broker, host2.code, { name: 'Sam', onState: (ph, info) => ph === 'received' && (got2 = info) });
   await until(() => host2.state.phase === 'request');
   assert.match(host2.state.request.confirm, /^\d{4}$/, 'the 4-digit check works for every code');
-  await host2.allow();
+  await host2.allow({ confirm: host2.state.request?.confirm });
   await g2.promise;
   assert.deepEqual(got2, { slot: 'p4', taken: ['p1', 'p2', 'p3'] });
 });
@@ -355,7 +403,7 @@ test('seat hint is checked against the pack, and an older host (no hint) still w
   let got = null;
   const g = guest(broker, host.code, { onState: (p, info) => p === 'received' && (got = info) });
   await until(() => host.state.phase === 'request');
-  await host.allow();
+  await host.allow({ confirm: host.state.request?.confirm });
   await g.promise;
   assert.deepEqual(got, { slot: 'p3', taken: ['p1', 'p2'] });
   // no seat function: like an older host
@@ -363,7 +411,7 @@ test('seat hint is checked against the pack, and an older host (no hint) still w
   let got2 = null;
   const g2 = guest(broker, old.code, { name: 'robin', onState: (p, info) => p === 'received' && (got2 = info) });
   await until(() => old.state.phase === 'request');
-  await old.allow();
+  await old.allow({ confirm: old.state.request?.confirm });
   assert.deepEqual(await g2.promise, pack());
   assert.deepEqual(got2, { slot: 'p2', taken: [] }, 'a matching name is the only hint');
 });

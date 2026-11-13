@@ -22,6 +22,10 @@ Security fixes – all found in a code review and reported by @Never-lab:
   and double-quoted attributes, not for single quotes or backticks. No overlay used such a place, but now the escape
   covers them too, a player slot reaches the overlay's styles only as p1–p4, and the emulator page's "Click to start"
   label is set as plain text. The example in `docs/STREAM_API.md` escapes the same way.
+- **"Allow" for an invite code checks the 4 digits** (#22): both apps show the same 4 digits when the right two
+  people are talking to each other, but the host could press Allow without comparing them. Now the host types in the
+  digits the joining player's app shows; Allow stays off until they match, and the app sends the invite only with the
+  matching digits. Joining between this version and 2.5.0 keeps working (the digits are computed the same way).
 
 ## 2.5.0
 

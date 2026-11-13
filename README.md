@@ -36,7 +36,7 @@ A SoulLink is a Nuzlocke for two or more: whatever you catch on a route is bound
 <summary><b>Step by step: playing together</b></summary>
 
 1. **One person hosts:** SoulLink › **Host a new SoulLink**, choose "SoulLink · 2/3/4" and enter everyone's names. Pick the game (and optionally a hack) and a randomizer preset.
-2. **Invite with a code:** the app shows a 6-digit code (valid for 15 minutes). Tell it to the next player; when they ask to join, you click **Allow**. Each code lets exactly one person in – "New code" makes the next one. An invite file works too.
+2. **Invite with a code:** the app shows a 6-digit code (valid for 15 minutes). Tell it to the next player; when they ask to join, their app shows 4 digits – type them in on your side and click **Allow** (it stays off until the digits match). Each code lets exactly one person in – "New code" makes the next one. An invite file works too.
 3. **The others join:** install the app, add their **own** ROM (and patch) to the library, then SoulLink › **Join with code**. The name you enter there is the name the others see.
 4. Everyone clicks **Play** on the board. The apps connect by themselves and the teams appear live on every board. If a Pokémon faints, the whole group of that area dies.
 

@@ -900,6 +900,8 @@ ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column;
 .invite-code-input { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 22px; letter-spacing: 0.12em; }
 .code-request { padding: 12px 14px; border-radius: var(--r-m); background: var(--shell-3); border-left: 3px solid var(--p2); display: flex; flex-direction: column; gap: 8px; }
 .code-request p { margin: 0; }
+.confirm-code-input { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 20px; letter-spacing: 0.3em; width: 9ch; }
+.confirm-code-input[aria-invalid="true"] { border-color: var(--bad-ink); }
 
 /* Long run names, titles and update texts in narrow places (sidebar card, session header, save-state cards) */
 .power > div { min-width: 0; }
