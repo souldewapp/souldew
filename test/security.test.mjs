@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createServer, connect } from 'node:net';
 import { deflateRawSync } from 'node:zlib';
-import { hostAllowed, apiRequestError } from '../server/lib/guard.mjs';
+import { hostAllowed, apiRequestError, privateRequestError } from '../server/lib/guard.mjs';
 import { validCustomPath } from '../server/lib/emulator.mjs';
 import { LiveBridge, parseHello, looksLikeHttp, luaScript } from '../server/lib/livebridge.mjs';
 import { readZipEntry, listZip } from '../server/lib/zip.mjs';
@@ -42,6 +42,25 @@ test('request gate: only the app origin reaches the API', () => {
   // state-changing requests still need the app header
   assert.ok(apiRequestError(req('POST', { 'sec-fetch-site': 'same-origin' }), P));
   assert.ok(apiRequestError(req('DELETE', {}), P));
+});
+
+test('private GETs (run pack, files, spoiler log, webhook, stream token, folders) need the app itself (#21)', () => {
+  const get = (headers = {}) => req('GET', headers);
+  const own = [{ 'x-soullink': '1' }, { 'sec-fetch-site': 'same-origin' }, { 'sec-fetch-site': 'same-origin', 'x-soullink': '1' }];
+  const notOwn = [{}, { 'sec-fetch-site': 'none' }, { 'x-soullink': '0' }, { 'sec-fetch-site': 'same-site' }];
+  const privatePaths = ['/api/runs/c0ffee01', '/api/runs/c0ffee01/download', '/api/runs/c0ffee01/file', '/api/runs/c0ffee01/log/p2',
+    '/api/runs/c0ffee01/data/p1', '/api/runs/c0ffee01/doc', '/api/runs/c0ffee01/discord', '/api/stream', '/api/status'];
+  for (const path of privatePaths) {
+    for (const h of own) assert.equal(privateRequestError(get(h), path), null, `${path} ${JSON.stringify(h)}`);
+    for (const h of notOwn) assert.ok(privateRequestError(get(h), path), `${path} ${JSON.stringify(h)}`);
+    assert.ok(privateRequestError(req('HEAD', {}), path), `HEAD ${path}`);
+  }
+  // what OBS and the overlays read stays as it was (the general gate still applies)
+  for (const path of ['/api/runs/c0ffee01/overlay', '/api/runs/current/overlay/events', '/api/library', '/api/catalog', '/api/runs/c0ffee01/save/p1']) {
+    assert.equal(privateRequestError(get({}), path), null, path);
+  }
+  // other methods are the general gate's (they need the app header there)
+  assert.equal(privateRequestError(req('PUT', {}), '/api/runs/c0ffee01/doc'), null);
 });
 
 test('custom emulator path: only a matching .app bundle or emulator executable', () => {

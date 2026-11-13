@@ -13,7 +13,9 @@ souldew runs a local HTTP server and talks to other players over public relays. 
 about:
 
 - **Local server** (`server/`): requests from other websites or other machines reaching the API (host check, origin
-  and `Sec-Fetch-Site` check and the app header in `server/lib/guard.mjs`), path traversal in file routes, the
+  and `Sec-Fetch-Site` check and the app header in `server/lib/guard.mjs`; GETs that hand out the run pack, a run's
+  files, the spoiler log, the Discord webhook, the stream token or folders additionally need the app header or a
+  same-origin request – `PRIVATE_GETS`), path traversal in file routes, the
   overlay API or the Pokélink bridge leaking room keys, file paths or spoilers.
 - **Invite codes** (`web/lib/invitecode.mjs`): ways to join a run without the host's approval, guessing or reusing a
   code, reading the run pack from the relay, or getting the pack without the host typing in the 4 confirmation digits
@@ -39,6 +41,10 @@ serve is readable by design – to the pages and programs listed in [docs/STREAM
   graveyard and the log. In a randomized run that tells what everybody got – that's what a stream shows.
 - **Never served:** room keys and secrets, invite codes, device IDs, the Discord webhook, the spoiler log, ROMs, saves,
   savestates, file names and folders.
+- **Stream API** (`server/lib/streamapi.mjs`): with the token, whoever has it; without, OBS (no Origin, or its
+  `http://absolute` local files), scripts and souldew's own pages. Pages opened from disk (Origin `null` – shared with
+  sandboxed frames on any website) and other `localhost` pages only after the Stream page's switch, which starts on
+  for installs set up before it existed (so their layouts keep working) and off for new ones.
 - **Pokélink bridge** (`server/lib/pokelink.mjs`): readable to themes opened from disk (`file://`, Origin `null`),
   Pokélink's own sites and souldew's own pages; pages of other local web servers only after the switch on the Stream
   page. Because a page opened from disk sends Origin `null` – which a sandboxed frame on a website sends too – a

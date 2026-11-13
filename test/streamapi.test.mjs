@@ -12,7 +12,7 @@ import { LEGENDARY, MYTHICAL, legendaryKind, isLegendary, legendariesUpTo } from
 import { decideCoffee, recordCoffee, coffeeRoll, coffeeTexts, coffeeJokeId, COFFEE, COFFEE_TEXT, COFFEE_SHORT, COFFEE_URL } from '../shared/coffee.mjs';
 import { qrMatrix, qrSvg, qrPath } from '../shared/qr.mjs';
 import { buildState, eventsBetween, legendaryEncounters, spriteSource, spriteUrls, API_PREFIX } from '../shared/streamapi.mjs';
-import { v1AccessError, localOrigin, requestToken, streamSettings } from '../server/lib/streamapi.mjs';
+import { v1AccessError, localOrigin, trustedOrigin, requestToken, streamSettings, streamMigration } from '../server/lib/streamapi.mjs';
 import { LINKS } from '../shared/links.mjs';
 
 const DATA = mkdtempSync(join(tmpdir(), 'sls-streamapi-'));
@@ -256,8 +256,37 @@ test('access: pages from this computer, OBS and curl may read; other sites need 
   assert.equal(v1AccessError(req(undefined, { authorization: `Bearer ${token}` }), url, { token }), null);
   assert.equal(requestToken(req(undefined, { 'x-souldew-token': 'x' }), url), 'x');
   assert.equal(v1AccessError(req(undefined, { authorization: 'Bearer wrong' }), url, { token }).status, 401);
-  assert.deepEqual(streamSettings({}), { token: '', coffee: true, corner: 'bl' }, 'pop-up on by default');
-  assert.deepEqual(streamSettings({ stream: { token: 'short', coffee: false, corner: 'tr' } }), { token: '', coffee: false, corner: 'tr' });
+  assert.deepEqual(streamSettings({}), { token: '', coffee: true, corner: 'bl', localPages: false }, 'pop-up on by default');
+  assert.deepEqual(streamSettings({ stream: { token: 'short', coffee: false, corner: 'tr', localPages: 'yes' } }), { token: '', coffee: false, corner: 'tr', localPages: false });
+});
+
+test('access without a token: OBS, scripts and souldew itself always; pages from disk and other localhost pages only when allowed (#21)', () => {
+  const req = (origin, host = '127.0.0.1:47390') => ({ headers: { host, ...(origin === undefined ? {} : { origin }) } });
+  const url = new URL('http://127.0.0.1/api/v1');
+  // always: no Origin (OBS URL sources, curl, scripts), OBS "Local file" sources, souldew's own origins
+  for (const o of [undefined, 'http://absolute', 'http://127.0.0.1:47390', 'http://localhost:47390', 'http://[::1]:47390']) {
+    assert.equal(v1AccessError(req(o), url), null, String(o));
+    assert.ok(trustedOrigin(o, '127.0.0.1:47390'), String(o));
+  }
+  // a file opened in a browser (null – which a sandboxed frame on any website sends too) and other local servers
+  for (const o of ['null', 'http://localhost:8080', 'http://127.0.0.1:5500', 'http://[::1]:3000', 'http://localhost']) {
+    const denied = v1AccessError(req(o), url);
+    assert.equal(denied?.status, 403, o);
+    assert.equal(denied.code, 'localPage', o);
+    assert.equal(v1AccessError(req(o), url, { localPages: true }), null, `${o} with the switch on`);
+  }
+  // websites: never without the token, switch or not
+  for (const o of ['https://evil.example', 'http://localhost.evil.example', 'https://absolute']) {
+    assert.equal(v1AccessError(req(o), url, { localPages: true }).code, 'foreignOrigin', o);
+  }
+  // the token still opens it from anywhere – and is still needed by everyone once set
+  const token = 'abcdefghijklmnopqrstuv';
+  assert.equal(v1AccessError(req('null'), new URL(`http://127.0.0.1/api/v1?token=${token}`), { token }), null);
+  assert.equal(v1AccessError(req('http://absolute'), url, { token }).status, 401);
+  // installs from before the switch keep the old rule once; new ones start strict; a set value is never touched
+  assert.deepEqual(streamMigration({ onboarded: true, stream: { coffee: false } }), { stream: { coffee: false, localPages: true } });
+  assert.deepEqual(streamMigration({}), { stream: { localPages: false } });
+  assert.equal(streamMigration({ onboarded: true, stream: { localPages: false } }), null);
 });
 
 // ---- the server ------------------------------------------------------------------------------------------------
@@ -330,6 +359,17 @@ test('server: /api/v1 JSON, CORS, token, read-only, sprites, live events and the
     const runs = await (await fetch(`${url}/api/v1/runs`)).json();
     assert.deepEqual(runs.map((r) => [r.id, r.current, r.players.length]), [['c0ffee02', true, 2]]);
 
+    // a new install starts strict: OBS and souldew yes, a page of another local server or from disk not yet (#21)
+    const appSet = (body) => fetch(`${url}/api/stream`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-soullink': '1' }, body: JSON.stringify(body) }).then((x) => x.json());
+    assert.equal((await (await fetch(`${url}/api/stream`, { headers: { 'x-soullink': '1' } })).json()).localPages, false);
+    assert.equal((await fetch(`${url}/api/v1/runs/current`, { headers: { origin: 'http://absolute' } })).status, 200, 'an OBS local-file layout');
+    assert.equal((await fetch(`${url}/api/v1/runs/current`, { headers: { origin: url } })).status, 200, 'souldew’s own page');
+    const strict = await fetch(`${url}/api/v1/runs/current`, { headers: { origin: 'http://localhost:8080' } });
+    assert.equal(strict.status, 403);
+    assert.equal((await strict.json()).code, 'localPage');
+    assert.equal((await fetch(`${url}/api/v1/runs/current`, { headers: { origin: 'null' } })).status, 403);
+    assert.equal((await appSet({ localPages: true })).localPages, true);
+
     const r = await fetch(`${url}/api/v1/runs/current?lang=de`, { headers: { origin: 'http://localhost:8080' } });
     assert.equal(r.status, 200);
     assert.equal(r.headers.get('access-control-allow-origin'), 'http://localhost:8080');
@@ -370,8 +410,8 @@ test('server: /api/v1 JSON, CORS, token, read-only, sprites, live events and the
 
     // settings: on by default, corner, token
     const set = (body) => fetch(`${url}/api/stream`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-soullink': '1' }, body: JSON.stringify(body) }).then((x) => x.json());
-    const s0 = await (await fetch(`${url}/api/stream`)).json();
-    assert.deepEqual([s0.coffee, s0.corner, s0.token], [true, 'bl', '']);
+    const s0 = await (await fetch(`${url}/api/stream`, { headers: { 'x-soullink': '1' } })).json();
+    assert.deepEqual([s0.coffee, s0.corner, s0.token, s0.localPages], [true, 'bl', '', true]);
     assert.match(s0.base, /^http:\/\/127\.0\.0\.1:\d+\/api\/v1$/);
     assert.equal((await set({ corner: 'tr' })).corner, 'tr');
     assert.equal((await set({ corner: 'middle' })).corner, 'tr', 'only the four corners');

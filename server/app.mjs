@@ -24,11 +24,11 @@ import { moveToGraveyard, parseHgssSave } from '../shared/gen4save.mjs';
 import { listPresets, savePreset, deletePreset } from './lib/presets.mjs';
 import { pageHeaders } from './lib/csp.mjs';
 import { gpuBackends, validBackend, fallbackNotice } from '../shared/gpu.mjs';
-import { hostAllowed, apiRequestError } from './lib/guard.mjs';
+import { hostAllowed, apiRequestError, privateRequestError } from './lib/guard.mjs';
 import { overlaySnapshot, TEST_SPECIES, currentRunId } from '../shared/overlay.mjs';
 import { startPokelinkBridge, pokelinkPlayers, POKELINK_PORT } from './lib/pokelink.mjs';
 import { romDataFor } from './lib/romloc.mjs';
-import { createStreamHub, streamSettings } from './lib/streamapi.mjs';
+import { createStreamHub, streamSettings, streamMigration } from './lib/streamapi.mjs';
 import { COFFEE_CORNERS } from '../shared/coffee.mjs';
 import { LINKS } from '../shared/links.mjs';
 import { randomBytes } from 'node:crypto';
@@ -437,6 +437,15 @@ function handleExport(req, res, path, url) {
  */
 export function startServer({ port = 7373, host = '127.0.0.1', background = true } = {}) {
   const GEN4 = JSON.parse(readFileSync(join(SHARED_DIR, 'data', 'gen4.json'), 'utf8'));
+  // The stream API's localPages switch (server/lib/streamapi.mjs streamMigration): an install set up before it
+  // existed keeps reading from local pages without a token, a new one starts strict. A config that can't be read
+  // is left alone (saveConfig would replace it with this one patch).
+  try {
+    const patch = streamMigration(existsSync(CONFIG_PATH) ? JSON.parse(readFileSync(CONFIG_PATH, 'utf8')) : {});
+    if (patch) saveConfig(patch);
+  } catch {
+    // unreadable config – streamSettings reads localPages as off
+  }
   const sseClients = new Set();
   const emit = (event, data) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -1029,6 +1038,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
     if (COFFEE_CORNERS.includes(body.corner)) next.corner = body.corner;
     if (body.token === 'new') next.token = randomBytes(18).toString('base64url');
     else if (body.token === '') next.token = '';
+    if (typeof body.localPages === 'boolean') next.localPages = body.localPages; // pages from disk / localhost without the token
     saveConfig({ stream: next });
     return streamState(server.address()?.port);
   });
@@ -1359,7 +1369,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       if ((path === '/api/v1' || path.startsWith('/api/v1/')) && await streamHub.handle(req, res, path, url)) return;
       if (path.startsWith('/api/')) {
         // Origin / Sec-Fetch-Site / x-soullink checks (server/lib/guard.mjs) – before any API route, SSE included.
-        const denied = apiRequestError(req, server.address()?.port);
+        const denied = apiRequestError(req, server.address()?.port) || privateRequestError(req, path);
         if (denied) return send(res, 403, { error: denied });
       }
       const overlayEvents = path.match(/^\/api\/runs\/(current|[a-f0-9]{8})\/overlay\/events$/);

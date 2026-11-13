@@ -99,9 +99,23 @@ test('run outputs: a crafted rom name in run.json cannot reach files outside the
     assert.equal(runPath('aaaa0002', 'link.nds'), null);
   }
 
-  const { server, url } = await startServer({ port: 0, background: false });
+  const { server, url: base } = await startServer({ port: 0, background: false });
   const app = { 'x-soullink': '1' };
+  // the app's own pages: every request carries the app header (web/lib/api.mjs) – run files are private GETs (#21)
+  const fetch = (u, o = {}) => globalThis.fetch(u, { ...o, headers: { ...app, ...o.headers } });
+  const url = base;
   try {
+    // private GETs: a typed URL, another program or an old client without Sec-Fetch-Site gets nothing (#21)
+    for (const path of ['/api/runs/aaaa0001', '/api/runs/aaaa0001/doc', '/api/runs/aaaa0001/save/p1', `/api/runs/aaaa0001/file?name=${encodeURIComponent('Ana - HeartGold.nds')}`,
+      '/api/runs/aaaa0001/download?what=pack', '/api/runs/aaaa0001/log/p1', '/api/stream', '/api/status']) {
+      const typed = await globalThis.fetch(`${url}${path}`, { headers: { 'sec-fetch-site': 'none' } });
+      const viaPage = await globalThis.fetch(`${url}${path}`, { headers: { 'sec-fetch-site': 'same-origin' } });
+      const isPrivate = !path.includes('/save/');
+      assert.equal(typed.status === 403, isPrivate, `typed ${path} → ${typed.status}`);
+      assert.notEqual(viaPage.status, 403, `same-origin ${path}`);
+    }
+    assert.equal((await globalThis.fetch(`${url}/api/runs/aaaa0001`)).status, 403, 'no headers at all');
+
     // the run's own files still work
     assert.equal(await (await fetch(`${url}/api/runs/aaaa0001/save/p1`)).text(), 'SAVE');
     assert.equal(await (await fetch(`${url}/api/runs/aaaa0001/file?name=${encodeURIComponent('Ana - HeartGold.nds')}`)).text(), 'ROM');

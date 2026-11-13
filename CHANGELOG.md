@@ -33,6 +33,15 @@ Security fixes – all found in a code review and reported by @Never-lab:
   **Local file** ticked now connects too (OBS serves those from its own `http://absolute/` address, which the bridge
   didn't know). SECURITY.md lists what the stream features show on purpose (teams and other spoilers) and what they
   never do (keys, codes, paths).
+- **Stream API and the app's private data are tighter** (#21):
+  - Without a token the stream API (`/api/v1`) now answers OBS (browser sources and **Local file** sources), scripts
+    and souldew itself. Layouts opened from disk in a browser and pages of other local web servers need the token or
+    the new switch **Pages on this computer without a token, too** on the Stream page – a page from disk can't be told
+    apart from a sandboxed frame on a website. Installs from before keep the old rule (the switch starts on), so
+    existing layouts keep working; new installs start with it off.
+  - The app's own requests for the run pack (room key), a run's files and spoiler log, the Discord webhook, the stream
+    token and the folder list now need to come from the app itself (its header or a same-origin request) – a typed
+    URL or another program gets nothing. The OBS overlays don't use any of them.
 
 ## 2.5.0
 

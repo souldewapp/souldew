@@ -18,8 +18,15 @@ If port 47390 is taken, souldew picks another one – the Stream page always sho
 - **Read-only.** Every endpoint is `GET` (plus `HEAD`/`OPTIONS`); anything else gets `405`.
 - **Only what a stream may show.** No ROMs, saves, savestates, file names or folders, no invite codes, room keys or
   device IDs, no spoiler log, no Discord webhook, no moves.
-- **Who may read:** OBS browser sources (URL or local file), `curl`/scripts, pages opened from disk (`file://`) and
-  pages served from `localhost` / `127.0.0.1`. Pages of other websites get `403`.
+- **Who may read without a token:** OBS browser sources (a URL, or a file with **Local file** ticked), `curl` and
+  scripts, and souldew's own pages. Pages opened from disk in a browser (`file://`) and pages served by another web
+  server on this computer (`localhost` / `127.0.0.1` on another port) need the token – or the switch **Pages on this
+  computer without a token, too** on the Stream page (`403 localPage` until then). Pages of other websites get `403`.
+  - *Why the switch:* a page opened from disk sends the origin `null`, and so does a sandboxed frame on any website –
+    souldew can't tell them apart. With the switch off, a website you happen to have open can't read your run.
+  - *Updating from 2.5.0 or older:* an install that was already set up keeps the old rule (the switch starts on), so
+    existing layouts keep working; a new install starts with it off. Switch it off once your layouts run in OBS or
+    use the token.
 - **Optional token.** Switch on **Require a token** on the Stream page: then every data request needs it – from
   anywhere, which also lets a layout hosted on a website read the API. Pass it as `?token=…` (the only way for
   `EventSource` and `<img>`), `Authorization: Bearer …` or `X-Souldew-Token: …`. The token is covered in streamer
@@ -36,7 +43,7 @@ meaning. A breaking change would get `/api/v2`, with v1 kept alongside. Unknown 
 
 | Endpoint | Answer |
 |---|---|
-| `GET /api/v1` | Index: API version, current run ID, whether a token is required, endpoint and event lists |
+| `GET /api/v1` | Index: API version, current run ID, `auth` (`token`: a token is required; `localPages`: pages from disk / localhost may read without one), endpoint and event lists |
 | `GET /api/v1/runs` | All runs: `[{ id, name, mode, gen, current, players: [{ slot, name, color }], createdAt }]` |
 | `GET /api/v1/runs/current` | The current run – the one open in souldew, else the one played last (its data changed last) – the whole state, see below |
 | `GET /api/v1/runs/{id}` | One run's state (8-character run ID from `/runs`) |
@@ -51,7 +58,7 @@ meaning. A breaking change would get `/api/v2`, with v1 kept alongside. Unknown 
 | `GET /api/v1/coffee/qr.svg` | The QR code of the coffee link (SVG) |
 
 Every data endpoint takes `?lang=en|de|fr|es|it` for Pokémon, item and place names (default `en`). Errors are
-`{ "error": "…", "code": "…" }` with a fitting status (`401 tokenRequired`, `403 foreignOrigin`, `404 runNotFound` /
+`{ "error": "…", "code": "…" }` with a fitting status (`401 tokenRequired`, `403 foreignOrigin` / `localPage`, `404 runNotFound` /
 `noRun` / `noPlayer` / `notFound`, `405 readOnly`).
 
 ## The state
@@ -206,9 +213,9 @@ Every wild legendary also sends `event: legendary`, pop-up or not – handy for 
 
 ### A party list (OBS browser source)
 
-Save this as `party.html` and add it to OBS as a **Browser** source with **Local file** ticked (or open it in a
-browser). It lists every player's team with sprites and updates the moment something happens. No styling – that part
-is yours.
+Save this as `party.html` and add it to OBS as a **Browser** source with **Local file** ticked. It lists every
+player's team with sprites and updates the moment something happens. No styling – that part is yours. To open it in a
+browser straight from disk, put the token in (or switch on **Pages on this computer without a token, too**).
 
 ```html
 <!doctype html>
