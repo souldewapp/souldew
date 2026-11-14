@@ -14,6 +14,7 @@
 <p align="center">
   <b><a href="https://github.com/souldewapp/souldew/releases/latest">Download for macOS, Windows &amp; Linux</a></b> ·
   <a href="https://souldewapp.github.io/souldew/">Website</a> ·
+  <a href="https://discord.gg/kvVDCyzdpQ">Discord</a> ·
   <a href="#how-a-soullink-works">How it works</a> ·
   <a href="#a-look-inside">Screenshots</a> ·
   <a href="#made-for-streaming">Streaming</a> ·
