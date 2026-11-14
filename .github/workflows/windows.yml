@@ -110,7 +110,7 @@ jobs:
           # while it is shutting down.
           function Wait-Server([int]$seconds) {
             for ($i = 0; $i -lt $seconds; $i++) {
-              try { Invoke-RestMethod http://127.0.0.1:47390/api/status -TimeoutSec 2 | Out-Null; return $true } catch { Start-Sleep 1 }
+              try { Invoke-RestMethod http://127.0.0.1:47390/api/status -Headers @{ 'x-soullink' = '1' } -TimeoutSec 2 | Out-Null; return $true } catch { Start-Sleep 1 }
             }
             return $false
           }
