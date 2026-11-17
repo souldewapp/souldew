@@ -7,6 +7,7 @@
 import { decryptPK4 } from '../gen4save.mjs';
 import { readGen67, regions67, readGen67Battle, battleRegions } from './gen67.mjs';
 import { catchRate3ds } from './catch3ds.mjs';
+import { ctrNoBalls } from './cheats.mjs';
 
 const hex = (v) => (typeof v === 'string' ? parseInt(v, 16) : Number(v));
 const u16le = (b, o) => b[o] | (b[o + 1] << 8);
@@ -2041,7 +2042,12 @@ export function readLiveBattle(entry, read, T, state = {}, party = null) {
   try {
     if (entry.gen <= 2) return withCatchRates(holdEnemy(state, entry.battleEnemy && entry.inBattle ? battleGB(entry, read, T, state, party) : null), entry, T);
     if (entry.gen === 3) return withCatchRates(holdEnemy(state, entry.enemyPartyAddr && entry.inBattle ? battleGen3(entry, read, T, state) : null), entry, T);
-    if (entry.gen >= 6) return withCatchRates(readGen67Battle(entry, read, party), entry, T);
+    if (entry.gen >= 6) {
+      const fight = readGen67Battle(entry, read, party);
+      // a wild fight with no ball in the bag can't be a catch (Birch's rescue on Route 101, the fights before the first
+      // Poké Balls): the tracker asks no "not caught" question for it and shows no catch chance
+      return withCatchRates(fight?.kind === 'wild' && ctrNoBalls(entry, read, state) === true ? { ...fight, balls: 'none' } : fight, entry, T);
+    }
     return withCatchRates(battleDS(entry, read, T, state, party), entry, T);
   } catch {
     return null;

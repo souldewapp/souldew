@@ -125,6 +125,22 @@ export function pk6Mon(raw, gen) {
   };
 }
 
+/**
+ * Why pk6Mon turns a slot down – for the diagnostics only (Help › Save diagnostics): which check failed and the numbers it
+ * looked at. Never holds anything of the player's besides species, level and stat words.
+ */
+export function pk6Why(raw, gen) {
+  const { data: d, checksumOk } = decryptPK6(raw);
+  const species = u16(d, 0x08);
+  const info = { species, status: u32(d, 0xe8), level: d[0xec], hp: u16(d, 0xf0), maxHp: u16(d, 0xf2), stats: [0xf4, 0xf6, 0xf8, 0xfa, 0xfc].map((o) => u16(d, o)), egg: !!(u32(d, 0x74) & 0x40000000) };
+  if (!checksumOk) return { why: 'checksum', ...info };
+  if (!species || species > (gen >= 7 ? 807 : 721)) return { why: 'species', ...info };
+  if (!statusOk(info.status)) return { why: 'status', ...info };
+  if (info.egg ? info.level > 100 || info.hp > info.maxHp : info.level < 1 || info.level > 100 || !info.maxHp || info.hp > info.maxHp) return { why: 'level/hp', ...info };
+  if ([info.maxHp, ...info.stats].some((v) => v > 999)) return { why: 'stat', ...info };
+  return { why: 'other', ...info };
+}
+
 /** The 260-byte PK6/PK7 of RAM slot `i` in a 6-slot party region. */
 export function slotBytes(region, i) {
   const at = i * SLOT_STRIDE;
@@ -144,7 +160,7 @@ const BAD_EGG_READS = 3;
  * is a Bad Egg, not a write in progress – it is skipped (no party member) instead of ending the party there (it hid
  * every Pokémon behind it – in slot 0 the whole team, for good).
  */
-export function partyFromRegion(region, gen, bad = null) {
+export function partyFromRegion(region, gen, bad = null, rejected = null) {
   if (!region || region.length < PARTY_BYTES) return null;
   const party = [];
   for (let i = 0; i < 6; i++) {
@@ -157,6 +173,8 @@ export function partyFromRegion(region, gen, bad = null) {
         bad[i] = bad[i]?.sig === sig ? { sig, n: bad[i].n + 1 } : { sig, n: 1 };
         if (bad[i].n >= BAD_EGG_READS) continue;
       }
+      // (diagnostics: a slot that holds data but isn't taken – the Pokémon behind it stay hidden)
+      if (rejected && i > 0 && u32(raw, 0)) rejected.push({ slot: i, ...pk6Why(raw, gen) });
       // slot 0 must hold a Pokémon. After it, the first slot that doesn't ends the party: empty slots hold blank
       // data (encryption constant 0, species 0), zeros or what was there before (readGen67 confirms a shrink).
       if (i === 0) return null;
@@ -191,9 +209,19 @@ export function readGen67(entry, read, state = {}) {
     const region = read(hex(a.addr ?? a), PARTY_BYTES);
     // (Bad Egg counters per address: the update's addresses are tried in turn)
     const bad = ((state.g67Bad ||= {})[i] ||= {});
-    const party = partyFromRegion(region, entry.gen, bad);
+    const rejected = state.onDiag ? [] : null;
+    const party = partyFromRegion(region, entry.gen, bad, rejected);
     if (!party) continue;
     state.g67 = i;
+    // diagnostics, only when it changes: how many Pokémon were read at which update's address, and the slots that held
+    // data but were turned down (why: checksum / species / status / level/hp / stat – with the numbers it looked at)
+    if (state.onDiag) {
+      const note = JSON.stringify([i, party.map((m) => m.species), rejected.map((x) => [x.slot, x.why, x.status, x.level])]);
+      if (note !== state.g67Note) {
+        state.g67Note = note;
+        state.onDiag({ type: 'party3ds', version: a.version || null, count: party.length, species: party.map((m) => m.species), rejected });
+      }
+    }
     // fewer Pokémon than last time: only once a second read agrees (a slot the game is rewriting ends the party early)
     const sig = party.map((m) => m.key).join();
     if (state.g67Len && party.length < state.g67Len && state.g67Shrink !== sig) {

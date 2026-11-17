@@ -506,11 +506,14 @@ export function openAreas(doc, manifest, slot = 'p1') {
  * false). In a SoulLink only where the place sign resolves to an area (one without this player's encounter, or a
  * known place nobody caught at yet): a "yes" there fails the pair for everyone, so no question after every wild battle
  * in a place the app can't tell – a solo Nuzlocke still asks there and offers the open areas.
- * o: { foe: {species, shiny}, wild, from, newMonAt, boxes, partySize, here: {gen, id, name} }
+ * o: { foe: {species, shiny}, wild, from, newMonAt, boxes, partySize, partyAtStart (party size when the battle began), here: {gen, id, name} }
  */
-export function missedQuestion(doc, manifest, rd, slot, { foe, wild, from = 0, newMonAt = 0, boxes = true, partySize = 0, here = null } = {}) {
+export function missedQuestion(doc, manifest, rd, slot, { foe, wild, from = 0, newMonAt = 0, boxes = true, partySize = 0, partyAtStart = null, here = null } = {}) {
   if (!manifest || doc.get('run:status', null) || !wild || !foe?.species) return false;
   if (newMonAt >= from || (!boxes && partySize >= 6)) return false;
+  // the team has grown since the battle began: that was a catch, whatever the timestamps say (the battle read can flicker
+  // and restart `from`, and a 3DS catch reaches the team only after the nickname screen)
+  if (partyAtStart !== null && partySize > partyAtStart) return false;
   if (foe.shiny && rules(doc, manifest).shinyClause) return false;
   if (dupeOf(doc, manifest, rd, foe.species, slot)) return false;
   const at = here ? areaForPlace(doc, manifest, genOfRun(manifest, rd), here) : null;
@@ -919,6 +922,8 @@ export function dupeOf(doc, manifest, rd, species, slot, exceptArea) {
  */
 const lastBattle = new WeakMap();
 export const BATTLE_GRACE = 5000;
+/** A Pokémon of the species a miss was marked for, caught this soon after, replaces that miss (applySnapshot). */
+const LATE_CATCH_MS = 5 * 60 * 1000;
 /** How long after a wild battle a Pokémon joining the team counts as caught in it (catch, nickname, Pokédex screens). */
 export const WILD_CATCH_WINDOW = 60000;
 
@@ -1128,7 +1133,12 @@ export function applySnapshot(doc, manifest, gen, slot, snap, { auto = true, rd 
     if (!guess && gen <= 2 && m.metLocation == null && snap.source === 'live' && snap.here && recent?.battle?.kind === 'wild' && Date.now() - recent.at < WILD_CATCH_WINDOW) {
       guess = areaForPlace(doc, manifest, gen, snap.here, { create: true });
     }
-    const occupied = guess ? has(guess) : null;
+    // A catch that reaches the team after "not caught" was answered (the question came up while the nickname screen was
+    // still open, or the player marked the area before the ball's result showed): the same Pokémon within a few minutes
+    // of that miss, in the miss's own area – the catch wins, as it would have without the question.
+    const missed = guess && guess !== 'starter' && !writes[`enc:${guess}:${slot}`] ? encounter(doc, guess, slot) : null;
+    const lateCatch = missed?.outcome === 'missed' && !!missed.species && missed.species === m.species && Date.now() - (missed.at || 0) < LATE_CATCH_MS;
+    const occupied = guess ? (lateCatch ? null : has(guess)) : null;
     // Shiny clause off → a shiny is an ordinary encounter.
     const shinyHold = !!m.shiny && r.shinyClause;
     // Dupes clause: a caught dupe isn't the area's encounter – don't let it take the slot.

@@ -303,3 +303,44 @@ test('4 peers: the doc converges whatever order the edits arrive in (last writer
   assert.deepEqual(x.get('rules'), { n: 3 }, 'equal time: the larger device id wins');
   for (let i = 1; i <= 4; i++) assert.deepEqual(x.get(`live:p${i}`), { at: i - 1 });
 });
+
+// Alpha Sapphire, SoulLink (3DS): the "not caught" question came up while the catch's nickname screen was still open, the
+// area was marked missed – and the Pokémon then reached the team. The catch wins; it used to land in the inbox ("occupied")
+// while the area and the whole group stayed "missed".
+test('a catch that reaches the team after its area was marked missed replaces the miss (3DS)', () => {
+  const ORAS = { id: 'run3ds', mode: 'soullink', game: { code: 'ECLA', system: '3ds' }, players: { p1: { name: 'Lou' }, p2: { name: 'Robin' } } };
+  const d = mkDoc();
+  const starter = { key: 'aaaa-1-1', species: 246, nickname: 'Larvitar', level: 5, hp: 20, maxHp: 20, metLocation: 204, metLevel: 5 };
+  const rattata = { key: 'bbbb-1-1', species: 19, nickname: 'Rattata', level: 2, hp: 12, maxHp: 12, metLocation: 204, metLevel: 2 };
+  const apply = (party) => R.applySnapshot(d, ORAS, 6, 'p1', { source: 'live', party });
+  apply([starter]);
+  apply([starter]);
+  R.markMissed(d, ORAS, 'm6-204', 'p1', { species: 19, by: 'p1' });
+  assert.equal(R.encounter(d, 'm6-204', 'p1').outcome, 'missed');
+  const res = apply([starter, rattata]);
+  assert.equal(R.encounter(d, 'm6-204', 'p1').outcome, 'caught');
+  assert.equal(R.encounter(d, 'm6-204', 'p1').species, 19);
+  assert.equal(res.inbox.length, 0, 'the catch is not left in the inbox');
+  assert.notEqual(R.pairState(d, 'm6-204').state, 'failed');
+  // a miss of another Pokémon (or a long time ago) stays
+  const e = mkDoc();
+  R.applySnapshot(e, ORAS, 6, 'p1', { source: 'live', party: [starter] });
+  R.markMissed(e, ORAS, 'm6-204', 'p1', { species: 16, by: 'p1' });
+  const res2 = R.applySnapshot(e, ORAS, 6, 'p1', { source: 'live', party: [starter, rattata] });
+  assert.equal(R.encounter(e, 'm6-204', 'p1').outcome, 'missed', 'another species: not this miss');
+  assert.equal(res2.inbox.length, 1);
+  const f = mkDoc();
+  R.applySnapshot(f, ORAS, 6, 'p1', { source: 'live', party: [starter] });
+  R.markMissed(f, ORAS, 'm6-204', 'p1', { species: 19, by: 'p1' });
+  later(10 * 60 * 1000, () => R.applySnapshot(f, ORAS, 6, 'p1', { source: 'live', party: [starter, rattata] }));
+  assert.equal(R.encounter(f, 'm6-204', 'p1').outcome, 'missed', 'ten minutes later it is no late catch');
+});
+
+test('missed encounter question: a party that grew since the battle began was a catch', () => {
+  const d = mkDoc();
+  snap(d, [mon()]);
+  const base = { foe: { species: 16, level: 3 }, wild: true, from: 1000, newMonAt: 0, boxes: false, partySize: 2, partyAtStart: 1 };
+  assert.equal(R.missedQuestion(d, SOLO, null, 'p1', base), false, 'the team has one more Pokémon than at the start');
+  assert.equal(R.missedQuestion(d, SOLO, null, 'p1', { ...base, partyAtStart: 2 }), true, 'same size: nothing was caught');
+  assert.equal(R.missedQuestion(d, SOLO, null, 'p1', { ...base, partyAtStart: null }), true, 'size at the start unknown: the old rules');
+});

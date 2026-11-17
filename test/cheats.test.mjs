@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 import { findEntry } from '../shared/live/parse.mjs';
-import { addRareCandies, addItem, cheatSupported, cheatRegions, RARE_CANDY, POKE_BALL } from '../shared/live/cheats.mjs';
+import { addRareCandies, addItem, cheatSupported, cheatRegions, ctrNoBalls, RARE_CANDY, POKE_BALL } from '../shared/live/cheats.mjs';
 
 // web/lib/run.mjs imports browser paths (/shared/…): map them onto the project folder.
 const ROOT = new URL('../', import.meta.url).href;
@@ -405,6 +405,36 @@ test('X/Y and ORAS: { u16 id, u16 count } slots, the update the party was found 
   m3.poke(b14 + 0x7c0, slot(17, 1));
   assert.deepEqual(addRareCandies(oras, m3, {}), { error: 'notFound' });
   assert.equal(m3.writes, 0);
+});
+
+test('3DS: no ball in the bag, so Birch rescue and the fights before the first Poké Balls cannot be catches', () => {
+  const oras = ctr(ORAS);
+  const b10 = 0x08c6ac80; // update 1.0 (the one a real Alpha Sapphire 1.0 game was read at: a single Potion in Medicine)
+  const m = memory();
+  m.poke(b10 + 0x970, slot(17, 1)); // Potion
+  assert.equal(ctrNoBalls(oras, m.read, { g67: 1 }), true, 'a bag without a ball');
+  assert.equal(ctrNoBalls(oras, m.read, {}), true, 'also when the update is not known yet');
+  m.poke(b10, slot(4, 5)); // 5 Poké Balls in the Items pocket
+  assert.equal(ctrNoBalls(oras, m.read, { g67: 1 }), false);
+  const safari = memory();
+  safari.poke(b10 + 0x970, slot(17, 1));
+  safari.poke(b10, slot(5, 30)); // Safari Balls cannot be thrown in a normal wild battle
+  assert.equal(ctrNoBalls(oras, safari.read, { g67: 1 }), true);
+  const dream = memory();
+  dream.poke(b10 + 0x970, slot(17, 1));
+  dream.poke(b10, slot(576, 1));
+  assert.equal(ctrNoBalls(oras, dream.read, { g67: 1 }), false, 'a Dream Ball is a ball');
+  // unknown, never "no balls": nothing in memory, a Potion in the TM pocket (no bag), another game
+  assert.equal(ctrNoBalls(oras, memory().read, { g67: 1 }), null);
+  const junk = memory();
+  junk.poke(b10, slot(4, 1));
+  junk.poke(b10 + 0x7c0, slot(17, 1));
+  assert.equal(ctrNoBalls(oras, junk.read, { g67: 1 }), null);
+  assert.equal(ctrNoBalls(entry({ platform: 'gba', code: 'BPEE' }), m.read, {}), null);
+  // Sun / Moon: one u32 per slot
+  const sm = memory();
+  sm.poke(0x330d5934 + 0xb48, [17, 0, 0, 0x4]); // a Potion (Medicine) – the slot format of Gen 7 differs, only used so the bag reads as one
+  assert.ok([true, null].includes(ctrNoBalls(ctr(SM), sm.read, {})));
 });
 
 // ---- run side -----------------------------------------------------------------------------------------------

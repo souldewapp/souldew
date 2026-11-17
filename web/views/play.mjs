@@ -51,6 +51,9 @@ const speedText = (s) => (s === MAX ? t('play.speedMax', 'Max') : `${s}×`);
 // A wild battle ended and no new Pokémon showed up this long after → it got away (Nuzlocke: ask about the area).
 // Long enough for the catch to land in the party / box (the box is read every few seconds).
 const MISSED_WAIT = 10000;
+// a wild Pokémon that fainted can't have been caught: its question needs no wait – and a long wait loses it when the next
+// battle begins first (the pending question is dropped then)
+const MISSED_WAIT_FAINTED = 1000;
 // what you hear while fast-forwarding; 'plain' takes the turbo mixer out of the sound path altogether
 const TURBO_AUDIO = ['music', 'mute', 'original', 'plain'];
 
@@ -358,7 +361,9 @@ export function GameSession({ session, mode }) {
   const monKeys = useRef(null);
   const newMonAt = useRef(0);
   const wildFrom = useRef(0);
+  const partyAtWild = useRef(null); // the party's size when the current wild battle began
   const wildOnly = useRef(false); // the current battle began wild and never looked like a trainer battle
+  const wildNoBalls = useRef(false); // the current wild battle was fought without a ball in the bag – no catch, no miss
   const liveRead = useRef({ boxes: false, party: 0 }); // does the live read see the PC; party size (a full one sends a catch there)
   const prevBattle = useRef(null);
   const noteMons = (mons) => {
@@ -1061,28 +1066,32 @@ export function GameSession({ session, mode }) {
     if (battle?.enemy) {
       if (!prev?.enemy) {
         wildFrom.current = Date.now();
+        partyAtWild.current = liveRead.current.party || null;
         wildOnly.current = battle.kind === 'wild';
+        wildNoBalls.current = false;
       }
+      if (battle.balls === 'none') wildNoBalls.current = true;
       if (battle.kind !== 'wild') wildOnly.current = false; // (Gen 4 guesses the kind – one trainer read is enough)
       setMissed(null); // the next battle started: that one gets its own question
       return undefined;
     }
     if (battle || !prev?.enemy?.species) return undefined;
     const foe = prev.enemy;
-    const fight = { foe, wild: wildOnly.current && prev.kind === 'wild', from: wildFrom.current, here };
+    // (no ball to throw – Birch's rescue, the fights before the first Poké Balls – is no encounter that can be missed)
+    const fight = { foe, wild: wildOnly.current && prev.kind === 'wild' && !wildNoBalls.current, from: wildFrom.current, here };
     const where = fight.wild && doc && me && here ? doc.get(`where:${me}`, null) : null;
     if (where && where.gen === here.gen && where.id === here.id) doc.set(`where:${me}`, { ...where, wild: { species: foe.species, level: foe.level ?? null, at: Date.now() } });
     const id = setTimeout(() => {
       if (!doc || !manifest) return;
       const seen = liveRead.current;
-      if (!missedQuestion(doc, manifest, runData, me, { ...fight, newMonAt: newMonAt.current, boxes: seen.boxes, partySize: seen.party })) return;
+      if (!missedQuestion(doc, manifest, runData, me, { ...fight, newMonAt: newMonAt.current, boxes: seen.boxes, partySize: seen.party, partyAtStart: partyAtWild.current })) return;
       setMissed({ species: foe.species, level: foe.level ?? null });
-    }, MISSED_WAIT);
+    }, foe.maxHp > 0 && foe.hp === 0 ? MISSED_WAIT_FAINTED : MISSED_WAIT);
     return () => clearTimeout(id);
   }, [battle, isRun]);
   // a catch that took longer (nickname screen, full party → box): no question anymore
   useEffect(() => {
-    if (missed && newMonAt.current >= wildFrom.current) setMissed(null);
+    if (missed && (newMonAt.current >= wildFrom.current || (partyAtWild.current !== null && liveRead.current.party > partyAtWild.current))) setMissed(null);
   });
 
   // Fast-forward sound: keep the music going at 1× (default), mute it, or play the sped-up original.

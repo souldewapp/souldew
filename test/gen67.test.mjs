@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { decryptPK6, encryptPK6, pk6Mon, slotBytes, partyFromRegion, readGen67, readGen67Battle, SLOT_STRIDE, STATS_OFFSET, BOX_SIZE, PARTY_BYTES } from '../shared/live/gen67.mjs';
+import { decryptPK6, encryptPK6, pk6Mon, pk6Why, slotBytes, partyFromRegion, readGen67, readGen67Battle, SLOT_STRIDE, STATS_OFFSET, BOX_SIZE, PARTY_BYTES } from '../shared/live/gen67.mjs';
 import { findEntry, regionsFor, readLiveParty, regionReader, readLiveBattle } from '../shared/live/parse.mjs';
 import { areaLabel } from '../shared/overlay.mjs';
 
@@ -330,4 +330,34 @@ test('the place sign (Gen 7): the zone in the player\'s position, both game pair
   assert.equal(usum.zoneAddr, '0x33F6D74A');
   assert.equal(sm.zoneAddr, '0x34183CC6');
   assert.ok(regionsFor(usum).some((r) => r.name === 'zone' && r.addr === 0x33f6d74a && r.len === 2));
+});
+
+test('diagnostics: a slot that holds data but is turned down says why – and the party read says so once per change', () => {
+  const a = mon({ ec: 1, pid: 11, species: 650, nick: 'Chespin' });
+  const b = mon({ ec: 2, pid: 22, species: 661, nick: 'Fletchling', status: 0x1234 }); // a status value the reader doesn't know
+  const c = mon({ ec: 3, pid: 33, species: 659, nick: 'Bunnelby' });
+  const ram = ramParty([a, b, c]);
+  const rejected = [];
+  assert.equal(partyFromRegion(ram, 6, null, rejected).length, 1, 'the Pokémon behind the turned-down slot stay hidden');
+  assert.equal(rejected.length, 1);
+  assert.equal(rejected[0].slot, 1);
+  assert.equal(rejected[0].why, 'status');
+  assert.equal(rejected[0].status, 0x1234);
+  assert.equal(pk6Why(encryptPK6(mon({ level: 0 })), 6).why, 'level/hp');
+  assert.equal(pk6Why(encryptPK6(mon({ species: 800 })), 6).why, 'species');
+  // a blank slot is no rejection
+  const blank = [];
+  partyFromRegion(ramParty([a, new Uint8Array(BOX_SIZE + 0x1c)]), 6, null, blank);
+  assert.equal(blank.length, 0);
+  // readGen67 reports to state.onDiag when what it read changes, not on every poll
+  const entry = { gen: 6, partyAddrs: [{ addr: '0x1000' }] };
+  const read = (addr, len) => (addr === 0x1000 ? ram.subarray(0, len) : null);
+  const seen = [];
+  const state = { onDiag: (d) => seen.push(d) };
+  readGen67(entry, read, state);
+  readGen67(entry, read, state);
+  assert.equal(seen.length, 1);
+  assert.equal(seen[0].type, 'party3ds');
+  assert.equal(seen[0].count, 1);
+  assert.equal(seen[0].rejected[0].why, 'status');
 });

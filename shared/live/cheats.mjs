@@ -312,7 +312,32 @@ function ctrBagAt(L, base, read) {
     if (anyPtr && (got.size !== want.size || [...got].some((p) => !want.has(p)))) return null;
   }
   const [off, slots] = L.pockets.medicine;
-  return { addr: base + off, slots, bytes: b.subarray(off, off + slots * 4), g7, slot: (i) => slot(off + i * 4), idOf, countOf };
+  return { addr: base + off, slots, bytes: b.subarray(off, off + slots * 4), g7, slot: (i) => slot(off + i * 4), idOf, countOf, block: b, slotAt: slot };
+}
+
+/**
+ * The balls a wild battle can use, Gen 6/7 item numbers (PKHeX ItemStorage): Master … Premier, Dusk, Heal, Quick (1–15
+ * but the Safari Ball, 5), Cherish (16), Fast … Sport (492–499, not the Park Ball), Dream (576), Beast (851).
+ */
+const CATCH_BALLS = new Set([1, 2, 3, 4, ...range(6, 16), ...range(492, 499), 576, 851]);
+
+/**
+ * Nintendo 3DS: is there no ball to throw? true: the bag was read as a bag (at the update the party was found at, first)
+ * and its Items pocket – where Gen 6/7 keep the Poké Balls – has none; false: it has one; null: no bag was found, or
+ * it looks like none (unknown – callers behave as if balls were there). The first fights of Omega Ruby / Alpha Sapphire
+ * (Birch's rescue, the rival's battle) are fought before the first ball is handed out.
+ */
+export function ctrNoBalls(entry, read, state) {
+  const L = layoutOf(entry);
+  if (L?.kind !== 'ctr') return null;
+  for (const base of ctrBags(entry, state)) {
+    const bag = ctrBagAt(L, base, read);
+    if (!bag) continue;
+    const [off, n] = L.pockets.items;
+    for (let i = 0; i < n; i++) if (CATCH_BALLS.has(bag.idOf(bag.slotAt(off + i * 4)))) return false;
+    return true;
+  }
+  return null;
 }
 
 function ctrAdd(L, entry, mem, state, item, count) {
