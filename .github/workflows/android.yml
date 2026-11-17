@@ -1,0 +1,127 @@
+name: Android app
+
+# Builds the Android app (android/): the souldew server on nodejs-mobile in a WebView, the randomizer converted to DEX, and
+# the 3DS player (native/ctr-host + Azahar's libretro core with native/azahar-patch, built for arm64). The result is
+# souldew-<version>-android-arm64.apk, with the Android app's own version (android/version.properties – not the desktop
+# app's). android-release.yml calls this workflow for a tag android-v<version> and publishes the APK as a GitHub release.
+#
+# The Azahar core is the long step (20–40 min); it is cached on the patches, the host source and the build script, so
+# a run that changes only the app takes a few minutes.
+#
+# Signing (optional, repository secrets – without them the APK is signed with the debug key: it installs, but updates
+# over a differently signed app are refused, so don't publish that one):
+#   ANDROID_KEYSTORE_B64        the keystore file, base64 (base64 -w0 souldew.jks)
+#   ANDROID_KEYSTORE_PASSWORD   its password
+#   ANDROID_KEY_ALIAS           the key's alias
+#   ANDROID_KEY_PASSWORD        the key's password (defaults to the keystore password)
+# Keep the keystore safe: losing it means installed apps can never be updated.
+
+on:
+  workflow_call:
+    secrets:
+      ANDROID_KEYSTORE_B64:
+        required: false
+      ANDROID_KEYSTORE_PASSWORD:
+        required: false
+      ANDROID_KEY_ALIAS:
+        required: false
+      ANDROID_KEY_PASSWORD:
+        required: false
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - 'native/**'
+      - 'scripts/android-assets.mjs'
+      - 'scripts/build-ctr-android.mjs'
+      - 'scripts/fetch-nodejs-mobile.mjs'
+      - 'server/**'
+      - 'shared/**'
+      - 'web/**'
+      - 'tools/upr*/**'
+      - '.github/workflows/android.yml'
+
+permissions:
+  contents: read
+
+env:
+  AZAHAR_TAG: '2126.2' # as ctr.yml and scripts/build-ctr.mjs
+  NDK_VERSION: '27.2.12479018'
+
+jobs:
+  apk:
+    name: Build the APK
+    runs-on: ubuntu-24.04 # not ubuntu-latest: that label is moving to Ubuntu 26 (other JDK and SDK images)
+    timeout-minutes: 120
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Version
+        id: version
+        run: echo "version=$(grep '^versionName=' android/version.properties | cut -d= -f2 | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
+      - name: Android SDK parts (NDK, CMake for the JNI bridge, platform, build tools)
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+      - name: The 3DS part (cached)
+        id: ctr-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: android/app/ctr/arm64-v8a
+          key: android-ctr-${{ env.AZAHAR_TAG }}-${{ env.NDK_VERSION }}-${{ hashFiles('native/azahar-patch/**', 'native/ctr-host/**', 'scripts/build-ctr-android.mjs') }}
+      - name: Build the 3DS part (host + Azahar core for Android)
+        if: steps.ctr-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build
+          node scripts/build-ctr-android.mjs
+      - name: Check the 3DS part
+        run: |
+          for f in libctrhost.so libazahar_libretro.so; do test -s "android/app/ctr/arm64-v8a/$f" || { echo "::error::$f is missing"; exit 1; }; done
+          "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm" -D --defined-only android/app/ctr/arm64-v8a/libazahar_libretro.so | grep -q souldew_read_memory \
+            || { echo "::error::the core lacks the souldew patch"; exit 1; }
+      - run: node scripts/fetch-nodejs-mobile.mjs
+      - name: The server, the web app and the randomizer as app assets
+        run: node scripts/android-assets.mjs
+      - name: Signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            (umask 077 && printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/souldew.jks")
+            echo "SOULDEW_KEYSTORE=$RUNNER_TEMP/souldew.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::ANDROID_KEYSTORE_B64 is not set – the APK is signed with the debug key (don't publish it)"
+          fi
+      - name: Build the APK
+        working-directory: android
+        env:
+          SOULDEW_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          SOULDEW_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          SOULDEW_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease -PsouldewAbis=arm64-v8a --no-daemon
+      - name: Check the APK
+        run: |
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging "$apk" | tee badging.txt | head -1
+          grep -q "versionName='${{ steps.version.outputs.version }}'" badging.txt || { echo "::error::versionName doesn't match android/version.properties"; exit 1; }
+          unzip -l "$apk" > list.txt
+          for f in lib/arm64-v8a/libnode.so lib/arm64-v8a/libctrhost.so lib/arm64-v8a/libazahar_libretro.so lib/arm64-v8a/libsouldew_node.so assets/souldew/server/index.mjs assets/souldew/tools/upr/PokeRandoZX.jar; do
+            grep -q "$f" list.txt || { echo "::error::$f is not in the APK"; exit 1; }
+          done
+          mkdir -p dist
+          cp "$apk" "dist/souldew-${{ steps.version.outputs.version }}-android-arm64.apk"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: android
+          path: dist/souldew-*-android-arm64.apk
+          if-no-files-found: error

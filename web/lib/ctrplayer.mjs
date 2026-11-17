@@ -9,6 +9,7 @@ import { serverErrorText } from '/lib/errors.mjs';
 import { findEntry, regionsFor } from '/shared/live/parse.mjs';
 import { cheatRegions } from '/shared/live/cheats.mjs';
 import { CTR_LAYOUTS, ctrLayout, ctrTouchAt } from '/shared/ctrlayout.mjs';
+import { mountPad, isTouchScreen } from '/lib/ctrpad.mjs';
 
 const q = new URLSearchParams(location.search);
 const MSG = { VIDEO: 2, AUDIO: 3, MEM: 4, STATE: 5, LOG: 6, EVENT: 7, FFSOUND: 8 };
@@ -508,7 +509,7 @@ async function pump() {
 // ---- input ------------------------------------------------------------------------------------------------------------
 // libretro joypad bits (the same numbers EmulatorJS uses, lib/controls.mjs BUTTONS.ejs) – plus ZL 12, ZR 13
 const BIT = { b: 0, y: 1, select: 2, start: 3, up: 4, down: 5, left: 6, right: 7, a: 8, x: 9, l: 10, r: 11, zl: 12, zr: 13 };
-const inp = { keys: 0, pad: 0, lx: 0, ly: 0, rx: 0, ry: 0, px: 0, py: 0, touch: false, stickX: 0, stickY: 0 };
+const inp = { keys: 0, pad: 0, screenPad: 0, padX: 0, padY: 0, lx: 0, ly: 0, rx: 0, ry: 0, px: 0, py: 0, touch: false, stickX: 0, stickY: 0 };
 let sentInput = '';
 // Sun/Moon walk with the Circle Pad only (the D-pad scrolls menus): the direction keys move it too – full tilt –
 // unless a controller's stick does
@@ -519,10 +520,10 @@ function stickFromKeys() {
   return [x * 0x7fff, y * 0x7fff];
 }
 function sendInput() {
-  const buttons = inp.keys | inp.pad;
+  const buttons = inp.keys | inp.pad | inp.screenPad;
   const [kx, ky] = stickFromKeys();
-  const lx = inp.lx || inp.stickX || kx;
-  const ly = inp.ly || inp.stickY || ky;
+  const lx = inp.lx || inp.stickX || inp.padX || kx;
+  const ly = inp.ly || inp.stickY || inp.padY || ky;
   const sig = [buttons, lx, ly, inp.rx, inp.ry, inp.px, inp.py, inp.touch].join();
   if (sig === sentInput) return;
   sentInput = sig;
@@ -555,8 +556,18 @@ addEventListener('keyup', (e) => {
   inp.keys &= ~(1 << BIT[b]);
   sendInput();
 });
+// phones and tablets: the on-screen pad (lib/ctrpad.mjs)
+const screenPad = isTouchScreen()
+  ? mountPad(document.body, ({ bits, lx, ly }) => {
+    inp.screenPad = bits;
+    inp.padX = lx;
+    inp.padY = ly;
+    sendInput();
+  })
+  : null;
 addEventListener('blur', () => {
   forwardKey({ key: 'Tab', code: 'Tab', blur: true }, false); // ends a held fast-forward
+  screenPad?.reset();
   inp.keys = 0;
   inp.pad = 0;
   inp.touch = false;

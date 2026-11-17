@@ -10,7 +10,7 @@ import { join } from 'node:path';
 
 const DATA = mkdtempSync(join(tmpdir(), 'sls-randoerr-'));
 process.env.SLS_DATA_DIR = DATA;
-const { randomizerError, inspectRom, javaOptsFor, JAVA_OPTS } = await import('../server/lib/toolchain.mjs');
+const { randomizerError, inspectRom, javaOptsFor, bridgeCommand, JAVA_OPTS } = await import('../server/lib/toolchain.mjs');
 const { ctrRandoError } = await import('../server/lib/ctrrando.mjs');
 const { buildRun } = await import('../server/lib/build.mjs');
 const { errorBody } = await import('../server/app.mjs');
@@ -109,7 +109,7 @@ test('every bridge run gets its own working folder (two runs on one game don\'t 
   assert.deepEqual(javaOptsFor({ workDir: '/tmp/w' }), [...JAVA_OPTS, '-Dsouldew.upr.root=/tmp/w']);
   const src = readFileSync(new URL('../server/lib/toolchain.mjs', import.meta.url), 'utf8');
   assert.match(src, /const workDir = join\(CACHE_DIR, ctr \? 'upr-3ds' : 'upr-work', randomBytes\(6\)\.toString\('hex'\)\);/);
-  assert.match(src, /cwd: workDir,/);
+  assert.equal(bridgeCommand({ java: { bin: 'java' }, workDir: '/tmp/w', platform: 'linux' })[2], '/tmp/w'); // the folder is the bridge's cwd
 });
 
 test('the wizard says why the randomizer is off; the new messages are translated', () => {

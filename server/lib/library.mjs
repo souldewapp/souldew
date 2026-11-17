@@ -516,6 +516,12 @@ function linuxCandidates(home, env, h, list) {
 export function discoverCandidates(home = homedir(), { platform = process.platform, env = process.env, list = listNames } = {}) {
   const P = platform === 'win32' ? win32 : posix;
   const h = (...p) => P.join(home, ...p);
+  if (platform === 'android') {
+    // the phone's shared storage (the app's own home is private): needs "All files access" (MainActivity), else Android shows
+    // an app nothing but its own files. Downloads is where a file that came over Bluetooth, a browser or a PC transfer ends up.
+    const base = env.SLS_SHARED_DIR || '/storage/emulated/0';
+    return ['Download', 'Documents', 'ROMs', 'Roms', 'roms', 'Games', 'Emulation', 'GBA', 'NDS', '3DS', 'Nintendo', 'RetroArch/roms'].map((d) => posix.join(base, d));
+  }
   const common = [...userDirs(env, P), h('Downloads'), h('Desktop'), h('Documents'), h('Games'), h('ROMs'), h('Roms'), h('roms'), h('Emulation')];
   if (platform === 'win32') {
     const drive = `${(env.SystemDrive || 'C:').replace(/[\\/]+$/, '')}\\`;

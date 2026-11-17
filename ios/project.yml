@@ -1,0 +1,54 @@
+# The iOS app (XcodeGen: `xcodegen generate` in this folder makes souldew.xcodeproj – .github/workflows/ios.yml does).
+# Environment: SOULDEW_VERSION (package.json's version), SOULDEW_BUILD (a build number).
+# Before generating: Frameworks/NodeMobile.xcframework (nodejs-mobile for iOS) and souldew-app/ (node scripts/ios-assets.mjs).
+name: souldew
+options:
+  bundleIdPrefix: app.souldew
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "${SOULDEW_VERSION}"
+    CURRENT_PROJECT_VERSION: "${SOULDEW_BUILD}"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    ENABLE_BITCODE: NO
+targets:
+  souldew:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      # the server, the web app and the production node_modules, as a plain folder in the app bundle
+      - path: souldew-app
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - framework: Frameworks/NodeMobile.xcframework
+        embed: true
+        codeSign: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.souldew
+        PRODUCT_NAME: souldew
+        SWIFT_OBJC_BRIDGING_HEADER: App/souldew-Bridging-Header.h
+    info:
+      path: Generated/Info.plist
+      properties:
+        CFBundleDisplayName: souldew
+        UILaunchScreen: {}
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # the page comes from the server inside the app (http://127.0.0.1)
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        # Files › On My iPhone › souldew: the Library folder there takes game files (drop ROMs in)
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        ITSAppUsesNonExemptEncryption: false

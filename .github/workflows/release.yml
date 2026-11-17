@@ -4,7 +4,7 @@ name: Release
 # The tag must match "version" in package.json, and CHANGELOG.md needs a "## 2.1.0" section (the release notes).
 #
 # Windows: the installer is always built here (windows-latest).
-# Linux: the AppImage and the .deb are always built here (ubuntu-latest).
+# Linux: the AppImage and the .deb are always built here (ubuntu-24.04).
 # macOS: the DMG is built here only when the repository variable MACOS_RELEASE is "true" (Settings › Secrets and
 # variables › Actions › Variables) – macOS runners don't start for this repository at the moment.
 #
@@ -40,6 +40,12 @@ jobs:
     name: The fast player part for Windows and Linux
     uses: ./.github/workflows/native.yml
 
+  # The iOS app (an UNSIGNED IPA, see ios.yml): only when the repository variable IOS_RELEASE is "true" (needs macOS runners).
+  ios:
+    name: The iOS app
+    if: vars.IOS_RELEASE == 'true'
+    uses: ./.github/workflows/ios.yml
+
   windows:
     name: Build the Windows installer
     needs: [ctr, native]
@@ -48,10 +54,10 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
           cache: npm
@@ -69,12 +75,12 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: node scripts/fetch-jre.mjs x64
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: ctr-win32-x64
           path: tools/ctr/win32-x64
       - run: node scripts/build-ctr.mjs --check
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: native-win32-x64
           path: tools/native/win32-x64
@@ -85,7 +91,7 @@ jobs:
         run: npx electron-builder --win nsis --x64 --publish never
       - name: Smoke test
         run: node scripts/smoke-app.mjs dist/win-unpacked/souldew.exe
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: windows
           path: dist/souldew-${{ steps.version.outputs.version }}-win-x64-setup.exe
@@ -94,13 +100,13 @@ jobs:
   linux:
     name: Build the Linux AppImage and .deb
     needs: [ctr, native]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
           cache: npm
@@ -112,12 +118,12 @@ jobs:
           sudo apt-get install -y --no-install-recommends xvfb xauth
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
       - run: node scripts/fetch-jre.mjs x64
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: ctr-linux-x64
           path: tools/ctr/linux-x64
       - run: chmod +x tools/ctr/linux-x64/ctrhost && node scripts/build-ctr.mjs --check
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: native-linux-x64
           path: tools/native/linux-x64
@@ -126,7 +132,7 @@ jobs:
         run: npx electron-builder --linux AppImage deb --x64 --publish never
       - name: Smoke test
         run: xvfb-run -a node scripts/smoke-app.mjs dist/linux-unpacked/souldew
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: linux
           path: |
@@ -140,10 +146,10 @@ jobs:
     runs-on: macos-latest # Apple silicon – the app is built for arm64
     timeout-minutes: 120 # the 3DS core is built from source here
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
           cache: npm
@@ -159,7 +165,7 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false' # ad-hoc signed (build.mac.identity "-")
         run: npm run dist -- --publish never
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: macos
           path: dist/souldew-*-arm64.dmg
@@ -167,20 +173,20 @@ jobs:
 
   publish:
     name: Publish the GitHub release
-    needs: [windows, linux, macos]
+    needs: [windows, linux, macos, ios]
     # runs when Windows and Linux succeeded and macOS either succeeded or was skipped (not built here)
     if: always() && needs.windows.result == 'success' && needs.linux.result == 'success' && (needs.macos.result == 'success' || needs.macos.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # gh release create
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           path: dist
           merge-multiple: true
@@ -195,6 +201,10 @@ jobs:
           exe="dist/souldew-$VERSION-win-x64-setup.exe"
           appimage="dist/souldew-$VERSION-linux-x86_64.AppImage"
           deb="dist/souldew-$VERSION-linux-amd64.deb"
+          extra=()
+          # the unsigned iOS IPA (when IOS_RELEASE built it)
+          ipa="dist/souldew-$VERSION-ios-unsigned.ipa"
+          if [ -f "$ipa" ]; then extra+=("$ipa"); fi
           if [ -f "$dmg" ] && [ -n "$RELEASE_KEY" ]; then
             key="$RUNNER_TEMP/release-key.pem"
             (umask 077 && printf '%s\n' "$RELEASE_KEY" > "$key")
@@ -203,7 +213,7 @@ jobs:
             out="dist/release-$VERSION"
             # not a draft or pre-release: the apps read releases/latest/download/latest.json
             gh release create "v$VERSION" "$out/souldew-$VERSION-arm64.dmg" "$out/souldew-$VERSION-win-x64-setup.exe" \
-              "$out/souldew-$VERSION-linux-x86_64.AppImage" "$out/souldew-$VERSION-linux-amd64.deb" "$out/latest.json" \
+              "$out/souldew-$VERSION-linux-x86_64.AppImage" "$out/souldew-$VERSION-linux-amd64.deb" "$out/latest.json" "${extra[@]}" \
               --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file "$out/notes.md" --verify-tag
             echo "Published v$VERSION with macOS + Windows + Linux and a signed latest.json." >> "$GITHUB_STEP_SUMMARY"
           else
@@ -214,7 +224,7 @@ jobs:
               const notes = changelogSection(readFileSync('CHANGELOG.md', 'utf8'), process.env.VERSION);
               if (notes == null) { console.error('CHANGELOG.md has no ## ' + process.env.VERSION + ' section'); process.exit(1); }
               writeFileSync('notes.md', notes + '\n');"
-            gh release create "v$VERSION" "$exe" "$appimage" "$deb" --draft --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file notes.md --verify-tag
+            gh release create "v$VERSION" "$exe" "$appimage" "$deb" "${extra[@]}" --draft --repo "$GITHUB_REPOSITORY" --title "souldew $VERSION" --notes-file notes.md --verify-tag
             {
               echo "### Draft release v$VERSION created (Windows installer + Linux packages)"
               echo "Installed apps don't see it yet. Finish it on a Mac (docs/DEVELOPMENT.md › Releasing):"

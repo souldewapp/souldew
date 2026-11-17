@@ -8,7 +8,9 @@
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
   #game { position: absolute; inset: 0; }
   /* hide EmulatorJS chrome – the app draws its own console UI */
-  .ejs_context_menu, .ejs_menu_bar, .ejs_virtualGamepad_parent, .ejs_message, .ejs_popup_container { display: none !important; }
+  .ejs_context_menu, .ejs_menu_bar, .ejs_message, .ejs_popup_container { display: none !important; }
+  /* EmulatorJS' on-screen pad is for touch screens only (phones, tablets); a mouse and keyboard never see it */
+  html:not(.touch) .ejs_virtualGamepad_parent { display: none !important; }
   .ejs_canvas { image-rendering: pixelated; }
   /* the RetroArch core hides the cursor over the canvas (inline cursor:none) – keep it visible for DS touch */
   .ejs_canvas, .ejs_canvas_parent { cursor: default !important; }
@@ -33,6 +35,10 @@
     }));
   }
   const q = new URLSearchParams(location.search);
+  // A touch screen as the main way to point (not a laptop with a touch screen next to a mouse): the on-screen pad shows.
+  // ?touch=1 / ?touch=0 forces it – for a browser that reports its screen wrongly (desktop mode on a tablet).
+  const touchScreen = q.get('touch') ? q.get('touch') === '1' : navigator.maxTouchPoints > 0 && matchMedia('(pointer: coarse)').matches;
+  if (touchScreen) document.documentElement.classList.add('touch');
 
   // ---- frame pacing (lib/pacer.mjs) -------------------------------------------------------------------
   // RetroArch's own timing sleeps on setTimeout, which a coarse system timer (Windows) stretches – fast-forward capped
@@ -141,6 +147,7 @@
     // own (applySkip below).
     desmume_advanced_timing: 'disabled',
     lockMouse: 'disabled', // melonDS/DeSmuME report supportsMouse → EmulatorJS would pointer-lock on every click
+    'virtual-gamepad': touchScreen ? 'enabled' : 'disabled',
     'save-save-interval': '15',
   };
   // No pointer lock at all in here (EmulatorJS' canvas click handler, RetroArch's mouse grab): the mouse must
@@ -1353,6 +1360,18 @@
     }
   }
   window.EJS_onGameStart = () => {
+    // EmulatorJS shows its on-screen pad at start only when the start button was touched – there is none here
+    // (EJS_startOnLoaded), so on a touch screen it is switched on by hand.
+    // (EmulatorJS builds and hides the pad again a moment after the start, so it is asked a few times)
+    if (touchScreen) {
+      const showPad = () => {
+        try {
+          E().touch = true;
+          E().toggleVirtualGamepad(true);
+        } catch { /* no pad – the keyboard still works */ }
+      };
+      for (const ms of [0, 400, 1200, 3000]) setTimeout(showPad, ms);
+    }
     setTimeout(wakeAudio, 400);
     try { watchGl(); } catch { /* diagnostics only */ }
     syncAudio();

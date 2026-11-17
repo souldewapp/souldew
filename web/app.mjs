@@ -34,7 +34,7 @@ import { useCoffeeFx, CoffeeFx } from './views/coffee.mjs';
 import { LicenseNag } from './views/nag.mjs';
 import { countLaunch, shouldNag } from './lib/nag.mjs';
 import { mySlotIn } from './lib/restart.mjs';
-import { IS_MAC, IS_WIN, PLATFORM, shortcut } from './lib/platform.mjs';
+import { IS_MAC, IS_WIN, IS_TOUCH, PLATFORM, shortcut } from './lib/platform.mjs';
 import { TrophiesView, TrophyToasts } from './views/trophies.mjs';
 import { syncTrophies, rememberSlots, watchRun, onTrophyUnlock } from './lib/trophies.mjs';
 
@@ -737,7 +737,7 @@ function App() {
     { id: 'trophies', label: t('nav.trophies', 'Trophies'), icon: 'trophy', accent: '#e7c24f' },
     { id: 'settings', label: t('nav.settings', 'Settings'), icon: 'gear', accent: '#9a8ee6' },
     { id: 'guide', label: t('nav.guide', 'Help'), icon: 'help', accent: '#4fb8c4' },
-  ];
+  ].filter((n) => !(IS_TOUCH && n.id === 'stream')); // OBS overlays: there is no OBS for phones and tablets
 
   return html`<${Ctx.Provider} value=${ctx}>
     <div class=${`frame ${native ? 'app-native' : ''} ${folded ? 'rail-folded' : ''} ${folded && peek ? 'rail-peek' : ''}`}>

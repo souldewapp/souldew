@@ -226,4 +226,6 @@ export function romCapFor(rc, badges) {
 }
 
 /** A trainer name as the game writes it, for display: "BROCK" → "Brock", "LT. SURGE" → "Lt. Surge" (mixed case stays). */
-export const prettyTrainer = (s) => (s && s === s.toUpperCase() ? s.toLowerCase().replace(/(^|[\s.&-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()) : s || '');
+let WORD_START; // no \p{L} on Node builds without ICU (nodejs-mobile): fall back to Latin letters
+try { WORD_START = new RegExp('(^|[\\s.&-])(\\p{L})', 'gu'); } catch { WORD_START = /(^|[\s.&-])([A-Za-zÀ-ɏ])/g; }
+export const prettyTrainer = (s) => (s && s === s.toUpperCase() ? s.toLowerCase().replace(WORD_START, (m, a, b) => a + b.toUpperCase()) : s || '');

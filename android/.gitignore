@@ -1,0 +1,14 @@
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+# nodejs-mobile runtime (downloaded, see docs/ANDROID.md) and the packaged app files
+app/libnode/
+app/ctr/
+app/src/main/assets/souldew/
+*.jks
+*.keystore
+app/.cxx/
+device-log.txt
+crash.log

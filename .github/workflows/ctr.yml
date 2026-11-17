@@ -33,15 +33,15 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
       - name: Cached build (same sources, same Azahar)
         id: cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: tools/ctr/linux-x64
           key: ctr-linux-x64-${{ env.AZAHAR_TAG }}-${{ hashFiles('native/**', 'scripts/build-ctr.mjs') }}
@@ -68,7 +68,7 @@ jobs:
           set +e
           tools/ctr/linux-x64/ctrhost; test $? -eq 2 || exit 1 # usage
           for s in retro_run souldew_read_memory souldew_write_memory souldew_title_id; do nm -D tools/ctr/linux-x64/azahar_libretro.so | grep -E " T $s\$" || exit 1; done
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ctr-linux-x64
           path: tools/ctr/linux-x64/
@@ -77,20 +77,20 @@ jobs:
   windows:
     name: 3DS part for Windows
     if: contains(inputs.platforms, 'windows')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
       IMAGE: reallibretroretroarch/libretro-build-mxe-win-cross-cores:mingw12
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
       - name: Cached build (same sources, same Azahar)
         id: cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: tools/ctr/win32-x64
           key: ctr-win32-x64-${{ env.AZAHAR_TAG }}-${{ hashFiles('native/**', 'scripts/build-ctr.mjs') }}
@@ -126,7 +126,7 @@ jobs:
           node scripts/build-ctr.mjs --platform win32-x64 --check
           sudo apt-get install -y --no-install-recommends binutils-mingw-w64-x86-64 >/dev/null 2>&1 || true
           for s in souldew_read_memory souldew_write_memory souldew_title_id; do x86_64-w64-mingw32-objdump -p tools/ctr/win32-x64/azahar_libretro.dll | grep -w "$s" || exit 1; done
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ctr-win32-x64
           path: tools/ctr/win32-x64/

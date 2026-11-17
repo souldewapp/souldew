@@ -43,7 +43,7 @@ const PATTERNS = [
 // a bare 64-hex string is what a Live runs token looks like (and a SHA-256): nothing that ships may hold one but these
 // (the tests compare against known hashes and make their tokens at run time)
 const HEX64 = /\b[a-f0-9]{64}\b/i;
-const HEX_OK = new Set(['server/lib/toolchain.mjs']); // the pinned SHA-256 of a download (a checksum, public)
+const HEX_OK = new Set(['server/lib/toolchain.mjs', 'scripts/fetch-nodejs-mobile.mjs']); // the pinned SHA-256 of a download (a checksum, public)
 
 test('no credentials anywhere in the app, the scripts or the tests', () => {
   const hits = [];

@@ -4,6 +4,7 @@
 import { html, useEffect, useRef } from '/vendor/htm-preact.mjs';
 import { openExternal } from '../lib/ui.mjs';
 import { LINKS } from '../lib/links.mjs';
+import { IS_ANDROID, IS_TOUCH } from '../lib/platform.mjs';
 import { t } from '../lib/i18n.mjs';
 
 /** Pixel art as SVG rects: `rows` of characters, `.` = empty. */
@@ -89,13 +90,17 @@ export function LicenseNag({ open, launches = 5, onClose }) {
     openExternal(LINKS.coffee);
     close();
   };
+  const buyAndroid = () => {
+    openExternal(LINKS.coffeeAndroid);
+    close();
+  };
   const checks = [
     t('nag.c1', 'Unlimited Pokémon deaths'),
     t('nag.c2', 'Ready for your 47th Nuzlocke attempt'),
     t('nag.c3', 'Blame your partner, AES-256 encrypted'),
     t('nag.c4', 'Free updates for life (yours or your team’s, whichever ends first)'),
   ];
-  return html`<dialog class="nag" ref=${ref} aria-labelledby="nag-title" aria-describedby="nag-free"
+  return html`<dialog class=${`nag ${IS_TOUCH ? 'nag-touch' : ''}`} ref=${ref} aria-labelledby="nag-title" aria-describedby="nag-free"
     onCancel=${(e) => { e.preventDefault(); close(); }} onClick=${(e) => e.target === e.currentTarget && close()}>
     <div class="nag-win">
       <div class="nag-titlebar">
@@ -113,7 +118,11 @@ export function LicenseNag({ open, launches = 5, onClose }) {
           <ul class="nag-list">${checks.map((c) => html`<li><${Pixels} rows=${CHECK} colors=${{ G: '#1d9a2c' }} scale=${2} className="nag-check" /><span>${c}</span></li>`)}</ul>
           <div class="nag-price"><s class="nag-was">${t('nag.was', '$34.22')}</s>
             <span class="nag-pay">${t('nag.pay', 'You pay:')} <b>${t('nag.payWhat', 'whatever a coffee costs')}</b></span></div>
-          <button type="button" class="nag-buy" onClick=${buy}>${t('rail.coffee', 'Buy me a coffee')}</button>
+          <div class="nag-buys">
+            <button type="button" class="nag-buy" onClick=${buy}>${t('rail.coffee', 'Buy me a coffee')}</button>
+            ${IS_ANDROID && html`<button type="button" class="nag-buy nag-buy-alt" onClick=${buyAndroid}>${t('nag.androidBuy', 'Support the Android app')}</button>`}
+          </div>
+          ${IS_ANDROID && html`<p class="nag-note">${t('nag.androidNote', '“Buy me a coffee” supports souldew itself. The Android app is a port with its own maker – a coffee for the Android app keeps this version going.')}</p>`}
           <p class="nag-offer">${t('nag.offer', 'Act now, this is a one time offer!')}</p>
         </div>
       </div>

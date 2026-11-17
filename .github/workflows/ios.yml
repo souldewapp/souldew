@@ -1,0 +1,93 @@
+name: iOS app
+
+# Builds the iOS app (ios/): the souldew server on nodejs-mobile in a WKWebView, the same page as the desktop and Android
+# apps. Game Boy / Color / Advance / DS play in the browser emulator; there is no Java for the randomizer and no JIT for
+# the 3DS player on iOS. The result is souldew-<version>-ios-unsigned.ipa – UNSIGNED: it installs only after it is signed
+# (AltStore / SideStore / Sideloadly with a free Apple ID, or Xcode with a team). App Store / TestFlight need a paid Apple
+# Developer account and a signed export – not set up here (see docs/IOS.md).
+#
+# macOS runners never started for this repository (jobs cancelled in the queue, see ci.yml), so this workflow does not
+# run on its own:
+#   - by hand: Actions › iOS app › Run workflow;
+#   - on pushes that touch the app: when the repository variable IOS_CI is "true";
+#   - from release.yml: when the repository variable IOS_RELEASE is "true" (the IPA is attached to the release).
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - 'scripts/ios-assets.mjs'
+      - 'server/**'
+      - 'shared/**'
+      - 'web/**'
+      - 'package.json'
+      - '.github/workflows/ios.yml'
+
+permissions:
+  contents: read
+
+env:
+  NODEMOBILE_VERSION: '18.20.4'
+  # nodejs-mobile for iOS (NodeMobile.xcframework) – checked after the download
+  NODEMOBILE_IOS_SHA256: '8c5ca3a0d1e38de7f182a5642593e82593b820efd375a14b3ecafc4bcfee620e'
+
+jobs:
+  ipa:
+    name: Build the IPA
+    # a push only builds when IOS_CI is "true"; a manual run does, and so does a desktop version tag v* (release.yml calls this
+    # workflow only when IOS_RELEASE is "true") – not the Android tags (android-v*)
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/v') || vars.IOS_CI == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: XcodeGen
+        run: brew install xcodegen
+      - name: nodejs-mobile for iOS
+        run: |
+          mkdir -p ios/Frameworks
+          curl -fL -o "$RUNNER_TEMP/nodejs-mobile-ios.zip" "https://github.com/nodejs-mobile/nodejs-mobile/releases/download/v$NODEMOBILE_VERSION/nodejs-mobile-v$NODEMOBILE_VERSION-ios.zip"
+          echo "$NODEMOBILE_IOS_SHA256  $RUNNER_TEMP/nodejs-mobile-ios.zip" | shasum -a 256 -c -
+          unzip -q "$RUNNER_TEMP/nodejs-mobile-ios.zip" 'NodeMobile.xcframework/*' -d ios/Frameworks
+          ls ios/Frameworks/NodeMobile.xcframework
+      - name: The server, the web app and their modules as app files
+        run: node scripts/ios-assets.mjs
+      - name: Generate the Xcode project
+        working-directory: ios
+        env:
+          SOULDEW_VERSION: ${{ steps.version.outputs.version }}
+          SOULDEW_BUILD: ${{ github.run_number }}
+        run: xcodegen generate --spec project.yml
+      - name: Build (device, unsigned)
+        working-directory: ios
+        run: |
+          xcodebuild -project souldew.xcodeproj -scheme souldew -configuration Release -sdk iphoneos \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - name: Package the unsigned IPA
+        run: |
+          app=ios/build/Build/Products/Release-iphoneos/souldew.app
+          test -d "$app" || { echo "::error::$app was not built"; exit 1; }
+          test -d "$app/souldew-app/server" || { echo "::error::the server files are not in the app"; exit 1; }
+          test -d "$app/Frameworks/NodeMobile.framework" || { echo "::error::NodeMobile.framework is not embedded"; exit 1; }
+          mkdir -p dist ipa/Payload
+          cp -R "$app" ipa/Payload/
+          (cd ipa && zip -qry "../dist/souldew-${{ steps.version.outputs.version }}-ios-unsigned.ipa" Payload)
+          ls -la dist
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: ios
+          path: dist/souldew-*-ios-unsigned.ipa
+          if-no-files-found: error

@@ -4,7 +4,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  { ignores: ['web/vendor/**', 'node_modules/**', 'dist/**', 'tools/**', 'runs/**', 'library/**', 'research/**', '_ref/**'] },
+  { ignores: ['web/vendor/**', 'node_modules/**', 'dist/**', 'tools/**', 'runs/**', 'library/**', 'research/**', '_ref/**', 'android/app/src/main/assets/**', 'android/app/build/**', 'android/app/libnode/**', 'android/app/ctr/**', 'android/.gradle/**'] },
   js.configs.recommended,
   {
     files: ['**/*.mjs'],

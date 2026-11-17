@@ -1,0 +1,110 @@
+name: Android release
+
+# Pushing a tag builds the Android app and creates a GitHub release with the signed APK:
+#   git tag android-v1.0.0 && git push origin android-v1.0.0
+# The tag must match versionName in android/version.properties, and android/CHANGELOG.md needs a "## 1.0.0" section (the
+# release notes). The Android app has its own version line (not the desktop app's v* tags, see release.yml).
+#
+# The release is created as a DRAFT: open it on GitHub, check the APK and the notes, then press Publish. A release needs the
+# signing secrets (android.yml says which): without them the APK would carry the debug key and could never be updated by a
+# properly signed one, so this workflow refuses to run.
+
+on:
+  push:
+    tags: ['android-v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check the tag
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+      - name: Tag, version and release notes agree
+        id: version
+        run: |
+          version=$(grep '^versionName=' android/version.properties | cut -d= -f2 | tr -d '[:space:]')
+          if [ "android-v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match android/version.properties ($version)"
+            exit 1
+          fi
+          VERSION="$version" node --input-type=module -e "
+            import { readFileSync } from 'node:fs';
+            const { changelogSection } = await import('./scripts/release.mjs');
+            const notes = changelogSection(readFileSync('android/CHANGELOG.md', 'utf8'), process.env.VERSION);
+            if (!notes) { console.error('::error::android/CHANGELOG.md has no ## ' + process.env.VERSION + ' section'); process.exit(1); }"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: The signing key is there
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::ANDROID_KEYSTORE_B64 is not set – a release must be signed with the real key (see android.yml)"
+            exit 1
+          fi
+
+  apk:
+    name: Build the APK
+    needs: check
+    uses: ./.github/workflows/android.yml
+    secrets: inherit
+
+  publish:
+    name: Create the GitHub release (draft), or add the APK to the existing one
+    needs: [check, apk]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # gh release create
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: android
+          path: dist
+      - name: Verify the APK is signed with the release key, not the debug key
+        run: |
+          apk="dist/souldew-${{ needs.check.outputs.version }}-android-arm64.apk"
+          test -f "$apk" || { echo "::error::$apk is missing"; ls -la dist; exit 1; }
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --print-certs "$apk" | tee certs.txt
+          # the debug certificate's CN is "Android Debug"
+          if grep -q "CN=Android Debug" certs.txt; then echo "::error::the APK is signed with the debug key"; exit 1; fi
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          VERSION="$VERSION" node --input-type=module -e "
+            import { readFileSync, writeFileSync } from 'node:fs';
+            const { changelogSection } = await import('./scripts/release.mjs');
+            writeFileSync('notes.md', changelogSection(readFileSync('android/CHANGELOG.md', 'utf8'), process.env.VERSION) + '\n');"
+          apk="dist/souldew-$VERSION-android-arm64.apk"
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            # a release for this tag exists already (made by hand on the GitHub page): its title and notes stay as they are
+            gh release upload "$GITHUB_REF_NAME" "$apk" --repo "$GITHUB_REPOSITORY" --clobber
+            echo "### The APK was added to the existing release $GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh release create "$GITHUB_REF_NAME" "$apk" \
+              --repo "$GITHUB_REPOSITORY" --title "souldew for Android $VERSION" --notes-file notes.md --draft --verify-tag
+            {
+              echo "### Draft release $GITHUB_REF_NAME created"
+              echo "Check the APK and the notes on GitHub, then press **Publish**."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

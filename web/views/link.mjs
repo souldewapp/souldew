@@ -6,6 +6,7 @@ import { players as getPlayers, slotsOf, othersOf, joinNames } from '../lib/run.
 import { PARTNER_TTL } from '../lib/sync.mjs';
 import { ConnectionFlow, ConnectionText } from './guide.mjs';
 import { HostCode, PackVersionNote } from './invitecode.mjs';
+import { IS_TOUCH } from '../lib/platform.mjs';
 
 
 export function LinkView() {
@@ -39,7 +40,7 @@ export function LinkView() {
     // storage blocked – the default text fits
   }
   // the overlays for OBS (and the streamer mode) have their own page now
-  const overlay = html`<div class="row"><span class="small muted grow">${t('link.overlayMoved', 'Streaming this run? The OBS overlays and the streamer mode are on the Stream page.')}</span>
+  const overlay = IS_TOUCH ? null : html`<div class="row"><span class="small muted grow">${t('link.overlayMoved', 'Streaming this run? The OBS overlays and the streamer mode are on the Stream page.')}</span>
     <button class="btn small ghost" onClick=${() => navigate('stream')}><${Icon} name="stream" size=${14} />${t('link.toStream', 'Stream & overlays')}</button></div>`;
   // A solo Nuzlocke has nobody to connect to: no connect button, lights or player switch – only the stream overlay.
   if (!others.length) {

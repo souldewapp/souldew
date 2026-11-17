@@ -817,6 +817,33 @@ details.group details.group { margin: 0 14px 8px; }
   .session.is-fs .session-body.has-left > .session-side { grid-area: side; }
 }
 
+/* Touch screens (phone, tablet – web/lib/platform.mjs IS_TOUCH): the game fills the screen, in landscape too. The title
+   bar, the controls and the team (left / right panels) sit in an overlay that the round handle opens; a tap into the
+   game closes it. Nothing but the game and its on-screen pad is in the way while playing. */
+.session.full.touch-play { position: fixed !important; inset: 0 !important; z-index: 45; display: block !important; min-height: 0 !important; padding: 0 !important; background: #000; overflow: hidden; }
+.session.full.touch-play .session-body, .session.full.touch-play .session-body.has-left { position: absolute; inset: 0; display: block !important; padding: 0 !important; }
+.session.full.touch-play .session-body > .session-stage { position: absolute; inset: 0; display: block !important; height: auto !important; }
+.session.full.touch-play .session-screen { position: absolute; inset: 0; }
+/* the player frame is the whole screen: the picture sits letterboxed inside it and the on-screen pad (drawn by the player
+   at the frame's edges) lands in the free space beside / below the picture instead of on top of it */
+.session.full.touch-play .console-screen { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+.touch-handle { position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); right: calc(8px + env(safe-area-inset-right, 0px)); z-index: 70; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 1px solid #ffffff2e; background: #141318b8; color: #ebe6da; font-size: 22px; line-height: 1; opacity: 0.5; cursor: pointer; transition: opacity 0.15s; }
+.touch-handle:hover, .touch-handle[aria-expanded='true'] { opacity: 1; }
+.session.full.touch-play .session-top { position: absolute; top: 0; left: 0; right: 0; z-index: 60; padding: 10px 64px 10px 14px; background: #141318f2; border-bottom: 1px solid var(--edge-hi); transform: translateY(-110%); transition: transform 0.18s; }
+.session.full.touch-play .session-bar { position: absolute; left: 50%; bottom: 12px; z-index: 60; max-width: calc(100% - 24px); opacity: 0; pointer-events: none; transform: translate(-50%, 140%); transition: transform 0.18s, opacity 0.18s; box-shadow: 0 8px 30px #000b; }
+.session.full.touch-play .session-bar .btn.icon { width: 40px; height: 40px; min-width: 40px; }
+.session.full.touch-play .session-left, .session.full.touch-play .session-side { position: absolute; top: 0; bottom: 0; z-index: 55; width: min(330px, 84vw); overflow: auto; padding: 60px 12px 12px; background: #141318f5; transition: transform 0.18s; grid-area: auto; max-height: none; }
+.session.full.touch-play .session-left { left: 0; transform: translateX(-105%); }
+.session.full.touch-play .session-side { right: 0; transform: translateX(105%); }
+.session.full.touch-play.menu-open .session-top, .session.full.touch-play.menu-open .session-left, .session.full.touch-play.menu-open .session-side { transform: none; }
+.session.full.touch-play.menu-open .session-bar { opacity: 1; pointer-events: auto; transform: translateX(-50%); }
+/* the save-state board (views/savestates.mjs) on a touch screen: above the sliding panels, which step aside while it is open
+   (the level-cap panel on the left used to slide in over it) */
+.session.full.touch-play .states-panel { z-index: 65; bottom: 12px; width: min(720px, calc(100% - 24px)); max-height: calc(100% - 24px); }
+.session.full.touch-play.states-open .session-left { transform: translateX(-105%); }
+.session.full.touch-play.states-open .session-side { transform: translateX(105%); }
+.session.full.touch-play.states-open .session-top { transform: translateY(-110%); }
+
 /* controls */
 button.ctl-key { cursor: pointer; min-width: 110px; padding: 2px 8px; line-height: 1.6; }
 button.ctl-key:hover { background: var(--shell-3); }
@@ -1440,12 +1467,29 @@ dialog.nag[open] { animation: nag-in .16s steps(3, end); }
   background: linear-gradient(#b4ec8f, #5cc235 48%, #34a01c 52%, #49b82a); box-shadow: inset 0 1px 0 #ffffffb3, 0 2px 3px #0000004d; }
 .nag-buy:hover { background: linear-gradient(#c6f5a5, #6fd146 48%, #3db122 52%, #57c834); }
 .nag-buy:active { background: linear-gradient(#49b82a, #34a01c 50%, #5cc235); box-shadow: inset 0 2px 3px #0000004d; }
+.nag-buys { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.nag-buys .nag-buy { width: 100%; text-align: center; }
+.nag-buy-alt { border-color: #8a5200; text-shadow: 0 1px 1px #5c3500; background: linear-gradient(#ffd98a, #f5a623 48%, #e08a00 52%, #f2b04a); }
+.nag-buy-alt:hover { background: linear-gradient(#ffe3a6, #ffb43c 48%, #eb9400 52%, #f7bd62); }
+.nag-buy-alt:active { background: linear-gradient(#e89a10, #d98300 50%, #f0b050); }
+.nag-note { margin: 8px 0 0; color: #444; font-size: 11.5px; }
 .nag-offer { margin: 8px 0 0; color: #c0190f; font-weight: 700; font-size: 12px; }
 .nag-offer sup { font-size: 9px; }
 .nag-foot { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding: 8px 6px 5px; }
 .nag-btn { min-width: 76px; padding: 4px 12px; font: 12px Tahoma, Verdana, 'Segoe UI', sans-serif; color: #000; background: #d4d0c8; cursor: pointer;
   border: 1px solid; border-color: #fff #404040 #404040 #fff; box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #dfdfdf; }
 .nag-btn:active { border-color: #404040 #fff #fff #404040; box-shadow: inset 1px 1px 0 #808080; }
+/* phones and tablets: the window fits the screen (scrolls inside when it is too tall, e.g. a phone in landscape) and
+   every button is a finger-sized target */
+dialog.nag.nag-touch[open] { display: flex; max-height: calc(100dvh - 24px); }
+.nag-touch .nag-win { display: flex; flex-direction: column; width: min(580px, 100%); max-height: calc(100dvh - 24px); font-size: 14px; }
+.nag-touch .nag-titlebar { flex: none; height: 32px; font-size: 13px; }
+.nag-touch .nag-x { width: 28px; height: 24px; }
+.nag-touch .nag-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px; }
+.nag-touch .nag-list li { font-size: 13.5px; }
+.nag-touch .nag-buy { min-height: 48px; font-size: 17px; }
+.nag-touch .nag-foot { flex: none; padding: 8px 8px 6px; }
+.nag-touch .nag-btn { min-height: 42px; padding: 8px 16px; font-size: 14px; }
 @media (max-width: 560px) { .nag-body { flex-direction: column; gap: 10px; } .nag-icon svg { width: 40px; height: auto; } }
 
 /* "Share to Discord" (Live runs, web/views/liveshare.mjs): Discord's blurple, dimmed to sit in the night shell */

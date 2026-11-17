@@ -1,8 +1,8 @@
 // Java + Universal Pokemon Randomizer ZX detection, download and invocation.
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync, renameSync, rmSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, renameSync, rmSync, readdirSync, chmodSync } from 'node:fs';
 import { createHash, randomBytes } from 'node:crypto';
-import { join, delimiter } from 'node:path';
+import { join, delimiter, dirname } from 'node:path';
 import { listZip, readZipEntry } from './zip.mjs';
 import { TOOLS_DIR, BUNDLED_TOOLS, CACHE_DIR } from './paths.mjs';
 import { httpError, removeQuietly } from './fsutil.mjs';
@@ -73,6 +73,34 @@ export function parseBridgeOutput(out) {
 
 let javaCache = null;
 
+/**
+ * Android (nodejs-mobile reports platform "android"): there is no Java, but the randomizer is plain Java code and the
+ * Android app packs it as DEX (scripts/android-assets.mjs: PokeRandoZX.jar = classes.dex with the bridge + classes2.dex
+ * with UPR + UPR's resource files). Android's own runtime runs it: `dalvikvm64 -Xmx… -cp <jar> SoulLinkBridge …`. The
+ * bridge's classes come first in the dex order, like the bridge folder on a desktop class path.
+ * Why dalvikvm and not app_process: app_process appends the device's `dalvik.vm.heapsize` (512 MB) after any -Xmx, so a
+ * 3DS game (Omega Ruby: ~1.9 GB output) ran out of memory halfway; dalvikvm takes -Xmx as given. The heap must fit into
+ * the low 4 GB of address space, so ~1.8 GB is the most (−Xmx1900m and above fail to start) – checked on a Snapdragon 8
+ * Gen 3 tablet: Omega Ruby randomizes in about a minute with it.
+ */
+export const ANDROID_DALVIKVM = ['/apex/com.android.art/bin/dalvikvm64', '/apex/com.android.art/bin/dalvikvm'];
+export const ANDROID_HEAP = '-Xmx1800m';
+const androidRuntime = (exists = existsSync) => ANDROID_DALVIKVM.find((p) => exists(p)) || null;
+
+/** The command that runs the bridge: [binary, argv, cwd]. `platform`/`java` injectable for tests. */
+export function bridgeCommand({ platform = process.platform, java, jar = UPR_JAR, bridgeDir = BRIDGE_DIR, ctr = false, workDir = null, args = [] }) {
+  if (platform === 'android') {
+    // ART takes the options of a JVM that mean something to it: system properties (no -Xss, awt) and the heap – 1 GB
+    // for a Game Boy / DS game, the most ART allows for a 3DS game
+    const opts = javaOptsFor({ ctr, workDir }).filter((o) => /^-D(file\.encoding|souldew\.)/.test(o));
+    return [java.bin, [ctr ? ANDROID_HEAP : '-Xmx1g', ...opts, '-cp', jar, 'SoulLinkBridge', ...args], workDir || dirname(jar)];
+  }
+  // the bridge folder first: it carries a fixed copy of UPR's Effectiveness (EnumMap instead of HashMap – the order
+  // of a HashMap of enums depends on the JVM, so "sensible items" on Gen 4/5 gave different ROMs per Java version)
+  // and of SysConstants (the working folder above)
+  return [java.bin, [...javaOptsFor({ ctr, workDir }), '-cp', [bridgeDir, jar].join(delimiter), 'SoulLinkBridge', ...args], workDir || dirname(jar)];
+}
+
 /** Installed JDKs / JREs in the usual Windows folders (…\Java\jdk-17\bin\java.exe, Adoptium, Microsoft, Zulu …). */
 export function windowsJavaCandidates(env = process.env, list = readdirSync) {
   const found = [];
@@ -116,6 +144,11 @@ function javaCandidates() {
 
 export function detectJava(force = false) {
   if (javaCache && !force) return javaCache;
+  if (process.platform === 'android') {
+    const bin = androidRuntime();
+    javaCache = bin ? { ok: true, bin, version: 'Android Runtime', major: 8, bundled: true, vendor: 'ART' } : { ok: false, bin: null, version: null, major: 0 };
+    return javaCache;
+  }
   for (const bin of javaCandidates()) {
     try {
       // windowsHide: java.exe is a console program – without it every check would flash a console window
@@ -262,18 +295,22 @@ export function runBridge(args, { timeoutMs, ctr = false, onLine = null, spawnFn
   const java = detectJava();
   if (!java.ok) return Promise.reject(httpError(409, 'Java 8+ wasn’t found. Install Java (e.g. Temurin 21 from adoptium.net).', 'javaMissing'));
   if (!existsSync(UPR_JAR)) return Promise.reject(httpError(409, 'Universal Pokemon Randomizer ZX is missing – reinstall souldew, or play without the randomizer.', 'uprMissing'));
+  if (process.platform === 'android') {
+    try {
+      chmodSync(UPR_JAR, 0o444); // Android refuses to load code from a file the app can still write to
+    } catch {
+      // read-only already
+    }
+  }
   const limit = timeoutMs ?? (ctr ? CTR_TIMEOUT_MS : 180000);
   // every run's own folder for the game files UPR unpacks (a 3DS game: hundreds of MB) – never inside the app, never
   // shared: two runs on the same game (the wizard's check while a build runs) took each other's files away
   const workDir = join(CACHE_DIR, ctr ? 'upr-3ds' : 'upr-work', randomBytes(6).toString('hex'));
   mkdirSync(workDir, { recursive: true });
   return new Promise((resolve, reject) => {
-    // the bridge folder first: it carries a fixed copy of UPR's Effectiveness (EnumMap instead of HashMap – the order
-    // of a HashMap of enums depends on the JVM, so "sensible items" on Gen 4/5 gave different ROMs per Java version)
-    // and of SysConstants (the working folder above)
-    const cp = [BRIDGE_DIR, UPR_JAR].join(delimiter);
-    const child = spawnFn(java.bin, [...javaOptsFor({ ctr, workDir }), '-cp', cp, 'SoulLinkBridge', ...args], {
-      cwd: workDir,
+    const [bin, argv, cwd] = bridgeCommand({ java, ctr, workDir, args });
+    const child = spawnFn(bin, argv, {
+      cwd,
       windowsHide: true, // no console window next to the app while the randomizer runs
     });
     let out = '';

@@ -525,7 +525,11 @@ function levelGap(d) {
   const theirs = Math.max(0, ...Object.entries(d.lives).filter(([s]) => s !== d.me).map(([, l]) => topLevel(l.party)));
   return mine && theirs ? mine - theirs : 0;
 }
-const norm = (s) => String(s || '').normalize('NFC').toUpperCase().replace(/[^\p{L}\p{N}]/gu, '');
+// Node builds without ICU (nodejs-mobile on Android) reject \p{…}: fall back to Latin letters, digits and the
+// common non-Latin scripts.
+let NON_WORD;
+try { NON_WORD = new RegExp('[^\\p{L}\\p{N}]', 'gu'); } catch { NON_WORD = /[^0-9A-Za-zÀ-ɏͰ-῿぀-퟿]/g; }
+const norm = (s) => String(s || '').normalize('NFC').toUpperCase().replace(NON_WORD, '');
 
 /** Evaluate every achievement → [{ id, cat, rarity, hidden, target, n, ok, at }]. */
 export function evaluate(ctx) {

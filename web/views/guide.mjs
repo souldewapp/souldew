@@ -4,7 +4,7 @@ import { Icon } from '../lib/icons.mjs';
 import { t, currentLang } from '../lib/i18n.mjs';
 import { LINKS } from '../lib/links.mjs';
 import { resolve as resolveControls, resolveHotkeys, keyLabel } from '../lib/controls.mjs';
-import { shortcut } from '../lib/platform.mjs';
+import { shortcut, IS_TOUCH } from '../lib/platform.mjs';
 
 /** A key binding for display, with its Shift if it has one: "Tab", "⇧ Tab" on a Mac, "Shift+Tab" elsewhere. */
 export const comboLabel = (b) => (!b ? '–' : b.shift ? shortcut('Shift+K', { space: true }).replace(/K$/, keyLabel(b)) : keyLabel(b));
@@ -74,11 +74,12 @@ export function ConnectionText({ group = false } = {}) {
 
 export function GuideView() {
   const { route, status } = useApp();
-  const [tab, setTab] = useState(route.params.tab || 'start');
+  const [tab, setTab] = useState(IS_TOUCH && route.params.tab === 'keys' ? 'start' : route.params.tab || 'start');
   return html`<div class="stack-l">
     <div class="topbar"><h1>${t('guide.title', 'Help')}</h1></div>
     <div class="tabs" role="tablist" data-pad-tabs>
       ${[['start', t('guide.start', 'Getting started')], ['keys', t('guide.keys', 'Controls & shortcuts')], ['faq', t('guide.faq', 'Questions')]]
+        .filter(([k]) => !(IS_TOUCH && k === 'keys')) // keys and shortcuts are for a keyboard
         .map(([k, l]) => html`<button role="tab" aria-selected=${tab === k} class=${tab === k ? 'on' : ''} onClick=${() => setTab(k)}>${l}</button>`)}
     </div>
     ${tab === 'start' && html`<section class="panel steps-list">

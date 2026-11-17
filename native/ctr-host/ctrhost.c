@@ -89,6 +89,14 @@ static const char *const RENDERER_NAMES[] = {"vulkan", "compat", "software"};
 
 // core options souldew sets (everything else: the core's own default)
 static const char *core_option(const char *key) {
+  // diagnostics / per-platform tuning: CTRHOST_OPT_<core option> overrides it, e.g. CTRHOST_OPT_citra_use_hw_shader=disabled
+  // (the Android app sets that one: Adreno's driver fails to build the pipelines of the hardware vertex shaders)
+  {
+    char name[128];
+    snprintf(name, sizeof name, "CTRHOST_OPT_%s", key);
+    const char *v = getenv(name);
+    if (v && *v) return v;
+  }
   if (!strcmp(key, "citra_graphics_api")) return renderer == R_SOFTWARE ? "Software" : "Vulkan";
   if (!strcmp(key, "citra_resolution_factor")) return scale_str;
   if (!strcmp(key, "citra_layout_option")) return "default"; // top above bottom

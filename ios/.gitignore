@@ -1,0 +1,9 @@
+# generated: the project (xcodegen), the Info.plist, the app files (scripts/ios-assets.mjs), nodejs-mobile (downloaded)
+souldew.xcodeproj/
+Generated/
+souldew-app/
+Frameworks/
+build/
+DerivedData/
+xcuserdata/
+*.ipa

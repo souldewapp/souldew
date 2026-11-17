@@ -16,7 +16,10 @@ export const RETRY_WINDOW_MS = 30 * 1000;
 const MEMO_MAX = 16;
 
 export const validRenderer = (v) => (CTR_RENDERERS.includes(v) ? v : 'auto');
-export const nextRenderer = (mode) => RENDERER_CHAIN[RENDERER_CHAIN.indexOf(mode) + 1] || null;
+// Android: the core has no software renderer there (it falls back to "unknown graphics API" and crashes), so "auto" never
+// steps down to it
+export const chainFor = (platform = process.platform) => (platform === 'android' ? RENDERER_CHAIN.filter((r) => r !== 'software') : RENDERER_CHAIN);
+export const nextRenderer = (mode, platform = process.platform) => { const chain = chainFor(platform); return chain[chain.indexOf(mode) + 1] || null; };
 
 /** A graphics card and its driver as a key: "1002:7550|2.0.416 AMD proprietary driver 26.11.1 (LLPC)". Unknown: "?". */
 export function gpuKey(gpu) {
@@ -28,11 +31,11 @@ export function gpuKey(gpu) {
  * The renderer for the next start: the chosen one, or (auto) what was learned for the card the last game ran on.
  * { mode, auto } – auto: a crash in the first seconds may step down (see rendererFailure).
  */
-export function pickRenderer({ setting, memo, lastGpu } = {}) {
+export function pickRenderer({ setting, memo, lastGpu, platform = process.platform } = {}) {
   const s = validRenderer(setting);
   if (s !== 'auto') return { mode: s, auto: false };
   const m = memo && typeof memo === 'object' ? memo[lastGpu || '?'] : null;
-  return { mode: RENDERER_CHAIN.includes(m) ? m : 'vulkan', auto: true };
+  return { mode: chainFor(platform).includes(m) ? m : 'vulkan', auto: true };
 }
 
 /** `memo` with `key` → `mode` (newest last, at most MEMO_MAX entries). */

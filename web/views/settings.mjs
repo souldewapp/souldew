@@ -10,7 +10,7 @@ import { BUTTONS, RESERVED, PRESETS, bindable, keyLabel, resolve as resolveContr
   HOTKEYS, resolveHotkeys, hotkeyBindable, sameCombo, padHotkeys } from '../lib/controls.mjs';
 import { SHORTCUTS, buttonLabel, comboLabel } from './guide.mjs';
 import { UpdateSection } from './update.mjs';
-import { PLATFORM } from '../lib/platform.mjs';
+import { PLATFORM, IS_TOUCH, IS_ANDROID, soundsText } from '../lib/platform.mjs';
 import { gpuBackends } from '/shared/gpu.mjs';
 import { LiveRunsSettings } from './liveshare.mjs';
 import { suspendPadNav } from '../lib/padnav.mjs';
@@ -442,7 +442,7 @@ export function SettingsView() {
         <span class="hint">${cfg.fullTurbo !== false ? t('set.speedGuardFull', 'Not with full-power turbo.') : t('set.speedGuardHint', 'Off: the speed you pick stays as it is, the bar shows when a scene runs slower. On: a level that isn’t reached for a few seconds drops to the highest one that holds.')}</span></span></label>
       <label class="check"><input type="checkbox" checked=${cfg.turboMax === true} onChange=${(e) => save({ turboMax: e.target.checked })} /><span>${t('set.turboMax', 'Turbo step “Max”: as fast as this computer can')}
         <span class="hint">${t('set.turboMaxHint', 'After 4× comes “Max” – no speed limit at all. How fast it gets depends on the game and the computer.')}</span></span></label>
-      <label class="check"><input type="checkbox" checked=${cfg.sounds !== false} onChange=${(e) => save({ sounds: e.target.checked })} /><span>${t('set.soundsAll', 'Sounds on this computer (start-up chime, catches, deaths, badges, pings)')}</span></label>
+      <label class="check"><input type="checkbox" checked=${cfg.sounds !== false} onChange=${(e) => save({ sounds: e.target.checked })} /><span>${soundsText()}</span></label>
       <label class="check"><input type="checkbox" checked=${cfg.shareScreen !== false} onChange=${(e) => save({ shareScreen: e.target.checked })} /><span>${t('set.shareScreenAll', 'Share my screen with the other players')}
         <span class="hint">${t('set.shareScreenHint', 'While you play, the others see your game small in a corner. It is only sent while someone is watching.')}</span></span></label>
       <label class="check"><input type="checkbox" checked=${cfg.presence !== false} onChange=${(e) => save({ presence: e.target.checked })} /><span>${t('set.presence', 'Count me in “playing now” (anonymous)')}
@@ -458,11 +458,14 @@ export function SettingsView() {
       <${ThemePicker} value=${cfg.theme} onPick=${(id) => save({ theme: id })} />
     </section>
 
-    <${ControlsSection} saved=${cfg.controls || null} save=${(p) => save(p).catch((e) => toast({ kind: 'death', title: t('set.controls', 'Controls'), text: e.message }))} />
+    ${!IS_TOUCH && html`<${ControlsSection} saved=${cfg.controls || null} save=${(p) => save(p).catch((e) => toast({ kind: 'death', title: t('set.controls', 'Controls'), text: e.message }))} />`}
     <${PadSection} saved=${cfg.pads || null} save=${(p) => save(p).catch((e) => toast({ kind: 'death', title: t('pad.title', 'Controller'), text: e.message }))}
       nav=${cfg.padNav !== false} saveNav=${(on) => save({ padNav: on })} />
 
-    <section class="panel stack">
+    ${IS_TOUCH ? html`<section class="panel stack">
+      <h2>${t('set.emulators', 'Emulators')}</h2>
+      <p class="small muted">${t('set.emuDevice', 'Games run in the built-in emulator: Game Boy, Game Boy Color, Game Boy Advance and Nintendo DS, with live sync. Nintendo 3DS games and external emulators (Azahar, melonDS, mGBA) are not available on phones and tablets.')}</p>
+    </section>` : html`<section class="panel stack">
       <h2>${t('set.emulators', 'Emulators')}</h2>
       <p class="small muted">${t('set.emuText', 'The built-in emulator plays every system up to the Nintendo 3DS and has the best live sync. 3DS games can also run in Azahar (for example when a graphics card can’t run the built-in 3DS player). External emulators are optional otherwise.')}</p>
       ${status?.native?.ok && html`<label class="check"><input type="checkbox" checked=${cfg.nativeCore !== false} onChange=${(e) => save({ nativeCore: e.target.checked })} /><span>${t('set.native', 'Fast player for DS, GBA and Game Boy')}
@@ -485,7 +488,7 @@ export function SettingsView() {
       </div>`)}
       ${status?.emulators?.mgba?.installed && html`<div class="note">${t('set.mgbaScriptAgain', 'For live data with mGBA: Tools › Scripting… › File › Load script… and pick this file (again after every mGBA restart):')} <span class="code">${status.live?.script}</span>
         <button class="btn small ghost" onClick=${() => { copy(status.live?.script || ''); toast({ kind: 'ok', title: t('common.copied', 'Copied'), text: status.live?.script }); }}>${t('common.copy', 'Copy')}</button></div>`}
-    </section>
+    </section>`}
 
     <section class="panel stack">
       <h2>${t('set.library', 'Library')}</h2>
@@ -509,6 +512,7 @@ export function SettingsView() {
       <h2>${t('set.about', 'About')}</h2>
       <${UpdateSection} />
       <dl class="facts small">
+        ${IS_ANDROID && window.SouldewApp?.appVersion && html`<dt>${t('set.androidApp', 'Android app')}</dt><dd>${window.SouldewApp.appVersion()}</dd>`}
         <dt>${t('set.randomizer', 'Randomizer')}</dt><dd>Universal Pokémon Randomizer ZX ${status?.upr?.version} · Java ${status?.java?.version || t('set.javaMissing', 'not found')}${status?.java?.bundled ? ` (${t('set.bundled', 'bundled')})` : ''}</dd>
         <dt>${t('set.data', 'Pokémon data')}</dt><dd>PokeAPI · ${t('set.covers', 'covers')}: libretro-thumbnails</dd>
         <dt>${t('set.emuCore', 'Built-in emulator')}</dt><dd>EmulatorJS (melonDS, DeSmuME, mGBA, Gambatte) · ${t('set.nativeShort', 'Fast player')}: melonDS DS, mGBA, Gambatte (libretro) · 3DS: Azahar (libretro)</dd>
@@ -517,6 +521,7 @@ export function SettingsView() {
         <button class="btn small" onClick=${() => openExternal(LINKS.github)}><${Icon} name="external" size=${14} />${t('set.github', 'souldew on GitHub')}</button>
         <button class="btn small" onClick=${() => openExternal(LINKS.issues)}><${Icon} name="external" size=${14} />${t('set.reportBug', 'Report a bug')}</button>
         <button class="btn small" onClick=${() => openExternal(LINKS.coffee)}><${Icon} name="coffee" size=${14} />${t('rail.coffee', 'Buy me a coffee')}</button>
+        ${IS_ANDROID && html`<button class="btn small" onClick=${() => openExternal(LINKS.coffeeAndroid)}><${Icon} name="coffee" size=${14} />${t('nag.androidBuy', 'Support the Android app')}</button>`}
       </div>
       <label class="check small"><input type="checkbox" checked=${cfg.nagOff !== true} onChange=${(e) => save({ nagOff: !e.target.checked })} /><span>${t('set.nag', 'Show the joke license window now and then')}
         <span class="hint">${t('set.nagHint', 'A parody of old shareware nag screens. souldew stays free either way.')}</span></span></label>

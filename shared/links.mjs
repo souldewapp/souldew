@@ -2,6 +2,8 @@
 // pop-up (shared/coffee.mjs). web/lib/links.mjs re-exports them for the app.
 export const LINKS = {
   coffee: 'https://buymeacoffee.com/souldew',
+  // the Android app's own coffee link (the Android port is a separate piece of work) – offered on Android only
+  coffeeAndroid: 'https://buymeacoffee.com/enderain',
   github: 'https://github.com/souldewapp/souldew',
   issues: 'https://github.com/souldewapp/souldew/issues/new/choose',
   releases: 'https://github.com/souldewapp/souldew/releases',

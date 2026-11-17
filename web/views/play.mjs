@@ -1,7 +1,7 @@
 import { html, useState, useEffect, useRef, useCallback } from '/vendor/htm-preact.mjs';
-import { useApp, Led, saveDiagnostics, copy } from '../lib/ui.mjs';
+import { useApp, Led, saveDiagnostics, copy, openExternal } from '../lib/ui.mjs';
 import { bridgeState } from '../lib/livebridge.mjs';
-import { IS_MAC, IS_WIN, PLATFORM } from '../lib/platform.mjs';
+import { IS_MAC, IS_WIN, IS_TOUCH, IS_IOS, PLATFORM } from '../lib/platform.mjs';
 import { diag } from '../lib/diag.mjs';
 import { Icon } from '../lib/icons.mjs';
 import { t, ago } from '../lib/i18n.mjs';
@@ -108,7 +108,9 @@ export function PlayView() {
   }
   if (target.error) return html`<${PlayHome} />`;
   // 3DS: souldew's own player when its 3DS part is there (and Azahar isn't chosen in Settings), else Azahar on its own
-  if (target.system === '3ds' && (!status?.ctr?.ok || status?.config?.emulatorFor?.['3ds'] === 'azahar')) return html`<${ExternalPlay} target=${target} emu="azahar" />`;
+  // (a phone or tablet can't start a desktop Azahar: its own player or a pointer to the Azahar app)
+  if (target.system === '3ds' && IS_TOUCH && !status?.ctr?.ok) return html`<${NoCtrOnDevice} />`;
+  if (target.system === '3ds' && !IS_TOUCH && (!status?.ctr?.ok || status?.config?.emulatorFor?.['3ds'] === 'azahar')) return html`<${ExternalPlay} target=${target} emu="azahar" />`;
   const choice = status?.config?.emulatorFor?.[target.system] || 'builtin';
   if (choice !== 'builtin' && status?.emulators?.[choice]?.installed) return html`<${ExternalPlay} target=${target} emu=${choice} />`;
   if (running) return html`<${SwitchGame} next=${target} />`;
@@ -124,6 +126,22 @@ function ctrLayoutLabel(id) {
     bt: t('play.l3dsBt', 'Bottom screen above the top one'),
     top: t('play.l3dsTop', 'Top screen only'),
   }[id] || id;
+}
+
+/** Azahar's Android app: the releases page has the APK (the Play Store also lists it). */
+const AZAHAR_ANDROID_URL = 'https://github.com/azahar-emu/azahar/releases';
+
+/** A phone or tablet whose app has no built-in 3DS player (its libraries are missing): where to get Azahar instead. */
+function NoCtrOnDevice() {
+  const { navigate } = useApp();
+  return html`<div class="panel empty-state">
+    <${Icon} name="play" size=${64} />
+    <h2>${t('ctr.noPlayerTitle', 'The 3DS player isn’t available here')}</h2>
+    <p class="muted prose">${IS_IOS ? t('ctr.noPlayerIos', 'Nintendo 3DS games can’t run on an iPhone or iPad: iOS doesn’t let apps generate code at run time, which a 3DS emulator needs.')
+      : t('ctr.noPlayerDevice', 'This device can’t run souldew’s built-in 3DS player. Azahar for Android plays 3DS games in its own app – without live tracking.')}</p>
+    <div class="row">${!IS_IOS && html`<button class="btn primary big" onClick=${() => openExternal(AZAHAR_ANDROID_URL)}>${t('ctr.getAzaharAndroid', 'Get Azahar for Android')}</button>`}
+      <button class="btn big" onClick=${() => navigate('play')}>${t('play.pickOther', 'Play something else')}</button></div>
+  </div>`;
 }
 
 /**
@@ -152,10 +170,12 @@ function CtrFailed({ fail, target, onClose }) {
     <div class="grow stack-s">
       <b>${t('ctr.failedTitle', 'The 3DS game has stopped')}</b>
       ${fail.message && html`<span class="small">${fail.message}</span>`}
-      ${!noAzahar && html`<span class="small muted">${t('ctr.failedHint', 'Some graphics cards and drivers can’t run souldew’s built-in 3DS player yet. Azahar, the free 3DS emulator, plays the same games – with live tracking. You can switch back any time in Settings › Emulators.')}</span>`}
+      ${!noAzahar && IS_TOUCH && html`<span class="small muted">${t('ctr.failedHintDevice', 'Azahar for Android plays the same games in its own app – without souldew’s live tracking.')}</span>`}
+      ${!noAzahar && !IS_TOUCH && html`<span class="small muted">${t('ctr.failedHint', 'Some graphics cards and drivers can’t run souldew’s built-in 3DS player yet. Azahar, the free 3DS emulator, plays the same games – with live tracking. You can switch back any time in Settings › Emulators.')}</span>`}
     </div>
     <div class="row">
-      ${!noAzahar && html`<button class="btn small primary" data-pad-first disabled=${busy} onClick=${toAzahar}>${t('ctr.useAzahar', 'Play 3DS games in Azahar')}</button>`}
+      ${!noAzahar && IS_TOUCH && html`<button class="btn small primary" data-pad-first onClick=${() => openExternal(AZAHAR_ANDROID_URL)}>${t('ctr.getAzaharAndroid', 'Get Azahar for Android')}</button>`}
+      ${!noAzahar && !IS_TOUCH && html`<button class="btn small primary" data-pad-first disabled=${busy} onClick=${toAzahar}>${t('ctr.useAzahar', 'Play 3DS games in Azahar')}</button>`}
       <button class="btn small ghost" onClick=${() => saveDiagnostics({ ctrFailed: fail })}><${Icon} name="save" size=${14} />${t('play.diag', 'Save diagnostics')}</button>
       <button class="btn small ghost" data-pad-back onClick=${onClose}>${t('play.close', 'Close game')}</button>
     </div>
@@ -279,6 +299,7 @@ export function GameSession({ session, mode }) {
   usePresence(status?.config?.presence !== false && phase === 'running' && !ctrFail
     ? { system: target.system, mode: target.kind === 'run' ? runMode(manifest) : 'solo' } : null);
   const [fs, setFs] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // touch screens: the overlay with the title, controls and team
   const [confirmReset, setConfirmReset] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [panelPrefs, setPanelPrefs] = useBattlePanelPrefs();
@@ -615,6 +636,27 @@ export function GameSession({ session, mode }) {
     document.addEventListener('fullscreenchange', on);
     return () => document.removeEventListener('fullscreenchange', on);
   }, []);
+
+  // the touch overlay closes on a tap into the game (the page loses focus to the frame) or anywhere outside it
+  useEffect(() => {
+    if (!menuOpen) return;
+    const away = (e) => !e.target.closest?.('.session-top, .session-bar, .session-left, .session-side, .touch-handle, .states-panel') && setMenuOpen(false);
+    const close = () => setMenuOpen(false);
+    addEventListener('pointerdown', away);
+    window.addEventListener('blur', close);
+    return () => {
+      removeEventListener('pointerdown', away);
+      window.removeEventListener('blur', close);
+    };
+  }, [menuOpen]);
+
+  // Fullscreen on a phone or tablet: a Game Boy / GBA picture is wider than tall – turn the screen sideways with it
+  // (browsers allow the lock only in fullscreen; where it isn't allowed nothing happens)
+  useEffect(() => {
+    if (!IS_TOUCH || isDs) return;
+    if (fs) screen.orientation?.lock?.('landscape')?.catch?.(() => {});
+    else screen.orientation?.unlock?.();
+  }, [fs, isDs]);
 
   // Leaving the big view (another section, the overview): no fullscreen of a page the game no longer covers, and the
   // panels that only exist in the big view don't pop up again on the way back.
@@ -1247,13 +1289,13 @@ export function GameSession({ session, mode }) {
   const [wasmSrc] = useState(() => {
     // 3DS: souldew's own player page – the game runs in the native host (server/lib/ctr.mjs), its saves live in the
     // host's folder for this game / run slot (target.key)
-    if (target.system === '3ds') return `/player3ds.html?rom=${encodeURIComponent(target.rom)}&key=${encodeURIComponent(target.key)}&name=${encodeURIComponent(target.name)}&layout=${layout3ds}${smooth3ds ? '&smooth=1' : ''}`;
+    if (target.system === '3ds') return `/player3ds.html?rom=${encodeURIComponent(target.rom)}&key=${encodeURIComponent(target.key)}&name=${encodeURIComponent(target.name)}&layout=${layout3ds}${smooth3ds ? '&smooth=1' : ''}${IS_TOUCH ? '&touch=1' : '&touch=0'}`;
     // EmulatorJS names the ROM (and its browser-side save) after the URL's last segment → make it unique per game.
     const romKey = `${hash(new TextEncoder().encode(target.key)).replace(/\D/g, '')}`;
     const romUrl = `/rom/g${romKey}.${target.system}?src=${encodeURIComponent(target.rom)}`;
     const lay = layout === 'lr' ? '&layout=Left%2FRight&dlayout=left%2Fright' : '';
     const wcore = isDs && /^(IPK|IPG|IRB|IRA|IRE|IRD)/.test(target.code || '') ? 'desmume' : '';
-    return `/player.html?system=${target.system}${wcore ? `&core=${wcore}` : ''}${lay}${fullTurbo ? '' : '&fullturbo=0'}&rom=${encodeURIComponent(romUrl)}&name=${encodeURIComponent(target.name)}&save=${encodeURIComponent(target.saveUrl)}&tap=${encodeURIComponent(t('play.tapToStart', 'Click to start'))}`;
+    return `/player.html?system=${target.system}${wcore ? `&core=${wcore}` : ''}${lay}${fullTurbo ? '' : '&fullturbo=0'}${IS_TOUCH ? '&touch=1' : '&touch=0'}&rom=${encodeURIComponent(romUrl)}&name=${encodeURIComponent(target.name)}&save=${encodeURIComponent(target.saveUrl)}&tap=${encodeURIComponent(t('play.tapToStart', 'Click to start'))}`;
   });
   const src = nativeOn && target.system !== '3ds' ? nativeSrc : wasmSrc;
   const arn = target.system === '3ds' ? ctrLayoutAspect(layout3ds) : isDs ? (layout === 'lr' ? 512 / 192 : 256 / 384) : target.system === 'gba' ? 3 / 2 : 10 / 9;
@@ -1324,7 +1366,10 @@ export function GameSession({ session, mode }) {
   const battlePanel = html`<${BattlePanel} battle=${battle} mine=${myParty} gen=${gameGen} game=${liveGame} isRun=${isRun}
     side=${panelSide} collapsed=${panelPrefs.collapsed} onPrefs=${setPanelPrefs} hitsOpen=${panelPrefs.hits} noMoves=${features?.moves === 'no'} />`;
   const hasLeft = !!(isRun || here || (battle?.enemy && panelSide === 'left'));
-  return html`<div class=${`session ${mode} ${fs && mode === 'full' ? 'is-fs' : ''} ${isDs ? 'ds' : ''}`} data-v=${docVersion}>
+  const touchPlay = IS_TOUCH && mode === 'full';
+  return html`<div class=${`session ${mode} ${fs && mode === 'full' ? 'is-fs' : ''} ${isDs ? 'ds' : ''} ${touchPlay ? 'touch-play' : ''} ${touchPlay && menuOpen ? 'menu-open' : ''} ${touchPlay && statesOpen ? 'states-open' : ''}`} data-v=${docVersion}>
+    ${touchPlay && html`<button class="touch-handle" aria-expanded=${menuOpen} aria-label=${t('play.menu', 'Menu')} title=${t('play.menu', 'Menu')}
+      onClick=${() => setMenuOpen(!menuOpen)}><span aria-hidden="true">${menuOpen ? '×' : '☰'}</span></button>`}
     <div class="mini-head">
       <${Led} on=${phase === 'running' && !paused} color="green" /><span class="grow ellipsis">${target.label}</span>
       ${btn('close', t('play.close', 'Close game'), actions.close)}
@@ -1343,7 +1388,7 @@ export function GameSession({ session, mode }) {
         ${panelSide === 'left' && battlePanel}
       </aside>`}
       <div class="session-stage">
-        <div class="session-screen" onClick=${focusGame}>
+        <div class="session-screen" onClick=${() => { setMenuOpen(false); focusGame(); }}>
           <div class="console-screen" style=${`--arn:${arn}`}>
             <iframe ref=${frame} src=${src} title=${t('play.screenTitle', 'Game screen')} allow="autoplay; fullscreen; gamepad"
               class=${screenShown ? 'ci-shown' : 'ci-wait'} onLoad=${focusGame}></iframe>

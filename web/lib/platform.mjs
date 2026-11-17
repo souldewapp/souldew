@@ -49,6 +49,48 @@ export function shortPath(p) {
   return String(p)
     .replace(/^\/Users\/[^/]+\/Library\/Mobile Documents\/com~apple~CloudDocs/, 'iCloud Drive')
     .replace(/^\/Users\/[^/]+\/Library\/Application Support\/OpenEmu\/Game Library/, 'OpenEmu').replace(/^\/Users\/[^/]+/, '~')
+    .replace(/^\/storage\/emulated\/0(?=\/|$)/, 'Internal storage')
     .replace(/^\/(?:var\/)?home\/[^/]+(?=\/|$)/, '~')
     .replace(/^[A-Za-z]:\\Users\\[^\\]+\\(OneDrive[^\\]*)/i, '$1').replace(/^[A-Za-z]:\\Users\\[^\\]+/i, '~');
 }
+
+/**
+ * Sounds checkbox text: "this computer" on a computer, "this device" on a phone or tablet (IS_TOUCH, defined below – read
+ * when called, not at load).
+ */
+export const soundsText = () => (IS_TOUCH
+  ? t('set.soundsDevice', 'Sounds on this device (start-up chime, catches, deaths, badges, pings)')
+  : t('set.soundsAll', 'Sounds on this computer (start-up chime, catches, deaths, badges, pings)'));
+
+/** The Android app (its WebView says Android). */
+export const IS_ANDROID = (() => {
+  try {
+    return /Android/i.test(navigator.userAgent);
+  } catch {
+    return false;
+  }
+})();
+
+/** An iPhone or iPad: the app there has no randomizer (no Java), no 3DS player (no JIT) and no way to scan the device. */
+export const IS_IOS = (() => {
+  try {
+    return /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  } catch {
+    return false;
+  }
+})();
+
+/**
+ * A touch screen is the main way to point (a phone or tablet – not a laptop with a touch screen next to a mouse): the
+ * game fills the screen and its controls sit in an overlay (views/play.mjs, styles.css .touch-play). `?touch=1` / `?touch=0`
+ * in the address forces it, for a browser that reports its screen wrongly (desktop mode on a tablet).
+ */
+export const IS_TOUCH = (() => {
+  try {
+    const forced = new URLSearchParams(location.hash.split('?')[1] || location.search).get('touch');
+    if (forced) return forced === '1';
+    return navigator.maxTouchPoints > 0 && matchMedia('(pointer: coarse)').matches;
+  } catch {
+    return false;
+  }
+})();
