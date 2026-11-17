@@ -369,6 +369,12 @@ export function gen3MapHeaders(rom) {
   return out;
 }
 
+/** Every map's region map section, by 'group.num' (the map header table's +0x14), or null when the table isn't found. */
+export function gen3MapSections(rom) {
+  const groups = gen3MapGroups(rom);
+  return groups ? new Map(groups.maps.map(([key, h]) => [key, rom[h + 0x14]])) : null;
+}
+
 /** gMapGroups: the group table's offset and every map's header offset ['group.num', offset], or null. */
 function gen3MapGroups(rom) {
   const len = rom.length;

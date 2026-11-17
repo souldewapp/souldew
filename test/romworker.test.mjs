@@ -47,7 +47,8 @@ test('a request is answered while a ROM is being scanned; the scan\'s result arr
     const res = await scan;
     assert.ok(scanAt > statusAt, 'answered while the scan was still running');
     assert.equal(res.status, 200);
-    assert.deepEqual(Object.keys(res.body).sort(), Object.keys(ROMDATA_NONE).sort());
+    // (all but `wild`: the Pokémon Finder's own route, /api/rom/wild)
+    assert.deepEqual(Object.keys(res.body).sort(), Object.keys(ROMDATA_NONE).filter((k) => k !== 'wild').sort());
     assert.equal(res.body.header.system, 'gba', 'the scan\'s own result');
     assert.ok(scanAt - t0 >= 1100);
     // the same ROM again: from memory, no second scan

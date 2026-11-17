@@ -22,6 +22,9 @@ function decode(rom, o, n, table) {
   return s;
 }
 
+/** A Gen 3 text field (see the species tables): the string up to its 0xFF terminator, null for a byte the charset lacks. */
+export const gen3Text = decode;
+
 // a species name: letters first, then letters, digits and the few signs names use ("Mr. Mime", "Ho-Oh", "Nidoran♀",
 // "Type: Null"; Complete FireRed Upgrade's Unown forms "Unown !" / "UNOWN?")
 const NAME = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .'’\-♂♀:!?]*$/;

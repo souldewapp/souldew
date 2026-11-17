@@ -12,7 +12,8 @@ import { createHash } from 'node:crypto';
 import { Worker } from 'node:worker_threads';
 import zlib from 'node:zlib';
 import { romLocations, gen3MapTable, gen3MapHeaders, gen3RamMoved, gbMapHeaders } from '../../shared/live/romloc.mjs';
-import { romSpecies, gen3ItemNames, gen3MoveNames, gen3MoveMap } from '../../shared/live/romspecies.mjs';
+import { romSpecies, gen3ItemNames, gen3MoveNames, gen3MoveMap, gen3Text } from '../../shared/live/romspecies.mjs';
+import { gen3Wild } from '../../shared/live/romwild.mjs';
 import { romTypes } from '../../shared/live/romtypes.mjs';
 import { romCaps } from '../../shared/live/romcaps.mjs';
 import { gbWramShift } from '../../shared/live/romwram.mjs';
@@ -24,7 +25,7 @@ import { isCtrExt } from '../../shared/romid.mjs';
 import { identifyCtr } from '../../shared/ctr.mjs';
 import { ctrZonePlaces } from '../../shared/live/ctrzones.mjs';
 
-const VERSION = 21; // bump when romData() / ctrData() change what they find or the shape of the result (13: types and level caps from the ROM, 14: 3DS zone tables, 15: their header, 16: Gen 3 hacks with moved RAM, badge flags by the leaders' order, 17: Black/White zone headers, 18: catch rates with the types, the Game Boy enemy's status / catch rate / battle type moved with a hack's RAM, 19: the Game Boy map headers, Gen 3 map headers, Black 2/White 2 zone headers – the place sign checks the game's copy of the current map's header against them, 20: Yellow's map headers (249 maps) and its memory table entry found from its ROM header, 21: Gen 5 forms' types)
+const VERSION = 22; // bump when romData() / ctrData() change what they find or the shape of the result (13: types and level caps from the ROM, 14: 3DS zone tables, 15: their header, 16: Gen 3 hacks with moved RAM, badge flags by the leaders' order, 17: Black/White zone headers, 18: catch rates with the types, the Game Boy enemy's status / catch rate / battle type moved with a hack's RAM, 19: the Game Boy map headers, Gen 3 map headers, Black 2/White 2 zone headers – the place sign checks the game's copy of the current map's header against them, 20: Yellow's map headers (249 maps) and its memory table entry found from its ROM header, 21: Gen 5 forms' types, 22: Gen 3 wild encounters)
 const memo = new Map();
 let tables = null;
 
@@ -53,7 +54,7 @@ export function romCrc(bytes) {
   return (v >>> 0).toString(16).toUpperCase().padStart(8, '0');
 }
 
-/** All results for a ROM's bytes: { data (locations or null), species, wram, gbMaps, types, caps, capsWhy, items, moves, vanilla }. */
+/** All results for a ROM's bytes: { data (locations or null), species, wram, gbMaps, types, caps, capsWhy, items, moves, wild, vanilla }. */
 export function romData(u8, sharedDir) {
   const o = opts(sharedDir);
   let vanilla = false;
@@ -88,7 +89,23 @@ export function romData(u8, sharedDir) {
   // the header (system, game code, title): which memory table entry reads it (shared/live/features.mjs)
   const h = identifyRom(u8.subarray(0, 0x200));
   const header = h?.system ? { system: h.system, code: h.code || '', title: h.title || '' } : null;
-  return { data, species, wram: vanilla ? null : gbShift(u8, o), gbMaps: gbMaps(u8, o), types, caps, capsWhy: caps ? null : c.why || null, ...own, header, vanilla };
+  return { data, species, wram: vanilla ? null : gbShift(u8, o), gbMaps: gbMaps(u8, o), types, caps, capsWhy: caps ? null : c.why || null, ...own, wild: wildOf(u8, o, data, species), header, vanilla };
+}
+
+/**
+ * Gen 3: where the wild Pokémon are (shared/live/romwild.mjs) – the game's own species and place names. null where the table
+ * can't be read with confidence (another engine, a hack that changed the layout). It is big (the page asks for it on its own,
+ * /api/rom/wild) and stays out of the play view's /api/rom/locations.
+ */
+function wildOf(u8, o, data, species) {
+  if (data?.gen !== 3 || !species?.count || !species.source) return null;
+  const { names: at, stride } = species.source;
+  return gen3Wild(u8, {
+    speciesCount: species.count,
+    names: data.names,
+    toDex: (i) => (species.map ? species.map[i] : o.gen3Index[i]) || 0,
+    speciesNames: (i) => gen3Text(u8, at + i * stride, stride, o.gen3Charset.table || o.gen3Charset) || '',
+  });
 }
 
 /**
@@ -163,7 +180,7 @@ export function ctrData(file) {
 export const isCtrFile = (file) => Boolean(file) && isCtrExt(extname(file).slice(1));
 
 /** What romDataFor finds when there's nothing to find – also the list of fields the disk cache must give back. */
-export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, gbMaps: null, types: null, caps: null, capsWhy: null, items: null, moves: null, header: null, vanilla: null });
+export const ROMDATA_NONE = Object.freeze({ data: null, species: null, wram: null, gbMaps: null, types: null, caps: null, capsWhy: null, items: null, moves: null, wild: null, header: null, vanilla: null });
 /** A disk-cache entry back into romDataFor's result (every field of ROMDATA_NONE – a missing one would be lost on the
  * next start, as the own types of Too Many Types were). */
 export const fromRomCache = (v) => Object.fromEntries(Object.keys(ROMDATA_NONE).map((k) => [k, v[k] ?? null]));

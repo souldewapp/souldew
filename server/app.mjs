@@ -1057,7 +1057,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
   // file, a library ROM – zipped ones unpacked –, or a patched ROM). { data: null } = no location data for this game.
   // The scan runs in a worker thread (server/lib/romloc.mjs): a big ROM takes seconds the first time, and every other
   // request is answered meanwhile – the play view fills in what depends on it once it arrives.
-  route('GET', /^\/api\/rom\/locations$/, (req, m, url) => {
+  const romSource = (url) => {
     const src = new URL(url.searchParams.get('src') || '', 'http://local');
     const env = { sharedDir: SHARED_DIR, cacheDir: CACHE_DIR };
     const run = src.pathname.match(/^\/api\/runs\/([a-f0-9]{8})\/file$/);
@@ -1078,7 +1078,13 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
       return romDataFor({ patched: { romId: src.searchParams.get('romId'), patchId: src.searchParams.get('patchId'), config: loadConfig() } }, env);
     }
     throw httpError(400, 'bad src', 'badRequest');
+  };
+  // (the wild encounters are big and only the Pokémon Finder needs them: their own route)
+  route('GET', /^\/api\/rom\/locations$/, async (req, m, url) => {
+    const { wild, ...rest } = await romSource(url); // eslint-disable-line no-unused-vars
+    return rest;
   });
+  route('GET', /^\/api\/rom\/wild$/, async (req, m, url) => ({ wild: (await romSource(url)).wild }));
 
   // ---- ROM inspection & run building ----------------------------------------------
   route('POST', /^\/api\/rom\/inspect$/, async (req) => {

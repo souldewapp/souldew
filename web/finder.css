@@ -1,0 +1,35 @@
+/* Pokémon Finder (web/views/finder.mjs): search a Pokémon → where it lives, pick an area → its Pokémon. */
+.finder .finder-h { display: flex; align-items: center; gap: 8px; font-size: 17px; margin: 4px 0; }
+.finder-picks, .finder-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.finder-list { flex-direction: column; flex-wrap: nowrap; max-height: 420px; overflow-y: auto; padding-right: 2px; }
+.finder-pick { display: inline-flex; align-items: center; gap: 8px; min-width: 0; padding: 5px 12px 5px 8px; border-radius: 999px; cursor: pointer; text-align: left;
+  border: 1px solid #0d0c10; background: var(--shell-3); color: var(--ink-2); }
+.finder-list .finder-pick { border-radius: var(--r-m); padding: 7px 12px; }
+.finder-pick:hover { color: var(--ink); }
+.finder-pick.on { color: var(--ink); background: var(--shell-4); box-shadow: inset 0 0 0 1.5px var(--crs); }
+.finder-table { display: flex; flex-direction: column; }
+.finder-row { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, .8fr) minmax(0, .8fr) minmax(0, .6fr); gap: 10px; align-items: baseline;
+  padding: 7px 4px; border-bottom: 1px solid #ffffff0d; font-size: 14px; }
+.finder-row.head { color: var(--ink-3); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.finder-area { overflow-wrap: anywhere; }
+.finder-areas { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.finder-area-card { padding: 10px 14px; border-radius: var(--r-m); background: #141318; display: flex; flex-direction: column; gap: 8px; }
+.finder-mh { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 2px; }
+.finder-mons { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.finder-mons li { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.finder-lv { color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+.finder-pct { min-width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; }
+.finder-note { margin-top: 4px; }
+/* a touch screen: finger-sized targets */
+.finder.touch .finder-pick { min-height: 44px; }
+.finder.touch .seg button { min-height: 40px; }
+@media (max-width: 760px) {
+  .finder-areas { grid-template-columns: minmax(0, 1fr); }
+  .finder-list { max-height: 240px; }
+  /* the table becomes cards: the area on its own line, the rest under it */
+  .finder-row.head { display: none; }
+  .finder-row { grid-template-columns: repeat(4, minmax(0, auto)); justify-content: start; gap: 4px 14px; }
+  .finder-row .finder-area { grid-column: 1 / -1; font-weight: 600; }
+}
+/* the game picker and the Pokémon / Area switch sit on one line when there is room, else the switch wraps under it */
+.finder .row .field { flex: 1 1 220px; }

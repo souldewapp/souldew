@@ -434,6 +434,8 @@ const NAV_ICONS = {
   stream: html`<rect x="3" y="4.5" width="18" height="12.5" rx="2.4" /><path d="M8.5 20.5h7M12 17v3.5" /><circle class="ni-rec" cx="12" cy="10.75" r="2.5" />`,
   // a cup – it bobs on hover
   trophy: html`<g class="ni-bob"><path d="M7.5 4.5h9v4.4a4.5 4.5 0 0 1-9 0z" /><path d="M7.5 6.4H5a2.5 2.5 0 0 0 2.8 3.5M16.5 6.4H19a2.5 2.5 0 0 1-2.8 3.5" /><path d="M12 13.4v3.1M8.8 20.2h6.4l-.7-3.7H9.5z" /></g>`,
+  // a magnifier over a Poké Ball's band – it bobs on hover
+  finder: html`<g class="ni-bob"><circle cx="10.5" cy="10.5" r="6.6" /><path d="M4.2 10.5h12.6" /><circle cx="10.5" cy="10.5" r="1.9" /><path d="M15.4 15.4l5 5" /></g>`,
   help: html`<circle cx="12" cy="12" r="9" /><path class="ni-bob" d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.9-2.6 2.3-2.6 4" /><circle class="ni-bob" cx="12" cy="17.3" r=".7" />`,
 };
 

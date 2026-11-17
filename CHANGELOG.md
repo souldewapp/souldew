@@ -2,6 +2,16 @@
 
 `npm run release` takes the release notes from the section of the version being released.
 
+## Unreleased
+
+- **Pokémon Locator** (thanks to a player for the idea). A new “Locator” page in the sidebar: pick one of your Game Boy Advance games, search a
+  Pokémon and see where it can be found – area, method (walking, surfing, Rock Smash, the three rods), level range and
+  chance – or pick an area and see its Pokémon. It is read from the game file itself, so a ROM hack's changed encounters,
+  new Pokémon and own area names show as they are; a game whose encounter tables can't be read with confidence is left
+  out instead of guessed at. This first version covers Ruby, Sapphire, FireRed and Emerald (checked in the USA games). The
+  slot chances are the retail games' fixed ones; Repels, Flutes, Sweet Scent, chaining, abilities, held items, swarms,
+  roamers, gift and static encounters and the other generations come later. It works with touch screens too.
+
 ## 2.8.1
 
 - **Fast-forward on a key, like in mGBA** (thanks to a player for the idea). Hold Tab to fast-forward while it is held,

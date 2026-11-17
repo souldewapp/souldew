@@ -52,3 +52,6 @@ export function shortPath(p) {
     .replace(/^\/(?:var\/)?home\/[^/]+(?=\/|$)/, '~')
     .replace(/^[A-Za-z]:\\Users\\[^\\]+\\(OneDrive[^\\]*)/i, '$1').replace(/^[A-Za-z]:\\Users\\[^\\]+/i, '~');
 }
+
+/** A touch screen is the main pointer (a phone or tablet): bigger targets, no search box that pops the keyboard up on its own. */
+export const IS_TOUCH = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
