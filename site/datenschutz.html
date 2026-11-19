@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Datenschutz – souldew</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#121116">
+<meta name="theme-color" content="#0c0b10">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
@@ -35,19 +35,24 @@
 
   <h2>4. Abfrage der aktuellen Version</h2>
   <p>Damit die Download-Knöpfe direkt auf die neueste Version zeigen, fragt dein Browser beim Laden der Seite die öffentliche Schnittstelle von GitHub (api.github.com) nach dem neuesten Release. Dabei wird deine IP-Adresse an GitHub übermittelt (siehe Abschnitt 2). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes Interesse ist ein funktionierender Download. Die Antwort (Versionsnummer, Dateinamen, Größen) wird höchstens 30 Minuten im Sitzungsspeicher deines Browsers (sessionStorage) zwischengespeichert, damit beim Wechsel zwischen den Sprachversionen nicht erneut gefragt wird; sie verlässt deinen Browser nicht und wird beim Schließen des Tabs gelöscht. Ohne JavaScript führen die Knöpfe zur Release-Seite auf GitHub.</p>
-  <p>Welcher Download-Knopf zuerst erscheint (macOS oder Windows), entscheidet dein Browser lokal anhand seiner Angaben zum Betriebssystem. Diese Angabe wird nirgendwohin gesendet.</p>
+  <p><b>Danke-Wand:</b> Wenn du dich dem Abschnitt „Danke“ der Startseite näherst, fragt dein Browser beim Kontodienst von souldew (accounts.souldew.app, von uns bei Cloudflare betrieben, siehe Abschnitt 7) die öffentliche Liste der Unterstützer ab. Die Anfrage enthält kein Cookie und keinen Referrer; wie jede Anfrage enthält sie deine IP-Adresse, die Cloudflare zur Zustellung verarbeitet. Die Liste enthält nur, was Unterstützer selbst zeigen möchten (siehe Abschnitt 6). Schlägt die Anfrage fehl, zeigt die Seite einen festen Text. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes Interesse ist, den Menschen zu danken, die souldew unterstützen.</p>
 
   <h2>5. Externe Links</h2>
-  <p>Links zu GitHub und Buy Me a Coffee führen zu Angeboten der jeweiligen Anbieter. Erst wenn du einen Link anklickst, werden Daten an diese übertragen; dort gelten deren Datenschutzbestimmungen.</p>
+  <p>Links zu GitHub, Discord, Instagram und Buy Me a Coffee führen zu Angeboten der jeweiligen Anbieter. Erst wenn du einen Link anklickst, werden Daten an diese übertragen; dort gelten deren Datenschutzbestimmungen.</p>
 
   <h2>6. Die App souldew</h2>
-  <p>Die App selbst sammelt keine Nutzungsdaten und hat kein Konto (einzige Ausnahme: der anonyme Zähler „Spielt gerade“, siehe Abschnitt 7, abschaltbar). Damit sie funktioniert, nimmt sie folgende Verbindungen auf:</p>
+  <!-- REVIEW(owner): Abschnitt 6 wurde am 19.11.26 für souldew 3.0 ergänzt (Konto, souldew+, Danke-Wand, TURN), aus dem Code
+       der App abgeleitet – bitte vor dem Livegang prüfen, besonders Speicherdauern beim Konto, das Opt-in der Danke-Wand und
+       den Anfragezähler für die TURN-Zugangsdaten. Die englische Fassung steht in privacy.html. -->
+  <p>Die App sammelt keine Nutzungsdaten (einzige Ausnahme: der anonyme Zähler „Spielt gerade“, siehe Abschnitt 7, abschaltbar). Damit sie funktioniert, nimmt sie folgende Verbindungen auf:</p>
   <ul>
-    <li><b>Updates:</b> Beim Start und alle vier Stunden fragt die App bei GitHub nach einer neuen Version.</li>
-    <li><b>Mitspielen:</b> Für SoulLinks finden sich die Apps über öffentliche Nostr-Relays und verbinden sich dann direkt (WebRTC); als Ausweichweg dient ein öffentlicher MQTT-Broker. Übertragen werden nur verschlüsselte Tracker-Daten – nie Spiele oder Spielstände.</li>
-    <li><b>Pokémon-Bilder:</b> Sprites werden aus dem öffentlichen PokeAPI-Repository auf GitHub geladen.</li>
-    <li><b>Discord:</b> Nur wenn du selbst einen Discord-Webhook einträgst, sendet die App Run-Ereignisse dorthin.</li>
+    <li><b>Updates:</b> Beim Start und alle vier Stunden lädt die App die Datei <code>latest.json</code> des neuesten Releases von GitHub und prüft ihre Signatur; ein neues Installationsprogramm kommt aus demselben Release.</li>
+    <li><b>Mitspielen:</b> Für SoulLinks finden sich die Apps über öffentliche Nostr-Relays und verbinden sich dann direkt (WebRTC); als Ausweichweg dient ein öffentlicher MQTT-Broker. Verbindungen zum Tauschen, Kämpfen, für Raids und Shared World können über den TURN-Dienst von Cloudflare weitergeleitet werden; die kurzlebigen Zugangsdaten dafür kommen von unserem Server unter api.souldew.app. Übertragen werden nur verschlüsselte Daten – Tracker-Daten, die gedrückten Tasten während einer Verbindung und, wenn ihr euch zuseht, das Spielbild der Partner. Nie Spiele oder Spielstände.</li>
+    <li><b>Bilder:</b> Pokémon-Sprites und Spielcover werden aus öffentlichen Repositorys auf GitHub geladen (PokeAPI, libretro-thumbnails).</li>
+    <li><b>Discord, nur wenn du es einrichtest:</b> Trägst du einen Discord-Webhook ein oder verknüpfst du „Live-Runs“ mit <code>/live connect</code>, sendet die App die Run-Ereignisse, die du teilst, an Discord – bei Live-Runs über unseren Server unter api.souldew.app.</li>
   </ul>
+  <p><b>souldew-Konto (freiwillig):</b> „Mit Discord anmelden“ öffnet deinen Browser bei accounts.souldew.app, das dich zur Bestätigung zu Discord schickt. souldew fragt Discord nur nach dem Umfang <code>identify</code> und erhält deine Discord-ID, deinen Benutzernamen, Anzeigenamen und dein Profilbild – nie dein Passwort oder deine E-Mail-Adresse. Der Kontodienst speichert dein Konto, das Profil, das du einrichtest, deine Freunde, Anfragen, Blockierungen und Run-Einladungen, deine Anmeldungen je Gerät und – nur wenn du „Meine Runs im Profil zeigen“ einschaltest – zusammengefasste Zahlen deiner Runs. Während die App läuft, meldet sie, dass du online bist und – je nach Einstellung – was du spielst; deine Freunde sehen das gemäß deinen Datenschutzeinstellungen. Unter Einstellungen › Konto kannst du deine Daten exportieren, Geräte abmelden und dein Konto löschen. Ohne Konto wird nichts davon gesendet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.</p>
+  <p><b>souldew+:</b> Mitgliedschaften werden bei Buy Me a Coffee bezahlt; dort gelten deren Datenschutzbestimmungen. Buy Me a Coffee meldet unserem Kontodienst die Mitgliedschaft mit der dort verwendeten E-Mail-Adresse; wir speichern sie nicht lesbar, sondern als Hashwert mit geheimem Schlüssel, damit du die Mitgliedschaft mit derselben Adresse (oder mit <code>/supporter claim</code> im souldew-Discord) deinem Konto zuordnen kannst. Auf der Danke-Seite der App und der Danke-Wand der Website erscheinen Unterstützer nur dann mit Namen, wenn sie das selbst wollen: Neue Unterstützer werden einmal gefragt („Ja, zeig mich“ / „Nein, danke“), und unter Einstellungen › Konto › Privatsphäre lässt sich „Meinen Namen auf der Danke-Seite zeigen“ jederzeit ein- und ausschalten. Gezeigt werden Name, Stufe, seit wann und – falls vorhanden – das Profilbild; alle anderen werden nur mitgezählt (Rechtsgrundlage: deine Einwilligung, Art. 6 Abs. 1 lit. a DSGVO, jederzeit widerruflich). Der Kontodienst läuft bei Cloudflare (Workers, D1, R2; zu Cloudflare siehe Abschnitt 7).</p>
 
   <h2 id="spielt-gerade">7. Anonymer Zähler „Spielt gerade“</h2>
   <p lang="en"><em>In short (English):</em> while a game runs, the souldew app sends an anonymous heartbeat once a minute – the system, the mode, the app version and a random id that is new for every game – so the souldew Discord can show how many people are playing right now. No name, no game title, no IP address stored, no profiles. Switch it off in Settings › General.</p>
@@ -67,7 +72,7 @@
   <h2>8. Deine Rechte</h2>
   <p>Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen die Verarbeitung (Art. 21). Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77 DSGVO). Wende dich dafür an die oben genannte Adresse.</p>
 
-  <p class="faint">Stand: November 2026</p>
+  <p class="faint">Stand: November 2026 · English: <a href="privacy.html" lang="en">privacy policy</a></p>
 </main>
 <footer class="site-foot"><div class="wrap"><p class="foot-links"><a href="de/">Startseite</a> · <a href="impressum.html">Impressum</a> · <a href="./">English</a></p></div></footer>
 </body>

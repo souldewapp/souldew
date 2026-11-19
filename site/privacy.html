@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy – souldew</title>
+<meta name="description" content="What the souldew website and the souldew app send, to whom and why.">
+<link rel="canonical" href="https://souldew.app/privacy.html">
+<link rel="alternate" hreflang="en" href="https://souldew.app/privacy.html">
+<link rel="alternate" hreflang="de" href="https://souldew.app/datenschutz.html">
+<meta name="theme-color" content="#0c0b10">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="assets/img/icon.svg" alt="" width="36" height="36"><span>souldew</span></a>
+    <div class="head-actions"><a class="btn btn-ghost btn-small" href="datenschutz.html" lang="de" hreflang="de">Deutsch</a><a class="btn btn-ghost btn-small" href="./">Home</a></div>
+  </div>
+</header>
+<main class="wrap doc" id="main">
+  <h1>Privacy policy</h1>
+  <p>This page explains what the souldew website and the souldew app send, to whom and why. The German version, <a href="datenschutz.html" lang="de">Datenschutzerklärung</a>, says the same; if the two ever differ, the German one applies.</p>
+  <!-- REVIEW(owner): this English page was written from datenschutz.html and the app's code (server/lib/presence.mjs,
+       liveruns.mjs, linkice.mjs, accounts/, electron/update-core.mjs) on 19.11.26. It is not legal advice. Points marked
+       REVIEW below need your confirmation before launch (retention of account data, the thank-you wall's opt-in, the
+       relay rate counter). -->
+
+  <h2>1. Who is responsible</h2>
+  <p>Paul Kapischka, Hirzelstraße 17, 04229 Leipzig, Germany, email: <a href="mailto:hallo@kapischka.de">hallo@kapischka.de</a></p>
+
+  <h2>2. The website</h2>
+  <p><b>Hosting.</b> This website is hosted on GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. To deliver the pages GitHub processes technically necessary data, in particular your IP address, the date and time, the page requested and information about your browser (server log files). We have no access to these logs. Data may be transferred to the USA; GitHub is certified under the EU-US Data Privacy Framework. Legal basis: Art. 6(1)(f) GDPR. More: <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub’s privacy statement</a>.</p>
+  <p><b>No cookies, no analytics.</b> The website sets no cookies, uses no analytics or tracking and embeds no third-party content. Fonts and pictures come from the same server as the page.</p>
+  <p><b>The latest version.</b> So the download buttons point straight at the newest files, your browser asks GitHub’s public API (api.github.com) for the latest release when the page loads; this sends your IP address to GitHub. The answer (version number, file names, sizes) is kept in your browser’s session storage for up to 30 minutes and never leaves your browser. Without JavaScript the buttons lead to the release page on GitHub. Legal basis: Art. 6(1)(f) GDPR; our legitimate interest is a working download.</p>
+  <p><b>The thank-you wall.</b> When you scroll near the “Thank you” section, your browser asks souldew’s accounts service (accounts.souldew.app, run by us on Cloudflare – see section 3.6) for the public list of supporters. The request carries no cookie and no referrer; like every request it carries your IP address, which Cloudflare processes to deliver it. The list holds only what supporters chose to show (see section 3.6). If the request fails, the page shows a static text instead. Legal basis: Art. 6(1)(f) GDPR; our legitimate interest is thanking the people who support souldew.</p>
+  <p><b>Links.</b> Links to GitHub, Discord, Instagram and Buy Me a Coffee lead to those providers. Data goes to them only when you click a link; their privacy policies apply there.</p>
+
+  <h2>3. The souldew app</h2>
+  <p>souldew runs on your computer. Your games, save files and runs stay there. The app has no analytics. It contacts the following services – most of them only when you use the feature in question.</p>
+
+  <h3 class="d4" id="updates">3.1 Update check</h3>
+  <p>At start and every four hours the app downloads <code>latest.json</code> from the latest souldew release on GitHub (github.com, a service of GitHub, Inc., see section 2) and checks its signature. If there is a new version, the installer is downloaded from the same GitHub release. GitHub sees your IP address and the request; nothing else is sent.</p>
+
+  <h3 class="d4" id="together">3.2 Playing together (SoulLink, link sessions, partner video)</h3>
+  <p>The apps of a run find each other through public Nostr relays and then connect directly to each other (WebRTC). Where a direct connection isn’t possible, a public MQTT broker is used as a fallback for run data, and link sessions (trades, battles, raids, Shared World) can be relayed through Cloudflare’s TURN service; the short-lived TURN credentials come from souldew’s server at api.souldew.app. Only encrypted data travels: tracker data, the buttons pressed during a link, and – if you watch each other – your partners’ game picture. Never your games or save files. Relays and the TURN service see the IP addresses of the connection.</p>
+  <!-- REVIEW(owner): docs/MULTIPLAYER.md says the bot limits GET /link/ice to 20 requests per IP per hour with "the live
+       feature's D1 counter". If that counter stores the IP address (or a hash of it) in D1, say so here and how long it
+       is kept. -->
+
+  <h3 class="d4" id="playing-now">3.3 Anonymous “playing now” counter</h3>
+  <p>So the souldew Discord can show how many people are playing right now, the app sends – <b>only while a game actually runs</b> in souldew’s own players – a short message once a minute to our server at api.souldew.app (if that address can’t be reached at all, to the older address of the same server at workers.dev). It contains only:</p>
+  <ul>
+    <li>a random id made when the game starts – new for every game, never stored on your computer, derived from nothing,</li>
+    <li>the system (Game Boy, Game Boy Advance, Nintendo DS or Nintendo 3DS),</li>
+    <li>the mode (solo, Nuzlocke or SoulLink) and</li>
+    <li>the app version.</li>
+  </ul>
+  <p>When the game closes, “stopped” is sent once. No name, account, game title, save, run data or file is sent; offline, nothing is sent and nothing is sent later.</p>
+  <p><b>Storage:</b> for each running game the server keeps only these details and the time of the last message; they are deleted with “stopped”, at the latest a few minutes after the last message. Only totals (games running per system and mode, one value per five minutes) are kept, for 90 days. We don’t store your IP address and don’t log the messages; Cloudflare processes it to deliver the request and to limit abuse (an in-memory limit per address, nothing stored). No profiles are made. Anyone can read the totals at <a href="https://api.souldew.app/presence">api.souldew.app/presence</a>.</p>
+  <p><b>Provider:</b> the server runs on Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA (Cloudflare Workers and D1). Data may be transferred to the USA; Cloudflare is certified under the EU-US Data Privacy Framework. More: <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s privacy policy</a>.</p>
+  <p><b>Legal basis:</b> Art. 6(1)(f) GDPR; our legitimate interest is showing how active the community is and planning capacity.</p>
+  <p><b>Switching it off:</b> Settings › General › “Count me in ‘playing now’ (anonymous)” – on by default. Off applies at once. The details: <a href="https://github.com/souldewapp/souldew/blob/main/docs/PRIVACY.md">docs/PRIVACY.md</a>.</p>
+
+  <h3 class="d4" id="discord">3.4 Sharing to Discord (Live Runs and webhooks)</h3>
+  <p>Only if you set it up yourself. With <b>Live Runs</b> you link souldew to your Discord account once with a code from <code>/live connect</code> in the souldew Discord; souldew’s server at api.souldew.app answers with a token that is stored in its own file in your data folder. From then on the app sends the run events you choose to share, through our server, to Discord. If you enter a <b>Discord webhook</b> for a run, the app posts that run’s events there directly. In both cases Discord Inc. receives what you share; Discord’s privacy policy applies there.</p>
+  <!-- REVIEW(owner): add what the bot stores for Live Runs (the token, the Discord user id, the shared events) and for how long. -->
+
+  <h3 class="d4" id="account">3.5 souldew account (optional)</h3>
+  <p>Without an account the app works as before and sends none of the following.</p>
+  <p><b>Sign-in.</b> “Sign in with Discord” opens your browser at accounts.souldew.app, which sends you to Discord to confirm. souldew asks Discord only for the scope <code>identify</code> and receives your Discord user id, user name, display name and profile picture – never your password or email address. Your sign-in is kept in your computer’s keychain.</p>
+  <p><b>What the accounts service stores:</b> your account (Discord id, name and picture as above, your souldew handle and friend code), the profile you set up (banner, frame, nameplate, title, accent colour, showcase, status line, privacy settings), your friends, friend requests, blocks and run invites, your sign-ins per device, and – only if you switch on “Show my runs on my profile” – summary numbers of your runs (no saves, no ROM data, no file paths). While the app runs and you are signed in, it tells the service that you are online and, depending on your settings, what you are playing; your friends see this according to your privacy settings, and “appear offline” hides it.</p>
+  <p><b>Your choices:</b> who sees your profile and your status is set in Settings › Account. There you can also export your data as a file, sign out devices and delete your account; deleting it removes your profile, friends, invites, online status and sign-ins.</p>
+  <!-- REVIEW(owner): retention – how long are sign-in records, reports and deleted-account remnants kept? Is Discord's
+       role (an independent controller for the OAuth step) worded as you want it? -->
+  <p><b>Provider and legal basis:</b> the accounts service is run by us on Cloudflare (Workers, D1, R2; see section 3.3 for Cloudflare). Legal basis: Art. 6(1)(b) GDPR – providing the account and friends features you ask for.</p>
+
+  <h3 class="d4" id="plus">3.6 souldew+ and the thank-you wall</h3>
+  <p>souldew+ memberships are paid on Buy Me a Coffee; their privacy policy applies to the payment. Buy Me a Coffee tells our accounts service about the membership (tier and period, with the email you used there). We don’t keep that email in readable form: the service stores a keyed hash of it, so the membership can be linked to your account when you enter the same email in Settings › Account – or through <code>/supporter claim</code> in the souldew Discord. The souldew+ looks are then downloaded from the accounts service, encrypted for your account.</p>
+  <p><b>Thank-you wall:</b> the app’s Thank you page and the website’s “Thank you” section show supporters by name <b>only if they say so</b>: a new supporter is asked once (“Yes, show me” / “No thanks”), and Settings › Account › Privacy › “Show my name on the Thank you page” switches it on or off at any time. Shown are the name, the tier, since when and – where the supporter has one – their profile picture. Everyone else is only counted in the totals.</p>
+  <!-- REVIEW(owner): confirm which name the wall shows (souldew display name?) and that the website's /v1/thanks answer
+       carries only opted-in people plus the totals. -->
+  <p><b>Legal basis:</b> Art. 6(1)(b) GDPR for the membership; Art. 6(1)(a) GDPR (your consent, which you can withdraw at any time) for appearing on the thank-you wall.</p>
+
+  <h3 class="d4" id="pictures">3.7 Pictures</h3>
+  <p>Pokémon sprites and game covers are loaded from public GitHub repositories (PokeAPI, libretro-thumbnails) and cached on your computer. Friends’ profile pictures are fetched by the app through its local server.</p>
+  <!-- REVIEW(owner): name the host the avatar proxy fetches from (Discord's CDN or accounts.souldew.app). -->
+
+  <h2>4. Your rights</h2>
+  <p>You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and to object (Art. 21), and to withdraw consent at any time (Art. 7(3)). You can also complain to a data protection supervisory authority (Art. 77 GDPR). Contact us at the address above.</p>
+
+  <p class="faint">Last updated: November 2026</p>
+</main>
+<footer class="site-foot"><div class="wrap"><p class="foot-links"><a href="./">Home</a> <a href="code-signing.html">Code signing policy</a> <a href="impressum.html" lang="de">Impressum</a> <a href="datenschutz.html" lang="de">Datenschutz</a></p></div></footer>
+</body>
+</html>
