@@ -2,12 +2,32 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://souldew.app/</loc>
+    <lastmod>2026-11-19</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://souldew.app/"/>
   </url>
   <url>
     <loc>https://souldew.app/de/</loc>
+    <lastmod>2026-11-19</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://souldew.app/"/>
+  </url>
+  <url>
+    <loc>https://souldew.app/code-signing.html</loc>
+    <lastmod>2026-11-19</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/code-signing.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/code-signing.html"/>
+  </url>
+  <url>
+    <loc>https://souldew.app/de/code-signing.html</loc>
+    <lastmod>2026-11-19</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/code-signing.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/code-signing.html"/>
+  </url>
+  <url>
+    <loc>https://souldew.app/privacy.html</loc>
+    <lastmod>2026-11-19</lastmod>
   </url>
 </urlset>
