@@ -46,7 +46,7 @@
   <h3 class="d4" id="updates">3.1 Update check</h3>
   <p>At start and every four hours the app downloads <code>latest.json</code> from the latest souldew release on GitHub (github.com, a service of GitHub, Inc., see section 2) and checks its signature. If there is a new version, the installer is downloaded from the same GitHub release. GitHub sees your IP address and the request; nothing else is sent.</p>
 
-  <h3 class="d4" id="together">3.2 Playing together (SoulLink, link sessions, partner video)</h3>
+  <h3 class="d4" id="together">3.2 Playing together (SoulLink, Play together, link sessions, partner video)</h3>
   <p>The apps of a run find each other through public Nostr relays and then connect directly to each other (WebRTC). Where a direct connection isn’t possible, a public MQTT broker is used as a fallback for run data, and link sessions (trades, battles, raids, Shared World) can be relayed through Cloudflare’s TURN service; the short-lived TURN credentials come from souldew’s server at api.souldew.app. Only encrypted data travels: tracker data, the buttons pressed during a link, and – if you watch each other – your partners’ game picture. Never your games or save files. Relays and the TURN service see the IP addresses of the connection.</p>
   <!-- REVIEW(owner): docs/MULTIPLAYER.md says the bot limits GET /link/ice to 20 requests per IP per hour with "the live
        feature's D1 counter". If that counter stores the IP address (or a hash of it) in D1, say so here and how long it
@@ -57,7 +57,7 @@
   <ul>
     <li>a random id made when the game starts – new for every game, never stored on your computer, derived from nothing,</li>
     <li>the system (Game Boy, Game Boy Advance, Nintendo DS or Nintendo 3DS),</li>
-    <li>the mode (solo, Nuzlocke or SoulLink) and</li>
+    <li>the mode (solo, Nuzlocke, SoulLink or Play together) and</li>
     <li>the app version.</li>
   </ul>
   <p>When the game closes, “stopped” is sent once. No name, account, game title, save, run data or file is sent; offline, nothing is sent and nothing is sent later.</p>
