@@ -6,11 +6,11 @@ The project page for GitHub Pages – static HTML, CSS and vanilla JS, no build 
   `assets/js/site.js`) plus one short band near the top that leads to the 3.0 page (`.v3`, styles at the end of
   `site.css`), a “3.0” link in the nav and the privacy / code-signing links in the footer and under the downloads.
 - **souldew 3.0** (`3/index.html`, `de/3/index.html` – https://souldew.app/3/ and /de/3/): its own page, own styles and
-  script (`assets/css/site30.css`, `assets/js/site30.js`). Two handhelds lit like the 3.0 film, cut by the viewport
+  script (`assets/css/site30.css`, `assets/js/site30.js`). Two handhelds lit like the 3.0 film, turned inward and cut by the viewport
   around the headline; trade and battle as a built, animated sequence of souldew's interface; Shared World; a raid's
   shared pool with hit chips; friends; souldew+ – the 3D launch scrubbed frame by frame (plays once on phones, one still
-  with reduced motion), “Your handheld” as the app's own 3D model for the free looks (drag to turn) with the souldew+
-  skins as pictures, banners, frames, themes, tiers, the thank-you wall.
+  with reduced motion), “Your handheld” as a carousel of every skin with stickers, banners, frames, themes, tiers,
+  the thank-you wall. The hero handhelds drift with a gentle parallax (off with reduced motion).
 
 Names on the page are neutral (Sam, Tim, Lena, Kim, Robin, Noor, Finn, Lou) – never a real person's.
 
@@ -23,11 +23,9 @@ Names on the page are neutral (Sam, Tim, Lena, Kim, Robin, Noor, Finn, Lou) – 
 | `privacy.html` | Privacy policy in English (website + app, incl. account, souldew+, thank-you wall). `REVIEW(owner)` comments need the owner's check. |
 | `code-signing.html`, `de/code-signing.html` | The code signing policy SignPath Foundation asks for (Windows builds only). |
 | `impressum.html`, `datenschutz.html` | Legal notice and privacy policy (German, binding). |
-| `assets/js/hh3d/` | The app's 3D handheld for the website: `handheld/*.mjs` and `cosmetics/banners/engine` are copies of `web/lib/…`, three.js r180 from `web/vendor/three`. Changes on top: relative imports, a cut-down `cosmetics/state.mjs` (free banners only), the screen picture's roof drawn the right way up (`placeholder.mjs`), and `viewer.mjs` (mount, drag to turn, free looks only). Loaded on demand. |
-| `assets/img/30/hero2/` | The hero handhelds: 8 frames each of a light sweep (`l|r-1400|720-0…7.webp`), rendered from the app's scene with the trailer's light rig. |
+| `assets/img/30/hero2/` | The two hero handhelds (`l|r-1400|720.webp`), rendered from the app's scene with the trailer's light rig; also used by the home band. |
 | `assets/img/30/unfold/{1400,760}/` | The 3D launch (DS, Golden Wheat) as 53 frames, transparent – the scrub uses 2…52. |
-| `assets/img/30/hh/` | Pictures of every skin (no stickers) and each sticker cut out (difference-matted), positioned in % in the HTML. |
-| `assets/img/30/hh3d/` | The app's free sticker atlas (`web/assets/handheld`) for the 3D model. |
+| `assets/img/30/hh/` | The skin carousel: a picture of every skin (no stickers, `-1400/-760/-thumb`) and each sticker cut out (difference-matted), positioned in % in the HTML. |
 | `assets/img/30/ui/` | Crops of souldew's real interface (friends, Shared World game view). |
 | `assets/img/30/looks/`, `themes/` | souldew+ public preview media: banners, nameplates, frames, the 16 colour themes. |
 | `assets/img/og-30.png`, `og-30-de.png` | Social previews of the 3.0 page (1200×630); the home keeps `og-image.png`. |
@@ -55,7 +53,7 @@ request fails (not deployed, offline, CORS) the static text stays – nothing wa
 
 The 3D renders come from the app itself: `~/souldew-promo/trailer30/tools/hh-studio.mjs` (hidden Electron window,
 scratch data folder, dev souldew+ pack) plus site shots (`site`, `site2` with the trailer's light rig) for the hero,
-the unfold, the skins and the stickers – the screens show the fixed screen picture from `assets/js/hh3d`;
+the unfold, the skins and the stickers – the screens show the app's placeholder picture with its roof drawn the right way up;
 the sticker layers are separated by difference matting against two skins. The UI crops come from the screenshots that
 `scripts/whatsnew-media.mjs` uses. Never commit the screenshots or a pack.
 
