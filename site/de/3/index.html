@@ -28,8 +28,8 @@
 <link rel="apple-touch-icon" href="../../assets/img/apple-touch-icon.png">
 <link rel="preload" href="../../assets/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../../assets/fonts/PixelifySans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" as="image" href="../../assets/img/30/hero2/l-1400-0.webp" imagesrcset="../../assets/img/30/hero2/l-720-0.webp 720w, ../../assets/img/30/hero2/l-1400-0.webp 1400w" imagesizes="(max-width: 700px) 70vw, 54vw" fetchpriority="high">
-<link rel="preload" as="image" href="../../assets/img/30/hero2/r-1400-0.webp" imagesrcset="../../assets/img/30/hero2/r-720-0.webp 720w, ../../assets/img/30/hero2/r-1400-0.webp 1400w" imagesizes="(max-width: 700px) 70vw, 54vw" fetchpriority="high">
+<link rel="preload" as="image" href="../../assets/img/30/hero2/l-1400.webp" imagesrcset="../../assets/img/30/hero2/l-720.webp 720w, ../../assets/img/30/hero2/l-1400.webp 1400w" imagesizes="(max-width: 700px) 70vw, 54vw" fetchpriority="high">
+<link rel="preload" as="image" href="../../assets/img/30/hero2/r-1400.webp" imagesrcset="../../assets/img/30/hero2/r-720.webp 720w, ../../assets/img/30/hero2/r-1400.webp 1400w" imagesizes="(max-width: 700px) 70vw, 54vw" fetchpriority="high">
 <link rel="stylesheet" href="../../assets/css/site30.css">
 <script>document.documentElement.classList.replace('no-js', 'js');</script>
 <script type="application/ld+json">
@@ -78,11 +78,11 @@
 
 <main id="main">
 
-<!-- 1 · Hero: two handhelds, lit like the film, bleeding off both edges around the headline -->
+<!-- 1 · Hero: two handhelds, lit like the film, turned inward and cut by both edges; they drift slower than the headline -->
 <section class="hero" aria-labelledby="hero-title" data-hero>
-  <div class="hero-bleed" aria-hidden="true">
-    <div class="hx hx-l"><img src="../../assets/img/30/hero2/l-1400-0.webp" srcset="../../assets/img/30/hero2/l-720-0.webp 720w, ../../assets/img/30/hero2/l-1400-0.webp 1400w" sizes="(max-width: 700px) 70vw, 54vw" width="1400" height="1160" alt="" fetchpriority="high"><canvas data-sweep="l" width="1400" height="1160"></canvas><span class="tag tag-p1">Tim</span></div>
-    <div class="hx hx-r"><img src="../../assets/img/30/hero2/r-1400-0.webp" srcset="../../assets/img/30/hero2/r-720-0.webp 720w, ../../assets/img/30/hero2/r-1400-0.webp 1400w" sizes="(max-width: 700px) 70vw, 54vw" width="1400" height="1160" alt="" fetchpriority="high"><canvas data-sweep="r" width="1400" height="1160"></canvas><span class="tag tag-p2">Lena</span></div>
+  <div class="hero-bleed" aria-hidden="true" data-parallax>
+    <div class="hx hx-l"><img src="../../assets/img/30/hero2/l-1400.webp" srcset="../../assets/img/30/hero2/l-720.webp 720w, ../../assets/img/30/hero2/l-1400.webp 1400w" sizes="(max-width: 700px) 70vw, 54vw" width="1400" height="1160" alt="" fetchpriority="high"><span class="tag tag-p1">Tim</span></div>
+    <div class="hx hx-r"><img src="../../assets/img/30/hero2/r-1400.webp" srcset="../../assets/img/30/hero2/r-720.webp 720w, ../../assets/img/30/hero2/r-1400.webp 1400w" sizes="(max-width: 700px) 70vw, 54vw" width="1400" height="1160" alt="" fetchpriority="high"><span class="tag tag-p2">Lena</span></div>
     <span class="emote" data-emote><svg viewBox="0 0 16 16"><use href="../../assets/img/icons.svg#i-heart"/></svg></span>
   </div>
   <div class="wrap hero-head">
@@ -241,19 +241,14 @@
     <div class="launch-stage">
       <div class="launch-copy">
         <p class="mark mark-plus"><span class="mark-w">souldew</span><span class="mark-p">+</span></p>
-        <h2 id="launch-title" class="d2 launch-h">Deine Spiele starten<br><span class="dim">auf deinem eigenen Handheld.</span></h2>
+        <h2 id="launch-title" class="d2 launch-h">Jedes Spiel beginnt<br><span class="dim">mit deinem Handheld.</span></h2>
       </div>
       <div class="launch-dev">
         <canvas width="1400" height="1269" data-launch-canvas aria-hidden="true"></canvas>
         <img class="launch-still" src="../../assets/img/30/unfold/1400/f52.webp" width="1400" height="1269" alt="Ein souldew-Handheld im Skin Golden Wheat, aufgeklappt, beide Bildschirme an." loading="lazy">
         <button class="tlink launch-again" type="button" data-launch-again hidden>Noch mal abspielen</button>
       </div>
-      <ol class="beats" aria-label="Die 3D-Startanimation">
-        <li data-beat="0"><b>Der Deckel schwingt auf</b></li>
-        <li data-beat="1"><b>Die Karte fällt hinein und rastet ein</b></li>
-        <li data-beat="2"><b>Bildschirme an – weiter in dein Spiel</b></li>
-      </ol>
-      <p class="launch-note">Sie läuft, während dein Spiel startet, und das Spiel wartet nie darauf. Jede Taste überspringt sie, und sie ist lautlos.</p>
+      <p class="launch-note">Während dein Spiel lädt, zeigt souldew ein kurzes 3D-Intro mit deinem eigenen, gestalteten Handheld. Es bremst den Start nie aus, und jede Taste überspringt es.</p>
     </div>
   </section>
 
@@ -261,19 +256,19 @@
   <section class="sec hh-sec" aria-labelledby="hh-title">
     <div class="wrap hh-grid">
       <div class="hh-copy">
-        <h2 id="hh-title" class="d2" data-reveal>Zieh es an.<br><span class="dim">Dreh es herum.</span></h2>
-        <p class="lead" data-reveal>Ein Skin für alle deine Geräte und bis zu acht Sticker pro Gerät aus 54 – frei drehen, von 70 bis 160 % skalieren, über die Kanten und übereinander kleben.</p>
+        <h2 id="hh-title" class="d2" data-reveal>Dein Handheld.<br><span class="dim">Dein Look.</span></h2>
+        <p class="lead" data-reveal>Ein Skin für alle deine Geräte und bis zu acht Sticker pro Gerät, aus 54 Motiven. Dreh sie, mach sie größer oder kleiner (70 bis 160 %) und kleb sie über Kanten oder übereinander.</p>
         <ul class="hh-more" data-reveal>
-          <li>Holo- und Glitzer-Finish</li>
-          <li>12 gespeicherte Designs, „Überrasch mich beim Start“</li>
-          <li>Drei Sticker, die man sich nur verdienen kann</li>
+          <li>Holo- und Glitzersticker</li>
+          <li>Bis zu 12 Designs speichern, auf Wunsch zufällig beim Start</li>
+          <li>Drei Sticker gibt’s nur als Trophäe</li>
           <li>Dein Handheld siehst nur du</li>
         </ul>
       </div>
       <div class="hh-dev" data-hh>
         <div class="hh-stage">
           <div class="hh-pic" data-hh-pic>
-            <img class="hh-img is-on" data-hh-img src="../../assets/img/30/hh/colours-1400.webp" srcset="../../assets/img/30/hh/colours-760.webp 760w, ../../assets/img/30/hh/colours-1400.webp 1400w" sizes="(max-width: 900px) 92vw, 760px" width="1400" height="994" alt="Dein Handheld in deinen Farben, mit sechs Stickern." loading="lazy">
+            <img class="hh-img is-on" data-hh-img src="../../assets/img/30/hh/colours-1400.webp" srcset="../../assets/img/30/hh/colours-760.webp 760w, ../../assets/img/30/hh/colours-1400.webp 1400w" sizes="(max-width: 900px) 92vw, 720px" width="1400" height="994" alt="Dein Handheld in deinen Farben, mit sechs Stickern." loading="lazy">
             <img class="hh-img" data-hh-img2 src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" width="1400" height="994" alt="" aria-hidden="true">
             <div class="stk-layer" data-stk-layer aria-hidden="true">
               <img class="stk" style="--l:2.461%;--t:23.512%;--w:5.564%;--d:0" src="../../assets/img/30/hh/stk-star.webp" alt="" loading="lazy">
@@ -284,30 +279,23 @@
               <img class="stk" style="--l:68.379%;--t:70.158%;--w:8.507%;--d:5" src="../../assets/img/30/hh/stk-heart.webp" alt="" loading="lazy">
             </div>
           </div>
-          <div class="hh-3d" data-hh3d tabindex="0" role="img" aria-label="Dein Handheld in 3D. Zum Drehen ziehen oder die Pfeiltasten nutzen." hidden></div>
-          <p class="hh-hint" data-hh-hint hidden>Zum Drehen ziehen</p>
+          <button class="hh-nav hh-prev" type="button" data-hh-prev aria-label="Vorheriger Skin"><svg aria-hidden="true"><use href="../../assets/img/icons.svg#i-arrow"/></svg></button>
+          <button class="hh-nav hh-next" type="button" data-hh-next aria-label="Nächster Skin"><svg aria-hidden="true"><use href="../../assets/img/icons.svg#i-arrow"/></svg></button>
         </div>
-        <div class="hh-controls">
-          <div class="seg" role="radiogroup" aria-label="Gerät" data-hh-sys hidden>
-            <button type="button" role="radio" aria-checked="true" data-sys="gba">Flach</button>
-            <button type="button" role="radio" aria-checked="false" data-sys="nds">Zum Aufklappen</button>
-          </div>
-          <fieldset class="skins" data-skins>
-            <legend class="sr-only">Skin</legend>
-            <label class="sw" title="Deine Farben – Supporter"><input type="radio" name="skin" value="colours" checked aria-label="Deine Farben (Supporter)"><span class="sw-c" style="--a:#5b6b8c;--b:#7d8db0"></span><span class="sw-n" hidden>Deine Farben<small>Supporter</small></span></label>
-            <label class="sw" title="Plain Dusk – Supporter"><input type="radio" name="skin" value="plain-dusk" aria-label="Plain Dusk (Supporter)"><span class="sw-c" style="--a:#1c1a26;--b:#3a3150"></span><span class="sw-n" hidden>Plain Dusk<small>Supporter</small></span></label>
-            <i class="sw-sep" aria-hidden="true"></i>
-            <label class="sw" title="Golden Wheat – souldew+"><input type="radio" name="skin" value="golden-wheat" aria-label="Golden Wheat (souldew+)"><span class="sw-c" style="--a:#f0b57a;--b:#d99a3c"></span><span class="sw-n" hidden>Golden Wheat<small>souldew+</small></span></label>
-            <label class="sw" title="Coral Shelf – souldew+"><input type="radio" name="skin" value="coral-shelf" aria-label="Coral Shelf (souldew+)"><span class="sw-c" style="--a:#7fd3ee;--b:#2f8fc0"></span><span class="sw-n" hidden>Coral Shelf<small>souldew+</small></span></label>
-            <label class="sw" title="Cherry Orchard – souldew+"><input type="radio" name="skin" value="cherry-orchard" aria-label="Cherry Orchard (souldew+)"><span class="sw-c" style="--a:#b8d8f2;--b:#e889b6"></span><span class="sw-n" hidden>Cherry Orchard<small>souldew+</small></span></label>
-            <label class="sw" title="Night Train – souldew+"><input type="radio" name="skin" value="night-train" aria-label="Night Train (souldew+)"><span class="sw-c" style="--a:#141a33;--b:#2e3d78"></span><span class="sw-n" hidden>Night Train<small>souldew+</small></span></label>
-            <label class="sw" title="Aurora Fjord – souldew+"><input type="radio" name="skin" value="aurora-fjord" aria-label="Aurora Fjord (souldew+)"><span class="sw-c" style="--a:#0e1c26;--b:#3bbf8f"></span><span class="sw-n" hidden>Aurora Fjord<small>souldew+</small></span></label>
-            <label class="sw" title="Firefly Meadow – souldew+"><input type="radio" name="skin" value="firefly-meadow" aria-label="Firefly Meadow (souldew+)"><span class="sw-c" style="--a:#0f1f1d;--b:#2d5b52"></span><span class="sw-n" hidden>Firefly Meadow<small>souldew+</small></span></label>
-          </fieldset>
-          <button class="btn btn-ghost btn-sm stk-btn" type="button" data-stk-toggle aria-pressed="true"><span data-stk-label>Sticker abziehen</span></button>
+        <div class="hh-meta">
+          <p class="hh-cap" data-hh-cap aria-live="polite">Deine Farben · Supporter</p>
+          <button class="btn btn-ghost btn-sm stk-btn" type="button" data-stk-toggle aria-pressed="true"><span data-stk-label>Ohne Sticker</span></button>
         </div>
-        <p class="hh-cap" data-hh-cap aria-live="polite">Deine Farben · Supporter</p>
-        <p class="hh-note" data-hh-note>Die Supporter-Looks drehst du hier in 3D. souldew+-Skins zeigen wir als Bilder des Originals.</p>
+        <div class="hh-thumbs" role="radiogroup" aria-label="Skin" data-skins>
+            <button type="button" role="radio" aria-checked="true" tabindex="0" data-skin="colours" data-name="Deine Farben" data-tier="Supporter" class="th"><img src="../../assets/img/30/hh/colours-thumb.webp" width="240" height="170" alt="" loading="lazy"><span class="sr-only">Deine Farben, Supporter</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-skin="plain-dusk" data-name="Plain Dusk" data-tier="Supporter" class="th"><img src="../../assets/img/30/hh/plain-dusk-thumb.webp" width="240" height="170" alt="" loading="lazy"><span class="sr-only">Plain Dusk, Supporter</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-skin="golden-wheat" data-name="Golden Wheat" data-tier="souldew+" class="th th-plus"><img src="../../assets/img/30/hh/golden-wheat-thumb.webp" width="240" height="170" alt="" loading="lazy"><span class="sr-only">Golden Wheat, souldew+</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-skin="coral-shelf" data-name="Coral Shelf" data-tier="souldew+" class="th th-plus"><img src="../../assets/img/30/hh/coral-shelf-thumb.webp" width="240" height="170" alt="" loading="lazy"><span class="sr-only">Coral Shelf, souldew+</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-skin="cherry-orchard" data-name="Cherry Orchard" data-tier="souldew+" class="th th-plus"><img src="../../assets/img/30/hh/cherry-orchard-thumb.webp" width="240" height="170" alt="" loading="lazy"><span class="sr-only">Cherry Orchard, souldew+</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-skin="night-train" data-name="Night Train" data-tier="souldew+" class="th th-plus"><img src="../../assets/img/30/hh/night-train-thumb.webp" width="240" height="170" alt="" loading="lazy"><span class="sr-only">Night Train, souldew+</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-skin="aurora-fjord" data-name="Aurora Fjord" data-tier="souldew+" class="th th-plus"><img src="../../assets/img/30/hh/aurora-fjord-thumb.webp" width="240" height="170" alt="" loading="lazy"><span class="sr-only">Aurora Fjord, souldew+</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-skin="firefly-meadow" data-name="Firefly Meadow" data-tier="souldew+" class="th th-plus"><img src="../../assets/img/30/hh/firefly-meadow-thumb.webp" width="240" height="170" alt="" loading="lazy"><span class="sr-only">Firefly Meadow, souldew+</span></button>
+        </div>
       </div>
     </div>
   </section>
@@ -490,29 +478,49 @@
   </section>
 </div>
 
-<!-- 7 · Also in 3.0: a typographic index of the smaller news -->
+<!-- 7 · Also in 3.0: the smaller news, grouped so it can be scanned -->
 <section class="sec also" id="also" aria-labelledby="also-title">
   <div class="wrap">
-    <h2 id="also-title" class="d3 center" data-reveal>Und alles andere in 3.0.</h2>
-    <ul class="also-list" data-reveal>
-      <li>Eine neue Spielansicht – das Spiel groß, alles andere in einem Dock</li>
-      <li>Das Spiel jedes Partners gleichzeitig, in verschiebbaren Fenstern</li>
-      <li>Oberflächengröße von 80 bis 175 %, scharf in jeder Größe</li>
-      <li>Einstellungen in Tabs, mit einer Suche, die jede Einstellung findet</li>
-      <li>Der Game-Boy-Look – grüner Bildschirm oder Game Boy Color</li>
-      <li>Pokémon Quetzal, live ausgelesen</li>
-      <li>Pokémon Smaragd auf Deutsch, live ausgelesen</li>
-      <li>Schärfere Pixel in jeder Fenstergröße</li>
-      <li>Ein Hinweis, wenn die 3DS-Auflösung den schnellen Vorlauf bremst</li>
-      <li>Eine Sicherung deiner Runs und Spielstände vor dem ersten Start von 3.0</li>
-      <li>Was neu ist, in fünf kurzen Karten</li>
-      <li>Eine Danke-Seite für alle, die souldew kostenlos halten</li>
-      <li>Ein Partner mit 2.8 bekommt einen Hinweis, statt zu warten</li>
-      <li>Die souldew-Engine (Beta) – ein Player für DS, GBA und Game Boy</li>
-      <li>Ein Cheat-Menü – Pokébälle, Heilitems und Geld, wenn der Host es erlaubt</li>
-      <li>Spielstände aus anderen Emulatoren oder vom Modul importieren – und deine mitnehmen</li>
-    </ul>
-    <p class="fine center" data-reveal><a class="tlink" href="https://github.com/souldewapp/souldew/blob/main/CHANGELOG.md">Das ganze Changelog lesen (Englisch)</a></p>
+    <h2 id="also-title" class="d3" data-reveal>Und alles andere in 3.0.</h2>
+    <div class="also-grid">
+      <div class="also-g" data-reveal>
+        <p class="also-k"><svg aria-hidden="true"><use href="../../assets/img/icons.svg#i-play"/></svg>Spielen</p>
+        <ul>
+          <li>Eine neue Spielansicht: das Spiel groß, alles andere in einem Dock</li>
+          <li>Das Spiel jedes Partners gleichzeitig, in verschiebbaren Fenstern</li>
+          <li>Ein Cheat-Menü für Pokébälle, Heilitems und Geld, wenn der Host es erlaubt</li>
+          <li>Die souldew-Engine (Beta): ein Player für DS, GBA und Game Boy</li>
+        </ul>
+      </div>
+      <div class="also-g" data-reveal>
+        <p class="also-k"><svg aria-hidden="true"><use href="../../assets/img/icons.svg#i-eye"/></svg>Aussehen &amp; Bedienung</p>
+        <ul>
+          <li>Oberflächengröße von 80 bis 175 %, scharf in jeder Größe</li>
+          <li>Einstellungen in Tabs, mit einer Suche, die jede Einstellung findet</li>
+          <li>Der Game-Boy-Look: grüner Bildschirm oder Game Boy Color</li>
+          <li>Schärfere Pixel in jeder Fenstergröße</li>
+          <li>Was neu ist, in fünf kurzen Karten</li>
+        </ul>
+      </div>
+      <div class="also-g" data-reveal>
+        <p class="also-k"><svg aria-hidden="true"><use href="../../assets/img/icons.svg#i-library"/></svg>Spiele</p>
+        <ul>
+          <li>Pokémon Quetzal, live ausgelesen</li>
+          <li>Pokémon Smaragd auf Deutsch, live ausgelesen</li>
+          <li>Spielstände aus anderen Emulatoren oder vom Modul importieren – und deine mitnehmen</li>
+          <li>Ein Hinweis, wenn die 3DS-Auflösung den schnellen Vorlauf bremst</li>
+        </ul>
+      </div>
+      <div class="also-g" data-reveal>
+        <p class="also-k"><svg aria-hidden="true"><use href="../../assets/img/icons.svg#i-lock"/></svg>Sicherheit &amp; Community</p>
+        <ul>
+          <li>Eine Sicherung deiner Runs und Spielstände vor dem ersten Start von 3.0</li>
+          <li>Wer noch 2.8 nutzt, bekommt einen Hinweis, statt zu warten</li>
+          <li>Eine Danke-Seite für alle, die souldew kostenlos halten</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine" data-reveal><a class="tlink" href="https://github.com/souldewapp/souldew/blob/main/CHANGELOG.md">Das ganze Changelog lesen (Englisch)</a></p>
   </div>
 </section>
 
