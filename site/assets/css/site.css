@@ -424,15 +424,10 @@ em { font-style: normal; }
 .nav-links .nav-new { color: var(--ink); }
 .nav-links .nav-new::after { content: ''; display: inline-block; width: 6px; height: 6px; margin-left: 6px; vertical-align: 2px; background: var(--p2); }
 .v3 { position: relative; overflow: hidden; padding: clamp(80px, 13vh, 150px) 0; background: radial-gradient(40% 70% at 78% 60%, #8cb0ff14, transparent 70%), radial-gradient(30% 50% at 95% 70%, #ff8fdc12, transparent 70%), #0d0c11; box-shadow: inset 0 1px 0 var(--line), inset 0 -1px 0 var(--line); }
-.v3-pic { position: absolute; inset: 0; pointer-events: none; perspective: 1400px; }
-.v3-pic::after { content: ''; position: absolute; inset: 38% 0 -4px; background: linear-gradient(to top, #0d0c11 10%, rgba(13, 12, 17, .82) 42%, rgba(13, 12, 17, 0)); z-index: 3; transform: translateZ(1px); }
-.v3-pic { --vw: min(38vw, 600px); }
-.v3-pic img { position: absolute; width: var(--vw); height: auto; transform-origin: 50% 100%; }
-/* both lean back a little; the front one throws its shadow onto the one behind */
-.v3-l { transform: rotateX(14deg) rotateZ(-3deg); filter: brightness(.86); }
-.v3-r { z-index: 1; transform: rotateX(12deg) rotateZ(2deg); filter: drop-shadow(-46px 26px 34px rgba(0, 0, 0, .78)) drop-shadow(-12px 8px 10px rgba(0, 0, 0, .5)); }
-.v3-l { right: calc(var(--vw) * .14); bottom: -8%; }
-.v3-r { right: calc(var(--vw) * -.56); bottom: 2%; }
+.v3-pic { position: absolute; inset: 0; pointer-events: none; }
+/* one 3D render of the pair (both lean back; the front one's soft shadow on the other is in the render) */
+.v3-pair { position: absolute; right: calc(min(54vw, 860px) * -.08); bottom: 6%; width: min(54vw, 860px); height: auto; }
+.v3-pic::after { content: ''; position: absolute; inset: auto 0 0; height: 28%; background: linear-gradient(to top, rgba(13, 12, 17, .9), rgba(13, 12, 17, 0)); }
 .v3-in { position: relative; z-index: 1; }
 .v3-in > * { max-width: min(560px, 50vw); }
 .v3 .display-2 { font-size: clamp(36px, 4.6vw, 66px); }
@@ -447,8 +442,11 @@ em { font-style: normal; }
 @media (max-width: 900px) {
   .v3 { padding-top: 0; }
   .v3-in > * { max-width: 600px; }
-  .v3-pic { position: relative; height: 58vw; margin-bottom: 8px; --vw: 64vw; }
-  .v3-l { right: auto; left: -14vw; bottom: 0; }
-  .v3-r { right: -16vw; bottom: 6%; }
+  .v3-pic { position: relative; height: 46vw; margin-bottom: 8px; }
+  .v3-pair { width: 104vw; right: -10vw; bottom: 0; }
 }
 @media (max-width: 1180px) { .nav-links .nav-new { display: none; } }
+@media (max-width: 1180px) and (min-width: 901px) { .v3-pair { width: 46vw; right: -4vw; } }
+.v3-in > h2 { max-width: min(700px, 52vw); }
+:lang(de) .v3 .display-2 { font-size: clamp(32px, 3.9vw, 56px); }
+@media (max-width: 900px) { .v3-in > h2 { max-width: 600px; } }

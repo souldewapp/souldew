@@ -28,8 +28,8 @@
 <link rel="apple-touch-icon" href="../../assets/img/apple-touch-icon.png">
 <link rel="preload" href="../../assets/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../../assets/fonts/PixelifySans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" as="image" href="../../assets/img/30/hero2/l-1400.webp" imagesrcset="../../assets/img/30/hero2/l-720.webp 720w, ../../assets/img/30/hero2/l-1400.webp 1400w" imagesizes="(max-width: 700px) 70vw, 54vw" fetchpriority="high">
-<link rel="preload" as="image" href="../../assets/img/30/hero2/r-1400.webp" imagesrcset="../../assets/img/30/hero2/r-720.webp 720w, ../../assets/img/30/hero2/r-1400.webp 1400w" imagesizes="(max-width: 700px) 70vw, 54vw" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" imagesrcset="../../assets/img/30/hero2/l-800.avif 800w, ../../assets/img/30/hero2/l-1600.avif 1600w" imagesizes="(max-width: 640px) 74vw, 52vw" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" imagesrcset="../../assets/img/30/hero2/r-800.avif 800w, ../../assets/img/30/hero2/r-1600.avif 1600w" imagesizes="(max-width: 640px) 74vw, 52vw" fetchpriority="high">
 <link rel="stylesheet" href="../../assets/css/site30.css">
 <script>document.documentElement.classList.replace('no-js', 'js');</script>
 <script type="application/ld+json">
@@ -78,11 +78,11 @@
 
 <main id="main">
 
-<!-- 1 · Hero: two handhelds, lit like the film, turned inward and cut by both edges; they drift slower than the headline -->
+<!-- 1 · Hero: two handhelds rendered in 3D (turned inward, leaning back a little), cut by both edges; they drift slower than the headline -->
 <section class="hero" aria-labelledby="hero-title" data-hero>
   <div class="hero-bleed" aria-hidden="true" data-parallax>
-    <div class="hx hx-l"><img src="../../assets/img/30/hero2/l-1400.webp" srcset="../../assets/img/30/hero2/l-720.webp 720w, ../../assets/img/30/hero2/l-1400.webp 1400w" sizes="(max-width: 700px) 70vw, 54vw" width="1400" height="1160" alt="" fetchpriority="high"><span class="tag tag-p1">Tim</span></div>
-    <div class="hx hx-r"><img src="../../assets/img/30/hero2/r-1400.webp" srcset="../../assets/img/30/hero2/r-720.webp 720w, ../../assets/img/30/hero2/r-1400.webp 1400w" sizes="(max-width: 700px) 70vw, 54vw" width="1400" height="1160" alt="" fetchpriority="high"><span class="tag tag-p2">Lena</span></div>
+    <div class="hx hx-l"><picture><source type="image/avif" srcset="../../assets/img/30/hero2/l-800.avif 800w, ../../assets/img/30/hero2/l-1600.avif 1600w" sizes="(max-width: 640px) 74vw, 52vw"><img src="../../assets/img/30/hero2/l-1600.webp" srcset="../../assets/img/30/hero2/l-800.webp 800w, ../../assets/img/30/hero2/l-1600.webp 1600w" sizes="(max-width: 640px) 74vw, 52vw" width="1711" height="1278" alt="" fetchpriority="high"></picture><span class="tag tag-p1">Tim</span></div>
+    <div class="hx hx-r"><picture><source type="image/avif" srcset="../../assets/img/30/hero2/r-800.avif 800w, ../../assets/img/30/hero2/r-1600.avif 1600w" sizes="(max-width: 640px) 74vw, 52vw"><img src="../../assets/img/30/hero2/r-1600.webp" srcset="../../assets/img/30/hero2/r-800.webp 800w, ../../assets/img/30/hero2/r-1600.webp 1600w" sizes="(max-width: 640px) 74vw, 52vw" width="1711" height="1278" alt="" fetchpriority="high"></picture><span class="tag tag-p2">Lena</span></div>
     <span class="emote" data-emote><svg viewBox="0 0 16 16"><use href="../../assets/img/icons.svg#i-heart"/></svg></span>
   </div>
   <div class="wrap hero-head">
