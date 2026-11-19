@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="de" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>souldew 3.0 – Zusammen spielen. Wirklich.</title>
+<meta name="description" content="souldew 3.0: Tauschen, kämpfen und raiden mit deinen SoulLink-Partnern – direkt von dort, wo du gerade im Spiel bist, und sie laufen in deinem Spiel herum. Kostenlose Desktop-App für Pokémon-SoulLinks und Nuzlockes, vom Game Boy bis zum 3DS.">
+<link rel="canonical" href="https://souldew.app/de/3/">
+<link rel="alternate" hreflang="en" href="https://souldew.app/3/">
+<link rel="alternate" hreflang="de" href="https://souldew.app/de/3/">
+<link rel="alternate" hreflang="x-default" href="https://souldew.app/3/">
+<meta name="theme-color" content="#0c0b10">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="souldew">
+<meta property="og:locale" content="de_DE">
+<meta property="og:locale:alternate" content="en_GB">
+<meta property="og:title" content="souldew 3.0 – Zusammen spielen. Wirklich.">
+<meta property="og:description" content="Tauschen, kämpfen und raiden mit deinen SoulLink-Partnern – direkt aus dem laufenden Spiel, ohne Neustart. Kostenlos für macOS, Windows und Linux.">
+<meta property="og:url" content="https://souldew.app/de/3/">
+<meta property="og:image" content="https://souldew.app/assets/img/og-30-de.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Zwei souldew-Handhelds nebeneinander mit dem Text: souldew 3.0 – Zusammen spielen. Wirklich.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://souldew.app/assets/img/og-30-de.png">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../assets/img/apple-touch-icon.png">
+<link rel="preload" href="../../assets/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../../assets/fonts/PixelifySans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="../../assets/img/30/hero2/l-1400-0.webp" imagesrcset="../../assets/img/30/hero2/l-720-0.webp 720w, ../../assets/img/30/hero2/l-1400-0.webp 1400w" imagesizes="(max-width: 700px) 70vw, 54vw" fetchpriority="high">
+<link rel="preload" as="image" href="../../assets/img/30/hero2/r-1400-0.webp" imagesrcset="../../assets/img/30/hero2/r-720-0.webp 720w, ../../assets/img/30/hero2/r-1400-0.webp 1400w" imagesizes="(max-width: 700px) 70vw, 54vw" fetchpriority="high">
+<link rel="stylesheet" href="../../assets/css/site30.css">
+<script>document.documentElement.classList.replace('no-js', 'js');</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"SoftwareApplication","name":"souldew","softwareVersion":"3.0","applicationCategory":"GameApplication","operatingSystem":"macOS, Windows, Linux","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"license":"https://www.gnu.org/licenses/gpl-3.0.html","url":"https://souldew.app/de/3/","downloadUrl":"https://github.com/souldewapp/souldew/releases/latest","codeRepository":"https://github.com/souldewapp/souldew","description":"Pokémon-SoulLinks für 2–4 Spieler und Solo-Nuzlockes: Emulator vom Game Boy bis zum 3DS, Live-Tracking aus dem Spielspeicher, Randomizer und Echtzeit-Sync – und mit 3.0 Tausch, Kämpfe, Raids und Shared World mit deinen Partnern, direkt aus dem laufenden Spiel.","inLanguage":"de"},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Ist souldew weiterhin kostenlos?","acceptedAnswer":{"@type":"Answer","text":"Ja. souldew ist kostenlos und Open Source unter der GNU GPL v3.0 oder neuer. Alles zum Spielen – Emulatoren, SoulLink, Nuzlocke-Tracking, Tausch, Kämpfe, Raids, Shared World, Freunde – ist kostenlos. souldew+ ändert nur das Aussehen."}},
+  {"@type":"Question","name":"Brauche ich ein Konto?","acceptedAnswer":{"@type":"Answer","text":"Nein. Ein Konto ist freiwillig und nur für Profile und die Freundesliste nötig. Ohne Konto funktioniert alles genau wie bisher."}},
+  {"@type":"Question","name":"Brauchen alle souldew 3.0?","acceptedAnswer":{"@type":"Answer","text":"Ja, zum Tauschen, Kämpfen, Raiden und gemeinsamen Herumlaufen brauchen alle 3.0. Ein Partner, der noch 2.8 nutzt, synchronisiert den Run weiter und bekommt einen Hinweis zum Update."}},
+  {"@type":"Question","name":"Enthält souldew Spiele?","acceptedAnswer":{"@type":"Answer","text":"Nein. Du spielst deine eigenen, legal erworbenen ROMs. souldew enthält und lädt keine Spiele."}}
+ ]}
+]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Zum Inhalt springen</a>
+
+<header class="nav" data-nav>
+  <div class="nav-in">
+    <a class="brand" href="../" aria-label="souldew Startseite"><img src="../../assets/img/icon.svg" alt="" width="30" height="30"><span>souldew</span></a>
+    <nav class="nav-links" aria-label="Hauptmenü">
+      <a href="../">Startseite</a>
+      <a href="#together">Zusammen spielen</a>
+      <a href="#world">Shared World</a>
+      <a href="#plus" class="nav-plus">souldew+</a>
+      <a href="#download">Download</a>
+    </nav>
+    <div class="nav-end">
+      <a class="lang" href="../../3/" hreflang="en" lang="en" aria-label="EN, English">EN</a>
+      <a class="nav-ic" href="https://discord.gg/kvVDCyzdpQ" aria-label="souldew auf Discord"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.099.246.198.373.292a.077.077 0 0 1-.007.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg></a>
+      <a class="nav-ic" href="https://github.com/souldewapp/souldew" aria-label="souldew auf GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <details class="nav-dl" data-nav-dl>
+        <summary class="btn btn-sm"><span>Download</span><svg class="ic nav-dl-chev" aria-hidden="true"><use href="../../assets/img/icons.svg#i-arrow"/></svg></summary>
+        <div class="nav-dl-pop">
+          <p class="nav-dl-head" data-dl-version>Kostenlos · Open Source (GPL-3.0)</p>
+          <a class="nav-dl-item" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="mac"><span class="dl-os">macOS <small class="dl-fmt">.dmg</small></span><span class="dl-kind">Apple silicon (M1+)</span><span class="dl-size" data-dl-size="mac"></span></a>
+          <a class="nav-dl-item" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="win"><span class="dl-os">Windows <small class="dl-fmt">.exe</small></span><span class="dl-kind">10 &amp; 11, x64</span><span class="dl-size" data-dl-size="win"></span></a>
+          <a class="nav-dl-item" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="linux"><span class="dl-os">Linux <small class="dl-fmt">AppImage</small></span><span class="dl-kind">x86_64, Steam Deck</span><span class="dl-size" data-dl-size="linux"></span></a>
+          <a class="nav-dl-item" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="deb"><span class="dl-os">Linux <small class="dl-fmt">.deb</small></span><span class="dl-kind">Debian, Ubuntu, Mint</span><span class="dl-size" data-dl-size="deb"></span></a>
+          <a class="nav-dl-more tlink" href="#download">Installationshinweise für jedes System</a>
+        </div>
+      </details>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- 1 · Hero: two handhelds, lit like the film, bleeding off both edges around the headline -->
+<section class="hero" aria-labelledby="hero-title" data-hero>
+  <div class="hero-bleed" aria-hidden="true">
+    <div class="hx hx-l"><img src="../../assets/img/30/hero2/l-1400-0.webp" srcset="../../assets/img/30/hero2/l-720-0.webp 720w, ../../assets/img/30/hero2/l-1400-0.webp 1400w" sizes="(max-width: 700px) 70vw, 54vw" width="1400" height="1160" alt="" fetchpriority="high"><canvas data-sweep="l" width="1400" height="1160"></canvas><span class="tag tag-p1">Tim</span></div>
+    <div class="hx hx-r"><img src="../../assets/img/30/hero2/r-1400-0.webp" srcset="../../assets/img/30/hero2/r-720-0.webp 720w, ../../assets/img/30/hero2/r-1400-0.webp 1400w" sizes="(max-width: 700px) 70vw, 54vw" width="1400" height="1160" alt="" fetchpriority="high"><canvas data-sweep="r" width="1400" height="1160"></canvas><span class="tag tag-p2">Lena</span></div>
+    <span class="emote" data-emote><svg viewBox="0 0 16 16"><use href="../../assets/img/icons.svg#i-heart"/></svg></span>
+  </div>
+  <div class="wrap hero-head">
+    <p class="mark" data-reveal><span class="mark-w">souldew</span> <span class="mark-v"><i>3</i>.<b>0</b></span></p>
+    <h1 id="hero-title" class="d1" data-reveal><span class="l">Zusammen spielen.</span> <span class="l l2">Wirklich.</span></h1>
+  </div>
+</section>
+<section class="hero-after" aria-label="Herunterladen">
+  <div class="wrap hero-row">
+    <p class="hero-lead" data-reveal>Tauschen, kämpfen und raiden mit deinen SoulLink-Partnern – direkt von dort, wo du gerade im Spiel stehst, ohne Neustart. Und jetzt laufen sie mit dir durch dein Spiel.</p>
+    <div class="hero-cta" data-reveal>
+      <ul class="dl-tiles" aria-label="Downloads für jedes System">
+        <li><a class="dl-tile" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="mac"><span class="dl-os">macOS <small class="dl-fmt">.dmg</small></span><span class="dl-kind">Apple silicon (M1+)</span><span class="dl-size" data-dl-size="mac"></span><svg class="ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-download"/></svg></a></li>
+        <li><a class="dl-tile" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="win"><span class="dl-os">Windows <small class="dl-fmt">.exe</small></span><span class="dl-kind">10 &amp; 11, x64</span><span class="dl-size" data-dl-size="win"></span><svg class="ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-download"/></svg></a></li>
+        <li><a class="dl-tile" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="linux"><span class="dl-os">Linux <small class="dl-fmt">AppImage</small></span><span class="dl-kind">x86_64, Steam Deck</span><span class="dl-size" data-dl-size="linux"></span><svg class="ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-download"/></svg></a></li>
+        <li><a class="dl-tile" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="deb"><span class="dl-os">Linux <small class="dl-fmt">.deb</small></span><span class="dl-kind">Debian, Ubuntu, Mint</span><span class="dl-size" data-dl-size="deb"></span><svg class="ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-download"/></svg></a></li>
+      </ul>
+      <p class="hero-meta"><span data-dl-version>Kostenlos · Open Source (GPL-3.0)</span> <a class="tlink" href="https://github.com/souldewapp/souldew">Auf GitHub ansehen</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · Trade and battle: the three moments of a link, in souldew's own interface -->
+<section class="sec together" id="together" aria-labelledby="together-title">
+  <div class="wrap">
+    <div class="split-head">
+      <h2 id="together-title" class="d2" data-reveal>Tauschen und kämpfen.<br><span class="dim">Ohne Kabel. Ohne Neustart.</span></h2>
+      <p class="lead" data-reveal>Auf dem Board hat die Karte jedes Partners „Tauschen“ und „Kämpfen“. Dein Partner drückt „Beitreten“, und beide Spiele gehen in die Verbindung, egal wo ihr gerade seid – auf einer Route, in einem Textfeld, in einem Menü. Geht zum Kabel-Club oder in den Union-Raum, tauscht oder kämpft wie auf echter Hardware, und danach läuft jedes Spiel allein weiter.</p>
+    </div>
+    <div class="seq" data-seq>
+      <ol class="seq-row">
+        <li class="step">
+          <p class="step-k"><span class="num">1</span> Einladen</p>
+          <div class="ui ui-partner" data-step="1">
+            <div class="ui-partner-top"><span class="ui-name p2">Tim</span><i class="ui-dot"></i></div>
+            <p class="ui-meta">live · gerade eben · 0 Orden · Cap 14</p>
+            <div class="ui-btns"><span class="ui-btn" data-press><svg aria-hidden="true"><use href="../../assets/img/icons.svg#i-link"/></svg>Tauschen</span><span class="ui-btn"><svg aria-hidden="true"><use href="../../assets/img/icons.svg#i-spark"/></svg>Kampf</span></div>
+          </div>
+          <p class="step-t">Tauschen oder Kämpfen auf der Karte deines Partners im Board.</p>
+        </li>
+        <li class="step">
+          <p class="step-k"><span class="num">2</span> Verbunden</p>
+          <div class="ui ui-linked" data-step="2">
+            <p class="ui-row"><svg class="ui-ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-link"/></svg><b>Verbunden mit Tim</b></p>
+            <p class="ui-meta">Verzögerung 4 Frames · direkt · <span data-ms>0</span> ms</p>
+            <div class="ui-wire" aria-hidden="true"><span class="w-a"></span><i></i><span class="w-b"></span></div>
+            <p class="ui-meta">Trefft euch im Pokémon-Center oben am Schalter.</p>
+            <span class="ui-btn ui-btn-q">Link verlassen</span>
+          </div>
+          <p class="step-t">Nur die Tasten reisen – es fühlt sich an wie ein Kabel, auch zwischen zwei Wohnungen.</p>
+        </li>
+        <li class="step">
+          <p class="step-k"><span class="num">3</span> Entschieden</p>
+          <div class="ui ui-result" data-step="3">
+            <p class="ui-row"><svg class="ui-ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-spark"/></svg><b>Sam hat gewonnen</b></p>
+            <p class="ui-meta">₽1.000 zu zahlen, sobald du in deinem Spiel wieder herumläufst</p>
+            <p class="ui-score"><span class="p2">Tim</span> <span class="num"><span>0</span> : <span data-score>0</span></span> <span class="p1">Sam</span></p>
+            <p class="ui-meta">Der Link ist beendet.</p>
+          </div>
+          <p class="step-t">Jedes Spiel liest das Ergebnis selbst; es zählt nur, worin sich alle einig sind.</p>
+        </li>
+      </ol>
+      <button class="tlink seq-again" type="button" data-seq-again hidden>Noch mal abspielen</button>
+    </div>
+    <dl class="facts">
+      <div data-reveal><dt><span class="num">1–5</span> Generationen</dt><dd>Von Rot bis Weiß 2, im Kabel-Club, Kolosseum und Union-Raum der Spiele selbst.</dd></div>
+      <div data-reveal><dt><span class="num">4</span> Spieler</dt><dd>Zwei gegen zwei in Gen 3, ihr alle vier im Union-Raum von Gen 4.</dd></div>
+      <div data-reveal><dt><span class="num">₽</span> Einsätze</dt><dd>Kämpft um Spielgeld. Das Spiel des Verlierers zahlt, das Board führt Buch.</dd></div>
+      <div data-reveal><dt><span class="num">Sicher</span> Für deinen Run</dt><dd>Vor jeder Verbindung wird dein Spielstand gesichert. Aus dem Takt? Beide Spiele gehen zurück.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- 3 · Shared World: one picture of the game inside souldew -->
+<section class="sec world" id="world" aria-labelledby="world-title">
+  <div class="wrap world-grid">
+    <figure class="world-shot" data-reveal>
+      <div class="frame-game">
+        <img src="../../assets/img/30/ui/world-game.webp" width="1180" height="1060" alt="Im Pokémon-Center eines Gen-3-Spiels: Dein Partner Tim steht mit Namensschild neben dir; souldews A-Menü ist offen mit Tauschen, Kämpfen, Winken, Schere-Stein-Papier und den Emotes Herz, !, ? und GG (englische App-Oberfläche)." loading="lazy">
+      </div>
+      <div class="world-card ui" aria-label="souldews Dock: Shared World eingeschaltet (englische App-Oberfläche)">
+        <p class="ui-row"><i class="ui-dot"></i><span class="ui-name p2">Tim</span> <span class="ui-meta">Live-Tracking</span></p>
+        <p class="ui-row"><i class="ui-dot"></i><span class="ui-name p1">Sam</span> <span class="ui-meta">live</span></p>
+        <p class="ui-row"><i class="ui-sw on"></i>Partner in meinem Spiel zeigen <span class="ui-meta">· 1 hier</span></p>
+        <p class="ui-row"><i class="ui-sw on"></i>Mein Pokémon läuft mir hinterher</p>
+      </div>
+    </figure>
+    <div class="world-copy">
+      <h2 id="world-title" class="d2" data-reveal>Deine Partner,<br>in deiner Welt.</h2>
+      <p class="lead" data-reveal>Partner auf derselben Karte laufen in deinem Spiel herum – mit ihrem Trainer-Sprite aus deiner eigenen ROM, einem Namensschild in ihrer Farbe und ihrem ersten Pokémon einen Schritt dahinter.</p>
+      <ul class="moves">
+        <li data-reveal><b>Hingehen, A drücken.</b> Tauschen, Kämpfen oder Winken, direkt aus dem Menü.</li>
+        <li data-reveal><b>Herzen, „!“, „?“ und GG.</b> Kleine Pixelblasen über deinem Kopf, auf jedem Bildschirm, der dich sieht.</li>
+        <li data-reveal><b>Schere, Stein, Papier.</b> Versiegelte Hände, erst getauscht, wenn beide gewählt haben.</li>
+        <li data-reveal><b>Ihren Kämpfen zusehen.</b> Gekreuzte Schwerter über dem Kopf – „Zusehen“ öffnet ihr Spiel live.</li>
+        <li data-reveal><b>Fänge und Grabsteine.</b> Nur was der Run festhält, dort, wo es passiert ist.</li>
+        <li data-reveal><b>Geschenke und „Komm her“.</b> Gib ein Item aus deinem Beutel weiter oder zeig allen, wo du bist.</li>
+      </ul>
+      <p class="fine" data-reveal>In Rot, Blau, Gelb, Gold, Silber, Kristall, allen Gen-3-Spielen, Platin, HeartGold und SoulSilver. Über dein Spiel gezeichnet – nichts wird hineingeschrieben.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · Raids: one shared health bar -->
+<section class="sec raid" id="raid" aria-labelledby="raid-title">
+  <div class="wrap">
+    <h2 id="raid-title" class="d2 center" data-reveal>Ein Trainer. Ihr alle.<br><span class="dim">Eine Lebensleiste.</span></h2>
+    <p class="lead center" data-reveal>Drück „Raid“ auf dem Board, und der nächste Trainerkampf, in den jeder von euch läuft, ist der Raid. Jeder Treffer in irgendeinem Spiel geht von einem gemeinsamen Vorrat ab – und der Trainer fällt überall gleichzeitig.</p>
+    <div class="raid-row">
+      <div class="pool ui" data-pool role="img" aria-label="Beispiel: eine gemeinsame KP-Leiste, die Sam, Tim und Lena zusammen leeren. Raid in 1:38 gewonnen, meisten Schaden: Tim.">
+        <div class="pool-head"><span class="pool-k">Gemeinsame KP</span><span class="pool-n"><span data-pool-n>100</span> %</span></div>
+        <div class="pool-bar"><i class="pool-fill" data-pool-fill></i></div>
+        <ul class="feed" data-pool-feed aria-hidden="true"></ul>
+        <div class="pool-foot">
+          <span class="who"><i class="dot d-p1"></i>Sam</span><span class="who"><i class="dot d-p2"></i>Tim</span><span class="who"><i class="dot d-p3"></i>Lena</span>
+          <span class="pool-done" data-pool-done>Gemeinsam gewonnen · 1:38 · meisten Schaden: Tim</span>
+        </div>
+        <button class="tlink pool-again" type="button" data-pool-again hidden>Noch mal abspielen</button>
+      </div>
+      <div class="raid-invite ui" data-reveal>
+        <p class="ui-row"><svg class="ui-ic bolt" aria-hidden="true"><use href="../../assets/img/icons.svg#i-spark"/></svg><b>Sam startet einen Raid</b></p>
+        <p class="ui-text">Gemeinsam gegen den nächsten Trainer, den ihr bekämpft – ein gemeinsamer KP-Pool, also ist er in allen Spielen zugleich besiegt. Pokémon, die dabei umfallen, zählen.</p>
+        <p class="ui-meta"><span class="p1">Sam</span> dabei · <span class="p2">Du</span> gefragt</p>
+        <div class="ui-btns end"><span class="ui-btn ui-btn-light">Mitmachen</span><span class="ui-btn ui-btn-q">Jetzt nicht</span></div>
+      </div>
+    </div>
+    <p class="fine center" data-reveal>In Red, Blue, Crystal, FireRed, LeafGreen, Emerald, Platinum, HeartGold und Black 2 (englische Versionen). Der Host entscheidet, ob Tode im Raid zählen.</p>
+  </div>
+</section>
+
+<!-- 5 · Friends -->
+<section class="sec friends" id="friends" aria-labelledby="friends-title">
+  <div class="wrap friends-grid">
+    <div class="friends-copy">
+      <h2 id="friends-title" class="d2" data-reveal>Freunde,<br><span class="dim">einen Klick entfernt.</span></h2>
+      <p class="lead" data-reveal>Melde dich mit Discord an – souldew bekommt nur deinen Namen und dein Bild – und du hast ein Profil und eine Freundesliste: wer online ist, was gespielt wird, und eine Einladung in deinen Run, der man mit einem Klick beitritt.</p>
+      <ul class="ticks" data-reveal>
+        <li>Freiwillig. Ohne Konto funktioniert alles genau wie bisher.</li>
+        <li>Der Run verbindet sich weiter direkt; das Konto überbringt nur die Einladung.</li>
+        <li>Du entscheidest, wer dein Profil sieht und wo du bist. Exportiere oder lösche deine Daten jederzeit.</li>
+      </ul>
+    </div>
+    <div class="friends-ui" aria-hidden="false">
+      <img class="fu fu-req" src="../../assets/img/30/ui/friends-req.webp" width="738" height="322" alt="Freundschaftsanfragen: Noor und Finn, jeweils mit Annehmen und Ignorieren (englische App-Oberfläche)." loading="lazy" data-reveal>
+      <img class="fu fu-kim" src="../../assets/img/30/ui/friends-kim.webp" width="1448" height="201" alt="Kims Zeile in der Freundesliste: befreundet seit Oktober 2026, Profil, In einen Run einladen (englische App-Oberfläche)." loading="lazy" data-reveal>
+      <img class="fu fu-run" src="../../assets/img/30/ui/friends-run.webp" width="1448" height="218" alt="Live: HeartGold – Kim &amp; Lou, Route 34. Dieser Run hat einen freien Platz – Kim kann dich reinlassen. Beitritt anfragen (englische App-Oberfläche)." loading="lazy" data-reveal>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · souldew+ -->
+<div class="plus" id="plus">
+
+  <!-- 6a · the launch: pinned scrub of the 3D handheld (stacked autoplay on phones, one still with reduced motion) -->
+  <section class="launch" data-launch aria-labelledby="launch-title">
+    <div class="launch-stage">
+      <div class="launch-copy">
+        <p class="mark mark-plus"><span class="mark-w">souldew</span><span class="mark-p">+</span></p>
+        <h2 id="launch-title" class="d2 launch-h">Deine Spiele starten<br><span class="dim">auf deinem eigenen Handheld.</span></h2>
+      </div>
+      <div class="launch-dev">
+        <canvas width="1400" height="1269" data-launch-canvas aria-hidden="true"></canvas>
+        <img class="launch-still" src="../../assets/img/30/unfold/1400/f52.webp" width="1400" height="1269" alt="Ein souldew-Handheld im Skin Golden Wheat, aufgeklappt, beide Bildschirme an." loading="lazy">
+        <button class="tlink launch-again" type="button" data-launch-again hidden>Noch mal abspielen</button>
+      </div>
+      <ol class="beats" aria-label="Die 3D-Startanimation">
+        <li data-beat="0"><b>Der Deckel schwingt auf</b></li>
+        <li data-beat="1"><b>Die Karte fällt hinein und rastet ein</b></li>
+        <li data-beat="2"><b>Bildschirme an – weiter in dein Spiel</b></li>
+      </ol>
+      <p class="launch-note">Sie läuft, während dein Spiel startet, und das Spiel wartet nie darauf. Jede Taste überspringt sie, und sie ist lautlos.</p>
+    </div>
+  </section>
+
+  <!-- 6b · Your handheld: skins and stickers -->
+  <section class="sec hh-sec" aria-labelledby="hh-title">
+    <div class="wrap hh-grid">
+      <div class="hh-copy">
+        <h2 id="hh-title" class="d2" data-reveal>Zieh es an.<br><span class="dim">Dreh es herum.</span></h2>
+        <p class="lead" data-reveal>Ein Skin für alle deine Geräte und bis zu acht Sticker pro Gerät aus 54 – frei drehen, von 70 bis 160 % skalieren, über die Kanten und übereinander kleben.</p>
+        <ul class="hh-more" data-reveal>
+          <li>Holo- und Glitzer-Finish</li>
+          <li>12 gespeicherte Designs, „Überrasch mich beim Start“</li>
+          <li>Drei Sticker, die man sich nur verdienen kann</li>
+          <li>Dein Handheld siehst nur du</li>
+        </ul>
+      </div>
+      <div class="hh-dev" data-hh>
+        <div class="hh-stage">
+          <div class="hh-pic" data-hh-pic>
+            <img class="hh-img is-on" data-hh-img src="../../assets/img/30/hh/colours-1400.webp" srcset="../../assets/img/30/hh/colours-760.webp 760w, ../../assets/img/30/hh/colours-1400.webp 1400w" sizes="(max-width: 900px) 92vw, 760px" width="1400" height="994" alt="Dein Handheld in deinen Farben, mit sechs Stickern." loading="lazy">
+            <img class="hh-img" data-hh-img2 src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" width="1400" height="994" alt="" aria-hidden="true">
+            <div class="stk-layer" data-stk-layer aria-hidden="true">
+              <img class="stk" style="--l:2.461%;--t:23.512%;--w:5.564%;--d:0" src="../../assets/img/30/hh/stk-star.webp" alt="" loading="lazy">
+              <img class="stk" style="--l:7.33%;--t:30.746%;--w:5.243%;--d:1" src="../../assets/img/30/hh/stk-dew.webp" alt="" loading="lazy">
+              <img class="stk" style="--l:68.807%;--t:25.848%;--w:9.524%;--d:2" src="../../assets/img/30/hh/stk-comet.webp" alt="" loading="lazy">
+              <img class="stk" style="--l:1.284%;--t:63.15%;--w:11.343%;--d:3" src="../../assets/img/30/hh/stk-gg.webp" alt="" loading="lazy">
+              <img class="stk" style="--l:18.941%;--t:72.72%;--w:8.133%;--d:4" src="../../assets/img/30/hh/stk-rainbow.webp" alt="" loading="lazy">
+              <img class="stk" style="--l:68.379%;--t:70.158%;--w:8.507%;--d:5" src="../../assets/img/30/hh/stk-heart.webp" alt="" loading="lazy">
+            </div>
+          </div>
+          <div class="hh-3d" data-hh3d tabindex="0" role="img" aria-label="Dein Handheld in 3D. Zum Drehen ziehen oder die Pfeiltasten nutzen." hidden></div>
+          <p class="hh-hint" data-hh-hint hidden>Zum Drehen ziehen</p>
+        </div>
+        <div class="hh-controls">
+          <div class="seg" role="radiogroup" aria-label="Gerät" data-hh-sys hidden>
+            <button type="button" role="radio" aria-checked="true" data-sys="gba">Flach</button>
+            <button type="button" role="radio" aria-checked="false" data-sys="nds">Zum Aufklappen</button>
+          </div>
+          <fieldset class="skins" data-skins>
+            <legend class="sr-only">Skin</legend>
+            <label class="sw" title="Deine Farben – Supporter"><input type="radio" name="skin" value="colours" checked aria-label="Deine Farben (Supporter)"><span class="sw-c" style="--a:#5b6b8c;--b:#7d8db0"></span><span class="sw-n" hidden>Deine Farben<small>Supporter</small></span></label>
+            <label class="sw" title="Plain Dusk – Supporter"><input type="radio" name="skin" value="plain-dusk" aria-label="Plain Dusk (Supporter)"><span class="sw-c" style="--a:#1c1a26;--b:#3a3150"></span><span class="sw-n" hidden>Plain Dusk<small>Supporter</small></span></label>
+            <i class="sw-sep" aria-hidden="true"></i>
+            <label class="sw" title="Golden Wheat – souldew+"><input type="radio" name="skin" value="golden-wheat" aria-label="Golden Wheat (souldew+)"><span class="sw-c" style="--a:#f0b57a;--b:#d99a3c"></span><span class="sw-n" hidden>Golden Wheat<small>souldew+</small></span></label>
+            <label class="sw" title="Coral Shelf – souldew+"><input type="radio" name="skin" value="coral-shelf" aria-label="Coral Shelf (souldew+)"><span class="sw-c" style="--a:#7fd3ee;--b:#2f8fc0"></span><span class="sw-n" hidden>Coral Shelf<small>souldew+</small></span></label>
+            <label class="sw" title="Cherry Orchard – souldew+"><input type="radio" name="skin" value="cherry-orchard" aria-label="Cherry Orchard (souldew+)"><span class="sw-c" style="--a:#b8d8f2;--b:#e889b6"></span><span class="sw-n" hidden>Cherry Orchard<small>souldew+</small></span></label>
+            <label class="sw" title="Night Train – souldew+"><input type="radio" name="skin" value="night-train" aria-label="Night Train (souldew+)"><span class="sw-c" style="--a:#141a33;--b:#2e3d78"></span><span class="sw-n" hidden>Night Train<small>souldew+</small></span></label>
+            <label class="sw" title="Aurora Fjord – souldew+"><input type="radio" name="skin" value="aurora-fjord" aria-label="Aurora Fjord (souldew+)"><span class="sw-c" style="--a:#0e1c26;--b:#3bbf8f"></span><span class="sw-n" hidden>Aurora Fjord<small>souldew+</small></span></label>
+            <label class="sw" title="Firefly Meadow – souldew+"><input type="radio" name="skin" value="firefly-meadow" aria-label="Firefly Meadow (souldew+)"><span class="sw-c" style="--a:#0f1f1d;--b:#2d5b52"></span><span class="sw-n" hidden>Firefly Meadow<small>souldew+</small></span></label>
+          </fieldset>
+          <button class="btn btn-ghost btn-sm stk-btn" type="button" data-stk-toggle aria-pressed="true"><span data-stk-label>Sticker abziehen</span></button>
+        </div>
+        <p class="hh-cap" data-hh-cap aria-live="polite">Deine Farben · Supporter</p>
+        <p class="hh-note" data-hh-note>Die Supporter-Looks drehst du hier in 3D. souldew+-Skins zeigen wir als Bilder des Originals.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6c · Profile looks and colour themes -->
+  <section class="sec looks" aria-labelledby="looks-title">
+    <div class="wrap">
+      <div class="split-head">
+        <h2 id="looks-title" class="d2" data-reveal>Und dann<br><span class="dim">der ganze Rest.</span></h2>
+        <p class="lead" data-reveal>Handgemachte Pixel-Banner, die sich bewegen, hinter deinem Namen auf dem Profil. Rahmen um dein Bild, Namensschilder in den Freundeslisten, jeden Monat neue. Markier deine Lieblinge mit einem Stern – „★ Favoriten“ zeigt nur diese.</p>
+      </div>
+    </div>
+    <div class="banners" aria-label="Ein paar souldew+-Banner">
+      <div class="b-row" data-marquee>
+        <picture><source srcset="../../assets/img/30/looks/banners/night-train-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/night-train.webp" width="192" height="56" alt="Banner: The Night Train" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/cherry-orchard-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/cherry-orchard.webp" width="192" height="56" alt="Banner: Cherry Orchard" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/linked-souls-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/linked-souls.webp" width="192" height="56" alt="Banner: Linked Souls" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/sailing-day-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/sailing-day.webp" width="192" height="56" alt="Banner: Sailing Day" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/ringed-world-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/ringed-world.webp" width="192" height="56" alt="Banner: Ringed World" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/golden-wheat-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/golden-wheat.webp" width="192" height="56" alt="Banner: Golden Wheat" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/lighthouse-point-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/lighthouse-point.webp" width="192" height="56" alt="Banner: Lighthouse Point" loading="lazy"></picture>
+      </div>
+      <div class="b-row b-row-2" data-marquee>
+        <picture><source srcset="../../assets/img/30/looks/banners/aurora-fjord-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/aurora-fjord.webp" width="192" height="56" alt="Banner: Aurora Fjord" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/balloon-morning-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/balloon-morning.webp" width="192" height="56" alt="Banner: Balloon Morning" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/title-screen-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/title-screen.webp" width="192" height="56" alt="Banner: Title Screen" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/palm-cove-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/palm-cove.webp" width="192" height="56" alt="Banner: Palm Cove" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/cloud-sea-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/cloud-sea.webp" width="192" height="56" alt="Banner: Cloud Sea" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/windmill-fields-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/windmill-fields.webp" width="192" height="56" alt="Banner: Windmill Fields" loading="lazy"></picture>
+        <picture><source srcset="../../assets/img/30/looks/banners/sunset-arena-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/banners/sunset-arena.webp" width="192" height="56" alt="Banner: Sunset Arena" loading="lazy"></picture>
+      </div>
+    </div>
+    <div class="wrap looks-grid">
+      <div class="frames" data-reveal>
+        <h3 class="d4">Rund um dein Bild</h3>
+        <ul class="fr-list" aria-label="Ein paar souldew+-Avatarrahmen">
+          <li><picture><img src="../../assets/img/30/looks/frames/brass-ring.png" width="208" height="208" alt="Frame: Brass Ring" loading="lazy"></picture></li>
+          <li><picture><img src="../../assets/img/30/looks/frames/cathedral-glass.png" width="208" height="208" alt="Frame: Cathedral Glass" loading="lazy"></picture></li>
+          <li><picture><img src="../../assets/img/30/looks/frames/sakura-bough.png" width="208" height="208" alt="Frame: Sakura Bough" loading="lazy"></picture></li>
+          <li><picture><img src="../../assets/img/30/looks/frames/snow-globe.png" width="208" height="208" alt="Frame: Snow Globe" loading="lazy"></picture></li>
+          <li><picture><img src="../../assets/img/30/looks/frames/ember-circlet.png" width="208" height="208" alt="Frame: Ember Circlet" loading="lazy"></picture></li>
+          <li><picture><img src="../../assets/img/30/looks/frames/soul-chain.png" width="208" height="208" alt="Frame: Soul Chain" loading="lazy"></picture></li>
+          <li><picture><img src="../../assets/img/30/looks/frames/gilded-filigree.png" width="208" height="208" alt="Frame: Gilded Filigree" loading="lazy"></picture></li>
+          <li><picture><img src="../../assets/img/30/looks/frames/after-the-rain.png" width="208" height="208" alt="Frame: After the Rain" loading="lazy"></picture></li>
+        </ul>
+        <h3 class="d4">Hinter deinem Namen in den Freundeslisten</h3>
+        <ul class="np-list" aria-label="Zwei souldew+-Namensschilder">
+          <li><picture><source srcset="../../assets/img/30/looks/nameplates/night-train-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/nameplates/night-train.webp" width="160" height="26" alt="" loading="lazy"></picture><span>Robin</span></li>
+          <li><picture><source srcset="../../assets/img/30/looks/nameplates/cherry-orchard-still.png" media="(prefers-reduced-motion: reduce)"><img src="../../assets/img/30/looks/nameplates/cherry-orchard.webp" width="160" height="26" alt="" loading="lazy"></picture><span>Kim</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6c2 · colour themes -->
+  <section class="sec themes-sec" aria-labelledby="themes-title">
+    <div class="wrap themes-grid" data-themes>
+      <div class="themes-pic" data-reveal>
+        <div class="th-win"><img data-theme-img src="../../assets/img/30/themes/midnight-ink.webp" width="800" height="500" alt="souldews Einstellungen im Theme Midnight Ink." loading="lazy"></div>
+      </div>
+      <div class="themes-copy">
+        <h2 id="themes-title" class="d2" data-reveal>Die ganze App in deinen Farben.</h2>
+        <p class="lead" data-reveal>16 Farb-Themes. Nur Farben – jedes Layout und jedes Wort bleibt, wo du es kennst. Angemeldet kannst du jedes 15 Minuten lang ausprobieren.</p>
+        <div class="th-sw" role="radiogroup" aria-label="Farb-Theme">
+          <button type="button" role="radio" aria-checked="false" data-theme="dusk" style="--c:#2b2040;--k:#f0a3c8" aria-label="Dusk"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="moss" style="--c:#213024;--k:#8fb6d9" aria-label="Moss"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="ember" style="--c:#1c1918;--k:#f39a4a" aria-label="Ember"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="tidewater" style="--c:#11282d;--k:#6fd0b0" aria-label="Tidewater"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="slate" style="--c:#1f2429;--k:#89b0e8" aria-label="Slate"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="graphite" style="--c:#1c1c1c;--k:#ededed" aria-label="Graphite"></button>
+          <button type="button" role="radio" aria-checked="true" data-theme="midnight-ink" style="--c:#151b30;--k:#96b1f4" aria-label="Midnight Ink"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="copper" style="--c:#231b16;--k:#e08a55" aria-label="Copper"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="night-shift" style="--c:#1f1812;--k:#f0c25a" aria-label="Night Shift"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="fog" style="--c:#3d4248;--k:#afc5ee" aria-label="Fog"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="paper-lantern" style="--c:#2c1517;--k:#f0c461" aria-label="Paper Lantern"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="soft-light" style="--c:#f5f4f1;--k:#2f5fb3" aria-label="Soft Light"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="sunbleached" style="--c:#f4ebda;--k:#2f5c96" aria-label="Sunbleached"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="glacier" style="--c:#ecf3f7;--k:#1f5ea7" aria-label="Glacier"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="sakura" style="--c:#f9eef0;--k:#c24c7a" aria-label="Sakura"></button>
+          <button type="button" role="radio" aria-checked="false" data-theme="cartridge-grey" style="--c:#dcdad5;--k:#86285e" aria-label="Cartridge Grey"></button>
+        </div>
+        <p class="th-name" data-theme-name aria-live="polite">Midnight Ink</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6d · Tiers: honest about what's free -->
+  <section class="sec tiers" id="tiers" aria-labelledby="tiers-title">
+    <div class="wrap">
+      <div class="split-head">
+        <h2 id="tiers-title" class="d2" data-reveal>Alles zum Spielen<br><span class="dim">bleibt kostenlos.</span></h2>
+        <p class="lead" data-reveal>Mit souldew+ hilfst du, die Server und die Zeit zu bezahlen – und bekommst dafür ein paar schöne Dinge. Es ändert nur, wie etwas aussieht. Monatlich über Buy Me a Coffee, dort jederzeit kündbar.</p>
+      </div>
+      <div class="tier-grid">
+        <article class="tier tier-free" data-reveal>
+          <h3 class="tier-n">Kostenlos</h3>
+          <p class="price"><span class="p-num">0 €</span><span class="p-per">für immer</span></p>
+          <ul>
+            <li>Jeder Emulator und jedes Spiel, das du besitzt</li>
+            <li>SoulLink, Nuzlocke und der Randomizer</li>
+            <li>Tausch, Kämpfe, Raids und Shared World</li>
+            <li>Live-Tracking, Sync, Live-Runs und Stream</li>
+            <li>Freunde, Profile, Trophäen und Titel</li>
+            <li>Spiele starten mit dem Modul, das hineingleitet</li>
+          </ul>
+          <a class="btn btn-ghost" href="#download">Herunterladen</a>
+        </article>
+        <article class="tier" data-reveal>
+          <h3 class="tier-n">Supporter</h3>
+          <p class="price"><span class="p-num">3 €</span><span class="p-per">im Monat</span></p>
+          <ul>
+            <li>Der 3D-Start: dein eigenes Handheld, in deinen Farben</li>
+            <li>Der Skin Plain Dusk, die 11 kostenlosen Sticker und ein gespeichertes Design</li>
+            <li>Das Supporter-Abzeichen auf deinem Profil</li>
+            <li>Du hilfst, die Server am Laufen zu halten</li>
+          </ul>
+          <a class="btn btn-ghost" href="https://buymeacoffee.com/souldew/membership">Supporter werden</a>
+        </article>
+        <article class="tier tier-plus" data-reveal>
+          <h3 class="tier-n">souldew<span>+</span></h3>
+          <p class="price"><span class="p-num">5 €</span><span class="p-per">im Monat</span></p>
+          <ul>
+            <li>Alles aus Supporter</li>
+            <li>Alle Skins und Sticker, Holo und Glitzer, 12 Designs</li>
+            <li>Gold, Klares Gehäuse, Holo-Etikett – und bei einem von 64 Starts ein Seltener Start</li>
+            <li>Alle Farb-Themes, Banner, Rahmen und Namensschilder – jeden Monat neue</li>
+            <li>Das souldew+-Abzeichen</li>
+          </ul>
+          <a class="btn btn-gold" href="https://buymeacoffee.com/souldew/membership">souldew+ beitreten</a>
+        </article>
+        <article class="tier" data-reveal>
+          <h3 class="tier-n">Legend</h3>
+          <p class="price"><span class="p-num">10 €</span><span class="p-per">im Monat</span></p>
+          <ul>
+            <li>Alles aus souldew+</li>
+            <li>Das Legend-Abzeichen</li>
+            <li>Für alle, die mehr geben möchten</li>
+          </ul>
+          <a class="btn btn-ghost" href="https://buymeacoffee.com/souldew/membership">Legend werden</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6e · Thank you: live from accounts.souldew.app, never blocks the page -->
+  <section class="sec thanks" id="thanks" aria-labelledby="thanks-title" data-thanks>
+    <div class="wrap">
+      <h2 id="thanks-title" class="d2 center" data-reveal>Danke.</h2>
+      <p class="lead center" data-thanks-lead data-reveal>An alle, die souldew am Laufen halten – die Server, die Signaturzertifikate, die Zeit.</p>
+      <ul class="th-counts" data-thanks-counts hidden>
+        <li><span class="num" data-count="legend">0</span> Legends</li>
+        <li><span class="num" data-count="plus">0</span> souldew+</li>
+        <li><span class="num" data-count="supporter">0</span> Supporters</li>
+        <li><span class="num" data-count="coffee">0</span> Kaffees</li>
+      </ul>
+      <ul class="th-wall" data-thanks-wall aria-label="Unterstützer" hidden></ul>
+      <div class="th-empty" data-thanks-empty>
+        <p>Hier erscheinen die Namen der Menschen, die souldew unterstützen – nur von denen, die in souldew Ja gesagt haben. Alle anderen werden mitgezählt.</p>
+        <a class="tlink" href="https://buymeacoffee.com/souldew/membership">souldew auf Buy Me a Coffee unterstützen</a>
+      </div>
+      <div class="tier-notes">
+        <div data-reveal>
+          <h3 class="d4">Wohin das Geld geht</h3>
+          <dl class="kv">
+            <div><dt>Server</dt><dd>Freunde, Online-Status, Einladungen und Live-Runs laufen darüber.</dd></div>
+            <div><dt>Signaturzertifikate</dt><dd>Damit dein Computer der App vertraut, die du herunterlädst.</dd></div>
+            <div><dt>Zeit</dt><dd>Neue Spiele, Fixes und Antworten auf Discord.</dd></div>
+          </dl>
+        </div>
+        <div data-reveal>
+          <h3 class="d4">Wenn du aufhörst</h3>
+          <dl class="kv">
+            <div><dt>Nichts, was du dir verdient hast, geht verloren</dt><dd>Runs, Trophäen, Titel, Freunde und dein Profil bleiben, wie sie sind.</dd></div>
+            <div><dt>Deine Auswahl wartet auf dich</dt><dd>Deine Looks, Starteinstellungen und Handheld-Designs sind wieder da, wenn du zurückkommst.</dd></div>
+            <div><dt>Eine Woche Kulanz offline</dt><dd>Ein paar Tage ohne Internet nehmen dir nichts weg.</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 7 · Also in 3.0: a typographic index of the smaller news -->
+<section class="sec also" id="also" aria-labelledby="also-title">
+  <div class="wrap">
+    <h2 id="also-title" class="d3 center" data-reveal>Und alles andere in 3.0.</h2>
+    <ul class="also-list" data-reveal>
+      <li>Eine neue Spielansicht – das Spiel groß, alles andere in einem Dock</li>
+      <li>Das Spiel jedes Partners gleichzeitig, in verschiebbaren Fenstern</li>
+      <li>Oberflächengröße von 80 bis 175 %, scharf in jeder Größe</li>
+      <li>Einstellungen in Tabs, mit einer Suche, die jede Einstellung findet</li>
+      <li>Der Game-Boy-Look – grüner Bildschirm oder Game Boy Color</li>
+      <li>Pokémon Quetzal, live ausgelesen</li>
+      <li>Pokémon Smaragd auf Deutsch, live ausgelesen</li>
+      <li>Schärfere Pixel in jeder Fenstergröße</li>
+      <li>Ein Hinweis, wenn die 3DS-Auflösung den schnellen Vorlauf bremst</li>
+      <li>Eine Sicherung deiner Runs und Spielstände vor dem ersten Start von 3.0</li>
+      <li>Was neu ist, in fünf kurzen Karten</li>
+      <li>Eine Danke-Seite für alle, die souldew kostenlos halten</li>
+      <li>Ein Partner mit 2.8 bekommt einen Hinweis, statt zu warten</li>
+      <li>Die souldew-Engine (Beta) – ein Player für DS, GBA und Game Boy</li>
+      <li>Ein Cheat-Menü – Pokébälle, Heilitems und Geld, wenn der Host es erlaubt</li>
+      <li>Spielstände aus anderen Emulatoren oder vom Modul importieren – und deine mitnehmen</li>
+    </ul>
+    <p class="fine center" data-reveal><a class="tlink" href="https://github.com/souldewapp/souldew/blob/main/CHANGELOG.md">Das ganze Changelog lesen (Englisch)</a></p>
+  </div>
+</section>
+
+<!-- 8 · The free core -->
+<section class="sec core" aria-labelledby="core-title">
+  <div class="wrap core-grid">
+    <div class="core-copy">
+      <h2 id="core-title" class="d2" data-reveal>Immer noch eine App<br><span class="dim">für den ganzen Run.</span></h2>
+      <p class="lead" data-reveal>Der Emulator führt das Spiel aus, souldew liest dein Team direkt aus dem Speicher und hält den Run aller synchron. Alles kostenlos, alles Open Source.</p>
+      <ul class="core-list" data-reveal>
+        <li><b>Game Boy bis 3DS.</b> Jedes Hauptspiel von Rot bis Ultramond, beide 3DS-Bildschirme und der Touchscreen unter deiner Maus.</li>
+        <li><b>Live-Tracking.</b> Art, Level, KP, Status und Fangort – neue Fänge sortieren sich selbst ein.</li>
+        <li><b>Deine Regeln, durchgesetzt.</b> Level-Caps, Dupes- und Shiny-Klausel, Tode und Blackouts erkennt souldew für dich.</li>
+        <li><b>Randomizer und ROM-Hacks.</b> Jeder baut dasselbe Spiel, Byte für Byte geprüft.</li>
+        <li><b>Gemacht fürs Streamen.</b> Overlays einfach in OBS ziehen; ein Schalter versteckt Codes und Spoiler.</li>
+      </ul>
+    </div>
+    <figure class="core-shot app-window" data-reveal>
+      <img src="../../assets/img/shots/board-1440.webp" srcset="../../assets/img/shots/board-1440.webp 1440w, ../../assets/img/shots/board.webp 2880w" sizes="(max-width: 900px) 100vw, 56vw" width="1440" height="900" alt="Das souldew-Board: Robins und Kims verbundene Pokémon nebeneinander mit Live-KP-Leisten, Levels und der Route, auf der jedes Paar gefangen wurde (englische App-Oberfläche)." loading="lazy">
+    </figure>
+  </div>
+</section>
+
+<!-- 9 · Download -->
+<section class="sec dl-sec" id="download" aria-labelledby="dl-title">
+  <div class="wrap">
+    <h2 id="dl-title" class="d2" data-reveal>Dein nächster SoulLink <span class="dim">beginnt hier.</span></h2>
+    <div class="platforms">
+      <article class="platform" data-platform="mac">
+        <h3>macOS</h3>
+        <p class="req">Apple silicon (M1 oder neuer)</p>
+        <a class="btn" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="mac"><svg class="ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-download"/></svg><span data-dl-label>Für macOS laden</span></a>
+        <p class="dl-meta" data-dl-meta="mac">.dmg von GitHub Releases</p>
+        <ol>
+          <li>Öffne die .dmg und zieh souldew in „Programme“.</li>
+          <li>Noch nicht von Apple notarisiert: Öffne souldew einmal, dann klick in <b>Systemeinstellungen › Datenschutz &amp; Sicherheit</b> auf <b>Dennoch öffnen</b>.</li>
+        </ol>
+      </article>
+      <article class="platform" data-platform="win">
+        <h3>Windows</h3>
+        <p class="req">Windows 10 oder 11, 64 Bit</p>
+        <a class="btn" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="win"><svg class="ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-download"/></svg><span data-dl-label>Für Windows laden</span></a>
+        <p class="dl-meta" data-dl-meta="win">Installer von GitHub Releases</p>
+        <ol>
+          <li>Starte den Installer – souldew installiert nur für dich, ohne Adminrechte.</li>
+          <li>Der Installer ist noch nicht signiert: Erscheint SmartScreen, klick auf <b>Weitere Informationen › Trotzdem ausführen</b>.</li>
+        </ol>
+      </article>
+      <article class="platform" data-platform="linux">
+        <h3>Linux</h3>
+        <p class="req">64 Bit (x86_64), Steam Deck</p>
+        <a class="btn" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="linux"><svg class="ic" aria-hidden="true"><use href="../../assets/img/icons.svg#i-download"/></svg><span data-dl-label>Für Linux laden</span></a>
+        <p class="dl-meta" data-dl-meta="linux">AppImage von GitHub Releases</p>
+        <p class="dl-alt">Debian, Ubuntu, Mint: <a class="tlink" href="https://github.com/souldewapp/souldew/releases/latest" data-dl="deb">.deb-Paket</a></p>
+        <ol>
+          <li>Mach die AppImage ausführbar (<b>Eigenschaften › Berechtigungen</b> oder <code>chmod +x</code>) und starte sie – sie aktualisiert sich selbst. Ubuntu ab 22.04 braucht einmal <code>libfuse2</code>.</li>
+          <li>Steam Deck: im Desktop-Modus, dann <b>Spiel außerhalb von Steam hinzufügen</b>, um sie im Spielmodus zu starten.</li>
+        </ol>
+      </article>
+    </div>
+    <p class="fine">Du kommst von 2.x? souldew aktualisiert sich selbst und kopiert vor dem ersten Start von 3.0 deine Runs, Spielstände, Einstellungen und Trophäen in einen Sicherungsordner. Zum Tauschen, Kämpfen, Raiden und gemeinsamen Herumlaufen brauchen alle im Run 3.0.</p>
+    <p class="fine dl-sign"><a class="tlink" href="../code-signing.html" lang="en">Code signing policy</a> <a class="tlink" href="../../datenschutz.html">Datenschutzerklärung</a></p>
+  </div>
+</section>
+
+<!-- 10 · FAQ -->
+<section class="sec faq-sec" aria-labelledby="faq-title">
+  <div class="wrap faq-grid">
+    <div>
+      <h2 id="faq-title" class="d2" data-reveal>Gut<br>zu wissen.</h2>
+      <p class="support">Finde SoulLink-Partner, hol dir Hilfe und teile deine Runs im <a class="tlink" href="https://discord.gg/kvVDCyzdpQ">souldew-Discord</a>.</p>
+    </div>
+    <div class="faq">
+      <details><summary>Ist souldew weiterhin kostenlos?</summary><p>Ja – kostenlos und Open Source unter der GNU GPL v3.0 oder neuer, ohne Werbung. Alles zum Spielen ist kostenlos: Emulatoren, SoulLink, Nuzlocke-Tracking, Tausch, Kämpfe, Raids, Shared World und Freunde. souldew+ ändert nur das Aussehen.</p></details>
+      <details><summary>Brauche ich ein Konto?</summary><p>Nein. Ein Konto ist freiwillig – du meldest dich mit Discord an, wenn du ein Profil und eine Freundesliste möchtest. souldew sieht nie dein Discord-Passwort und bekommt nur deinen Namen und dein Bild. Ohne Konto funktioniert alles genau wie bisher.</p></details>
+      <details><summary>Brauchen alle 3.0?</summary><p>Zum Tauschen, Kämpfen, Raiden und gemeinsamen Herumlaufen ja. Ein Partner mit 2.8 synchronisiert den Run weiter – Fänge, Tode, das Log, die Regeln – und bekommt einen Hinweis zum Update. Verbinden ohne Neustart geht im schnellen Player; ein Spiel im Browser-Emulator tritt der Verbindung von seinem letzten Spielstand aus bei.</p></details>
+      <details><summary>Ist eine Verbindung sicher für meinen Run?</summary><p>Vor jeder Verbindung sichert souldew deinen Spielstand. Geraten die verbundenen Spiele aus dem Takt, gehen beide genau dahin zurück, wo sie vor der Verbindung waren. Was eine Verbindung zeigt, zählt nicht für den Run – ein Kampf dort trägt nie einen Tod ein – und die Regeln des Runs entscheiden, ob Tausch und Verbindungskämpfe erlaubt sind.</p></details>
+      <details><summary>Enthält souldew Spiele?</summary><p>Nein. Du spielst deine eigenen, legal erworbenen ROMs. souldew erkennt sie an Header und Prüfsumme und liest beim Durchsuchen deines Computers nur Dateinamen und Header.</p></details>
+      <details><summary>Ich unterstütze souldew schon – wie bekomme ich souldew+?</summary><p>Verknüpf deine Buy-Me-a-Coffee-Mitgliedschaft unter Einstellungen › Konto mit der E-Mail-Adresse, die du dort verwendest, oder mit <code>/supporter claim</code> im souldew-Discord.</p></details>
+      <details><summary>Etwas ist schiefgelaufen – was soll ich schicken?</summary><p>Nutze direkt danach <b>Diagnose speichern</b> in der Hilfe der App und häng die Datei an einen <a href="https://github.com/souldewapp/souldew/issues/new/choose">Fehlerbericht</a>. Sie enthält, was die App gelesen und entschieden hat – keine ROM-, Spielstand- oder Einladungsdaten.</p></details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="foot-mark" aria-hidden="true"></p>
+    <div class="foot-row">
+      <nav class="foot-links" aria-label="Fußzeile">
+        <a href="https://github.com/souldewapp/souldew">GitHub</a>
+        <a href="https://discord.gg/kvVDCyzdpQ">Discord</a>
+        <a href="https://www.instagram.com/wearesouldew">Instagram</a>
+        <a href="https://github.com/souldewapp/souldew/releases">Releases</a>
+        <a href="https://github.com/souldewapp/souldew/issues/new/choose">Fehler melden</a>
+        <a href="https://buymeacoffee.com/souldew/membership">souldew+</a>
+        <a href="../code-signing.html" lang="en">Code signing policy</a>
+        <a href="../../impressum.html">Impressum</a>
+        <a href="../../datenschutz.html">Datenschutz</a>
+      </nav>
+      <p class="foot-legal">souldew ist ein Fanprojekt und freie Software unter der GPL-3.0. Es steht in keiner Verbindung zu Nintendo, Game Freak, Creatures Inc. oder The Pokémon Company und wird von ihnen weder unterstützt noch gesponsert. Pokémon und alle zugehörigen Namen sind Marken ihrer jeweiligen Inhaber. souldew enthält und lädt keine Spiele. Diese Seite setzt keine Cookies und nutzt keine Tracker.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="../../assets/js/site30.js" defer></script>
+</body>
+</html>

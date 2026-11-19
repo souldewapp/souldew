@@ -1,40 +1,39 @@
 # souldew website
 
-The project page for GitHub Pages – static HTML, CSS and vanilla JS, no build step, no frameworks. Version 3.0
-(“the link”): two players, one world, no cable. A dark stage, souldew's own 3D handheld as the object, souldew's real
-interface as the proof, the two player colours (P1 blue, P2 pink) only where two players are meant, gold only for
-souldew+. One pinned moment: the 3D launch animation, scrubbed frame by frame (desktop with motion; on phones it
-plays once, with reduced motion it is one still).
+The project page for GitHub Pages – static HTML, CSS and vanilla JS, no build step, no frameworks.
 
-Address: **https://souldew.app/** (English) and **/de/** (German).
+- **Home** (`index.html`, `de/index.html`): the souldew site as it was for 2.8 (“the link cable”, `assets/css/site.css`,
+  `assets/js/site.js`) plus one short band near the top that leads to the 3.0 page (`.v3`, styles at the end of
+  `site.css`), a “3.0” link in the nav and the privacy / code-signing links in the footer and under the downloads.
+- **souldew 3.0** (`3/index.html`, `de/3/index.html` – https://souldew.app/3/ and /de/3/): its own page, own styles and
+  script (`assets/css/site30.css`, `assets/js/site30.js`). Two handhelds lit like the 3.0 film, cut by the viewport
+  around the headline; trade and battle as a built, animated sequence of souldew's interface; Shared World; a raid's
+  shared pool with hit chips; friends; souldew+ – the 3D launch scrubbed frame by frame (plays once on phones, one still
+  with reduced motion), “Your handheld” as the app's own 3D model for the free looks (drag to turn) with the souldew+
+  skins as pictures, banners, frames, themes, tiers, the thank-you wall.
+
+Names on the page are neutral (Sam, Tim, Lena, Kim, Robin, Noor, Finn, Lou) – never a real person's.
 
 ## What's where
 
 | Path | Contents |
 |---|---|
-| `index.html`, `de/index.html` | The landing page in English and German. Identical markup, only the text differs – **change both** when content changes (German paths are prefixed with `../`). |
-| `privacy.html` | Privacy policy in English (website + app, incl. account, souldew+, thank-you wall). Comments marked `REVIEW(owner)` need the owner's check. |
+| `index.html`, `de/index.html` | Home (2.8 site + the 3.0 band). Change both when content changes. |
+| `3/index.html`, `de/3/index.html` | The 3.0 page. The German one is the English one with the texts swapped – change both. |
+| `privacy.html` | Privacy policy in English (website + app, incl. account, souldew+, thank-you wall). `REVIEW(owner)` comments need the owner's check. |
 | `code-signing.html`, `de/code-signing.html` | The code signing policy SignPath Foundation asks for (Windows builds only). |
 | `impressum.html`, `datenschutz.html` | Legal notice and privacy policy (German, binding). |
-| `404.html` | Served by GitHub Pages for unknown paths (absolute links). |
-| `assets/css/site.css` | All styles: tokens, type, hero, link stage, Shared World, raid pool, friends, souldew+ (launch pin, handheld, looks, themes, tiers, thanks), also-new list, downloads, FAQ, legal pages, responsive rules, reduced motion. |
-| `assets/js/site.js` | Progressive enhancement: download links + latest release (GitHub API), reveals, the hero emote, the link line, the raid pool demo, the launch scrub/autoplay, skins and stickers, colour themes, the banner drift, the thank-you wall. Strings for both languages are at the top. |
-| `assets/img/30/hero/` | The two handhelds of the hero (rendered from the app's own 3D scene, `web/lib/handheld/scene.mjs`). |
-| `assets/img/30/unfold/{1400,760}/f00–f51.webp` | The 3D launch (DS, Golden Wheat) as 52 frames, transparent – the scrub. |
-| `assets/img/30/hh/` | “Your handheld”: one still per skin (`<skin>-1400/760.webp`, no stickers) and each sticker cut out (`stk-*.webp`, difference-matted from two skins), positioned in % in the HTML. |
-| `assets/img/30/ui/` | Crops of souldew's real interface (2× screenshots from the e2e scripts), rounded corners cut. |
-| `assets/img/30/looks/` | souldew+ preview media (the public previews the accounts service hands out): animated banners and nameplates (native pixel size, scaled with `image-rendering: pixelated`), frames. |
-| `assets/img/30/themes/` | The app's settings in each of the 16 colour themes (public previews). |
-| `assets/img/shots/` | The board screenshot (2880×1800 and 1440 wide). |
-| `assets/img/og-30.png`, `og-30-de.png` | Social previews (1200×630). |
-| `assets/fonts/` | Self-hosted fonts (Pixelify Sans and IBM Plex under the SIL OFL, texts included; Pixel Digits is made by this project). |
-| `robots.txt`, `sitemap.xml`, `.nojekyll` | For search engines / GitHub Pages. |
+| `assets/js/hh3d/` | The app's 3D handheld for the website: `handheld/*.mjs` and `cosmetics/banners/engine` are copies of `web/lib/…`, three.js r180 from `web/vendor/three`. Changes on top: relative imports, a cut-down `cosmetics/state.mjs` (free banners only), the screen picture's roof drawn the right way up (`placeholder.mjs`), and `viewer.mjs` (mount, drag to turn, free looks only). Loaded on demand. |
+| `assets/img/30/hero2/` | The hero handhelds: 8 frames each of a light sweep (`l|r-1400|720-0…7.webp`), rendered from the app's scene with the trailer's light rig. |
+| `assets/img/30/unfold/{1400,760}/` | The 3D launch (DS, Golden Wheat) as 53 frames, transparent – the scrub uses 2…52. |
+| `assets/img/30/hh/` | Pictures of every skin (no stickers) and each sticker cut out (difference-matted), positioned in % in the HTML. |
+| `assets/img/30/hh3d/` | The app's free sticker atlas (`web/assets/handheld`) for the 3D model. |
+| `assets/img/30/ui/` | Crops of souldew's real interface (friends, Shared World game view). |
+| `assets/img/30/looks/`, `themes/` | souldew+ public preview media: banners, nameplates, frames, the 16 colour themes. |
+| `assets/img/og-30.png`, `og-30-de.png` | Social previews of the 3.0 page (1200×630); the home keeps `og-image.png`. |
 
-No box art, logos or official artwork. Game graphics appear only as a player's own game inside souldew's interface:
-`ui/world-game.webp` (Shared World) and the party icons on the board screenshot.
-
-Deployment: `.github/workflows/pages.yml` uploads this folder on every push to `main` that touches `site/**`
-(or by hand via *Run workflow*). **The 3.0 site lives on `feat/30-site` and must not reach `main` before the 3.0 launch.**
+Deployment: `.github/workflows/pages.yml` uploads this folder on every push to `main` that touches `site/**`.
+**The 3.0 site lives on `feat/30-site` and must not reach `main` before the 3.0 launch.**
 
 ## The thank-you wall
 
@@ -55,7 +54,8 @@ request fails (not deployed, offline, CORS) the static text stays – nothing wa
 ## Regenerating the pictures
 
 The 3D renders come from the app itself: `~/souldew-promo/trailer30/tools/hh-studio.mjs` (hidden Electron window,
-scratch data folder, dev souldew+ pack) plus a small site shot (`site`) for the unfold, the skins and the stickers;
+scratch data folder, dev souldew+ pack) plus site shots (`site`, `site2` with the trailer's light rig) for the hero,
+the unfold, the skins and the stickers – the screens show the fixed screen picture from `assets/js/hh3d`;
 the sticker layers are separated by difference matting against two skins. The UI crops come from the screenshots that
 `scripts/whatsnew-media.mjs` uses. Never commit the screenshots or a pack.
 
@@ -85,6 +85,6 @@ the icon sprite (`<use href="assets/img/icons.svg#…">`) needs a server in some
 
 - Every claim on the page is taken from `CHANGELOG.md` (## 3.0.0), the README and the app's own souldew+ texts – keep
   it in sync when features change. Save import/export is marked as a `TODO(3.0)` in the “also new” list.
-- The screenshots show demo runs and test names (`Robin & Kim`, `Marius`, `Tim`, `Lena`). No box art or official artwork.
+- The screenshots show demo runs and test names (`Robin & Kim`, `Sam`, `Tim`, `Lena`). No box art or official artwork.
 - The privacy policies mention the GitHub API call, the `sessionStorage` cache and the thank-you wall request. If you add anything that contacts a
   third party (analytics, embeds, web fonts from a CDN …), update `datenschutz.html` first.

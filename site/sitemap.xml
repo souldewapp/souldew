@@ -15,6 +15,20 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://souldew.app/"/>
   </url>
   <url>
+    <loc>https://souldew.app/3/</loc>
+    <lastmod>2026-11-19</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/3/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/3/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://souldew.app/3/"/>
+  </url>
+  <url>
+    <loc>https://souldew.app/de/3/</loc>
+    <lastmod>2026-11-19</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/3/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/3/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://souldew.app/3/"/>
+  </url>
+  <url>
     <loc>https://souldew.app/code-signing.html</loc>
     <lastmod>2026-11-19</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/code-signing.html"/>
