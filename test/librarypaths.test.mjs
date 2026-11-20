@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, existsSync, rmSync, symlinkSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const DATA = mkdtempSync(join(tmpdir(), 'sls-libpaths-'));
 const HOME = mkdtempSync(join(tmpdir(), 'sls-libhome-'));
@@ -13,7 +13,7 @@ const ELSEWHERE = mkdtempSync(join(tmpdir(), 'sls-libelse-'));
 process.env.SLS_DATA_DIR = DATA;
 process.env.HOME = HOME; // discovery looks through ~/Downloads, ~/Desktop … of this fake home
 process.env.USERPROFILE = HOME;
-const { approvedImportPath, approvedFolder, importFiles, discoverRoots } = await import('../server/lib/library.mjs');
+const { approvedImportPath, approvedFolder, importFiles, discoverRoots, resolveId } = await import('../server/lib/library.mjs');
 const { grantPicked, clearPicked, wasPicked } = await import('../server/lib/grants.mjs');
 const { startServer } = await import('../server/app.mjs');
 test.after(() => {
@@ -68,6 +68,17 @@ test('import: a link inside an approved folder that points elsewhere is refused 
   const link = join(HOME, 'Downloads', 'link.gba');
   if (!tryLink(join(ELSEWHERE, 'secret', 'id_rsa.gba'), link)) return t.skip('no symbolic links here');
   assert.throws(() => approvedImportPath(link, {}), (e) => e.status === 403);
+});
+
+test('resolveId: a link under a library root that points elsewhere is refused', (t) => {
+  const lib = join(ELSEWHERE, 'libroot');
+  mkdirSync(lib, { recursive: true });
+  writeFileSync(join(lib, 'ok.gba'), 'OK');
+  const link = join(lib, 'escape.gba');
+  if (!tryLink(join(ELSEWHERE, 'secret', 'id_rsa.gba'), link)) return t.skip('no symbolic links here');
+  const cfg = { libraryFolders: [lib] };
+  assert.equal(resolveId(join(lib, 'ok.gba'), cfg).abs, resolve(join(lib, 'ok.gba')));
+  assert.throws(() => resolveId(link, cfg), (e) => e.status === 403 && e.code === 'notInLibrary');
 });
 
 test('import refuses the whole batch before copying anything (#23)', () => {
