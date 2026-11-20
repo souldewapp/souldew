@@ -806,7 +806,7 @@ export function startServer({ port = 7373, host = '127.0.0.1', background = true
         }
       };
       const api = read('pokeapi.json');
-      overlayNames = { names: api?.names || {}, items: api?.items || {}, tables: { gen4: GEN4, loc2: read('locations_gen2_crystal.json'), loc3: read('locations_gen3.json'), loc6: read('locations_gen6.json'), loc7: read('locations_gen7.json') } };
+      overlayNames = { names: api?.names || {}, items: api?.items || {}, tables: { gen4: GEN4, loc2: read('locations_gen2_crystal.json'), ...Object.fromEntries([3, 4, 5, 6, 7].map((g) => [`loc${g}`, read(`locations_gen${g}.json`)])) } };
     }
     const list = overlayNames.names[lang] || overlayNames.names.en || [];
     const items = overlayNames.items;

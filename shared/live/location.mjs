@@ -830,19 +830,22 @@ export class MusicKeyTracker {
   }
 }
 
+/** The name of a location table entry ({ en, de, es, fr, it }) in `lang` – English where it has none (or is the same). */
+export const nameIn = (e, lang = 'en') => (e && typeof e === 'object' ? e[lang] || e.en || '' : '');
+
 /**
- * Display name of a location id. `tables` = { maps, loc2, loc3, gen4 } (the JSON files; any may be missing),
- * `lang` 'de' picks the German names where a table has them (gen 4 names are English, like locationName).
+ * Name of a met / current location id in `lang` (the app's languages), '' when the tables don't know it.
+ * `tables` = { maps, loc2 … loc7, gen4 } (shared/data: maps.json, locations_gen<N>.json, gen4.json; any may be
+ * missing). Gen 1 ids are maps.json's gen1Locations; Gen 4 falls back to gen4.json's English names without loc4.
  */
 export function locationLabel(gen, id, tables = {}, lang = 'en') {
   if (!Number.isInteger(id)) return '';
-  const pick = (v) => (v ? (lang === 'de' && v.de) || v.en || '' : '');
-  if (gen === 1) return pick(tables.maps?.gen1Locations?.[String(id)]);
-  if (gen === 2) return pick(tables.loc2?.map?.[String(id)]);
-  if (gen === 3) return pick(tables.loc3?.map?.[String(id)]);
-  if (gen === 4) return tables.gen4?.locations?.[id] || '';
-  if (gen === 6) return pick(tables.loc6?.map?.[String(id)]);
-  if (gen === 7) return pick(tables.loc7?.map?.[String(id)]);
+  if (gen === 1) return nameIn(tables.maps?.gen1Locations?.[String(id)], lang);
+  if (gen === 4) {
+    const en = id >= 2000 ? tables.gen4?.locationsSpecial?.[String(id)] : tables.gen4?.locations?.[id];
+    return nameIn(tables.loc4?.map?.[String(id)], lang) || en || '';
+  }
+  if (gen >= 2 && gen <= 7) return nameIn(tables[`loc${gen}`]?.map?.[String(id)], lang);
   return '';
 }
 

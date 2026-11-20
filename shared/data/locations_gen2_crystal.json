@@ -5,491 +5,690 @@
   "0": {
    "en": "(None)",
    "de": "(Keiner)",
+   "es": "(Ninguno)",
+   "fr": "(Aucun)",
+   "it": "(Niente)",
    "landmark": "LANDMARK_SPECIAL"
   },
   "1": {
    "en": "New Bark Town",
    "de": "Neuborkia",
+   "es": "Pueblo Primavera",
+   "fr": "Bourg Geon",
+   "it": "Borgo Foglianova",
    "landmark": "LANDMARK_NEW_BARK_TOWN"
   },
   "2": {
    "en": "Route 29",
-   "de": "Route 29",
+   "es": "Ruta 29",
+   "it": "Percorso 29",
    "landmark": "LANDMARK_ROUTE_29"
   },
   "3": {
    "en": "Cherrygrove City",
    "de": "Rosalia City",
+   "es": "Ciudad Cerezo",
+   "fr": "Ville Griotte",
+   "it": "Fiorpescopoli",
    "landmark": "LANDMARK_CHERRYGROVE_CITY"
   },
   "4": {
    "en": "Route 30",
-   "de": "Route 30",
+   "es": "Ruta 30",
+   "it": "Percorso 30",
    "landmark": "LANDMARK_ROUTE_30"
   },
   "5": {
    "en": "Route 31",
-   "de": "Route 31",
+   "es": "Ruta 31",
+   "it": "Percorso 31",
    "landmark": "LANDMARK_ROUTE_31"
   },
   "6": {
    "en": "Violet City",
    "de": "Viola City",
+   "es": "Ciudad Malva",
+   "fr": "Mauville",
+   "it": "Violapoli",
    "landmark": "LANDMARK_VIOLET_CITY"
   },
   "7": {
    "en": "Sprout Tower",
    "de": "Knofensa-Turm",
+   "es": "Torre Bellsprout",
+   "fr": "Tour Chétiflor",
+   "it": "Torre Sprout",
    "landmark": "LANDMARK_SPROUT_TOWER"
   },
   "8": {
    "en": "Route 32",
-   "de": "Route 32",
+   "es": "Ruta 32",
+   "it": "Percorso 32",
    "landmark": "LANDMARK_ROUTE_32"
   },
   "9": {
    "en": "Ruins of Alph",
    "de": "Alph-Ruinen",
+   "es": "Ruinas Alfa",
+   "fr": "Ruines d'Alpha",
+   "it": "Rovine d'Alfa",
    "landmark": "LANDMARK_RUINS_OF_ALPH"
   },
   "10": {
    "en": "Union Cave",
    "de": "Einheitstunnel",
+   "es": "Cueva Unión",
+   "fr": "Caves Jumelles",
+   "it": "Grotta di mezzo",
    "landmark": "LANDMARK_UNION_CAVE"
   },
   "11": {
    "en": "Route 33",
-   "de": "Route 33",
+   "es": "Ruta 33",
+   "it": "Percorso 33",
    "landmark": "LANDMARK_ROUTE_33"
   },
   "12": {
    "en": "Azalea Town",
    "de": "Azalea City",
+   "es": "Pueblo Azalea",
+   "fr": "Ecorcia",
+   "it": "Azalina",
    "landmark": "LANDMARK_AZALEA_TOWN"
   },
   "13": {
    "en": "Slowpoke Well",
    "de": "Flegmon-Brunnen",
+   "es": "Pozo Slowpoke",
+   "fr": "Puits Ramoloss",
+   "it": "Pozzo Slowpoke",
    "landmark": "LANDMARK_SLOWPOKE_WELL"
   },
   "14": {
    "en": "Ilex Forest",
    "de": "Steineichenwald",
+   "es": "Encinar",
+   "fr": "Bois aux Chênes",
+   "it": "Bosco di Lecci",
    "landmark": "LANDMARK_ILEX_FOREST"
   },
   "15": {
    "en": "Route 34",
-   "de": "Route 34",
+   "es": "Ruta 34",
+   "it": "Percorso 34",
    "landmark": "LANDMARK_ROUTE_34"
   },
   "16": {
    "en": "Goldenrod City",
    "de": "Dukatia City",
+   "es": "Ciudad Trigal",
+   "fr": "Doublonville",
+   "it": "Fiordoropoli",
    "landmark": "LANDMARK_GOLDENROD_CITY"
   },
   "17": {
    "en": "Radio Tower",
    "de": "Radioturm",
+   "es": "Torre Radio",
+   "fr": "Tour Radio",
+   "it": "Torre Radio",
    "landmark": "LANDMARK_RADIO_TOWER"
   },
   "18": {
    "en": "Route 35",
-   "de": "Route 35",
+   "es": "Ruta 35",
+   "it": "Percorso 35",
    "landmark": "LANDMARK_ROUTE_35"
   },
   "19": {
    "en": "National Park",
    "de": "Nationalpark",
+   "es": "Parque Nacional",
+   "fr": "Parc Naturel",
+   "it": "Parco Nazionale",
    "landmark": "LANDMARK_NATIONAL_PARK"
   },
   "20": {
    "en": "Route 36",
-   "de": "Route 36",
+   "es": "Ruta 36",
+   "it": "Percorso 36",
    "landmark": "LANDMARK_ROUTE_36"
   },
   "21": {
    "en": "Route 37",
-   "de": "Route 37",
+   "es": "Ruta 37",
+   "it": "Percorso 37",
    "landmark": "LANDMARK_ROUTE_37"
   },
   "22": {
    "en": "Ecruteak City",
    "de": "Teak City",
+   "es": "Ciudad Iris",
+   "fr": "Rosalia",
+   "it": "Amarantopoli",
    "landmark": "LANDMARK_ECRUTEAK_CITY"
   },
   "23": {
    "en": "Tin Tower",
    "de": "Zinnturm",
+   "es": "Torre Hojalata",
+   "fr": "Tour Ferraille",
+   "it": "Torre di Latta",
    "landmark": "LANDMARK_TIN_TOWER"
   },
   "24": {
    "en": "Burned Tower",
    "de": "Turmruine",
+   "es": "Torre Quemada",
+   "fr": "Tour Cendrée",
+   "it": "Torre Bruciata",
    "landmark": "LANDMARK_BURNED_TOWER"
   },
   "25": {
    "en": "Route 38",
-   "de": "Route 38",
+   "es": "Ruta 38",
+   "it": "Percorso 38",
    "landmark": "LANDMARK_ROUTE_38"
   },
   "26": {
    "en": "Route 39",
-   "de": "Route 39",
+   "es": "Ruta 39",
+   "it": "Percorso 39",
    "landmark": "LANDMARK_ROUTE_39"
   },
   "27": {
    "en": "Olivine City",
    "de": "Oliviana City",
+   "es": "Ciudad Olivo",
+   "fr": "Oliville",
+   "it": "Olivinopoli",
    "landmark": "LANDMARK_OLIVINE_CITY"
   },
   "28": {
    "en": "Lighthouse",
    "de": "Leuchtturm",
+   "es": "Faro",
+   "fr": "Phare",
+   "it": "Faro",
    "landmark": "LANDMARK_LIGHTHOUSE"
   },
   "29": {
    "en": "Battle Tower",
    "de": "Duellturm",
+   "es": "Torre Batalla",
+   "fr": "Tour de Combat",
+   "it": "Torre Lotta",
    "landmark": "LANDMARK_BATTLE_TOWER"
   },
   "30": {
    "en": "Route 40",
-   "de": "Route 40",
+   "es": "Ruta 40",
+   "it": "Percorso 40",
    "landmark": "LANDMARK_ROUTE_40"
   },
   "31": {
    "en": "Whirl Islands",
    "de": "Strudelinseln",
+   "es": "Islas Remolino",
+   "fr": "Tourb'Iles",
+   "it": "Isole Vorticose",
    "landmark": "LANDMARK_WHIRL_ISLANDS"
   },
   "32": {
    "en": "Route 41",
-   "de": "Route 41",
+   "es": "Ruta 41",
+   "it": "Percorso 41",
    "landmark": "LANDMARK_ROUTE_41"
   },
   "33": {
    "en": "Cianwood City",
    "de": "Anemonia City",
+   "es": "Ciudad Orquídea",
+   "fr": "Irisia",
+   "it": "Fiorlisopoli",
    "landmark": "LANDMARK_CIANWOOD_CITY"
   },
   "34": {
    "en": "Route 42",
-   "de": "Route 42",
+   "es": "Ruta 42",
+   "it": "Percorso 42",
    "landmark": "LANDMARK_ROUTE_42"
   },
   "35": {
    "en": "Mt. Mortar",
    "de": "Kesselberg",
+   "es": "Mt. Mortero",
+   "fr": "Mont Creuset",
+   "it": "Monte Scodella",
    "landmark": "LANDMARK_MT_MORTAR"
   },
   "36": {
    "en": "Mahogany Town",
    "de": "Mahagonia City",
+   "es": "Pueblo Caoba",
+   "fr": "Acajou",
+   "it": "Mogania",
    "landmark": "LANDMARK_MAHOGANY_TOWN"
   },
   "37": {
    "en": "Route 43",
-   "de": "Route 43",
+   "es": "Ruta 43",
+   "it": "Percorso 43",
    "landmark": "LANDMARK_ROUTE_43"
   },
   "38": {
    "en": "Lake of Rage",
    "de": "See des Zorns",
+   "es": "Lago de la Furia",
+   "fr": "Lac Colère",
+   "it": "Lago d'Ira",
    "landmark": "LANDMARK_LAKE_OF_RAGE"
   },
   "39": {
    "en": "Route 44",
-   "de": "Route 44",
+   "es": "Ruta 44",
+   "it": "Percorso 44",
    "landmark": "LANDMARK_ROUTE_44"
   },
   "40": {
    "en": "Ice Path",
    "de": "Eispfad",
+   "es": "Ruta Helada",
+   "fr": "Route de Glace",
+   "it": "Via Gelata",
    "landmark": "LANDMARK_ICE_PATH"
   },
   "41": {
    "en": "Blackthorn City",
    "de": "Ebenholz City",
+   "es": "Ciudad Endrino",
+   "fr": "Ebènelle",
+   "it": "Ebanopoli",
    "landmark": "LANDMARK_BLACKTHORN_CITY"
   },
   "42": {
    "en": "Dragon's Den",
    "de": "Drachenhöhle",
+   "es": "Guarida Dragón",
+   "fr": "Antre du Dragon",
+   "it": "Tana del Drago",
    "landmark": "LANDMARK_DRAGONS_DEN"
   },
   "43": {
    "en": "Route 45",
-   "de": "Route 45",
+   "es": "Ruta 45",
+   "it": "Percorso 45",
    "landmark": "LANDMARK_ROUTE_45"
   },
   "44": {
    "en": "Dark Cave",
    "de": "Dunkelhöhle",
+   "es": "Cueva Oscura",
+   "fr": "Antre Noire",
+   "it": "Grotta Scura",
    "landmark": "LANDMARK_DARK_CAVE"
   },
   "45": {
    "en": "Route 46",
-   "de": "Route 46",
+   "es": "Ruta 46",
+   "it": "Percorso 46",
    "landmark": "LANDMARK_ROUTE_46"
   },
   "46": {
    "en": "Silver Cave",
    "de": "Silberhöhle",
+   "es": "Cueva Plateada",
+   "fr": "Grotte Argentée",
+   "it": "Monte Argento",
    "landmark": "LANDMARK_SILVER_CAVE"
   },
   "47": {
    "en": "Pallet Town",
    "de": "Alabastia",
+   "es": "Pueblo Paleta",
+   "fr": "Bourg Palette",
+   "it": "Biancavilla",
    "landmark": "LANDMARK_PALLET_TOWN"
   },
   "48": {
    "en": "Route 1",
-   "de": "Route 1",
+   "es": "Ruta 1",
+   "it": "Percorso 1",
    "landmark": "LANDMARK_ROUTE_1"
   },
   "49": {
    "en": "Viridian City",
    "de": "Vertania City",
+   "es": "Ciudad Verde",
+   "fr": "Jadielle",
+   "it": "Smeraldopoli",
    "landmark": "LANDMARK_VIRIDIAN_CITY"
   },
   "50": {
    "en": "Route 2",
-   "de": "Route 2",
+   "es": "Ruta 2",
+   "it": "Percorso 2",
    "landmark": "LANDMARK_ROUTE_2"
   },
   "51": {
    "en": "Pewter City",
    "de": "Marmoria City",
+   "es": "Ciudad Plateada",
+   "fr": "Argenta",
+   "it": "Plumbeopoli",
    "landmark": "LANDMARK_PEWTER_CITY"
   },
   "52": {
    "en": "Route 3",
-   "de": "Route 3",
+   "es": "Ruta 3",
+   "it": "Percorso 3",
    "landmark": "LANDMARK_ROUTE_3"
   },
   "53": {
    "en": "Mt. Moon",
    "de": "Mondberg",
+   "fr": "Mont Sélénite",
+   "it": "Monteluna",
    "landmark": "LANDMARK_MT_MOON"
   },
   "54": {
    "en": "Route 4",
-   "de": "Route 4",
+   "es": "Ruta 4",
+   "it": "Percorso 4",
    "landmark": "LANDMARK_ROUTE_4"
   },
   "55": {
    "en": "Cerulean City",
    "de": "Azuria City",
+   "es": "Ciudad Celeste",
+   "fr": "Azuria",
+   "it": "Celestopoli",
    "landmark": "LANDMARK_CERULEAN_CITY"
   },
   "56": {
    "en": "Route 24",
-   "de": "Route 24",
+   "es": "Ruta 24",
+   "it": "Percorso 24",
    "landmark": "LANDMARK_ROUTE_24"
   },
   "57": {
    "en": "Route 25",
-   "de": "Route 25",
+   "es": "Ruta 25",
+   "it": "Percorso 25",
    "landmark": "LANDMARK_ROUTE_25"
   },
   "58": {
    "en": "Route 5",
-   "de": "Route 5",
+   "es": "Ruta 5",
+   "it": "Percorso 5",
    "landmark": "LANDMARK_ROUTE_5"
   },
   "59": {
    "en": "Underground",
    "de": "Untergrund",
+   "es": "Subterráneo",
+   "fr": "Souterrain",
+   "it": "Sotterranei",
    "landmark": "LANDMARK_UNDERGROUND_PATH"
   },
   "60": {
    "en": "Route 6",
-   "de": "Route 6",
+   "es": "Ruta 6",
+   "it": "Percorso 6",
    "landmark": "LANDMARK_ROUTE_6"
   },
   "61": {
    "en": "Vermilion City",
    "de": "Orania City",
+   "es": "Ciudad Carmín",
+   "fr": "Carmin sur Mer",
+   "it": "Aranciopoli",
    "landmark": "LANDMARK_VERMILION_CITY"
   },
   "62": {
    "en": "Diglett's Cave",
    "de": "Digdas Höhle",
+   "es": "Cueva Diglett",
+   "fr": "Cave Taupiqueur",
+   "it": "Grotta Diglett",
    "landmark": "LANDMARK_DIGLETTS_CAVE"
   },
   "63": {
    "en": "Route 7",
-   "de": "Route 7",
+   "es": "Ruta 7",
+   "it": "Percorso 7",
    "landmark": "LANDMARK_ROUTE_7"
   },
   "64": {
    "en": "Route 8",
-   "de": "Route 8",
+   "es": "Ruta 8",
+   "it": "Percorso 8",
    "landmark": "LANDMARK_ROUTE_8"
   },
   "65": {
    "en": "Route 9",
-   "de": "Route 9",
+   "es": "Ruta 9",
+   "it": "Percorso 9",
    "landmark": "LANDMARK_ROUTE_9"
   },
   "66": {
    "en": "Rock Tunnel",
    "de": "Felstunnel",
+   "es": "Túnel Roca",
+   "fr": "Grotte",
+   "it": "Tunnel Roccioso",
    "landmark": "LANDMARK_ROCK_TUNNEL"
   },
   "67": {
    "en": "Route 10",
-   "de": "Route 10",
+   "es": "Ruta 10",
+   "it": "Percorso 10",
    "landmark": "LANDMARK_ROUTE_10"
   },
   "68": {
    "en": "Power Plant",
    "de": "Kraftwerk",
+   "es": "Central Energía",
+   "fr": "Centrale",
+   "it": "Centrale Elett.",
    "landmark": "LANDMARK_POWER_PLANT"
   },
   "69": {
    "en": "Lavender Town",
    "de": "Lavandia",
+   "es": "Pueblo Lavanda",
+   "fr": "Lavanville",
+   "it": "Lavandonia",
    "landmark": "LANDMARK_LAVENDER_TOWN"
   },
   "70": {
    "en": "Lav Radio Tower",
    "de": "Radioturm Lav.",
+   "es": "Torre Lavanda",
+   "fr": "Tour Radio Lavan.",
+   "it": "Torre Radio Lav",
    "landmark": "LANDMARK_LAV_RADIO_TOWER"
   },
   "71": {
    "en": "Celadon City",
    "de": "Prismania City",
+   "es": "Ciudad Azulona",
+   "fr": "Céladopole",
+   "it": "Azzurropoli",
    "landmark": "LANDMARK_CELADON_CITY"
   },
   "72": {
    "en": "Saffron City",
    "de": "Saffronia City",
+   "es": "Ciudad Azafrán",
+   "fr": "Safrania",
+   "it": "Zafferanopoli",
    "landmark": "LANDMARK_SAFFRON_CITY"
   },
   "73": {
    "en": "Route 11",
-   "de": "Route 11",
+   "es": "Ruta 11",
+   "it": "Percorso 11",
    "landmark": "LANDMARK_ROUTE_11"
   },
   "74": {
    "en": "Route 12",
-   "de": "Route 12",
+   "es": "Ruta 12",
+   "it": "Percorso 12",
    "landmark": "LANDMARK_ROUTE_12"
   },
   "75": {
    "en": "Route 13",
-   "de": "Route 13",
+   "es": "Ruta 13",
+   "it": "Percorso 13",
    "landmark": "LANDMARK_ROUTE_13"
   },
   "76": {
    "en": "Route 14",
-   "de": "Route 14",
+   "es": "Ruta 14",
+   "it": "Percorso 14",
    "landmark": "LANDMARK_ROUTE_14"
   },
   "77": {
    "en": "Route 15",
-   "de": "Route 15",
+   "es": "Ruta 15",
+   "it": "Percorso 15",
    "landmark": "LANDMARK_ROUTE_15"
   },
   "78": {
    "en": "Route 16",
-   "de": "Route 16",
+   "es": "Ruta 16",
+   "it": "Percorso 16",
    "landmark": "LANDMARK_ROUTE_16"
   },
   "79": {
    "en": "Route 17",
-   "de": "Route 17",
+   "es": "Ruta 17",
+   "it": "Percorso 17",
    "landmark": "LANDMARK_ROUTE_17"
   },
   "80": {
    "en": "Route 18",
-   "de": "Route 18",
+   "es": "Ruta 18",
+   "it": "Percorso 18",
    "landmark": "LANDMARK_ROUTE_18"
   },
   "81": {
    "en": "Fuchsia City",
    "de": "Fuchsania City",
+   "es": "Ciudad Fucsia",
+   "fr": "Parmanie",
+   "it": "Fucsiapoli",
    "landmark": "LANDMARK_FUCHSIA_CITY"
   },
   "82": {
    "en": "Route 19",
-   "de": "Route 19",
+   "es": "Ruta 19",
+   "it": "Percorso 19",
    "landmark": "LANDMARK_ROUTE_19"
   },
   "83": {
    "en": "Route 20",
-   "de": "Route 20",
+   "es": "Ruta 20",
+   "it": "Percorso 20",
    "landmark": "LANDMARK_ROUTE_20"
   },
   "84": {
    "en": "Seafoam Islands",
    "de": "Seeschauminseln",
+   "es": "Islas Espuma",
+   "fr": "Iles Ecume",
+   "it": "Isole Spumarine",
    "landmark": "LANDMARK_SEAFOAM_ISLANDS"
   },
   "85": {
    "en": "Cinnabar Island",
    "de": "Zinnoberinsel",
+   "es": "Isla Canela",
+   "fr": "Cramois'Ile",
+   "it": "Isola Cannella",
    "landmark": "LANDMARK_CINNABAR_ISLAND"
   },
   "86": {
    "en": "Route 21",
-   "de": "Route 21",
+   "es": "Ruta 21",
+   "it": "Percorso 21",
    "landmark": "LANDMARK_ROUTE_21"
   },
   "87": {
    "en": "Route 22",
-   "de": "Route 22",
+   "es": "Ruta 22",
+   "it": "Percorso 22",
    "landmark": "LANDMARK_ROUTE_22"
   },
   "88": {
    "en": "Victory Road",
    "de": "Siegesstrasse",
+   "es": "Calle Victoria",
+   "fr": "Route Victoire",
+   "it": "Via Vittoria",
    "landmark": "LANDMARK_VICTORY_ROAD"
   },
   "89": {
    "en": "Route 23",
-   "de": "Route 23",
+   "es": "Ruta 23",
+   "it": "Percorso 23",
    "landmark": "LANDMARK_ROUTE_23"
   },
   "90": {
    "en": "Indigo Plateau",
-   "de": "Indigo Plateau",
+   "es": "Meseta Añil",
+   "fr": "Plateau Indigo",
+   "it": "Altopiano Blu",
    "landmark": "LANDMARK_INDIGO_PLATEAU"
   },
   "91": {
    "en": "Route 26",
-   "de": "Route 26",
+   "es": "Ruta 26",
+   "it": "Percorso 26",
    "landmark": "LANDMARK_ROUTE_26"
   },
   "92": {
    "en": "Route 27",
-   "de": "Route 27",
+   "es": "Ruta 27",
+   "it": "Percorso 27",
    "landmark": "LANDMARK_ROUTE_27"
   },
   "93": {
    "en": "Tohjo Falls",
    "de": "Tohjo-Fälle",
+   "es": "Cataratas Tohjo",
+   "fr": "Chutes Tohjo",
+   "it": "Cascate Tohjo",
    "landmark": "LANDMARK_TOHJO_FALLS"
   },
   "94": {
    "en": "Route 28",
-   "de": "Route 28",
+   "es": "Ruta 28",
+   "it": "Percorso 28",
    "landmark": "LANDMARK_ROUTE_28"
   },
   "95": {
    "en": "Fast Ship",
    "de": "Schnellboot",
+   "es": "Ferry",
+   "fr": "Bateau Express",
+   "it": "Nave Veloce",
    "landmark": "LANDMARK_FAST_SHIP"
   },
   "126": {
    "en": "(Can't Tell)",
    "de": "(Ich kann nicht sagen)",
+   "es": "(No puedo decir)",
+   "fr": "(Je ne sais pas)",
+   "it": "(Non so)",
    "landmark": "LANDMARK_GIFT"
   },
   "127": {
    "en": "(Event)",
-   "de": "(Event)",
+   "es": "(Evento)",
+   "fr": "(Evénement)",
+   "it": "(Evento)",
    "landmark": "LANDMARK_EVENT"
   }
  }

@@ -8,7 +8,7 @@ import { ALL_SLOTS, slotsOf, runMode, isNuzlocke, isTogether, othersOf, runSecti
 import { gameInfo, cleanGameInfo } from '/shared/playtogether.mjs';
 import { DEFAULT_RULES, RULE_PRESETS, NUZLOCKE_RULES, rulesWithDefaults, cheatGroups } from '/shared/rules.mjs';
 import { CHEATS, cheatAllowed } from '/shared/live/cheats.mjs';
-import { placeName } from '/shared/live/location.mjs';
+import { placeName, locationLabel, nameIn } from '/shared/live/location.mjs';
 import { moneyText } from '/shared/linkbattle.mjs';
 import { livesLeft, livesOf, deathsIn, poolOf } from '/shared/lives.mjs';
 import { hostSlotOf, canEditRules, SOULLINK_RULE_KEYS } from '/shared/hostrules.mjs';
@@ -25,18 +25,20 @@ export const liveFresh = (doc, slot, now = Date.now()) => {
   return !!at && Math.abs(now - at) < LIVE_FRESH_MS; // abs: the clocks of two computers differ a little
 };
 
-let LOC3 = null;
-let LOC2 = null;
-let LOC6 = null;
-let LOC7 = null;
+// The met-location tables in every language of the app (shared/data/locations_gen<N>.json): { loc2 … loc7 }
+let LOC = {};
 export async function loadLocationTables() {
   const j = (f) => fetch(`/shared/data/${f}`).then((r) => r.json()).catch(() => null);
-  [LOC3, LOC2, LOC6, LOC7] = await Promise.all([j('locations_gen3.json'), j('locations_gen2_crystal.json'), j('locations_gen6.json'), j('locations_gen7.json')]);
+  const gens = [2, 3, 4, 5, 6, 7];
+  const all = await Promise.all(gens.map((g) => j(g === 2 ? 'locations_gen2_crystal.json' : `locations_gen${g}.json`)));
+  LOC = Object.fromEntries(gens.map((g, i) => [`loc${g}`, all[i]]));
 }
+/** The loaded location tables ({ loc2 … loc7 }, for locationLabel) – empty before loadLocationTables. */
+export const locationTables = () => LOC;
 
 // The running game's own place names (shared/live/romloc.mjs – web/views/location.mjs hands them over when the ROM's
 // location data has loaded): a catch is named like the place sign names that place (placeName) – the game's own name
-// in a randomized game or a ROM hack, and in Gen 5, which has no table of its own.
+// in a randomized game or a ROM hack.
 let ROM_PLACES = null;
 export function setRomPlaces(rom) {
   ROM_PLACES = rom && Array.isArray(rom.names) && rom.gen ? rom : null;
@@ -45,17 +47,7 @@ export function setRomPlaces(rom) {
 /** Localized name of a met location for a generation. */
 export function locationName(gen, id) {
   if (id === null || id === undefined) return '';
-  const lang = currentLang() === 'de' ? 'de' : 'en';
-  let table = '';
-  if (gen === 4) {
-    const g = gen4data();
-    table = id >= 2000 ? g?.locationsSpecial?.[String(id)] : g?.locations?.[id];
-  } else if (gen === 3) table = LOC3?.map?.[id]?.[lang] || LOC3?.map?.[id]?.en;
-  else if (gen === 2) table = LOC2?.map?.[id]?.[lang] || LOC2?.map?.[id]?.en;
-  else if (gen === 6 || gen === 7) {
-    const L = gen === 6 ? LOC6 : LOC7;
-    table = L?.map?.[id]?.[lang] || L?.map?.[id]?.en;
-  }
+  const table = locationLabel(gen, Number(id), { ...LOC, gen4: gen4data() }, currentLang());
   const own = ROM_PLACES?.gen === gen ? ROM_PLACES.names[id] || '' : '';
   return placeName({ romName: own }, { rom: ROM_PLACES, table: table || '', lang: currentLang() }) || `#${id}`;
 }
@@ -192,22 +184,22 @@ export function areaForPlace(doc, manifest, gen, here, { create = false } = {}) 
 export function locationChoices(manifest, gen) {
   if (profileOf(manifest).curated) return [];
   const code = String(manifest?.game?.code || '').toUpperCase();
-  const lang = currentLang() === 'de' ? 'de' : 'en';
-  const rows = (map, keep) => Object.entries(map || {}).map(([id, v]) => ({ id: +id, name: v[lang] || v.en, special: /SPECIAL|DYNAMIC|SECRET_BASE|NONE/.test(v.mapsec || v.landmark || '') }))
+  const lang = currentLang();
+  const rows = (map, keep) => Object.entries(map || {}).map(([id, v]) => ({ id: +id, name: nameIn(v, lang), special: /SPECIAL|DYNAMIC|SECRET_BASE|NONE/.test(v.mapsec || v.landmark || '') }))
     .filter((r) => keep(r.id) && !r.special && r.name && !r.name.startsWith('(')); // "(fateful encounter)" & co. aren't places
   if (gen === 3) {
     const frlg = /^BP[RG]/.test(code);
-    return rows(LOC3?.map, (id) => (frlg ? id >= 88 && id < 196 : id < 88 || id > 196));
+    return rows(LOC.loc3?.map, (id) => (frlg ? id >= 88 && id < 196 : id < 88 || id > 196));
   }
-  if (gen === 2) return rows(LOC2?.map, (id) => id > 0); // Johto + Kanto landmarks, the same in Gold/Silver
-  if (gen === 4) return (gen4data()?.locations || []).map((name, id) => ({ id, name })).filter((r) => r.id > 0 && r.id < 126 && r.name);
+  if (gen === 2) return rows(LOC.loc2?.map, (id) => id > 0); // Johto + Kanto landmarks, the same in Gold/Silver
+  if (gen === 4) return (gen4data()?.locations || []).map((en, id) => ({ id, name: nameIn(LOC.loc4?.map?.[id], lang) || en })).filter((r) => r.id > 0 && r.id < 126 && r.name);
   // Gen 6: X/Y's Kalos is 2–168, Omega Ruby/Alpha Sapphire's Hoenn 170 on; Gen 7: Alola (Sun/Moon and Ultra Sun/Moon).
   // Places only: the 30000s+ are link trades, events and eggs; id 2/4 Mystery Zone / Faraway Place.
   if (gen === 6) {
     const oras = /^EC[RL]/.test(code);
-    return rows(LOC6?.map, (id) => id > 4 && id < 30000 && (oras ? id >= 170 : id < 170));
+    return rows(LOC.loc6?.map, (id) => id > 4 && id < 30000 && (oras ? id >= 170 : id < 170));
   }
-  if (gen === 7) return rows(LOC7?.map, (id) => id > 4 && id < 30000);
+  if (gen === 7) return rows(LOC.loc7?.map, (id) => id > 4 && id < 30000);
   return [];
 }
 

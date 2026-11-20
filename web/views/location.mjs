@@ -7,15 +7,14 @@ import { t, currentLang } from '../lib/i18n.mjs';
 import { speciesName, gen4data, setRomSpecies, setRomTypes } from '../lib/data.mjs';
 import { readLocation, readMusicInfo, locationLabel, sameLocation, canReadLocation, placeName } from '/shared/live/location.mjs';
 import { watchRomData } from '../lib/romdata.mjs';
-import { pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, isTogether, genOfRun, setRomPlaces, areaForPlace } from '../lib/run.mjs';
+import { pairState, encounter, players as getPlayers, slotsOf, isNuzlocke, isTogether, genOfRun, setRomPlaces, areaForPlace, locationTables, loadLocationTables } from '../lib/run.mjs';
 
-let MAPS = null; // shared/data/maps.json once loaded
-let LOC = null; // { loc2, loc3, loc6, loc7 } for the names
+let MAPS = null; // shared/data/maps.json once loaded (the names: run.mjs locationTables)
 const load = () => {
   const j = (f) => fetch(`/shared/data/${f}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  load.p ||= Promise.all([j('maps.json'), j('locations_gen2_crystal.json'), j('locations_gen3.json'), j('locations_gen6.json'), j('locations_gen7.json')]).then(([maps, loc2, loc3, loc6, loc7]) => {
+  // the name tables are loaded at the app's start – asked for here only where that didn't happen
+  load.p ||= Promise.all([j('maps.json'), Object.keys(locationTables()).length ? null : loadLocationTables()]).then(([maps]) => {
     MAPS = maps;
-    LOC = { loc2, loc3, loc6, loc7 };
   });
   return load.p;
 };
@@ -99,7 +98,7 @@ export function readHere(entry, read, state = null) {
   if (!r) return null;
   if (r.link) return { gen: r.gen, id: r.id, name: linkRoomName(r.link), link: r.link }; // (a link room: no area)
   const lang = currentLang();
-  const table = locationLabel(r.gen, r.id, { maps: MAPS, ...LOC, gen4: gen4data() }, lang === 'de' ? 'de' : 'en');
+  const table = locationLabel(r.gen, r.id, { maps: MAPS, ...locationTables(), gen4: gen4data() }, lang);
   const name = placeName(r, { rom, table, lang });
   return name ? { gen: r.gen, id: r.id, name } : null;
 }
