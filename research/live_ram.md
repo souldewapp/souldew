@@ -151,11 +151,28 @@ Absolute GBA bus addresses. EWRAM `0x02000000` (256 KiB), IWRAM `0x03000000` (32
 |---|---|---|---|---|---|
 | Ruby/Sapphire US rev 0/1/2 (`AXVE`/`AXPE`) | `0x03004350` **IWRAM** | `0x03004360` **IWRAM** | `0x030045C0` | `0x03001770` | `pokeruby.sym:613,614,616,526` (rev1/rev2 and Sapphire identical) |
 | Rubin/Saphir **German** rev 0/1 (`AXVD`/`AXPD`) | `0x03004360` | `0x03004370` | `0x030045D0` | `0x03001770` | `pokeruby_de.sym:615,616,618,526` |
+| Ruby/Sapphire **French, Italian, Spanish** (`AXVF/I/S`, `AXPF/I/S`) | `0x03004360` | `0x03004370` | `0x030045D0` | `0x03001770` | no pret build – the German layout, see below |
 | Emerald (`BPEE`) | `0x020244E9` EWRAM | `0x020244EC` EWRAM | `0x02024744` | `0x030022C0` | `pokeemerald.sym:200,202,203,894` |
+| Emerald **German, French, Italian, Spanish** (`BPED/F/I/S`) | `0x020244E9` | `0x020244EC` | `0x02024744` | `0x030022C0` | no pret build – see below |
 | FireRed/LeafGreen rev 0/1 (`BPRE`/`BPGE`) | `0x02024029` | `0x02024284` | `0x0202402C` | `0x030030F0` | `pokefirered.sym:158,161,160,745` (rev1 and LeafGreen identical) |
 | FireRed/LeafGreen **German, French, Italian, Spanish** (`BPRD/F/I/S`, `BPGD/F/I/S`) | `0x02024029` | `0x02024284` | `0x0202402C` | `0x03003040` | no pret build – see below |
 
 **Revisions:** Ruby/Sapphire rev 0, 1 and 2 have identical addresses for every symbol used here, and so do FRLG rev 0 and 1. The generator asserts this across all sym files. German R/S are shifted by +0x10. There are **no German Emerald/FRLG symbols**: the pokeemerald `multi-language` branch has only `rom_es/fr/it.sha1`, and pokefirered has no German build. Use the scan fallback below for those.
+
+**French, Italian and Spanish Ruby/Sapphire** (`ruby_eu` / `sapphire_eu`): the German layout (`pokeruby_de.sym`). The
+retail Italian Ruby (`AXVI` rev 1, CRC32 `9305E793`) loads `gPlayerParty` `0x03004370` from 691 literal pools,
+`gEnemyParty` `0x030045D0` from 358 (the English `0x030045C0` from none), `gMain` `0x03001770` from 694, `gSaveBlock1`
+`0x02025734` from 339, `gMapHeader` `0x0202E828` from 99. Checked in the running Italian Ruby with the English plan
+(`scripts/rom-matrix/plans/ruby-sapphire.json`): team, place sign, a wild battle. Sapphire and the French and Spanish
+games are taken to share it and weren't at hand. Badges aren't read there, as in the German games.
+
+**French, Italian and Spanish Emerald** (`emerald_eu`; the German game has its own entry, `emerald_de`): the English game's RAM, address for address. pokebot-gen3's
+`modules/data/symbols/patches/language/pokeemerald.yml` overrides, for D/F/I/S, only ROM symbols and one EWRAM symbol
+souldew doesn't read (`sSavedPokeblockData`); `gMain`, `gSaveBlock1Ptr`/`gSaveBlock2Ptr`, `gPlayerParty`, `gEnemyParty`,
+`gBattleMons`, `gBattleTypeFlags`, `gMapHeader` … get a Japanese override alone. The retail Italian ROM (`BPEI`, CRC32
+`A0AEC80A`) loads exactly these addresses from its literal pools (`gPlayerParty` 1091 times, `gSaveBlock1Ptr` 829, `gMain`
+794, `gMapHeader` 142, `sCurrentMapMusic` 11) and the Japanese ones never. Checked in the running Italian game with the
+English Emerald plan (`scripts/rom-matrix/plans/emerald.json`).
 
 **Other-language FireRed/LeafGreen** (`firered_eu` / `leafgreen_eu`, souldew 2.3.1): two trackers that run on those ROMs
 list the same layout – EWRAM exactly as in the English game, IWRAM from `gMain` on `0xB0` lower:

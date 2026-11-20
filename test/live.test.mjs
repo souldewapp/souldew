@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { findEntry, readLiveParty, LiveTables, regionsFor, regionReader, parsePk3 } from '../shared/live/parse.mjs';
 import { encryptPK4 } from '../shared/gen4save.mjs';
+import { matchCatalog } from '../shared/romid.mjs';
 
 const L = (f) => JSON.parse(readFileSync(new URL(`../shared/data/${f}`, import.meta.url)));
 const T = new LiveTables({
@@ -33,9 +34,10 @@ const inv = (charset) => Object.fromEntries(Object.entries(charset.table).map(([
 test('entry lookup by game code / header title', () => {
   assert.equal(findEntry(TABLE, { platform: 'gba', code: 'BPRE' }).id, 'firered_us');
   // German Emerald (Smaragd) is tracked live like the English game – its RAM is the same (3.0 acceptance, verified in the
-  // running game: team, place, cap, battle, bag, catch); French, Italian and Spanish Emerald weren't checked: no entry
+  // running game: team, place, cap, battle, bag, catch); French, Italian and Spanish Emerald share emerald_eu (the Italian one
+  // checked in the running game)
   assert.equal(findEntry(TABLE, { platform: 'gba', code: 'BPED', title: 'POKEMON EMER' }).id, 'emerald_de');
-  for (const code of ['BPEF', 'BPEI', 'BPES']) assert.equal(findEntry(TABLE, { platform: 'gba', code, title: 'POKEMON EMER' }), null, code);
+  for (const code of ['BPEF', 'BPEI', 'BPES']) assert.equal(findEntry(TABLE, { platform: 'gba', code, title: 'POKEMON EMER' }).id, 'emerald_eu', code);
   assert.equal(findEntry(TABLE, { platform: 'gb', title: 'POKEMON RED' }).id, 'red_us');
   assert.equal(findEntry(TABLE, { platform: 'nds', code: 'IPKE' }).id, 'heartgold_us');
   assert.ok(findEntry(TABLE, { platform: 'nds', code: 'IPKD' }).scanOnly, 'German HG falls back to scanning');
@@ -127,6 +129,78 @@ test('Gen 3 (FireRed): encrypted party struct', () => {
   const bad = pk3({ pid: 1, otId: 2, internal: 1, nick: 'X', level: 5, hp: 1, maxHp: 1, met: 0 });
   bad[40] ^= 0xff;
   assert.ok(parsePk3(bad, T).bad);
+});
+
+test('Gen 3 Emerald in French, Italian and Spanish: its own table entry, the English RAM layout (German: emerald_de)', () => {
+  const us = findEntry(TABLE, { platform: 'gba', code: 'BPEE' });
+  assert.equal(us.id, 'emerald_us');
+  for (const code of ['BPED', 'BPEF', 'BPEI', 'BPES']) {
+    const e = findEntry(TABLE, { platform: 'gba', code });
+    assert.equal(e?.id, code === 'BPED' ? 'emerald_de' : 'emerald_eu', code);
+    assert.ok(!e.scanOnly, code);
+    // every address as in the English game (the Italian ROM's literal pools, pokebot-gen3's language patch)
+    for (const k of ['partyCountAddr', 'partyAddr', 'enemyPartyAddr', 'battleTypeFlagsAddr']) assert.equal(e[k], us[k], k);
+    assert.equal(e.inBattle.addr, us.inBattle.addr);
+    assert.deepEqual([e.liveBattleHp.battleMonsAddr, e.liveBattleHp.battlerPartyIndexesAddr], [us.liveBattleHp.battleMonsAddr, us.liveBattleHp.battlerPartyIndexesAddr]);
+    assert.equal(e.saveBlockPtrs, undefined, 'the save block pointers are Emerald\'s own (gen3Badges, cheats)');
+  }
+  const maps = L('maps.json');
+  for (const k of ['mapHeaderAddr', 'musicAddr', 'musicSize', 'kind']) assert.equal(maps.games.emerald_eu[k], maps.games.emerald_us[k], k);
+  // the issue's ROM (Versione Smeraldo, BPEI): the party reads like the English one
+  const it = findEntry(TABLE, { platform: 'gba', code: 'BPEI' });
+  const m = memory();
+  m.write(0x020244e9, [1]);
+  m.write(0x020244ec, pk3({ pid: 0x0badf00d, otId: 0xbeefcafe, internal: 1, nick: 'BULBASAUR', level: 5, hp: 20, maxHp: 21, met: 16 }));
+  const r = readLiveParty(it, m.read, T);
+  assert.deepEqual(r.party.map((x) => [x.species, x.nickname, x.level, x.hp, x.maxHp, x.metLocation]), [[1, 'BULBASAUR', 5, 20, 21, 16]]);
+});
+
+test('Gen 3 Ruby/Sapphire in French, Italian and Spanish: their own table entry, the German layout', () => {
+  const maps = L('maps.json');
+  for (const [game, c] of [['ruby', 'AXV'], ['sapphire', 'AXP']]) {
+    const de = findEntry(TABLE, { platform: 'gba', code: `${c}D` });
+    assert.equal(de.id, `${game}_de`);
+    for (const l of ['F', 'I', 'S']) {
+      const e = findEntry(TABLE, { platform: 'gba', code: c + l });
+      assert.equal(e?.id, `${game}_eu`, c + l);
+      // the team 0x10 further on than in the English game, like the German one (the Italian Ruby's literal pools)
+      for (const k of ['partyCountAddr', 'partyAddr', 'enemyPartyAddr', 'battleTypeFlagsAddr']) assert.equal(e[k], de[k], k);
+      assert.equal(e.inBattle.addr, de.inBattle.addr);
+      assert.deepEqual(e.liveBattleHp.battleMonsAddr, de.liveBattleHp.battleMonsAddr);
+    }
+    for (const k of ['mapHeaderAddr', 'musicAddr', 'musicSize', 'kind']) assert.equal(maps.games[`${game}_eu`][k], maps.games[`${game}_de`][k], k);
+  }
+  assert.equal(findEntry(TABLE, { platform: 'gba', code: 'AXVE' }).id, 'ruby_us');
+  // the issue's ROM (Versione Rubino, AXVI): the party at 0x03004370, its count at 0x03004360
+  const it = findEntry(TABLE, { platform: 'gba', code: 'AXVI' });
+  assert.deepEqual([it.partyCountAddr, it.partyAddr], ['0x03004360', '0x03004370']);
+  const m = memory();
+  m.write(0x03004360, [1]);
+  m.write(0x03004370, pk3({ pid: 0x0badf00d, otId: 0xbeefcafe, internal: 1, nick: 'BULBASAUR', level: 5, hp: 20, maxHp: 21, met: 16 }));
+  const r = readLiveParty(it, m.read, T);
+  assert.deepEqual(r.party.map((x) => [x.species, x.nickname, x.level, x.hp, x.maxHp, x.metLocation]), [[1, 'BULBASAUR', 5, 20, 21, 16]]);
+});
+
+test('the catalog knows the Italian, French and Spanish Gen 3 games as retail games, not as unknown ROMs', () => {
+  const catalog = L('catalog.json');
+  // the issue's file: "Pokemon - Versione Smeraldo (Italy).gba", BPEI, CRC32 A0AEC80A
+  const hit = matchCatalog({ system: 'gba', title: 'POKEMON EMER', code: 'BPEI', crc: 'A0AEC80A' }, catalog);
+  assert.deepEqual([hit.game.id, hit.game.variantOf, hit.exact], ['pokemon-emerald-it', 'pokemon-emerald', true]);
+  for (const base of ['ruby', 'sapphire', 'emerald', 'firered', 'leafgreen']) {
+    const root = catalog.games.find((g) => g.id === `pokemon-${base}`);
+    for (const [lang, letter] of [['it', 'I'], ['fr', 'F'], ['es', 'S']]) {
+      const g = catalog.games.find((x) => x.id === `pokemon-${base}-${lang}`);
+      assert.ok(g, `${base}-${lang}`);
+      assert.equal(g.variantOf, root.id);
+      assert.equal(g.serial, root.serial.slice(0, 3) + letter);
+      assert.ok(g.crc32.length === g.dumps.length && g.dumps.every((d) => d.uprSupported && d.sizeBytes === 16777216), g.id);
+      assert.ok(existsSync(new URL(`../web/assets/covers/${g.id}.png`, import.meta.url)), `cover of ${g.id}`);
+      // a modified copy (another CRC32) is still this game's
+      assert.equal(matchCatalog({ system: 'gba', code: g.serial, crc: '00000000' }, catalog).game.id, g.id);
+    }
+  }
+  const crcs = catalog.games.flatMap((g) => g.crc32 || []);
+  assert.equal(new Set(crcs).size, crcs.length, 'no dump twice');
 });
 
 test('Gen 3 FireRed/LeafGreen in German, French, Italian and Spanish: their own table entry, the English EWRAM layout', () => {

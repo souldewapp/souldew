@@ -780,6 +780,489 @@
    "variantOf": "pokemon-emerald"
   },
   {
+   "id": "pokemon-ruby-it",
+   "title": "Pokémon Ruby Version",
+   "titleDe": "Pokémon Rubin-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Italy",
+   "noIntroName": "Pokemon - Versione Rubino (Italy)",
+   "serial": "AXVI",
+   "crc32": [
+    "C18231A9",
+    "9305E793"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Versione Rubino (Italy)",
+     "crc32": "C18231A9",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    },
+    {
+     "noIntroName": "Pokemon - Versione Rubino (Italy) (Rev 1)",
+     "crc32": "9305E793",
+     "sizeBytes": 16777216,
+     "revision": 1,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2003,
+   "color": "#9E3B4A",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Versione%20Rubino%20%28Italy%29.png",
+   "coverLocal": "assets/covers/pokemon-ruby-it.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Versione%20Rubino%20%28Italy%29.png",
+   "variantOf": "pokemon-ruby"
+  },
+  {
+   "id": "pokemon-sapphire-it",
+   "title": "Pokémon Sapphire Version",
+   "titleDe": "Pokémon Saphir-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Italy",
+   "noIntroName": "Pokemon - Versione Zaffiro (Italy)",
+   "serial": "AXPI",
+   "crc32": [
+    "0C7992A9",
+    "5EFE4493"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Versione Zaffiro (Italy)",
+     "crc32": "0C7992A9",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    },
+    {
+     "noIntroName": "Pokemon - Versione Zaffiro (Italy) (Rev 1)",
+     "crc32": "5EFE4493",
+     "sizeBytes": 16777216,
+     "revision": 1,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2003,
+   "color": "#34558B",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Versione%20Zaffiro%20%28Italy%29.png",
+   "coverLocal": "assets/covers/pokemon-sapphire-it.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Versione%20Zaffiro%20%28Italy%29.png",
+   "variantOf": "pokemon-sapphire"
+  },
+  {
+   "id": "pokemon-firered-it",
+   "title": "Pokémon FireRed Version",
+   "titleDe": "Pokémon Feuerrote Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Italy",
+   "noIntroName": "Pokemon - Versione Rosso Fuoco (Italy)",
+   "serial": "BPRI",
+   "crc32": [
+    "73A72167"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Versione Rosso Fuoco (Italy)",
+     "crc32": "73A72167",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2004,
+   "color": "#B4553A",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Versione%20Rosso%20Fuoco%20%28Italy%29.png",
+   "coverLocal": "assets/covers/pokemon-firered-it.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Versione%20Rosso%20Fuoco%20%28Italy%29.png",
+   "variantOf": "pokemon-firered"
+  },
+  {
+   "id": "pokemon-leafgreen-it",
+   "title": "Pokémon LeafGreen Version",
+   "titleDe": "Pokémon Blattgrüne Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Italy",
+   "noIntroName": "Pokemon - Versione Verde Foglia (Italy)",
+   "serial": "BPGI",
+   "crc32": [
+    "16974506"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Versione Verde Foglia (Italy)",
+     "crc32": "16974506",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2004,
+   "color": "#6A8F45",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Versione%20Verde%20Foglia%20%28Italy%29.png",
+   "coverLocal": "assets/covers/pokemon-leafgreen-it.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Versione%20Verde%20Foglia%20%28Italy%29.png",
+   "variantOf": "pokemon-leafgreen"
+  },
+  {
+   "id": "pokemon-emerald-it",
+   "title": "Pokémon Emerald Version",
+   "titleDe": "Pokémon Smaragd-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Italy",
+   "noIntroName": "Pokemon - Versione Smeraldo (Italy)",
+   "serial": "BPEI",
+   "crc32": [
+    "A0AEC80A"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Versione Smeraldo (Italy)",
+     "crc32": "A0AEC80A",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2005,
+   "color": "#3C7D5E",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Versione%20Smeraldo%20%28Italy%29.png",
+   "coverLocal": "assets/covers/pokemon-emerald-it.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Versione%20Smeraldo%20%28Italy%29.png",
+   "variantOf": "pokemon-emerald"
+  },
+  {
+   "id": "pokemon-ruby-fr",
+   "title": "Pokémon Ruby Version",
+   "titleDe": "Pokémon Rubin-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "France",
+   "noIntroName": "Pokemon - Version Rubis (France)",
+   "serial": "AXVF",
+   "crc32": [
+    "690FD310",
+    "9F981F72"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Version Rubis (France)",
+     "crc32": "690FD310",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    },
+    {
+     "noIntroName": "Pokemon - Version Rubis (France) (Rev 1)",
+     "crc32": "9F981F72",
+     "sizeBytes": 16777216,
+     "revision": 1,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2003,
+   "color": "#9E3B4A",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Version%20Rubis%20%28France%29.png",
+   "coverLocal": "assets/covers/pokemon-ruby-fr.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Version%20Rubis%20%28France%29.png",
+   "variantOf": "pokemon-ruby"
+  },
+  {
+   "id": "pokemon-sapphire-fr",
+   "title": "Pokémon Sapphire Version",
+   "titleDe": "Pokémon Saphir-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "France",
+   "noIntroName": "Pokemon - Version Saphir (France)",
+   "serial": "AXPF",
+   "crc32": [
+    "3581A05F",
+    "2AE49146"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Version Saphir (France)",
+     "crc32": "3581A05F",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    },
+    {
+     "noIntroName": "Pokemon - Version Saphir (France) (Rev 1)",
+     "crc32": "2AE49146",
+     "sizeBytes": 16777216,
+     "revision": 1,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2003,
+   "color": "#34558B",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Version%20Saphir%20%28France%29.png",
+   "coverLocal": "assets/covers/pokemon-sapphire-fr.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Version%20Saphir%20%28France%29.png",
+   "variantOf": "pokemon-sapphire"
+  },
+  {
+   "id": "pokemon-firered-fr",
+   "title": "Pokémon FireRed Version",
+   "titleDe": "Pokémon Feuerrote Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "France",
+   "noIntroName": "Pokemon - Version Rouge Feu (France)",
+   "serial": "BPRF",
+   "crc32": [
+    "5DC668F6"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Version Rouge Feu (France)",
+     "crc32": "5DC668F6",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2004,
+   "color": "#B4553A",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Version%20Rouge%20Feu%20%28France%29.png",
+   "coverLocal": "assets/covers/pokemon-firered-fr.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Version%20Rouge%20Feu%20%28France%29.png",
+   "variantOf": "pokemon-firered"
+  },
+  {
+   "id": "pokemon-leafgreen-fr",
+   "title": "Pokémon LeafGreen Version",
+   "titleDe": "Pokémon Blattgrüne Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "France",
+   "noIntroName": "Pokemon - Version Vert Feuille (France)",
+   "serial": "BPGF",
+   "crc32": [
+    "BA3285E3"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Version Vert Feuille (France)",
+     "crc32": "BA3285E3",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2004,
+   "color": "#6A8F45",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Version%20Vert%20Feuille%20%28France%29.png",
+   "coverLocal": "assets/covers/pokemon-leafgreen-fr.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Version%20Vert%20Feuille%20%28France%29.png",
+   "variantOf": "pokemon-leafgreen"
+  },
+  {
+   "id": "pokemon-emerald-fr",
+   "title": "Pokémon Emerald Version",
+   "titleDe": "Pokémon Smaragd-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "France",
+   "noIntroName": "Pokemon - Version Emeraude (France)",
+   "serial": "BPEF",
+   "crc32": [
+    "A3FDCCB1"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Version Emeraude (France)",
+     "crc32": "A3FDCCB1",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2005,
+   "color": "#3C7D5E",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Version%20Emeraude%20%28France%29.png",
+   "coverLocal": "assets/covers/pokemon-emerald-fr.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Version%20Emeraude%20%28France%29.png",
+   "variantOf": "pokemon-emerald"
+  },
+  {
+   "id": "pokemon-ruby-es",
+   "title": "Pokémon Ruby Version",
+   "titleDe": "Pokémon Rubin-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Spain",
+   "noIntroName": "Pokemon - Edicion Rubi (Spain)",
+   "serial": "AXVS",
+   "crc32": [
+    "EB0729CF",
+    "B980FFF5"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Edicion Rubi (Spain)",
+     "crc32": "EB0729CF",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    },
+    {
+     "noIntroName": "Pokemon - Edicion Rubi (Spain) (Rev 1)",
+     "crc32": "B980FFF5",
+     "sizeBytes": 16777216,
+     "revision": 1,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2003,
+   "color": "#9E3B4A",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Edicion%20Rubi%20%28Spain%29.png",
+   "coverLocal": "assets/covers/pokemon-ruby-es.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Edicion%20Rubi%20%28Spain%29.png",
+   "variantOf": "pokemon-ruby"
+  },
+  {
+   "id": "pokemon-sapphire-es",
+   "title": "Pokémon Sapphire Version",
+   "titleDe": "Pokémon Saphir-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Spain",
+   "noIntroName": "Pokemon - Edicion Zafiro (Spain)",
+   "serial": "AXPS",
+   "crc32": [
+    "A04F5F0B",
+    "F2C88931"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Edicion Zafiro (Spain)",
+     "crc32": "A04F5F0B",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    },
+    {
+     "noIntroName": "Pokemon - Edicion Zafiro (Spain) (Rev 1)",
+     "crc32": "F2C88931",
+     "sizeBytes": 16777216,
+     "revision": 1,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2003,
+   "color": "#34558B",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Edicion%20Zafiro%20%28Spain%29.png",
+   "coverLocal": "assets/covers/pokemon-sapphire-es.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Edicion%20Zafiro%20%28Spain%29.png",
+   "variantOf": "pokemon-sapphire"
+  },
+  {
+   "id": "pokemon-firered-es",
+   "title": "Pokémon FireRed Version",
+   "titleDe": "Pokémon Feuerrote Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Spain",
+   "noIntroName": "Pokemon - Edicion Rojo Fuego (Spain)",
+   "serial": "BPRS",
+   "crc32": [
+    "9F08064E"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Edicion Rojo Fuego (Spain)",
+     "crc32": "9F08064E",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2004,
+   "color": "#B4553A",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Edicion%20Rojo%20Fuego%20%28Spain%29.png",
+   "coverLocal": "assets/covers/pokemon-firered-es.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Edicion%20Rojo%20Fuego%20%28Spain%29.png",
+   "variantOf": "pokemon-firered"
+  },
+  {
+   "id": "pokemon-leafgreen-es",
+   "title": "Pokémon LeafGreen Version",
+   "titleDe": "Pokémon Blattgrüne Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Spain",
+   "noIntroName": "Pokemon - Edicion Verde Hoja (Spain)",
+   "serial": "BPGS",
+   "crc32": [
+    "2CA11D59"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Edicion Verde Hoja (Spain)",
+     "crc32": "2CA11D59",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2004,
+   "color": "#6A8F45",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Edicion%20Verde%20Hoja%20%28Spain%29.png",
+   "coverLocal": "assets/covers/pokemon-leafgreen-es.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Edicion%20Verde%20Hoja%20%28Spain%29.png",
+   "variantOf": "pokemon-leafgreen"
+  },
+  {
+   "id": "pokemon-emerald-es",
+   "title": "Pokémon Emerald Version",
+   "titleDe": "Pokémon Smaragd-Edition",
+   "system": "gba",
+   "generation": 3,
+   "region": "Spain",
+   "noIntroName": "Pokemon - Edicion Esmeralda (Spain)",
+   "serial": "BPES",
+   "crc32": [
+    "8C4D3108"
+   ],
+   "dumps": [
+    {
+     "noIntroName": "Pokemon - Edicion Esmeralda (Spain)",
+     "crc32": "8C4D3108",
+     "sizeBytes": 16777216,
+     "revision": 0,
+     "uprSupported": true
+    }
+   ],
+   "releaseYear": 2005,
+   "color": "#3C7D5E",
+   "uprSupported": true,
+   "cover": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Boxarts/Pokemon%20-%20Edicion%20Esmeralda%20%28Spain%29.png",
+   "coverLocal": "assets/covers/pokemon-emerald-es.png",
+   "titleScreen": "https://raw.githubusercontent.com/libretro-thumbnails/Nintendo_-_Game_Boy_Advance/master/Named_Titles/Pokemon%20-%20Edicion%20Esmeralda%20%28Spain%29.png",
+   "variantOf": "pokemon-emerald"
+  },
+  {
    "id": "pokemon-diamond",
    "title": "Pokémon Diamond Version",
    "titleDe": "Pokémon Diamant-Edition",

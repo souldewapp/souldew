@@ -114,6 +114,24 @@
    "musicSize": 2,
    "musicSource": "pokesapphire_de.sym \"030006d4 sCurrentMapMusic\""
   },
+  "ruby_eu": {
+   "gen": 3,
+   "kind": "gen3",
+   "mapHeaderAddr": "0x0202E828",
+   "source": "gMapHeader 0x0202E828: same as ruby_de and the English game (the Italian Ruby loads it from 99 literal pools)",
+   "musicAddr": "0x030006D4",
+   "musicSize": 2,
+   "musicSource": "sCurrentMapMusic 0x030006D4 of ruby_de (the Italian Ruby loads it from 11 literal pools)"
+  },
+  "sapphire_eu": {
+   "gen": 3,
+   "kind": "gen3",
+   "mapHeaderAddr": "0x0202E828",
+   "source": "gMapHeader 0x0202E828: same as sapphire_de and the English game (the Italian Ruby loads it from 99 literal pools)",
+   "musicAddr": "0x030006D4",
+   "musicSize": 2,
+   "musicSource": "sCurrentMapMusic 0x030006D4 of sapphire_de (the Italian Ruby loads it from 11 literal pools)"
+  },
   "emerald_us": {
    "gen": 3,
    "kind": "gen3",
@@ -131,6 +149,15 @@
    "musicAddr": "0x03000F48",
    "musicSize": 2,
    "musicSource": "sCurrentMapMusic 0x03000F48: the English Emerald’s – 48 load sites in the German ROM name it (literal-pool alignment)"
+  },
+  "emerald_eu": {
+   "gen": 3,
+   "kind": "gen3",
+   "mapHeaderAddr": "0x02037318",
+   "source": "gMapHeader 0x02037318: same as emerald_us (pokebot-gen3 pokeemerald.yml has no D/F/I/S override; the Italian ROM loads it from 142 literal pools)",
+   "musicAddr": "0x03000F48",
+   "musicSize": 2,
+   "musicSource": "sCurrentMapMusic 0x03000F48 of emerald_us – the Italian ROM loads it from 11 literal pools (as many as German FireRed loads its own)"
   },
   "firered_us": {
    "gen": 3,
