@@ -42,6 +42,18 @@
   </url>
   <url>
     <loc>https://souldew.app/privacy.html</loc>
-    <lastmod>2026-11-19</lastmod>
+    <lastmod>2026-11-27</lastmod>
+  </url>
+  <url>
+    <loc>https://souldew.app/support.html</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/support.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/support.html"/>
+  </url>
+  <url>
+    <loc>https://souldew.app/de/support.html</loc>
+    <lastmod>2026-11-27</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/support.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/support.html"/>
   </url>
 </urlset>

@@ -37,7 +37,7 @@
   <p><b>Links.</b> Links to GitHub, Discord, Instagram and Buy Me a Coffee lead to those providers. Data goes to them only when you click a link; their privacy policies apply there.</p>
 
   <h2>3. The souldew app</h2>
-  <p>souldew runs on your computer. Your games, save files and runs stay there. The app has no analytics. It contacts the following services – most of them only when you use the feature in question.</p>
+  <p>souldew runs on your computer (the iPhone app: <a href="#ios">section 4</a>). Your games, save files and runs stay there. The app has no analytics. It contacts the following services – most of them only when you use the feature in question.</p>
 
   <h3 class="d4" id="updates">3.1 Update check</h3>
   <p>At start and every four hours the app downloads <code>latest.json</code> from the latest souldew release on GitHub (github.com, a service of GitHub, Inc., see section 2) and checks its signature. If there is a new version, the installer is downloaded from the same GitHub release. GitHub sees your IP address and the request; nothing else is sent.</p>
@@ -79,13 +79,43 @@
   <p><b>Legal basis:</b> Art. 6(1)(b) GDPR for the membership; Art. 6(1)(a) GDPR (your consent, which you can withdraw at any time) for appearing on the thank-you wall.</p>
 
   <h3 class="d4" id="pictures">3.7 Pictures</h3>
-  <p>Pokémon sprites and game covers are loaded from public GitHub repositories (PokeAPI, libretro-thumbnails) and cached on your computer. Friends’ profile pictures are fetched by the app through its local server.</p>
+  <p>Pokémon sprites and game covers are loaded from public GitHub repositories (PokeAPI, libretro-thumbnails) and cached on your computer. Friends’ profile pictures are fetched by the app through its local server. The iPhone app downloads no pictures of Pokémon or games (section 4.1).</p>
 
-  <h2>4. Your rights</h2>
+  <h2 id="ios">4. The souldew app for iPhone</h2>
+  <p>The iPhone app is souldew made for the phone: the built-in emulator, the tracker, SoulLink, trades and battles. Your games, saves, save states and runs stay on your iPhone, inside the app; like other app data they are part of your iPhone’s backup. The app contains no games and downloads none. It has <b>no analytics, no crash reporting, no advertising and no tracking</b>, and it doesn’t send the anonymous “playing now” counter or the daily usage count (section 3.3) – the iPhone app has neither. Updates come from the App Store. What Apple itself processes – downloads, purchases, and the crash reports and usage figures you may choose in the iOS settings to share with app developers, which Apple then passes on to us – is covered by <a href="https://www.apple.com/legal/privacy/">Apple’s privacy policy</a>.</p>
+
+  <h3 class="d4" id="ios-pictures">4.1 Pictures</h3>
+  <p>The pictures of the Pokémon are read from your own game files on your iPhone and kept there; DS games show their own icon from the game file. The app loads no pictures from the internet – except profile pictures, if you use an account (section 4.3).</p>
+
+  <h3 class="d4" id="ios-together">4.2 Playing together (SoulLink, trades and battles, Shared World)</h3>
+  <p>Only when you open a SoulLink run. The apps of a run find each other through public Nostr relays (the default list of the Trystero library, for example nos.lol and relay.nostr.dev.br) and then connect directly to each other (WebRTC). To find a direct path, the app asks public STUN servers of Google (stun.l.google.com) and Cloudflare (stun.cloudflare.com) for its public address. Where no direct connection is possible, the run’s data goes through public MQTT brokers instead: broker.emqx.io (EMQ Technologies), broker.hivemq.com (HiveMQ) and test.mosquitto.org (Eclipse Foundation). The iPhone app doesn’t use souldew’s TURN service (section 3.2).</p>
+  <p>What travels is <b>end-to-end encrypted</b> (AES-GCM, with a key derived from the run’s secret in the invite, which only the players’ devices know): the run’s tracker data (catches, deaths, the team, rules, the log); your status for your partners (the battle you are in, where you are in the game); during a trade or battle the buttons pressed and the state of the running game, directly between the devices; in Shared World your position in the game, waves and emotes. Relays, STUN servers and brokers can’t read it; they see the IP addresses of the connection. The brokers keep the run’s latest encrypted state as a stored (“retained”) message, so a partner who comes online later gets it. Not encrypted is only a short online notice per player – the name you play under in that run, that you are online, and the time – which the brokers keep too, under an address derived from the run that reveals nothing about it. Your game files are never sent. Legal basis: Art. 6(1)(b) GDPR – the link you set up with your partners.</p>
+
+  <h3 class="d4" id="ios-account">4.3 souldew account (optional)</h3>
+  <p>Without an account the app works completely and sends none of this. The account is the same as on the computer (section 3.5), with these differences:</p>
+  <ul>
+    <li><b>Sign in with Apple:</b> Apple’s own sign-in sheet. souldew asks Apple for <b>no name and no email address</b>, so it receives neither – not even a “Hide My Email” address. Apple gives souldew a user id that is valid for souldew only. The accounts service stores that id with your account and, encrypted, the token Apple issues for the sign-in – only to revoke your Apple sign-in at Apple when you delete the account or remove Apple from it, as Apple requires.</li>
+    <li><b>Sign in with Discord:</b> a sign-in sheet of iOS opens accounts.souldew.app and Discord; as on the computer, souldew gets only your Discord id, name and picture. You can link Discord to an account made with Apple, and Apple to one made with Discord.</li>
+    <li>Your sign-in is kept in your iPhone’s keychain, on this device only. In your list of signed-in devices the iPhone appears as “souldew on iPhone” – never with your device’s name.</li>
+    <li><b>Online status:</b> only while the app is open and in front – about once a minute, that you are online and, depending on your privacy settings, which game and mode you are playing (the place in the game only if you allow it). When the app goes to the background it reports you offline and sends nothing more; with “Appear offline” or “Hide me completely” it sends no status at all.</li>
+    <li><b>Profile pictures</b> of you and other players are loaded from Discord’s picture server (cdn.discordapp.com) or through the accounts service; Discord sees your IP address when a picture is loaded from it.</li>
+    <li>Friends, invites, reports and blocking work as on the computer.</li>
+    <li><b>Deleting your account:</b> More › souldew account › Delete account. Your account, profile, friends, requests, invites, online status and sign-ins are deleted at once; your Apple sign-in is revoked at Apple. Reports about you or made by you, and moderation records, are kept for 180 days under a keyed hash of your Apple or Discord id (not reversible without our secret key) and then deleted; if the same Apple ID or Discord account signs up again within that time, they are attached to the new account. Your runs and saves on the iPhone are not touched.</li>
+  </ul>
+  <p>Legal basis: Art. 6(1)(b) GDPR – the account and friends features you ask for; for keeping reports and moderation records after a deletion, Art. 6(1)(f) GDPR, our legitimate interest being to stop abuse from simply starting over.</p>
+
+  <h3 class="d4" id="ios-plus">4.4 souldew+ on the iPhone</h3>
+  <p>On the iPhone souldew+ is an App Store subscription. Apple handles the payment; we never see your payment details or your Apple Account. When you subscribe, the app adds an id to the purchase that is derived from your souldew account (a hash – not your name, not your Apple ID). The app sends the purchase, as signed by Apple, to the accounts service, which checks Apple’s signature and unlocks souldew+ for your souldew account – on the iPhone and on the computers you sign in on. Apple also tells the service when the subscription renews, ends, is refunded or revoked (App Store Server Notifications).</p>
+  <p>The service stores with your account the subscription’s original transaction id, the product and tier, whether it is a test purchase, its status, the end of the period and of any grace period, and whether it renews automatically – no receipts, no prices, no payment details. The record is deleted 90 days after access ends. When you delete your account the subscription is unlinked, not deleted, so a subscription that still runs can be restored into a new account. Manage or cancel it in iOS (Settings › your name › Subscriptions); deleting your souldew account doesn’t cancel it. The souldew+ looks are downloaded from the accounts service, encrypted for your account. Legal basis: Art. 6(1)(b) GDPR.</p>
+
+  <h3 class="d4" id="ios-links">4.5 Links</h3>
+  <p>Links in the app – this privacy policy, the legal notice, souldew’s Discord, GitHub and Apple’s terms of use – open in Safari. Data goes to those providers only when you tap a link; their privacy policies apply there.</p>
+
+  <h2>5. Your rights</h2>
   <p>You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and to object (Art. 21), and to withdraw consent at any time (Art. 7(3)). You can also complain to a data protection supervisory authority (Art. 77 GDPR). Contact us at the address above.</p>
 
   <p class="faint">Last updated: November 2026</p>
 </main>
-<footer class="site-foot"><div class="wrap"><p class="foot-links"><a href="./">Home</a> <a href="code-signing.html">Code signing policy</a> <a href="impressum.html" lang="de">Impressum</a> <a href="datenschutz.html" lang="de">Datenschutz</a></p></div></footer>
+<footer class="site-foot"><div class="wrap"><p class="foot-links"><a href="./">Home</a> <a href="support.html">Support</a> <a href="code-signing.html">Code signing policy</a> <a href="impressum.html" lang="de">Impressum</a> <a href="datenschutz.html" lang="de">Datenschutz</a></p></div></footer>
 </body>
 </html>

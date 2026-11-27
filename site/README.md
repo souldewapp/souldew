@@ -20,9 +20,10 @@ Names on the page are neutral (Sam, Tim, Lena, Kim, Robin, Noor, Finn, Lou) – 
 |---|---|
 | `index.html`, `de/index.html` | Home (2.8 site + the 3.0 band). Change both when content changes. |
 | `3/index.html`, `de/3/index.html` | The 3.0 page. The German one is the English one with the texts swapped – change both. |
-| `privacy.html` | Privacy policy in English (website + app, incl. account, souldew+, thank-you wall). `REVIEW(owner)` comments need the owner's check. |
+| `privacy.html` | Privacy policy in English (website + desktop app, incl. account, souldew+, thank-you wall; section 4: the iPhone app). `REVIEW(owner)` comments need the owner's check. |
+| `support.html`, `de/support.html` | Support for the iPhone app and the desktop app (Discord, tickets, bug reports, FAQ). The App Store's Support URL. Change both. |
 | `code-signing.html`, `de/code-signing.html` | The code signing policy SignPath Foundation asks for (Windows builds only). |
-| `impressum.html`, `datenschutz.html` | Legal notice and privacy policy (German, binding). |
+| `impressum.html`, `datenschutz.html` | Legal notice and privacy policy (German, binding; section 8: the iPhone app). |
 | `assets/img/30/hero2/` | The two hero handhelds (`l|r-1400|720.webp`), rendered from the app's scene with the trailer's light rig; also used by the home band. |
 | `assets/img/30/unfold/{1400,760}/` | The 3D launch (DS, Golden Wheat) as 53 frames, transparent – the scrub uses 2…52. |
 | `assets/img/30/hh/` | The skin carousel: a picture of every skin (no stickers, `-1400/-760/-thumb`) and each sticker cut out (difference-matted), positioned in % in the HTML. |
