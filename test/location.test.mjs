@@ -260,3 +260,25 @@ test('MusicKeyTracker: no map-music table (Gen 1–3, Pt) – stuck through 8 ma
   assert.equal(feedKeys(new MusicKeyTracker(), { song: null, map: 'p4.411', expected: null, playing: false }), 'p4.411');
   assert.equal(new MusicKeyTracker().next(null), null);
 });
+
+test('place names come in every language of the app, English where a table has none', () => {
+  const all = { maps, gen4, ...Object.fromEntries([3, 4, 5, 6, 7].map((g) => [`loc${g}`, json(`locations_gen${g}.json`)])), loc2 };
+  const names = (gen, id) => ['en', 'de', 'es', 'fr', 'it'].map((l) => locationLabel(gen, id, all, l));
+  assert.deepEqual(names(1, 0), ['Pallet Town', 'Alabastia', 'Pueblo Paleta', 'Bourg Palette', 'Biancavilla']);
+  assert.deepEqual(names(2, 1), ['New Bark Town', 'Neuborkia', 'Pueblo Primavera', 'Bourg Geon', 'Borgo Foglianova']);
+  assert.deepEqual(names(3, 0), ['Littleroot Town', 'Wurzelheim', 'Villa Raíz', 'Bourg-en-Vol', 'Albanova']);
+  assert.deepEqual(names(4, 177), ['Route 29', 'Route 29', 'Ruta 29', 'Route 29', 'Percorso 29']);
+  assert.deepEqual(names(4, 2001), ['Link trade', 'Linktausch', 'Intercambio', 'Echange Link', 'Scambio in link']);
+  assert.deepEqual(names(5, 6), ['Striaton City', 'Orion City', 'Ciudad Gres', 'Ogoesse', 'Levantopoli']);
+  assert.deepEqual(names(6, 6), ['Vaniville Town', 'Escissia', 'Pueblo Boceto', 'Bourg Croquis', 'Borgo Bozzetto']);
+  assert.equal(locationLabel(7, 24, all, 'it'), 'Lili');
+  // the Gen 4 table names the same places as gen4.json (the save reader's English names)
+  gen4.locations.forEach((en, id) => assert.equal(locationLabel(4, id, all, 'en'), en));
+  assert.equal(locationLabel(4, 126, { gen4 }, 'it'), 'New Bark Town', 'without the table: gen4.json');
+  assert.equal(locationLabel(3, 0, all, 'ja'), 'Littleroot Town', 'a language the tables lack');
+  for (const g of [2, 3, 4, 5, 6, 7]) {
+    for (const [id, e] of Object.entries(all[`loc${g}`].map)) {
+      for (const l of ['en', 'de', 'es', 'fr', 'it']) assert.ok(e[l] === undefined || (typeof e[l] === 'string' && e[l].trim() && !e[l].includes('\\')), `gen ${g} ${id} ${l}`);
+    }
+  }
+});

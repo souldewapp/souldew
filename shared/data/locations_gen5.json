@@ -1,0 +1,1637 @@
+{
+ "_doc": "Gen 5 met / egg location (PK5 0x80 / 0x7E) -> name in every language of the app. Black/White and Black 2/White 2 share the list. 30000s: link trades and transfers, 40000s: event places, 60000s: eggs.",
+ "_source": "PKHeX PKHeX.Core/Resources/text/locations/gen5/text_bw2_{00000,30000,40000,60000}_{en,de,es,fr,it}.txt (line index = id offset). Written by scripts/build-location-names.mjs.",
+ "map": {
+  "1": {
+   "en": "Mystery Zone",
+   "de": "Mysteriöser Ort",
+   "es": "Lugar misterioso",
+   "fr": "Endroit Mystérieux",
+   "it": "Zona Misteriosa"
+  },
+  "2": {
+   "en": "Faraway place",
+   "de": "Entfernter Ort",
+   "es": "Lugar lejano",
+   "fr": "Endroit Lointain",
+   "it": "Luogo Remoto"
+  },
+  "4": {
+   "en": "Nuvema Town",
+   "de": "Avenitia",
+   "es": "Pueblo Arcilla",
+   "fr": "Renouet",
+   "it": "Soffiolieve"
+  },
+  "5": {
+   "en": "Accumula Town",
+   "de": "Gavina",
+   "es": "Pueblo Terracota",
+   "fr": "Arabelle",
+   "it": "Quattroventi"
+  },
+  "6": {
+   "en": "Striaton City",
+   "de": "Orion City",
+   "es": "Ciudad Gres",
+   "fr": "Ogoesse",
+   "it": "Levantopoli"
+  },
+  "7": {
+   "en": "Nacrene City",
+   "de": "Septerna City",
+   "es": "Ciudad Esmalte",
+   "fr": "Maillard",
+   "it": "Zefiropoli"
+  },
+  "8": {
+   "en": "Castelia City",
+   "de": "Stratos City",
+   "es": "Ciudad Porcelana",
+   "fr": "Volucité",
+   "it": "Austropoli"
+  },
+  "9": {
+   "en": "Nimbasa City",
+   "de": "Rayono City",
+   "es": "Ciudad Mayólica",
+   "fr": "Méanville",
+   "it": "Sciroccopoli"
+  },
+  "10": {
+   "en": "Driftveil City",
+   "de": "Marea City",
+   "es": "Ciudad Fayenza",
+   "fr": "Port Yoneuve",
+   "it": "Libecciopoli"
+  },
+  "11": {
+   "en": "Mistralton City",
+   "de": "Panaero City",
+   "es": "Ciudad Loza",
+   "fr": "Parsemille",
+   "it": "Ponentopoli"
+  },
+  "12": {
+   "en": "Icirrus City",
+   "de": "Nevaio City",
+   "es": "Ciudad Teja",
+   "fr": "Flocombe",
+   "it": "Mistralopoli"
+  },
+  "13": {
+   "en": "Opelucid City",
+   "de": "Twindrake City",
+   "es": "Ciudad Caolín",
+   "fr": "Janusia",
+   "it": "Boreduopoli"
+  },
+  "14": {
+   "en": "Route 1",
+   "es": "Ruta 1",
+   "it": "Percorso 1"
+  },
+  "15": {
+   "en": "Route 2",
+   "es": "Ruta 2",
+   "it": "Percorso 2"
+  },
+  "16": {
+   "en": "Route 3",
+   "es": "Ruta 3",
+   "it": "Percorso 3"
+  },
+  "17": {
+   "en": "Route 4",
+   "es": "Ruta 4",
+   "it": "Percorso 4"
+  },
+  "18": {
+   "en": "Route 5",
+   "es": "Ruta 5",
+   "it": "Percorso 5"
+  },
+  "19": {
+   "en": "Route 6",
+   "es": "Ruta 6",
+   "it": "Percorso 6"
+  },
+  "20": {
+   "en": "Route 7",
+   "es": "Ruta 7",
+   "it": "Percorso 7"
+  },
+  "21": {
+   "en": "Route 8",
+   "es": "Ruta 8",
+   "it": "Percorso 8"
+  },
+  "22": {
+   "en": "Route 9",
+   "es": "Ruta 9",
+   "it": "Percorso 9"
+  },
+  "23": {
+   "en": "Route 10",
+   "es": "Ruta 10",
+   "it": "Percorso 10"
+  },
+  "24": {
+   "en": "Route 11",
+   "es": "Ruta 11",
+   "it": "Percorso 11"
+  },
+  "25": {
+   "en": "Route 12",
+   "es": "Ruta 12",
+   "it": "Percorso 12"
+  },
+  "26": {
+   "en": "Route 13",
+   "es": "Ruta 13",
+   "it": "Percorso 13"
+  },
+  "27": {
+   "en": "Route 14",
+   "es": "Ruta 14",
+   "it": "Percorso 14"
+  },
+  "28": {
+   "en": "Route 15",
+   "es": "Ruta 15",
+   "it": "Percorso 15"
+  },
+  "29": {
+   "en": "Route 16",
+   "es": "Ruta 16",
+   "it": "Percorso 16"
+  },
+  "30": {
+   "en": "Route 17",
+   "es": "Ruta 17",
+   "fr": "Chenal 17",
+   "it": "Percorso 17"
+  },
+  "31": {
+   "en": "Route 18",
+   "es": "Ruta 18",
+   "it": "Percorso 18"
+  },
+  "32": {
+   "en": "Dreamyard",
+   "de": "Traumbrache",
+   "es": "Solar de los Sueños",
+   "fr": "Vestiges du Rêve",
+   "it": "Cantiere dei Sogni"
+  },
+  "33": {
+   "en": "Pinwheel Forest",
+   "de": "Ewigenwald",
+   "es": "Bosque Azulejo",
+   "fr": "Forêt d'Empoigne",
+   "it": "Bosco Girandola"
+  },
+  "34": {
+   "en": "Desert Resort",
+   "de": "Wüstenresort",
+   "es": "Zona Desierto",
+   "fr": "Désert Délassant",
+   "it": "Deserto della Quiete"
+  },
+  "35": {
+   "en": "Relic Castle",
+   "de": "Alter Palast",
+   "es": "Castillo Ancestral",
+   "fr": "Château Enfoui",
+   "it": "Castello Sepolto"
+  },
+  "36": {
+   "en": "PWT"
+  },
+  "37": {
+   "en": "Chargestone Cave",
+   "de": "Elektrolithhöhle",
+   "es": "Cueva Electrorroca",
+   "fr": "Grotte Électrolithe",
+   "it": "Cava Pietrelettrica"
+  },
+  "38": {
+   "en": "Twist Mountain",
+   "de": "Wendelberg",
+   "es": "Monte Tuerca",
+   "fr": "Mont Foré",
+   "it": "Monte Vite"
+  },
+  "39": {
+   "en": "Dragonspiral Tower",
+   "de": "Drachenstiege",
+   "es": "Torre Duodraco",
+   "fr": "Tour Dragospire",
+   "it": "Torre Dragospira"
+  },
+  "40": {
+   "en": "Victory Road",
+   "de": "Siegesstraße",
+   "es": "Calle Victoria",
+   "fr": "Route Victoire",
+   "it": "Via Vittoria"
+  },
+  "41": {
+   "en": "Lacunosa Town",
+   "de": "Tessera",
+   "es": "Pueblo Ladrillo",
+   "fr": "Entrelasque",
+   "it": "Fortebrezza"
+  },
+  "42": {
+   "en": "Undella Town",
+   "de": "Ondula",
+   "es": "Pueblo Arenisca",
+   "fr": "Vaguelone",
+   "it": "Spiraria"
+  },
+  "43": {
+   "en": "Anville Town",
+   "de": "Ferrula",
+   "es": "Pueblo Biscuit",
+   "fr": "Rotombourg",
+   "it": "Roteolia"
+  },
+  "44": {
+   "en": "Pokémon League",
+   "de": "Pokémon Liga",
+   "es": "Liga Pokémon",
+   "fr": "Ligue Pokémon",
+   "it": "Lega Pokémon"
+  },
+  "45": {
+   "en": "N's Castle",
+   "de": "Schloss von N",
+   "es": "Palacio de N",
+   "fr": "Palais de N",
+   "it": "Palazzo di N"
+  },
+  "46": {
+   "en": "Royal Unova",
+   "de": "MS Einall Royal",
+   "es": "Real Teselia",
+   "fr": "L'Étoile d'Unys",
+   "it": "Nave Reale Unima"
+  },
+  "47": {
+   "en": "Gear Station",
+   "de": "Weichenstation",
+   "es": "Estación Radial",
+   "fr": "Engrenage du Métro",
+   "it": "Staz. Ruotadentata"
+  },
+  "48": {
+   "en": "Battle Subway",
+   "de": "Kampfmetro",
+   "es": "Metro Batalla",
+   "fr": "Métro de Combat",
+   "it": "Metrò Lotta"
+  },
+  "49": {
+   "en": "Musical Theater",
+   "de": "Musiktheater",
+   "es": "Teatro Musical",
+   "fr": "Music-Hall",
+   "it": "Teatro Musical"
+  },
+  "50": {
+   "en": "Black City",
+   "de": "Schwarze Stadt",
+   "es": "Ciudad Negra",
+   "fr": "Ville Noire",
+   "it": "Città Nera"
+  },
+  "51": {
+   "en": "White Forest",
+   "de": "Weißer Wald",
+   "es": "Bosque Blanco",
+   "fr": "Forêt Blanche",
+   "it": "Foresta Bianca"
+  },
+  "52": {
+   "en": "Unity Tower",
+   "de": "Turm der Einheit",
+   "es": "Torre Unión",
+   "fr": "Tour Union",
+   "it": "Torre Unione"
+  },
+  "53": {
+   "en": "Wellspring Cave",
+   "de": "Grundwassersenke",
+   "es": "Cueva Manantial",
+   "fr": "Veine Souterraine",
+   "it": "Falda Sotterranea"
+  },
+  "54": {
+   "en": "Mistralton Cave",
+   "de": "Panaero-Höhle",
+   "es": "Cueva Loza",
+   "fr": "Grotte Parsemille",
+   "it": "Cava Ponentopoli"
+  },
+  "55": {
+   "en": "Rumination Field",
+   "de": "Feld der Besinnung",
+   "es": "Claro Filosofía",
+   "fr": "Clairière Réflexion",
+   "it": "Radura Filosofia"
+  },
+  "56": {
+   "en": "Celestial Tower",
+   "de": "Turm des Himmels",
+   "es": "Torre de los Cielos",
+   "fr": "Tour des Cieux",
+   "it": "Torre Cielo"
+  },
+  "57": {
+   "en": "Moor of Icirrus",
+   "de": "Moor von Nevaio",
+   "es": "Pantano Teja",
+   "fr": "Tourbière Flocombe",
+   "it": "Palude Mistralopoli"
+  },
+  "58": {
+   "en": "Shopping Mall",
+   "de": "Kaufhaus",
+   "es": "Centro Comercial",
+   "fr": "Centre Commercial",
+   "it": "Magazzini"
+  },
+  "59": {
+   "en": "Challenger's Cave",
+   "de": "Höhle der Schulung",
+   "es": "Gruta Superación",
+   "fr": "Antre d'Entraînement",
+   "it": "Caverna Ascesi"
+  },
+  "60": {
+   "en": "Poké Transfer Lab",
+   "de": "Porterlabor",
+   "es": "Laboratorio Transfer",
+   "fr": "Laboratoire Fret",
+   "it": "Centro Pokétrasporto"
+  },
+  "61": {
+   "en": "Giant Chasm",
+   "de": "Riesengrotte",
+   "es": "Boquete Gigante",
+   "fr": "Grotte Cyclopéenne",
+   "it": "Fossa Gigante"
+  },
+  "62": {
+   "en": "Liberty Garden",
+   "de": "Freiheitsgarten",
+   "es": "Isla Libertad",
+   "fr": "Île Liberté",
+   "it": "Isola Libertà"
+  },
+  "63": {
+   "en": "P2 Laboratory",
+   "de": "P2-Labor",
+   "es": "Laboratorio P+P",
+   "fr": "Labo P2",
+   "it": "Laboratorio P&P"
+  },
+  "64": {
+   "en": "Skyarrow Bridge",
+   "de": "Himmelspfeilbrücke",
+   "es": "Puente Saeta",
+   "fr": "Pont Sagiciel",
+   "it": "Ponte Freccialuce"
+  },
+  "65": {
+   "en": "Driftveil Drawbridge",
+   "de": "Marea-Zugbrücke",
+   "es": "Puente de Fayenza",
+   "fr": "Pont Yoneuve",
+   "it": "Ponte Libecciopoli"
+  },
+  "66": {
+   "en": "Tubeline Bridge",
+   "de": "Zylinderbrücke",
+   "es": "Puente Axial",
+   "fr": "Pont Ferroviaire",
+   "it": "Ponte Propulsione"
+  },
+  "67": {
+   "en": "Village Bridge",
+   "de": "Dorfbrücke",
+   "es": "Puente Villa",
+   "fr": "Pont du Hameau",
+   "it": "Ponte Villaggio"
+  },
+  "68": {
+   "en": "Marvelous Bridge",
+   "de": "Wunderbrücke",
+   "es": "Puente Progreso",
+   "fr": "Pont de l'Inconnu",
+   "it": "Ponte Meraviglie"
+  },
+  "69": {
+   "en": "Entralink",
+   "de": "Kontaktebene",
+   "es": "Zona Nexo",
+   "fr": "Heylink",
+   "it": "Intramondo"
+  },
+  "70": {
+   "en": "Abundant Shrine",
+   "de": "Schrein der Ernte",
+   "es": "Santuario Abundancia",
+   "fr": "Autel Abondance",
+   "it": "Tempio Abbondanza"
+  },
+  "71": {
+   "en": "Undella Bay",
+   "de": "Bucht von Ondula",
+   "es": "Bahía Arenisca",
+   "fr": "Baie Vaguelone",
+   "it": "Baia Spiraria"
+  },
+  "72": {
+   "en": "Lostlorn Forest",
+   "de": "Hain der Täuschung",
+   "es": "Bosque Perdidos",
+   "fr": "Bois des Illusions",
+   "it": "Bosco Smarrimento"
+  },
+  "73": {
+   "en": "Trial Chamber",
+   "de": "Kammer der Prüfung",
+   "es": "Cámara de Pruebas",
+   "fr": "Salle Épreuve",
+   "it": "Sala del Cimento"
+  },
+  "74": {
+   "en": "Guidance Chamber",
+   "de": "Kammer der Weisung",
+   "es": "Estancia Orientación",
+   "fr": "Espace Guide",
+   "it": "Sala della Guida"
+  },
+  "75": {
+   "en": "Entree Forest",
+   "de": "Kontaktebenenhain",
+   "es": "Bosque Nexo",
+   "fr": "Forêt du Heylink",
+   "it": "Bosco Intramondo"
+  },
+  "76": {
+   "en": "Nimbasa City",
+   "de": "Rayono City",
+   "es": "Ciudad Mayólica",
+   "fr": "Méanville",
+   "it": "Sciroccopoli"
+  },
+  "77": {
+   "en": "Driftveil City",
+   "de": "Marea City",
+   "es": "Ciudad Fayenza",
+   "fr": "Port Yoneuve",
+   "it": "Libecciopoli"
+  },
+  "78": {
+   "en": "Mistralton City",
+   "de": "Panaero City",
+   "es": "Ciudad Loza",
+   "fr": "Parsemille",
+   "it": "Ponentopoli"
+  },
+  "79": {
+   "en": "Icirrus City",
+   "de": "Nevaio City",
+   "es": "Ciudad Teja",
+   "fr": "Flocombe",
+   "it": "Mistralopoli"
+  },
+  "80": {
+   "en": "Opelucid City",
+   "de": "Twindrake City",
+   "es": "Ciudad Caolín",
+   "fr": "Janusia",
+   "it": "Boreduopoli"
+  },
+  "81": {
+   "en": "Nuvema Town",
+   "de": "Avenitia",
+   "es": "Pueblo Arcilla",
+   "fr": "Renouet",
+   "it": "Soffiolieve"
+  },
+  "82": {
+   "en": "White Forest",
+   "de": "Weißer Wald",
+   "es": "Bosque Blanco",
+   "fr": "Forêt Blanche",
+   "it": "Foresta Bianca"
+  },
+  "83": {
+   "en": "Black City",
+   "de": "Schwarze Stadt",
+   "es": "Ciudad Negra",
+   "fr": "Ville Noire",
+   "it": "Città Nera"
+  },
+  "84": {
+   "en": "Cold Storage",
+   "de": "Tiefkühlcontainer",
+   "es": "Alm. Frigoríficos",
+   "fr": "Hangar Frigorifique",
+   "it": "Deposito Frigo"
+  },
+  "85": {
+   "en": "Chargestone Cave",
+   "de": "Elektrolithhöhle",
+   "es": "Cueva Electrorroca",
+   "fr": "Grotte Électrolithe",
+   "it": "Cava Pietrelettrica"
+  },
+  "86": {
+   "en": "Twist Mountain",
+   "de": "Wendelberg",
+   "es": "Monte Tuerca",
+   "fr": "Mont Foré",
+   "it": "Monte Vite"
+  },
+  "87": {
+   "en": "Dragonspiral Tower",
+   "de": "Drachenstiege",
+   "es": "Torre Duodraco",
+   "fr": "Tour Dragospire",
+   "it": "Torre Dragospira"
+  },
+  "88": {
+   "en": "Giant Chasm",
+   "de": "Riesengrotte",
+   "es": "Boquete Gigante",
+   "fr": "Grotte Cyclopéenne",
+   "it": "Fossa Gigante"
+  },
+  "89": {
+   "en": "Driftveil Drawbridge",
+   "de": "Marea-Zugbrücke",
+   "es": "Puente de Fayenza",
+   "fr": "Pont Yoneuve",
+   "it": "Ponte Libecciopoli"
+  },
+  "90": {
+   "en": "Tubeline Bridge",
+   "de": "Zylinderbrücke",
+   "es": "Puente Axial",
+   "fr": "Pont Ferroviaire",
+   "it": "Ponte Propulsione"
+  },
+  "91": {
+   "en": "Village Bridge",
+   "de": "Dorfbrücke",
+   "es": "Puente Villa",
+   "fr": "Pont du Hameau",
+   "it": "Ponte Villaggio"
+  },
+  "92": {
+   "en": "Marvelous Bridge",
+   "de": "Wunderbrücke",
+   "es": "Puente Progreso",
+   "fr": "Pont de l'Inconnu",
+   "it": "Ponte Meraviglie"
+  },
+  "93": {
+   "en": "Route 5",
+   "es": "Ruta 5",
+   "it": "Percorso 5"
+  },
+  "94": {
+   "en": "Route 6",
+   "es": "Ruta 6",
+   "it": "Percorso 6"
+  },
+  "95": {
+   "en": "Route 7",
+   "es": "Ruta 7",
+   "it": "Percorso 7"
+  },
+  "96": {
+   "en": "Route 8",
+   "es": "Ruta 8",
+   "it": "Percorso 8"
+  },
+  "97": {
+   "en": "Route 9",
+   "es": "Ruta 9",
+   "it": "Percorso 9"
+  },
+  "98": {
+   "en": "Route 11",
+   "es": "Ruta 11",
+   "it": "Percorso 11"
+  },
+  "99": {
+   "en": "Route 12",
+   "es": "Ruta 12",
+   "it": "Percorso 12"
+  },
+  "100": {
+   "en": "Route 13",
+   "es": "Ruta 13",
+   "it": "Percorso 13"
+  },
+  "101": {
+   "en": "Route 14",
+   "es": "Ruta 14",
+   "it": "Percorso 14"
+  },
+  "102": {
+   "en": "Route 15",
+   "es": "Ruta 15",
+   "it": "Percorso 15"
+  },
+  "103": {
+   "en": "Route 16",
+   "es": "Ruta 16",
+   "it": "Percorso 16"
+  },
+  "104": {
+   "en": "Lacunosa Town",
+   "de": "Tessera",
+   "es": "Pueblo Ladrillo",
+   "fr": "Entrelasque",
+   "it": "Fortebrezza"
+  },
+  "105": {
+   "en": "Undella Town",
+   "de": "Ondula",
+   "es": "Pueblo Arenisca",
+   "fr": "Vaguelone",
+   "it": "Spiraria"
+  },
+  "106": {
+   "en": "Accumula Gate",
+   "de": "Gavina-Tor",
+   "es": "Acceso Terracota",
+   "fr": "Porte Arabelle",
+   "it": "Varco Quattroventi"
+  },
+  "107": {
+   "en": "Undella Gate",
+   "de": "Ondula-Tor",
+   "es": "Acceso Arenisca",
+   "fr": "Porte Vaguelone",
+   "it": "Varco Spiraria"
+  },
+  "108": {
+   "en": "Nacrene Gate",
+   "de": "Septerna-Tor",
+   "es": "Acceso Esmalte",
+   "fr": "Porte Maillard",
+   "it": "Varco Zefiropoli"
+  },
+  "109": {
+   "en": "Castelia Gate",
+   "de": "Stratos-Tor",
+   "es": "Acceso Porcelana",
+   "fr": "Porte Volucité",
+   "it": "Varco Austropoli"
+  },
+  "110": {
+   "en": "Nimbasa Gate",
+   "de": "Rayono-Tor",
+   "es": "Acceso Mayólica",
+   "fr": "Porte Méanville",
+   "it": "Varco Sciroccopoli"
+  },
+  "111": {
+   "en": "Opelucid Gate",
+   "de": "Twindrake-Tor",
+   "es": "Acceso Caolín",
+   "fr": "Porte Janusia",
+   "it": "Varco Boreduopoli"
+  },
+  "112": {
+   "en": "Black Gate",
+   "de": "Schwarztor",
+   "es": "Acceso Negro",
+   "fr": "Porte Noire",
+   "it": "Varco Nero"
+  },
+  "113": {
+   "en": "White Gate",
+   "de": "Weißtor",
+   "es": "Acceso Blanco",
+   "fr": "Porte Blanche",
+   "it": "Varco Bianco"
+  },
+  "114": {
+   "en": "Bridge Gate",
+   "de": "Brückentor",
+   "es": "Acceso Puente",
+   "fr": "Porte de Pont",
+   "it": "Varco Ponte"
+  },
+  "115": {
+   "en": "Route Gate",
+   "de": "Routentor",
+   "es": "Acceso Ruta",
+   "fr": "Porte de Route",
+   "it": "Varco Percorso"
+  },
+  "116": {
+   "en": "Abyssal Ruins",
+   "de": "Unterwasserruine",
+   "es": "Ruinas Submarinas",
+   "fr": "Ruines des Abysses",
+   "it": "Rovine degli Abissi"
+  },
+  "117": {
+   "en": "Aspertia City",
+   "de": "Eventura City",
+   "es": "Ciudad Engobe",
+   "fr": "Pavonnay",
+   "it": "Alisopoli"
+  },
+  "118": {
+   "en": "Virbank City",
+   "de": "Vapydro City",
+   "es": "Ciudad Hormigón",
+   "fr": "Ondes-sur-Mer",
+   "it": "Zondopoli"
+  },
+  "119": {
+   "en": "Humilau City",
+   "de": "Abidaya City",
+   "es": "Ciudad Marga",
+   "fr": "Papeloa",
+   "it": "Grecalopoli"
+  },
+  "120": {
+   "en": "Pokéstar Studios",
+   "de": "Pokéwood",
+   "es": "Pokéwood",
+   "fr": "Pokéwood",
+   "it": "Pokéwood"
+  },
+  "121": {
+   "en": "Join Avenue",
+   "de": "Einklangspassage",
+   "es": "Galería Unión",
+   "fr": "Galerie Concorde",
+   "it": "Galleria Solidarietà"
+  },
+  "122": {
+   "en": "Floccesy Town",
+   "de": "Dausing",
+   "es": "Pueblo Ocre",
+   "fr": "Amaillide",
+   "it": "Venturia"
+  },
+  "123": {
+   "en": "Lentimas Town",
+   "de": "Monsentiero",
+   "es": "Pueblo Chamota",
+   "fr": "Arpentières",
+   "it": "Poggiovento"
+  },
+  "124": {
+   "en": "Route 19",
+   "es": "Ruta 19",
+   "it": "Percorso 19"
+  },
+  "125": {
+   "en": "Route 20",
+   "es": "Ruta 20",
+   "it": "Percorso 20"
+  },
+  "126": {
+   "en": "Route 21",
+   "es": "Ruta 21",
+   "fr": "Chenal 21",
+   "it": "Percorso 21"
+  },
+  "127": {
+   "en": "Route 22",
+   "es": "Ruta 22",
+   "it": "Percorso 22"
+  },
+  "128": {
+   "en": "Route 23",
+   "es": "Ruta 23",
+   "it": "Percorso 23"
+  },
+  "129": {
+   "en": "Castelia Sewers",
+   "de": "Stratos-Kanalisation",
+   "es": "Cloacas Porcelana",
+   "fr": "Égouts de Volucité",
+   "it": "Fogne di Austropoli"
+  },
+  "130": {
+   "en": "Floccesy Ranch",
+   "de": "Dausing-Hof",
+   "es": "Rancho Ocre",
+   "fr": "Ranch d'Amaillide",
+   "it": "Fattoria di Venturia"
+  },
+  "131": {
+   "en": "Virbank Complex",
+   "de": "Vapydro-Werke",
+   "es": "Polígono Hormigón",
+   "fr": "Z.I. d'Ondes-sur-Mer",
+   "it": "Cantiere Zondopoli"
+  },
+  "132": {
+   "en": "Reversal Mountain",
+   "de": "Janusberg",
+   "es": "Montaña Reversia",
+   "fr": "Mont Renenvers",
+   "it": "Monte Antipodi"
+  },
+  "133": {
+   "en": "Strange House",
+   "de": "Bizarro-Haus",
+   "es": "Villa Horroris",
+   "fr": "Manoir de l'Étrange",
+   "it": "Casa Bizzarra"
+  },
+  "134": {
+   "en": "Victory Road",
+   "de": "Siegesstraße",
+   "es": "Calle Victoria",
+   "fr": "Route Victoire",
+   "it": "Via Vittoria"
+  },
+  "135": {
+   "en": "Plasma Frigate",
+   "de": "Plasma-Fregatte",
+   "es": "Fragata Plasma",
+   "fr": "Frégate Plasma",
+   "it": "Fregata Plasma"
+  },
+  "136": {
+   "en": "Relic Passage",
+   "de": "Alter Fluchtweg",
+   "es": "Pasadizo Ancestral",
+   "fr": "Chemin Enfoui",
+   "it": "Antico Sentiero"
+  },
+  "137": {
+   "en": "Clay Tunnel",
+   "de": "Turner-Pfad",
+   "es": "Túnel Yakón",
+   "fr": "Route Bardane",
+   "it": "Passo di Rafan"
+  },
+  "139": {
+   "en": "White Treehollow",
+   "de": "Weiße Baumhöhle",
+   "es": "Cavernogal Blanco",
+   "fr": "Arbre Creux Blanc",
+   "it": "Antro Albero Bianco"
+  },
+  "140": {
+   "en": "Black Tower",
+   "de": "Schwarzes Hochhaus",
+   "es": "Rascacielos Negro",
+   "fr": "Gratte-Ciel Noir",
+   "it": "Grattacielo Nero"
+  },
+  "141": {
+   "en": "Seaside Cave",
+   "de": "Strandgrotte",
+   "es": "Gruta Marina",
+   "fr": "Grotte Littorale",
+   "it": "Grotta Costiera"
+  },
+  "142": {
+   "en": "Cave of Being",
+   "de": "Beschwörungshöhle",
+   "es": "Cueva Psique",
+   "fr": "Caverne des Esprits",
+   "it": "Cava della Mente"
+  },
+  "143": {
+   "en": "Hidden Grotto",
+   "de": "Versteckte Lichtung",
+   "es": "Claro Oculto",
+   "fr": "Trouée Cachée",
+   "it": "Meandro Nascosto"
+  },
+  "144": {
+   "en": "Marine Tube",
+   "de": "Unterseetunnel",
+   "es": "Acuatúnel",
+   "fr": "Aquatube",
+   "it": "Tunnel Marino"
+  },
+  "145": {
+   "en": "Virbank Gate",
+   "de": "Vapydro-Tor",
+   "es": "Acceso Hormigón",
+   "fr": "Porte Ondes-sur-Mer",
+   "it": "Varco Zondopoli"
+  },
+  "146": {
+   "en": "Aspertia Gate",
+   "de": "Eventura-Tor",
+   "es": "Acceso Engobe",
+   "fr": "Porte Pavonnay",
+   "it": "Varco Alisopoli"
+  },
+  "147": {
+   "en": "Nature Preserve",
+   "de": "Naturschutzgebiet",
+   "es": "Reserva Natural",
+   "fr": "Réserve Naturelle",
+   "it": "Riserva Naturale"
+  },
+  "148": {
+   "en": "Medal Office",
+   "de": "Medaillenamt",
+   "es": "Insigniárium",
+   "fr": "Bureau des Médailles",
+   "it": "Ufficio Premi"
+  },
+  "149": {
+   "en": "Underground Ruins",
+   "de": "Unterirdische Ruine",
+   "es": "Ruinas Subterráneas",
+   "fr": "Ruines Enfouies",
+   "it": "Rovine Sotterranee"
+  },
+  "150": {
+   "en": "Rock Peak Chamber",
+   "de": "Steingipfelkammer",
+   "es": "Sala Pico Roca",
+   "fr": "Salle Pic Rocheux",
+   "it": "Sala Picco"
+  },
+  "151": {
+   "en": "Iceberg Chamber",
+   "de": "Eisbergkammer",
+   "es": "Sala Iceberg",
+   "fr": "Salle Iceberg",
+   "it": "Sala Iceberg"
+  },
+  "152": {
+   "en": "Iron Chamber",
+   "de": "Eisenkammer",
+   "es": "Sala Hierro",
+   "fr": "Salle Fer",
+   "it": "Sala Ferro"
+  },
+  "153": {
+   "en": "Pledge Grove",
+   "de": "Schwurhain",
+   "es": "Arboleda Promesa",
+   "fr": "Bois du Serment",
+   "it": "Bosco del Giuramento"
+  },
+  "30002": {
+   "en": "Link Trade",
+   "de": "Linktausch",
+   "es": "Intercambio",
+   "fr": "Échange Link",
+   "it": "Scambio in link"
+  },
+  "30003": {
+   "en": "Link Trade",
+   "de": "Linktausch",
+   "es": "Intercambio",
+   "fr": "Échange Link",
+   "it": "Scambio in link"
+  },
+  "30004": {
+   "en": "Kanto"
+  },
+  "30005": {
+   "en": "Johto"
+  },
+  "30006": {
+   "en": "Hoenn"
+  },
+  "30007": {
+   "en": "Sinnoh"
+  },
+  "30008": {
+   "en": "Distant Land",
+   "de": "Entferntes Land",
+   "es": "Tierra lejana",
+   "fr": "Pays lointain",
+   "it": "Terra Lontana"
+  },
+  "30014": {
+   "en": "Entralink",
+   "de": "Kontaktebene",
+   "es": "Zona Nexo",
+   "fr": "Heylink",
+   "it": "Intramondo"
+  },
+  "30015": {
+   "en": "Pokémon Dream Radar",
+   "de": "Pokémon Traumradar",
+   "es": "RAdar Pokémon",
+   "fr": "RAdar Pokémon",
+   "it": "RAdar Pokémon"
+  },
+  "40001": {
+   "en": "Lovely place",
+   "de": "Idyll",
+   "es": "Lugar encantador",
+   "fr": "Endroit superbe",
+   "it": "Luogo grazioso"
+  },
+  "40002": {
+   "en": "Faraway place",
+   "de": "Entfernter Ort",
+   "es": "Lugar lejano",
+   "fr": "Endroit lointain",
+   "it": "Luogo Remoto"
+  },
+  "40003": {
+   "en": "Pokémon Movie",
+   "es": "Película Pokémon",
+   "fr": "Film Pokémon",
+   "it": "Film Pokémon"
+  },
+  "40004": {
+   "en": "Pokémon Movie 10",
+   "de": "Pokémon Film 10",
+   "es": "Película PKMN 10",
+   "fr": "Film Pokémon 10",
+   "it": "Film Pokémon 10"
+  },
+  "40005": {
+   "en": "Pokémon Movie 11",
+   "de": "Pokémon Film 11",
+   "es": "Película PKMN 11",
+   "fr": "Film Pokémon 11",
+   "it": "Film Pokémon 11"
+  },
+  "40006": {
+   "en": "Pokémon Movie 12",
+   "de": "Pokémon Film 12",
+   "es": "Película PKMN 12",
+   "fr": "Film Pokémon 12",
+   "it": "Film Pokémon 12"
+  },
+  "40007": {
+   "en": "Pokémon Movie 13",
+   "de": "Pokémon Film 13",
+   "es": "Película PKMN 13",
+   "fr": "Film Pokémon 13",
+   "it": "Film Pokémon 13"
+  },
+  "40008": {
+   "en": "Pokémon Movie 14",
+   "de": "Pokémon Film 14",
+   "es": "Película PKMN 14",
+   "fr": "Film Pokémon 14",
+   "it": "Film Pokémon 14"
+  },
+  "40009": {
+   "en": "Pokémon Movie 15",
+   "de": "Pokémon Film 15",
+   "es": "Película PKMN 15",
+   "fr": "Film Pokémon 15",
+   "it": "Film Pokémon 15"
+  },
+  "40010": {
+   "en": "Pokémon Movie 16",
+   "de": "Pokémon Film 16",
+   "es": "Película PKMN 16",
+   "fr": "Film Pokémon 16",
+   "it": "Film Pokémon 16"
+  },
+  "40011": {
+   "en": "Pokémon Movie 17",
+   "de": "Pokémon Film 17",
+   "es": "Película PKMN 17",
+   "fr": "Film Pokémon 17",
+   "it": "Film Pokémon 17"
+  },
+  "40012": {
+   "en": "Pokémon Movie 18",
+   "de": "Pokémon Film 18",
+   "es": "Película PKMN 18",
+   "fr": "Film Pokémon 18",
+   "it": "Film Pokémon 18"
+  },
+  "40013": {
+   "en": "Pokémon Movie 19",
+   "de": "Pokémon Film 19",
+   "es": "Película PKMN 19",
+   "fr": "Film Pokémon 19",
+   "it": "Film Pokémon 19"
+  },
+  "40014": {
+   "en": "Pokémon Movie 20",
+   "de": "Pokémon Film 20",
+   "es": "Película PKMN 20",
+   "fr": "Film Pokémon 20",
+   "it": "Film Pokémon 20"
+  },
+  "40015": {
+   "en": "Pokémon Center",
+   "de": "Pokémon-Center",
+   "es": "Centro Pokémon",
+   "fr": "Centre Pokémon",
+   "it": "Centro Pokémon"
+  },
+  "40016": {
+   "en": "Pokémon Cartoon",
+   "es": "Animación PKMN",
+   "fr": "Dessin animé Pokémon",
+   "it": "Cartone Pokémon"
+  },
+  "40017": {
+   "en": "PC Tokyo",
+   "es": "CP Tokio",
+   "fr": "CP Tokyo",
+   "it": "CP Tokyo"
+  },
+  "40018": {
+   "en": "PC Osaka",
+   "es": "CP Osaka",
+   "fr": "CP Osaka",
+   "it": "CP Osaka"
+  },
+  "40019": {
+   "en": "PC Fukuoka",
+   "es": "CP Fukuoka",
+   "fr": "CP Fukuoka",
+   "it": "CP Fukuoka"
+  },
+  "40020": {
+   "en": "PC Nagoya",
+   "es": "CP Nagoya",
+   "fr": "CP Nagoya",
+   "it": "CP Nagoya"
+  },
+  "40021": {
+   "en": "PC Sapporo",
+   "es": "CP Sapporo",
+   "fr": "CP Sapporo",
+   "it": "CP Sapporo"
+  },
+  "40022": {
+   "en": "PC Yokohama",
+   "es": "CP Yokohama",
+   "fr": "CP Yokohama",
+   "it": "CP Yokohama"
+  },
+  "40023": {
+   "en": "WCS",
+   "es": "Campeonato Mundial"
+  },
+  "40024": {
+   "en": "WCS 2010",
+   "es": "Camp. Mundial 2010"
+  },
+  "40025": {
+   "en": "WCS 2011",
+   "es": "Camp. Mundial 2011"
+  },
+  "40026": {
+   "en": "WCS 2012",
+   "es": "Camp. Mundial 2012"
+  },
+  "40027": {
+   "en": "WCS 2013",
+   "es": "Camp. Mundial 2013"
+  },
+  "40028": {
+   "en": "WCS 2014",
+   "es": "Camp. Mundial 2014"
+  },
+  "40029": {
+   "en": "WCS 2015",
+   "es": "Camp. Mundial 2015"
+  },
+  "40030": {
+   "en": "WCS 2016",
+   "es": "Camp. Mundial 2016"
+  },
+  "40031": {
+   "en": "WCS 2017",
+   "es": "Camp. Mundial 2017"
+  },
+  "40032": {
+   "en": "WCS 2018",
+   "es": "Camp. Mundial 2018"
+  },
+  "40033": {
+   "en": "WCS 2019",
+   "es": "Camp. Mundial 2019"
+  },
+  "40034": {
+   "en": "WCS 2020",
+   "es": "Camp. Mundial 2020"
+  },
+  "40035": {
+   "en": "Worlds",
+   "es": "Campeonato"
+  },
+  "40036": {
+   "en": "Worlds 2010",
+   "es": "Campeonato 2010"
+  },
+  "40037": {
+   "en": "Worlds 2011",
+   "es": "Campeonato 2011"
+  },
+  "40038": {
+   "en": "Worlds 2012",
+   "es": "Campeonato 2012"
+  },
+  "40039": {
+   "en": "Worlds 2013",
+   "es": "Campeonato 2013"
+  },
+  "40040": {
+   "en": "Worlds 2014",
+   "es": "Campeonato 2014"
+  },
+  "40041": {
+   "en": "Worlds 2015",
+   "es": "Campeonato 2015"
+  },
+  "40042": {
+   "en": "Worlds 2016",
+   "es": "Campeonato 2016"
+  },
+  "40043": {
+   "en": "Worlds 2017",
+   "es": "Campeonato 2017"
+  },
+  "40044": {
+   "en": "Worlds 2018",
+   "es": "Campeonato 2018"
+  },
+  "40045": {
+   "en": "Worlds 2019",
+   "es": "Campeonato 2019"
+  },
+  "40046": {
+   "en": "Worlds 2020",
+   "es": "Campeonato 2020"
+  },
+  "40047": {
+   "en": "VGE",
+   "es": "Evento de VJ",
+   "it": "Evento di Gioco"
+  },
+  "40048": {
+   "en": "VGE 2010",
+   "es": "Evento de VJ 2010",
+   "it": "Evento di Gioco 2010"
+  },
+  "40049": {
+   "en": "VGE 2011",
+   "es": "Evento de VJ 2011",
+   "it": "Evento di Gioco 2011"
+  },
+  "40050": {
+   "en": "VGE 2012",
+   "es": "Evento de VJ 2012",
+   "it": "Evento di Gioco 2012"
+  },
+  "40051": {
+   "en": "VGE 2013",
+   "es": "Evento de VJ 2013",
+   "it": "Evento di Gioco 2013"
+  },
+  "40052": {
+   "en": "VGE 2014",
+   "es": "Evento de VJ 2014",
+   "it": "Evento di Gioco 2014"
+  },
+  "40053": {
+   "en": "VGE 2015",
+   "es": "Evento de VJ 2015",
+   "it": "Evento di Gioco 2015"
+  },
+  "40054": {
+   "en": "VGE 2016",
+   "es": "Evento de VJ 2016",
+   "it": "Evento di Gioco 2016"
+  },
+  "40055": {
+   "en": "VGE 2017",
+   "es": "Evento de VJ 2017",
+   "it": "Evento di Gioco 2017"
+  },
+  "40056": {
+   "en": "VGE 2018",
+   "es": "Evento de VJ 2018",
+   "it": "Evento di Gioco 2018"
+  },
+  "40057": {
+   "en": "VGE 2019",
+   "es": "Evento de VJ 2019",
+   "it": "Evento di Gioco 2019"
+  },
+  "40058": {
+   "en": "VGE 2020",
+   "es": "Evento de VJ 2020",
+   "it": "Evento di Gioco 2020"
+  },
+  "40059": {
+   "en": "Pokémon Event",
+   "es": "Evento PKMN",
+   "fr": "Événement Pokémon",
+   "it": "Evento Pokémon"
+  },
+  "40060": {
+   "en": "Battle Competition",
+   "de": "Kampfturnier",
+   "es": "Torneo",
+   "fr": "Compétitions",
+   "it": "Gara di Lotta"
+  },
+  "40061": {
+   "en": "Game Event",
+   "de": "Spielveranstaltung",
+   "es": "Evento de Juegos",
+   "fr": "Événements",
+   "it": "Evento videoludico"
+  },
+  "40062": {
+   "en": "Pokémon Fan Club",
+   "es": "Club Fans PKMN",
+   "fr": "Fan Club Pokémon"
+  },
+  "40063": {
+   "en": "Pokémon Sunday"
+  },
+  "40064": {
+   "en": "Challenge Plaza",
+   "de": "Challenge-Plaza",
+   "es": "Plaza Reto",
+   "fr": "Square Défi",
+   "it": "Sfida in Piazza"
+  },
+  "40065": {
+   "en": "Battle Challenge",
+   "es": "Reto Batalla",
+   "fr": "Défi Combat",
+   "it": "Sfida di Lotta"
+  },
+  "40066": {
+   "en": "Trainers' Court",
+   "de": "Trainer's Court",
+   "es": "Pista Entrenadores",
+   "fr": "Court des Dresseurs",
+   "it": "Campo Allenatori"
+  },
+  "40067": {
+   "en": "Battle Tour",
+   "es": "Tour de Batalla",
+   "fr": "Tournoi Combat",
+   "it": "Tour di Lotta"
+  },
+  "40068": {
+   "en": "Concert",
+   "de": "Konzert",
+   "es": "Concierto Pokémon",
+   "it": "Concerto"
+  },
+  "40069": {
+   "en": "Wi-Fi Gift",
+   "de": "Wi-Fi-Geschenk",
+   "es": "Regalo Wi-Fi",
+   "fr": "Cadeau Wi-Fi",
+   "it": "Dono Wi-Fi"
+  },
+  "40070": {
+   "en": "Pokémon Ranger"
+  },
+  "40071": {
+   "en": "Ranger Union",
+   "de": "Ranger-Vereinigung",
+   "es": "Unión Ranger",
+   "fr": "Fédération Ranger",
+   "it": "Federazione Ranger"
+  },
+  "40072": {
+   "en": "PBR"
+  },
+  "40073": {
+   "en": "Pokémon DW",
+   "es": "Pokémon Dream World",
+   "it": "PDW"
+  },
+  "40074": {
+   "en": "Pokémon Event 10",
+   "es": "Evento PKMN 10",
+   "fr": "Événement Pokémon 10",
+   "it": "Even. Pokémon 10"
+  },
+  "40075": {
+   "en": "Pokémon Event 11",
+   "es": "Evento PKMN 11",
+   "fr": "Événement Pokémon 11",
+   "it": "Even. Pokémon 11"
+  },
+  "40076": {
+   "en": "Pokémon Event 12",
+   "es": "Evento PKMN 12",
+   "fr": "Événement Pokémon 12",
+   "it": "Even. Pokémon 12"
+  },
+  "40077": {
+   "en": "Pokémon Event 13",
+   "es": "Evento PKMN 13",
+   "fr": "Événement Pokémon 13",
+   "it": "Even. Pokémon 13"
+  },
+  "40078": {
+   "en": "Pokémon Event 14",
+   "es": "Evento PKMN 14",
+   "fr": "Événement Pokémon 14",
+   "it": "Even. Pokémon 14"
+  },
+  "40079": {
+   "en": "Pokémon Event 15",
+   "es": "Evento PKMN 15",
+   "fr": "Événement Pokémon 15",
+   "it": "Even. Pokémon 15"
+  },
+  "40080": {
+   "en": "Pokémon Event 16",
+   "es": "Evento PKMN 16",
+   "fr": "Événement Pokémon 16",
+   "it": "Even. Pokémon 16"
+  },
+  "40081": {
+   "en": "Pokémon Event 17",
+   "es": "Evento PKMN 17",
+   "fr": "Événement Pokémon 17",
+   "it": "Even. Pokémon 17"
+  },
+  "40082": {
+   "en": "Pokémon Event 18",
+   "es": "Evento PKMN 18",
+   "fr": "Événement Pokémon 18",
+   "it": "Even. Pokémon 18"
+  },
+  "40083": {
+   "en": "Pokémon Event 19",
+   "es": "Evento PKMN 19",
+   "fr": "Événement Pokémon 19",
+   "it": "Even. Pokémon 19"
+  },
+  "40084": {
+   "en": "Pokémon Event 20",
+   "es": "Evento PKMN 20",
+   "fr": "Événement Pokémon 20",
+   "it": "Even. Pokémon 20"
+  },
+  "40085": {
+   "en": "Pokémon Festa"
+  },
+  "40086": {
+   "en": "Pokémon Festa 10"
+  },
+  "40087": {
+   "en": "Pokémon Festa 11"
+  },
+  "40088": {
+   "en": "Pokémon Festa 12"
+  },
+  "40089": {
+   "en": "Pokémon Festa 13"
+  },
+  "40090": {
+   "en": "Pokémon Festa 14"
+  },
+  "40091": {
+   "en": "Pokémon Festa 15"
+  },
+  "40092": {
+   "en": "Pokémon Festa 16"
+  },
+  "40093": {
+   "en": "Pokémon Festa 17"
+  },
+  "40094": {
+   "en": "Pokémon Festa 18"
+  },
+  "40095": {
+   "en": "Pokémon Festa 19"
+  },
+  "40096": {
+   "en": "Pokémon Festa 20"
+  },
+  "40097": {
+   "en": "POKÉPARK"
+  },
+  "40098": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 10",
+   "es": "POKÉPARK 10",
+   "fr": "POKÉPARK 10",
+   "it": "POKÉPARK 10"
+  },
+  "40099": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 11",
+   "es": "POKÉPARK 11",
+   "fr": "POKÉPARK 11",
+   "it": "POKÉPARK 11"
+  },
+  "40100": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 12",
+   "es": "POKÉPARK 12",
+   "fr": "POKÉPARK 12",
+   "it": "POKÉPARK 12"
+  },
+  "40101": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 13",
+   "es": "POKÉPARK 13",
+   "fr": "POKÉPARK 13",
+   "it": "POKÉPARK 13"
+  },
+  "40102": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 14",
+   "es": "POKÉPARK 14",
+   "fr": "POKÉPARK 14",
+   "it": "POKÉPARK 14"
+  },
+  "40103": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 15",
+   "es": "POKÉPARK 15",
+   "fr": "POKÉPARK 15",
+   "it": "POKÉPARK 15"
+  },
+  "40104": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 16",
+   "es": "POKÉPARK 16",
+   "fr": "POKÉPARK 16",
+   "it": "POKÉPARK 16"
+  },
+  "40105": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 17",
+   "es": "POKÉPARK 17",
+   "fr": "POKÉPARK 17",
+   "it": "POKÉPARK 17"
+  },
+  "40106": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 18",
+   "es": "POKÉPARK 18",
+   "fr": "POKÉPARK 18",
+   "it": "POKÉPARK 18"
+  },
+  "40107": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 19",
+   "es": "POKÉPARK 19",
+   "fr": "POKÉPARK 19",
+   "it": "POKÉPARK 19"
+  },
+  "40108": {
+   "en": "POKÉPARK",
+   "de": "POKÉPARK 20",
+   "es": "POKÉPARK 20",
+   "fr": "POKÉPARK 20",
+   "it": "POKÉPARK 20"
+  },
+  "40109": {
+   "en": "Event Site",
+   "de": "Event",
+   "es": "Sitio Evento",
+   "fr": "Lieu d'Événement",
+   "it": "Luogo Evento"
+  },
+  "60001": {
+   "en": "Stranger",
+   "de": "Entfernte Person",
+   "es": "Persona lejana",
+   "fr": "Personne lointaine",
+   "it": "Persona lontana"
+  },
+  "60002": {
+   "en": "Day-Care Couple",
+   "de": "Betreuerpärchen",
+   "es": "Pareja guardería",
+   "fr": "Couple de la Pension",
+   "it": "Coppia Pensione"
+  },
+  "60003": {
+   "en": "PKMN Breeder",
+   "de": "Züchter",
+   "es": "Criapokémon",
+   "fr": "Éleveuse",
+   "it": "AllevaPKMN"
+  }
+ }
+}

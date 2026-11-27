@@ -3757,196 +3757,290 @@
   "0": {
    "en": "Pallet Town",
    "de": "Alabastia",
+   "es": "Pueblo Paleta",
+   "fr": "Bourg Palette",
+   "it": "Biancavilla",
    "label": "PalletTownName"
   },
   "1": {
    "en": "Viridian City",
    "de": "Vertania City",
+   "es": "Ciudad Verde",
+   "fr": "Jadielle",
+   "it": "Smeraldopoli",
    "label": "ViridianCityName"
   },
   "2": {
    "en": "Pewter City",
    "de": "Marmoria City",
+   "es": "Ciudad Plateada",
+   "fr": "Argenta",
+   "it": "Plumbeopoli",
    "label": "PewterCityName"
   },
   "3": {
    "en": "Cerulean City",
    "de": "Azuria City",
+   "es": "Ciudad Celeste",
+   "fr": "Azuria",
+   "it": "Celestopoli",
    "label": "CeruleanCityName"
   },
   "4": {
    "en": "Lavender Town",
    "de": "Lavandia",
+   "es": "Pueblo Lavanda",
+   "fr": "Lavanville",
+   "it": "Lavandonia",
    "label": "LavenderTownName"
   },
   "5": {
    "en": "Vermilion City",
    "de": "Orania City",
+   "es": "Ciudad Carmín",
+   "fr": "Carmin sur Mer",
+   "it": "Aranciopoli",
    "label": "VermilionCityName"
   },
   "6": {
    "en": "Celadon City",
    "de": "Prismania City",
+   "es": "Ciudad Azulona",
+   "fr": "Céladopole",
+   "it": "Azzurropoli",
    "label": "CeladonCityName"
   },
   "7": {
    "en": "Fuchsia City",
    "de": "Fuchsania City",
+   "es": "Ciudad Fucsia",
+   "fr": "Parmanie",
+   "it": "Fucsiapoli",
    "label": "FuchsiaCityName"
   },
   "8": {
    "en": "Cinnabar Island",
    "de": "Zinnoberinsel",
+   "es": "Isla Canela",
+   "fr": "Cramois'Île",
+   "it": "Isola Cannella",
    "label": "CinnabarIslandName"
   },
   "9": {
    "en": "Indigo Plateau",
    "de": "Indigo Plateau",
+   "es": "Meseta Añil",
+   "fr": "Plateau Indigo",
+   "it": "Altopiano Blu",
    "label": "IndigoPlateauName"
   },
   "10": {
    "en": "Saffron City",
    "de": "Saffronia City",
+   "es": "Ciudad Azafrán",
+   "fr": "Safrania",
+   "it": "Zafferanopoli",
    "label": "SaffronCityName"
   },
   "11": {
    "en": "Route 1",
    "de": "Route 1",
+   "es": "Ruta 1",
+   "it": "Percorso 1",
    "label": "Route1Name"
   },
   "12": {
    "en": "Route 2",
    "de": "Route 2",
+   "es": "Ruta 2",
+   "it": "Percorso 2",
    "label": "Route2Name"
   },
   "13": {
    "en": "Route 3",
    "de": "Route 3",
+   "es": "Ruta 3",
+   "it": "Percorso 3",
    "label": "Route3Name"
   },
   "14": {
    "en": "Route 4",
    "de": "Route 4",
+   "es": "Ruta 4",
+   "it": "Percorso 4",
    "label": "Route4Name"
   },
   "15": {
    "en": "Route 5",
    "de": "Route 5",
+   "es": "Ruta 5",
+   "it": "Percorso 5",
    "label": "Route5Name"
   },
   "16": {
    "en": "Route 6",
    "de": "Route 6",
+   "es": "Ruta 6",
+   "it": "Percorso 6",
    "label": "Route6Name"
   },
   "17": {
    "en": "Route 7",
    "de": "Route 7",
+   "es": "Ruta 7",
+   "it": "Percorso 7",
    "label": "Route7Name"
   },
   "18": {
    "en": "Route 8",
    "de": "Route 8",
+   "es": "Ruta 8",
+   "it": "Percorso 8",
    "label": "Route8Name"
   },
   "19": {
    "en": "Route 9",
    "de": "Route 9",
+   "es": "Ruta 9",
+   "it": "Percorso 9",
    "label": "Route9Name"
   },
   "20": {
    "en": "Route 10",
    "de": "Route 10",
+   "es": "Ruta 10",
+   "it": "Percorso 10",
    "label": "Route10Name"
   },
   "21": {
    "en": "Route 11",
    "de": "Route 11",
+   "es": "Ruta 11",
+   "it": "Percorso 11",
    "label": "Route11Name"
   },
   "22": {
    "en": "Route 12",
    "de": "Route 12",
+   "es": "Ruta 12",
+   "it": "Percorso 12",
    "label": "Route12Name"
   },
   "23": {
    "en": "Route 13",
    "de": "Route 13",
+   "es": "Ruta 13",
+   "it": "Percorso 13",
    "label": "Route13Name"
   },
   "24": {
    "en": "Route 14",
    "de": "Route 14",
+   "es": "Ruta 14",
+   "it": "Percorso 14",
    "label": "Route14Name"
   },
   "25": {
    "en": "Route 15",
    "de": "Route 15",
+   "es": "Ruta 15",
+   "it": "Percorso 15",
    "label": "Route15Name"
   },
   "26": {
    "en": "Route 16",
    "de": "Route 16",
+   "es": "Ruta 16",
+   "it": "Percorso 16",
    "label": "Route16Name"
   },
   "27": {
    "en": "Route 17",
    "de": "Route 17",
+   "es": "Ruta 17",
+   "it": "Percorso 17",
    "label": "Route17Name"
   },
   "28": {
    "en": "Route 18",
    "de": "Route 18",
+   "es": "Ruta 18",
+   "it": "Percorso 18",
    "label": "Route18Name"
   },
   "29": {
    "en": "Sea Route 19",
    "de": "Sea Route 19",
+   "es": "Ruta 19",
+   "fr": "Chenal 19",
+   "it": "Percorso 19",
    "label": "Route19Name"
   },
   "30": {
    "en": "Sea Route 20",
    "de": "Sea Route 20",
+   "es": "Ruta 20",
+   "fr": "Chenal 20",
+   "it": "Percorso 20",
    "label": "Route20Name"
   },
   "31": {
    "en": "Sea Route 21",
    "de": "Sea Route 21",
+   "es": "Ruta 21",
+   "fr": "Chenal 21",
+   "it": "Percorso 21",
    "label": "Route21Name"
   },
   "32": {
    "en": "Route 22",
    "de": "Route 22",
+   "es": "Ruta 22",
+   "it": "Percorso 22",
    "label": "Route22Name"
   },
   "33": {
    "en": "Route 23",
    "de": "Route 23",
+   "es": "Ruta 23",
+   "it": "Percorso 23",
    "label": "Route23Name"
   },
   "34": {
    "en": "Route 24",
    "de": "Route 24",
+   "es": "Ruta 24",
+   "it": "Percorso 24",
    "label": "Route24Name"
   },
   "35": {
    "en": "Route 25",
    "de": "Route 25",
+   "es": "Ruta 25",
+   "it": "Percorso 25",
    "label": "Route25Name"
   },
   "36": {
    "en": "Viridian Forest",
    "de": "Vertania-Wald",
+   "es": "Bosque Verde",
+   "fr": "Forêt de Jade",
+   "it": "Bosco Smeraldo",
    "label": "ViridianForestName"
   },
   "37": {
    "en": "Mt. Moon",
    "de": "Mondberg",
+   "fr": "Mont Sélénite",
+   "it": "Monte Luna",
    "label": "MountMoonName"
   },
   "38": {
    "en": "Rock Tunnel",
    "de": "Felstunnel",
+   "es": "Túnel Roca",
+   "fr": "Grotte",
+   "it": "Tunnel Roccioso",
    "label": "RockTunnelName"
   },
   "39": {
@@ -3957,66 +4051,104 @@
   "40": {
    "en": "S.S. Anne",
    "de": "M.S. Anne",
+   "fr": "L'Océane",
+   "it": "M/N Anna",
    "label": "SSAnneName"
   },
   "41": {
    "en": "Pokémon League",
    "de": "Pokémon Liga",
+   "es": "Liga Pokémon",
+   "fr": "Ligue Pokémon",
+   "it": "Lega Pokémon",
    "label": "PokemonLeagueName"
   },
   "42": {
    "en": "Underground Path",
    "de": "Tunnelpfad",
+   "es": "Vía Subterránea",
+   "fr": "Souterrain",
+   "it": "Via Sotterranea",
    "label": "UndergroundPathName"
   },
   "43": {
    "en": "Pokémon Tower",
    "de": "Pokémon Turm",
+   "es": "Torre Pokémon",
+   "fr": "Tour Pokémon",
+   "it": "Torre Pokémon",
    "label": "PokemonTowerName"
   },
   "44": {
    "en": "Seafoam Islands",
    "de": "Seeschauminseln",
+   "es": "Islas Espuma",
+   "fr": "Îles Écume",
+   "it": "Isole Spumarine",
    "label": "SeafoamIslandsName"
   },
   "45": {
    "en": "Victory Road",
    "de": "Siegesstrasse",
+   "es": "Calle Victoria",
+   "fr": "Route Victoire",
+   "it": "Via Vittoria",
    "label": "VictoryRoadName"
   },
   "46": {
    "en": "Diglett's Cave",
    "de": "Digdas Höhle",
+   "es": "Cueva Diglett",
+   "fr": "Cave Taupiqueur",
+   "it": "Grotta Diglett",
    "label": "DiglettsCaveName"
   },
   "47": {
    "en": "Rocket HQ",
    "de": "Rocket-Versteck",
+   "es": "Guarida Rocket",
+   "fr": "Repaire Rocket",
+   "it": "Rifugio Rocket",
    "label": "RocketHQName"
   },
   "48": {
    "en": "Silph Co.",
    "de": "Silph Co.",
+   "es": "Silph S.A.",
+   "fr": "Sylphe SARL",
+   "it": "Silph SpA",
    "label": "SilphCoName"
   },
   "49": {
    "en": "Pokémon Mansion",
    "de": "Pokémon-Haus",
+   "es": "Mansión Pokémon",
+   "fr": "Manoir Pokémon",
+   "it": "Villa Pokémon",
    "label": "PokemonMansionName"
   },
   "50": {
    "en": "Safari Zone",
    "de": "Safari-Zone",
+   "es": "Zona Safari",
+   "fr": "Parc Safari",
+   "it": "Zona Safari",
    "label": "SafariZoneName"
   },
   "51": {
    "en": "Cerulean Cave",
    "de": "Azuria-Höhle",
+   "es": "Cueva Celeste",
+   "fr": "Caverne Azurée",
+   "it": "Grotta Celeste",
    "label": "CeruleanCaveName"
   },
   "52": {
    "en": "Power Plant",
    "de": "Kraftwerk",
+   "es": "Central Energía",
+   "fr": "Centrale",
+   "it": "Centrale Elett.",
    "label": "PowerPlantName"
   }
  }

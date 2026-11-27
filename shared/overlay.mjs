@@ -6,6 +6,7 @@
 // ids, no spoiler data. The server pushes a fresh one whenever the run's doc changes.
 
 import { PROGRESSION } from './routes.mjs';
+import { locationLabel } from './live/location.mjs';
 import { slotsOf, runMode } from './slots.mjs';
 
 export const OVERLAY_FEED = 30; // newest log entries in a snapshot (alerts only need the latest ones)
@@ -62,7 +63,7 @@ function liteFeed(v) {
 
 /**
  * Display name of an area key: the doc's own area entry, the curated route list, a met-location key
- * (`m<gen>-<id>`) through the location tables { gen4, loc2, loc3, loc6, loc7 }, else the key itself.
+ * (`m<gen>-<id>`) through the location tables (locationLabel: { gen4, loc2 … loc7 }), else the key itself.
  */
 export function areaLabel(key, { doc = {}, tables = {}, lang = 'en' } = {}) {
   if (!key) return '';
@@ -71,14 +72,10 @@ export function areaLabel(key, { doc = {}, tables = {}, lang = 'en' } = {}) {
   if (ownName) return String(ownName);
   if (key === 'starter') return 'Starter';
   const curated = PROGRESSION.find((x) => x.key === key);
-  if (curated) return curated.name;
+  if (curated) return (curated.met?.length && locationLabel(4, curated.met[0], tables, lang)) || curated.name;
   const m = /^m(\d)-(\d+)$/.exec(key);
   if (m) {
-    const [g, id] = [Number(m[1]), Number(m[2])];
-    const pick = (e) => (e ? (lang === 'de' && e.de) || e.en || '' : '');
-    const name = g === 4 ? (id >= 2000 ? tables.gen4?.locationsSpecial?.[String(id)] : tables.gen4?.locations?.[id])
-      : g === 3 ? pick(tables.loc3?.map?.[String(id)]) : g === 2 ? pick(tables.loc2?.map?.[String(id)])
-        : g === 6 || g === 7 ? pick(tables[`loc${g}`]?.map?.[String(id)]) : '';
+    const name = locationLabel(Number(m[1]), Number(m[2]), tables, lang);
     if (name) return name;
   }
   return key;

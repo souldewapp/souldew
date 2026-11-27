@@ -5,1079 +5,1623 @@
   "0": {
    "en": "Littleroot Town",
    "de": "Wurzelheim",
+   "es": "Villa Raíz",
+   "fr": "Bourg-en-Vol",
+   "it": "Albanova",
    "mapsec": "MAPSEC_LITTLEROOT_TOWN"
   },
   "1": {
    "en": "Oldale Town",
    "de": "Rosaltstadt",
+   "es": "Pueblo Escaso",
+   "fr": "Rosyères",
+   "it": "Solarosa",
    "mapsec": "MAPSEC_OLDALE_TOWN"
   },
   "2": {
    "en": "Dewford Town",
    "de": "Faustauhaven",
+   "es": "Pueblo Azuliza",
+   "fr": "Village Myokara",
+   "it": "Bluruvia",
    "mapsec": "MAPSEC_DEWFORD_TOWN"
   },
   "3": {
    "en": "Lavaridge Town",
    "de": "Bad Lavastadt",
+   "es": "Pueblo Lavacalda",
+   "fr": "Vermilava",
+   "it": "Cuordilava",
    "mapsec": "MAPSEC_LAVARIDGE_TOWN"
   },
   "4": {
    "en": "Fallarbor Town",
    "de": "Laubwechselfeld",
+   "es": "Pueblo Pardal",
+   "fr": "Autéquia",
+   "it": "Brunifoglia",
    "mapsec": "MAPSEC_FALLARBOR_TOWN"
   },
   "5": {
    "en": "Verdanturf Town",
    "de": "Wiesenflur",
+   "es": "Pueblo Verdegal",
+   "fr": "Vergazon",
+   "it": "Mentania",
    "mapsec": "MAPSEC_VERDANTURF_TOWN"
   },
   "6": {
    "en": "Pacifidlog Town",
    "de": "Floßbrunn",
+   "es": "Pueblo Oromar",
+   "fr": "Pacifiville",
+   "it": "Orocea",
    "mapsec": "MAPSEC_PACIFIDLOG_TOWN"
   },
   "7": {
    "en": "Petalburg City",
    "de": "Blütenburg City",
+   "es": "Ciudad Petalia",
+   "fr": "Clémenti-Ville",
+   "it": "Petalipoli",
    "mapsec": "MAPSEC_PETALBURG_CITY"
   },
   "8": {
    "en": "Slateport City",
    "de": "Graphitport City",
+   "es": "Ciudad Portual",
+   "fr": "Poivressel",
+   "it": "Porto Selcepoli",
    "mapsec": "MAPSEC_SLATEPORT_CITY"
   },
   "9": {
    "en": "Mauville City",
    "de": "Malvenfroh City",
+   "es": "Ciudad Malvalona",
+   "fr": "Lavandia",
+   "it": "Ciclamipoli",
    "mapsec": "MAPSEC_MAUVILLE_CITY"
   },
   "10": {
    "en": "Rustboro City",
    "de": "Metarost City",
+   "es": "Ciudad Férrica",
+   "fr": "Mérouville",
+   "it": "Ferrugipoli",
    "mapsec": "MAPSEC_RUSTBORO_CITY"
   },
   "11": {
    "en": "Fortree City",
    "de": "Baumhausen City",
+   "es": "Ciudad Arborada",
+   "fr": "Cimetronelle",
+   "it": "Forestopoli",
    "mapsec": "MAPSEC_FORTREE_CITY"
   },
   "12": {
    "en": "Lilycove City",
    "de": "Seegrasulb City",
+   "es": "Ciudad Calagua",
+   "fr": "Nénucrique",
+   "it": "Porto Alghepoli",
    "mapsec": "MAPSEC_LILYCOVE_CITY"
   },
   "13": {
    "en": "Mossdeep City",
    "de": "Moosbach City",
+   "es": "Ciudad Algaria",
+   "fr": "Algatia",
+   "it": "Verdeazzupoli",
    "mapsec": "MAPSEC_MOSSDEEP_CITY"
   },
   "14": {
    "en": "Sootopolis City",
    "de": "Xeneroville",
+   "es": "Arrecípolis",
+   "fr": "Atalanopolis",
+   "it": "Ceneride",
    "mapsec": "MAPSEC_SOOTOPOLIS_CITY"
   },
   "15": {
    "en": "Ever Grande City",
    "de": "Prachtpolis City",
+   "es": "Ciudad Colosalia",
+   "fr": "Éternara",
+   "it": "Iridopoli",
    "mapsec": "MAPSEC_EVER_GRANDE_CITY"
   },
   "16": {
    "en": "Route 101",
-   "de": "Route 101",
+   "es": "Ruta 101",
+   "it": "Percorso 101",
    "mapsec": "MAPSEC_ROUTE_101"
   },
   "17": {
    "en": "Route 102",
-   "de": "Route 102",
+   "es": "Ruta 102",
+   "it": "Percorso 102",
    "mapsec": "MAPSEC_ROUTE_102"
   },
   "18": {
    "en": "Route 103",
-   "de": "Route 103",
+   "es": "Ruta 103",
+   "it": "Percorso 103",
    "mapsec": "MAPSEC_ROUTE_103"
   },
   "19": {
    "en": "Route 104",
-   "de": "Route 104",
+   "es": "Ruta 104",
+   "it": "Percorso 104",
    "mapsec": "MAPSEC_ROUTE_104"
   },
   "20": {
    "en": "Route 105",
-   "de": "Route 105",
+   "es": "Ruta 105",
+   "fr": "Chenal 105",
+   "it": "Percorso 105",
    "mapsec": "MAPSEC_ROUTE_105"
   },
   "21": {
    "en": "Route 106",
-   "de": "Route 106",
+   "es": "Ruta 106",
+   "fr": "Chenal 106",
+   "it": "Percorso 106",
    "mapsec": "MAPSEC_ROUTE_106"
   },
   "22": {
    "en": "Route 107",
-   "de": "Route 107",
+   "es": "Ruta 107",
+   "fr": "Chenal 107",
+   "it": "Percorso 107",
    "mapsec": "MAPSEC_ROUTE_107"
   },
   "23": {
    "en": "Route 108",
-   "de": "Route 108",
+   "es": "Ruta 108",
+   "fr": "Chenal 108",
+   "it": "Percorso 108",
    "mapsec": "MAPSEC_ROUTE_108"
   },
   "24": {
    "en": "Route 109",
-   "de": "Route 109",
+   "es": "Ruta 109",
+   "fr": "Chenal 109",
+   "it": "Percorso 109",
    "mapsec": "MAPSEC_ROUTE_109"
   },
   "25": {
    "en": "Route 110",
-   "de": "Route 110",
+   "es": "Ruta 110",
+   "it": "Percorso 110",
    "mapsec": "MAPSEC_ROUTE_110"
   },
   "26": {
    "en": "Route 111",
-   "de": "Route 111",
+   "es": "Ruta 111",
+   "it": "Percorso 111",
    "mapsec": "MAPSEC_ROUTE_111"
   },
   "27": {
    "en": "Route 112",
-   "de": "Route 112",
+   "es": "Ruta 112",
+   "it": "Percorso 112",
    "mapsec": "MAPSEC_ROUTE_112"
   },
   "28": {
    "en": "Route 113",
-   "de": "Route 113",
+   "es": "Ruta 113",
+   "it": "Percorso 113",
    "mapsec": "MAPSEC_ROUTE_113"
   },
   "29": {
    "en": "Route 114",
-   "de": "Route 114",
+   "es": "Ruta 114",
+   "it": "Percorso 114",
    "mapsec": "MAPSEC_ROUTE_114"
   },
   "30": {
    "en": "Route 115",
-   "de": "Route 115",
+   "es": "Ruta 115",
+   "it": "Percorso 115",
    "mapsec": "MAPSEC_ROUTE_115"
   },
   "31": {
    "en": "Route 116",
-   "de": "Route 116",
+   "es": "Ruta 116",
+   "it": "Percorso 116",
    "mapsec": "MAPSEC_ROUTE_116"
   },
   "32": {
    "en": "Route 117",
-   "de": "Route 117",
+   "es": "Ruta 117",
+   "it": "Percorso 117",
    "mapsec": "MAPSEC_ROUTE_117"
   },
   "33": {
    "en": "Route 118",
-   "de": "Route 118",
+   "es": "Ruta 118",
+   "it": "Percorso 118",
    "mapsec": "MAPSEC_ROUTE_118"
   },
   "34": {
    "en": "Route 119",
-   "de": "Route 119",
+   "es": "Ruta 119",
+   "it": "Percorso 119",
    "mapsec": "MAPSEC_ROUTE_119"
   },
   "35": {
    "en": "Route 120",
-   "de": "Route 120",
+   "es": "Ruta 120",
+   "it": "Percorso 120",
    "mapsec": "MAPSEC_ROUTE_120"
   },
   "36": {
    "en": "Route 121",
-   "de": "Route 121",
+   "es": "Ruta 121",
+   "it": "Percorso 121",
    "mapsec": "MAPSEC_ROUTE_121"
   },
   "37": {
    "en": "Route 122",
-   "de": "Route 122",
+   "es": "Ruta 122",
+   "fr": "Chenal 122",
+   "it": "Percorso 122",
    "mapsec": "MAPSEC_ROUTE_122"
   },
   "38": {
    "en": "Route 123",
-   "de": "Route 123",
+   "es": "Ruta 123",
+   "it": "Percorso 123",
    "mapsec": "MAPSEC_ROUTE_123"
   },
   "39": {
    "en": "Route 124",
-   "de": "Route 124",
+   "es": "Ruta 124",
+   "fr": "Chenal 124",
+   "it": "Percorso 124",
    "mapsec": "MAPSEC_ROUTE_124"
   },
   "40": {
    "en": "Route 125",
-   "de": "Route 125",
+   "es": "Ruta 125",
+   "fr": "Chenal 125",
+   "it": "Percorso 125",
    "mapsec": "MAPSEC_ROUTE_125"
   },
   "41": {
    "en": "Route 126",
-   "de": "Route 126",
+   "es": "Ruta 126",
+   "fr": "Chenal 126",
+   "it": "Percorso 126",
    "mapsec": "MAPSEC_ROUTE_126"
   },
   "42": {
    "en": "Route 127",
-   "de": "Route 127",
+   "es": "Ruta 127",
+   "fr": "Chenal 127",
+   "it": "Percorso 127",
    "mapsec": "MAPSEC_ROUTE_127"
   },
   "43": {
    "en": "Route 128",
-   "de": "Route 128",
+   "es": "Ruta 128",
+   "fr": "Chenal 128",
+   "it": "Percorso 128",
    "mapsec": "MAPSEC_ROUTE_128"
   },
   "44": {
    "en": "Route 129",
-   "de": "Route 129",
+   "es": "Ruta 129",
+   "fr": "Chenal 129",
+   "it": "Percorso 129",
    "mapsec": "MAPSEC_ROUTE_129"
   },
   "45": {
    "en": "Route 130",
-   "de": "Route 130",
+   "es": "Ruta 130",
+   "fr": "Chenal 130",
+   "it": "Percorso 130",
    "mapsec": "MAPSEC_ROUTE_130"
   },
   "46": {
    "en": "Route 131",
-   "de": "Route 131",
+   "es": "Ruta 131",
+   "fr": "Chenal 131",
+   "it": "Percorso 131",
    "mapsec": "MAPSEC_ROUTE_131"
   },
   "47": {
    "en": "Route 132",
-   "de": "Route 132",
+   "es": "Ruta 132",
+   "fr": "Chenal 132",
+   "it": "Percorso 132",
    "mapsec": "MAPSEC_ROUTE_132"
   },
   "48": {
    "en": "Route 133",
-   "de": "Route 133",
+   "es": "Ruta 133",
+   "fr": "Chenal 133",
+   "it": "Percorso 133",
    "mapsec": "MAPSEC_ROUTE_133"
   },
   "49": {
    "en": "Route 134",
-   "de": "Route 134",
+   "es": "Ruta 134",
+   "fr": "Chenal 134",
+   "it": "Percorso 134",
    "mapsec": "MAPSEC_ROUTE_134"
   },
   "50": {
    "en": "Underwater (Route 124)",
    "de": "Unterwasser (Route 124)",
+   "es": "Bajo el agua (Ruta 124)",
+   "fr": "Fond marin (Chenal 124)",
+   "it": "Sott'acqua (Percorso 124)",
    "mapsec": "MAPSEC_UNDERWATER_124"
   },
   "51": {
    "en": "Underwater (Route 126)",
    "de": "Unterwasser (Route 126)",
+   "es": "Bajo el agua (Ruta 126)",
+   "fr": "Fond marin (Chenal 126)",
+   "it": "Sott'acqua (Percorso 126)",
    "mapsec": "MAPSEC_UNDERWATER_126"
   },
   "52": {
    "en": "Underwater (Route 127)",
    "de": "Unterwasser (Route 127)",
+   "es": "Bajo el agua (Ruta 127)",
+   "fr": "Fond marin (Chenal 127)",
+   "it": "Sott'acqua (Percorso 127)",
    "mapsec": "MAPSEC_UNDERWATER_127"
   },
   "53": {
    "en": "Underwater (Route 128)",
    "de": "Unterwasser (Route 128)",
+   "es": "Bajo el agua (Ruta 128)",
+   "fr": "Fond marin (Chenal 128)",
+   "it": "Sott'acqua (Percorso 128)",
    "mapsec": "MAPSEC_UNDERWATER_128"
   },
   "54": {
    "en": "Underwater (Sootopolis City)",
    "de": "Unterwasser (Prachtpolis City)",
+   "es": "Bajo el agua (Arrecípolis)",
+   "fr": "Fond marin (Atalanopolis)",
+   "it": "Sott'acqua (Ceneride)",
    "mapsec": "MAPSEC_UNDERWATER_SOOTOPOLIS"
   },
   "55": {
    "en": "Granite Cave",
    "de": "Granithöhle",
+   "es": "Cueva Granito",
+   "fr": "Grotte Granite",
+   "it": "Grotta Pietrosa",
    "mapsec": "MAPSEC_GRANITE_CAVE"
   },
   "56": {
    "en": "Mt. Chimney",
    "de": "Schlotberg",
+   "es": "Monte Cenizo",
+   "fr": "Mont Chimnée",
+   "it": "Monte Camino",
    "mapsec": "MAPSEC_MT_CHIMNEY"
   },
   "57": {
    "en": "Safari Zone (RSE)",
    "de": "Safari-Zone (RSS)",
+   "es": "Zona Safari (RZE)",
+   "fr": "Parc Safari (RSE)",
+   "it": "Zona Safari (RZS)",
    "mapsec": "MAPSEC_SAFARI_ZONE"
   },
   "58": {
    "en": "Battle Tower (RS) / Battle Frontier (E)",
    "de": "Duellturm (RS) / Kampfzone (Sm)",
+   "es": "Torre Batalla (RZ) / Frente Batalla (E)",
+   "fr": "Tour de Combat (RS) / Zone de Combat (E)",
+   "it": "Torre Lotta (RZ) / Parco Lotta (S)",
    "mapsec": "MAPSEC_BATTLE_FRONTIER"
   },
   "59": {
    "en": "Petalburg Woods",
    "de": "Blütenburgwald",
+   "es": "Bosque Petalia",
+   "fr": "Bois Clémenti",
+   "it": "Bosco Petalo",
    "mapsec": "MAPSEC_PETALBURG_WOODS"
   },
   "60": {
    "en": "Rusturf Tunnel",
    "de": "Metaflurtunnel",
+   "es": "Túnel Fervergal",
+   "fr": "Tunnel Mérazon",
+   "it": "Tunnel Menferro",
    "mapsec": "MAPSEC_RUSTURF_TUNNEL"
   },
   "61": {
    "en": "Abandoned Ship",
    "de": "Schiffswrack",
+   "es": "Nao Abandonada",
+   "fr": "Épave",
+   "it": "Vecchia Nave",
    "mapsec": "MAPSEC_ABANDONED_SHIP"
   },
   "62": {
    "en": "New Mauville",
    "de": "Neu Malvenfroh",
+   "es": "Malvalanova",
+   "fr": "New Lavandia",
+   "it": "Ciclanova",
    "mapsec": "MAPSEC_NEW_MAUVILLE"
   },
   "63": {
    "en": "Meteor Falls",
    "de": "Meteorfälle",
+   "es": "Cascada Meteoro",
+   "fr": "Site Météore",
+   "it": "Cascate Meteora",
    "mapsec": "MAPSEC_METEOR_FALLS"
   },
   "64": {
    "en": "Meteor Falls (unused)",
    "de": "Meteorfälle (unbenutzt)",
+   "es": "Cascada Meteoro (sin usar)",
+   "fr": "Site Météore (inutilisé)",
+   "it": "Cascate Meteora (inutilizzato)",
    "mapsec": "MAPSEC_METEOR_FALLS2"
   },
   "65": {
    "en": "Mt. Pyre",
    "de": "Pyroberg",
+   "es": "Monte Pírico",
+   "fr": "Mont Mémoria",
+   "it": "Monte Pira",
    "mapsec": "MAPSEC_MT_PYRE"
   },
   "66": {
    "en": "Hideout",
    "de": "Versteck",
+   "es": "Guarida",
+   "fr": "Planque",
+   "it": "Rifugio",
    "mapsec": "MAPSEC_AQUA_HIDEOUT_OLD"
   },
   "67": {
    "en": "Shoal Cave",
    "de": "Küstenhöhle",
+   "es": "Cueva Cardumen",
+   "fr": "Grotte Tréfonds",
+   "it": "Grotta Ondosa",
    "mapsec": "MAPSEC_SHOAL_CAVE"
   },
   "68": {
    "en": "Seafloor Cavern",
    "de": "Tiefseehöhle",
+   "es": "Caverna Abisal",
+   "fr": "Caverne Fondmer",
+   "it": "Antro Abissale",
    "mapsec": "MAPSEC_SEAFLOOR_CAVERN"
   },
   "69": {
    "en": "Underwater (Seafloor Cavern)",
    "de": "Unterwasser (Tiefseehöhle)",
+   "es": "Bajo el agua (Caverna Abisal)",
+   "fr": "Fond marin (Caverne Fondmer)",
+   "it": "Sott'acqua (Antro Abissale)",
    "mapsec": "MAPSEC_UNDERWATER_SEAFLOOR_CAVERN"
   },
   "70": {
    "en": "Victory Road (RSE)",
    "de": "Siegesstraße (RSS)",
+   "es": "Calle Victoria (RZE)",
+   "fr": "Route Victoire (RSE)",
+   "it": "Via Vittoria (RZS)",
    "mapsec": "MAPSEC_VICTORY_ROAD"
   },
   "71": {
    "en": "Mirage Island",
    "de": "Wundereiland",
+   "es": "Isla Espejismo",
+   "fr": "Île Mirage",
+   "it": "Isola Miraggio",
    "mapsec": "MAPSEC_MIRAGE_ISLAND"
   },
   "72": {
    "en": "Cave of Origin",
    "de": "Urzeithöhle",
+   "es": "Cueva Ancestral",
+   "fr": "Grotte Origine",
+   "it": "Grotta dei Tempi",
    "mapsec": "MAPSEC_CAVE_OF_ORIGIN"
   },
   "73": {
    "en": "Southern Island",
    "de": "Insel im Süden",
+   "es": "Isla del Sur",
+   "fr": "Île du Sud",
+   "it": "Isola Remota",
    "mapsec": "MAPSEC_SOUTHERN_ISLAND"
   },
   "74": {
    "en": "Fiery Path",
    "de": "Feuriger Pfad",
+   "es": "Senda Ígnea",
+   "fr": "Chemin Ardent",
+   "it": "Cammino Ardente",
    "mapsec": "MAPSEC_FIERY_PATH"
   },
   "75": {
    "en": "Fiery Path (unused)",
    "de": "Feuriger Pfad (unbenutzt)",
+   "es": "Senda Ígnea (sin usar)",
+   "fr": "Chemin Ardent (inutilisé)",
+   "it": "Cammino Ardente (inutilizzato)",
    "mapsec": "MAPSEC_FIERY_PATH2"
   },
   "76": {
    "en": "Jagged Pass",
    "de": "Steilpass",
+   "es": "Desfiladero",
+   "fr": "Sentier Sinuroc",
+   "it": "Passo Selvaggio",
    "mapsec": "MAPSEC_JAGGED_PASS"
   },
   "77": {
    "en": "Jagged Pass (unused)",
    "de": "Steilpass (unbenutzt)",
+   "es": "Desfiladero (sin usar)",
+   "fr": "Sentier Sinuroc (inutilisé)",
+   "it": "Passo Selvaggio (inutilizzato)",
    "mapsec": "MAPSEC_JAGGED_PASS2"
   },
   "78": {
    "en": "Sealed Chamber",
    "de": "Siegelkammer",
+   "es": "Cámara Sellada",
+   "fr": "Sanctuaire",
+   "it": "Sala Incisa",
    "mapsec": "MAPSEC_SEALED_CHAMBER"
   },
   "79": {
    "en": "Underwater (Route 134)",
    "de": "Unterwasser (Route 134)",
+   "es": "Bajo el agua (Ruta 134)",
+   "fr": "Fond marin (Chenal 134)",
+   "it": "Sott'acqua (Percorso 134)",
    "mapsec": "MAPSEC_UNDERWATER_SEALED_CHAMBER"
   },
   "80": {
    "en": "Scorched Slab",
    "de": "Sonnengrotte",
+   "es": "Gruta Solar",
+   "fr": "Grotte Zénith",
+   "it": "Grottino Solare",
    "mapsec": "MAPSEC_SCORCHED_SLAB"
   },
   "81": {
    "en": "Island Cave",
    "de": "Inselhöhle",
+   "es": "Cueva Insular",
+   "fr": "Grotte Island",
+   "it": "Grotta Insulare",
    "mapsec": "MAPSEC_ISLAND_CAVE"
   },
   "82": {
    "en": "Desert Ruins",
    "de": "Wüstenruine",
+   "es": "Ruinas Desierto",
+   "fr": "Ruines Désert",
+   "it": "Rovine Sabbiose",
    "mapsec": "MAPSEC_DESERT_RUINS"
   },
   "83": {
    "en": "Ancient Tomb",
    "de": "Grabmal",
+   "es": "Tumba Antigua",
+   "fr": "Tombeau Antique",
+   "it": "Tomba Antica",
    "mapsec": "MAPSEC_ANCIENT_TOMB"
   },
   "84": {
    "en": "Inside of Truck",
    "de": "Im Möbelwagen",
+   "es": "Interior Camión",
+   "fr": "Camionnette",
+   "it": "Nel Camion",
    "mapsec": "MAPSEC_INSIDE_OF_TRUCK"
   },
   "85": {
    "en": "Sky Pillar",
    "de": "Himmelturm",
+   "es": "Pilar Celeste",
+   "fr": "Pilier Céleste",
+   "it": "Torre dei Cieli",
    "mapsec": "MAPSEC_SKY_PILLAR"
   },
   "86": {
    "en": "Secret Base",
    "de": "Geheimbasis",
+   "es": "Base Secreta",
+   "fr": "Base Secrète",
+   "it": "Base Segreta",
    "mapsec": "MAPSEC_SECRET_BASE"
   },
   "87": {
    "en": "Ferry",
    "de": "Fähre",
+   "it": "Traghetto",
    "mapsec": "MAPSEC_DYNAMIC"
   },
   "88": {
    "en": "Pallet Town",
    "de": "Alabastia",
+   "es": "Pueblo Paleta",
+   "fr": "Bourg Palette",
+   "it": "Biancavilla",
    "mapsec": "MAPSEC_PALLET_TOWN"
   },
   "89": {
    "en": "Viridian City",
    "de": "Vertania City",
+   "es": "Ciudad Verde",
+   "fr": "Jadielle",
+   "it": "Smeraldopoli",
    "mapsec": "MAPSEC_VIRIDIAN_CITY"
   },
   "90": {
    "en": "Pewter City",
    "de": "Marmoria City",
+   "es": "Ciudad Plateada",
+   "fr": "Argenta",
+   "it": "Plumbeopoli",
    "mapsec": "MAPSEC_PEWTER_CITY"
   },
   "91": {
    "en": "Cerulean City",
    "de": "Azuria City",
+   "es": "Ciudad Celeste",
+   "fr": "Azuria",
+   "it": "Celestopoli",
    "mapsec": "MAPSEC_CERULEAN_CITY"
   },
   "92": {
    "en": "Lavender Town",
    "de": "Lavandia",
+   "es": "Pueblo Lavanda",
+   "fr": "Lavanville",
+   "it": "Lavandonia",
    "mapsec": "MAPSEC_LAVENDER_TOWN"
   },
   "93": {
    "en": "Vermilion City",
    "de": "Orania City",
+   "es": "Ciudad Carmín",
+   "fr": "Carmin sur Mer",
+   "it": "Aranciopoli",
    "mapsec": "MAPSEC_VERMILION_CITY"
   },
   "94": {
    "en": "Celadon City",
    "de": "Prismania City",
+   "es": "Ciudad Azulona",
+   "fr": "Céladopole",
+   "it": "Azzurropoli",
    "mapsec": "MAPSEC_CELADON_CITY"
   },
   "95": {
    "en": "Fuchsia City",
    "de": "Fuchsania City",
+   "es": "Ciudad Fucsia",
+   "fr": "Parmanie",
+   "it": "Fucsiapoli",
    "mapsec": "MAPSEC_FUCHSIA_CITY"
   },
   "96": {
    "en": "Cinnabar Island",
    "de": "Zinnoberinsel",
+   "es": "Isla Canela",
+   "fr": "Cramois'Île",
+   "it": "Isola Cannella",
    "mapsec": "MAPSEC_CINNABAR_ISLAND"
   },
   "97": {
    "en": "Indigo Plateau",
-   "de": "Indigo Plateau",
+   "es": "Meseta Añil",
+   "fr": "Plateau Indigo",
+   "it": "Altopiano Blu",
    "mapsec": "MAPSEC_INDIGO_PLATEAU"
   },
   "98": {
    "en": "Saffron City",
    "de": "Saffronia City",
+   "es": "Ciudad Azafrán",
+   "fr": "Safrania",
+   "it": "Zafferanopoli",
    "mapsec": "MAPSEC_SAFFRON_CITY"
   },
   "99": {
    "en": "Route 4 (Pokémon Center)",
    "de": "Route 4 (Pokémon-Center)",
+   "es": "Ruta 4 (Centro Pokémon)",
+   "fr": "Route 4 (Centre Pokémon)",
+   "it": "Percorso 4 (Centro Pokémon)",
    "mapsec": "MAPSEC_ROUTE_4_POKECENTER"
   },
   "100": {
    "en": "Route 10 (Pokémon Center)",
    "de": "Route 10 (Pokémon-Center)",
+   "es": "Ruta 10 (Centro Pokémon)",
+   "fr": "Route 10 (Centre Pokémon)",
+   "it": "Percorso 10 (Centro Pokémon)",
    "mapsec": "MAPSEC_ROUTE_10_POKECENTER"
   },
   "101": {
    "en": "Route 1",
-   "de": "Route 1",
+   "es": "Ruta 1",
+   "it": "Percorso 1",
    "mapsec": "MAPSEC_ROUTE_1"
   },
   "102": {
    "en": "Route 2",
-   "de": "Route 2",
+   "es": "Ruta 2",
+   "it": "Percorso 2",
    "mapsec": "MAPSEC_ROUTE_2"
   },
   "103": {
    "en": "Route 3",
-   "de": "Route 3",
+   "es": "Ruta 3",
+   "it": "Percorso 3",
    "mapsec": "MAPSEC_ROUTE_3"
   },
   "104": {
    "en": "Route 4",
-   "de": "Route 4",
+   "es": "Ruta 4",
+   "it": "Percorso 4",
    "mapsec": "MAPSEC_ROUTE_4"
   },
   "105": {
    "en": "Route 5",
-   "de": "Route 5",
+   "es": "Ruta 5",
+   "it": "Percorso 5",
    "mapsec": "MAPSEC_ROUTE_5"
   },
   "106": {
    "en": "Route 6",
-   "de": "Route 6",
+   "es": "Ruta 6",
+   "it": "Percorso 6",
    "mapsec": "MAPSEC_ROUTE_6"
   },
   "107": {
    "en": "Route 7",
-   "de": "Route 7",
+   "es": "Ruta 7",
+   "it": "Percorso 7",
    "mapsec": "MAPSEC_ROUTE_7"
   },
   "108": {
    "en": "Route 8",
-   "de": "Route 8",
+   "es": "Ruta 8",
+   "it": "Percorso 8",
    "mapsec": "MAPSEC_ROUTE_8"
   },
   "109": {
    "en": "Route 9",
-   "de": "Route 9",
+   "es": "Ruta 9",
+   "it": "Percorso 9",
    "mapsec": "MAPSEC_ROUTE_9"
   },
   "110": {
    "en": "Route 10",
-   "de": "Route 10",
+   "es": "Ruta 10",
+   "it": "Percorso 10",
    "mapsec": "MAPSEC_ROUTE_10"
   },
   "111": {
    "en": "Route 11",
-   "de": "Route 11",
+   "es": "Ruta 11",
+   "it": "Percorso 11",
    "mapsec": "MAPSEC_ROUTE_11"
   },
   "112": {
    "en": "Route 12",
-   "de": "Route 12",
+   "es": "Ruta 12",
+   "it": "Percorso 12",
    "mapsec": "MAPSEC_ROUTE_12"
   },
   "113": {
    "en": "Route 13",
-   "de": "Route 13",
+   "es": "Ruta 13",
+   "it": "Percorso 13",
    "mapsec": "MAPSEC_ROUTE_13"
   },
   "114": {
    "en": "Route 14",
-   "de": "Route 14",
+   "es": "Ruta 14",
+   "it": "Percorso 14",
    "mapsec": "MAPSEC_ROUTE_14"
   },
   "115": {
    "en": "Route 15",
-   "de": "Route 15",
+   "es": "Ruta 15",
+   "it": "Percorso 15",
    "mapsec": "MAPSEC_ROUTE_15"
   },
   "116": {
    "en": "Route 16",
-   "de": "Route 16",
+   "es": "Ruta 16",
+   "it": "Percorso 16",
    "mapsec": "MAPSEC_ROUTE_16"
   },
   "117": {
    "en": "Route 17",
-   "de": "Route 17",
+   "es": "Ruta 17",
+   "it": "Percorso 17",
    "mapsec": "MAPSEC_ROUTE_17"
   },
   "118": {
    "en": "Route 18",
-   "de": "Route 18",
+   "es": "Ruta 18",
+   "it": "Percorso 18",
    "mapsec": "MAPSEC_ROUTE_18"
   },
   "119": {
    "en": "Route 19",
-   "de": "Route 19",
+   "es": "Ruta 19",
+   "fr": "Chenal 19",
+   "it": "Percorso 19",
    "mapsec": "MAPSEC_ROUTE_19"
   },
   "120": {
    "en": "Route 20",
-   "de": "Route 20",
+   "es": "Ruta 20",
+   "fr": "Chenal 20",
+   "it": "Percorso 20",
    "mapsec": "MAPSEC_ROUTE_20"
   },
   "121": {
    "en": "Route 21",
-   "de": "Route 21",
+   "es": "Ruta 21",
+   "fr": "Chenal 21",
+   "it": "Percorso 21",
    "mapsec": "MAPSEC_ROUTE_21"
   },
   "122": {
    "en": "Route 22",
-   "de": "Route 22",
+   "es": "Ruta 22",
+   "it": "Percorso 22",
    "mapsec": "MAPSEC_ROUTE_22"
   },
   "123": {
    "en": "Route 23",
-   "de": "Route 23",
+   "es": "Ruta 23",
+   "it": "Percorso 23",
    "mapsec": "MAPSEC_ROUTE_23"
   },
   "124": {
    "en": "Route 24",
-   "de": "Route 24",
+   "es": "Ruta 24",
+   "it": "Percorso 24",
    "mapsec": "MAPSEC_ROUTE_24"
   },
   "125": {
    "en": "Route 25",
-   "de": "Route 25",
+   "es": "Ruta 25",
+   "it": "Percorso 25",
    "mapsec": "MAPSEC_ROUTE_25"
   },
   "126": {
    "en": "Viridian Forest",
    "de": "Vertania-Wald",
+   "es": "Bosque Verde",
+   "fr": "Forêt de Jade",
+   "it": "Bosco Smeraldo",
    "mapsec": "MAPSEC_VIRIDIAN_FOREST"
   },
   "127": {
    "en": "Mt. Moon",
    "de": "Mondberg",
+   "fr": "Mont Sélénite",
+   "it": "Monte Luna",
    "mapsec": "MAPSEC_MT_MOON"
   },
   "128": {
    "en": "S.S. Anne",
    "de": "M.S. Anne",
+   "fr": "L'Océane",
+   "it": "M/N Anna",
    "mapsec": "MAPSEC_S_S_ANNE"
   },
   "129": {
    "en": "Underground Path (Routes 5-6)",
    "de": "Tunnelpfad (Routes 5-6)",
+   "es": "Vía Subterránea (Rutas 5-6)",
+   "fr": "Souterrain (Routes 5-6)",
+   "it": "Via Sotterranea (Percorsi 5-6)",
    "mapsec": "MAPSEC_UNDERGROUND_PATH"
   },
   "130": {
    "en": "Underground Path (Routes 7-8)",
    "de": "Tunnelpfad (Routes 7-8)",
+   "es": "Vía Subterránea (Rutas 7-8)",
+   "fr": "Souterrain (Routes 7-8)",
+   "it": "Via Sotterranea (Percorsi 7-8)",
    "mapsec": "MAPSEC_UNDERGROUND_PATH_2"
   },
   "131": {
    "en": "Diglett's Cave",
    "de": "Digdas Höhle",
+   "es": "Cueva Diglett",
+   "fr": "Cave Taupiqueur",
+   "it": "Grotta Diglett",
    "mapsec": "MAPSEC_DIGLETTS_CAVE"
   },
   "132": {
    "en": "Victory Road (Kanto)",
    "de": "Siegesstraße (Kanto)",
+   "es": "Calle Victoria (Kanto)",
+   "fr": "Route Victoire (Kanto)",
+   "it": "Via Vittoria (Kanto)",
    "mapsec": "MAPSEC_KANTO_VICTORY_ROAD"
   },
   "133": {
    "en": "Rocket Hideout",
    "de": "Rocket HQ",
+   "es": "Guarida Rocket",
+   "fr": "Repaire Rocket",
+   "it": "Rifugio Rocket",
    "mapsec": "MAPSEC_ROCKET_HIDEOUT"
   },
   "134": {
    "en": "Silph Co.",
-   "de": "Silph Co.",
+   "es": "Silph S.A.",
+   "fr": "Sylphe SARL",
+   "it": "Silph SpA",
    "mapsec": "MAPSEC_SILPH_CO"
   },
   "135": {
    "en": "Pokémon Mansion",
    "de": "Pokémon-Haus",
+   "es": "Mansión Pokémon",
+   "fr": "Manoir Pokémon",
+   "it": "Villa Pokémon",
    "mapsec": "MAPSEC_POKEMON_MANSION"
   },
   "136": {
    "en": "Safari Zone (Kanto)",
    "de": "Safari-Zone (Kanto)",
+   "es": "Zona Safari (Kanto)",
+   "fr": "Parc Safari (Kanto)",
+   "it": "Zona Safari (Kanto)",
    "mapsec": "MAPSEC_KANTO_SAFARI_ZONE"
   },
   "137": {
    "en": "Pokémon League",
    "de": "Pokémon Liga",
+   "es": "Liga Pokémon",
+   "fr": "Ligue Pokémon",
+   "it": "Lega Pokémon",
    "mapsec": "MAPSEC_POKEMON_LEAGUE"
   },
   "138": {
    "en": "Rock Tunnel",
    "de": "Felstunnel",
+   "es": "Túnel Roca",
+   "fr": "Grotte",
+   "it": "Tunnel Roccioso",
    "mapsec": "MAPSEC_ROCK_TUNNEL"
   },
   "139": {
    "en": "Seafoam Islands",
    "de": "Seeschauminseln",
+   "es": "Islas Espuma",
+   "fr": "Îles Écume",
+   "it": "Isole Spumarine",
    "mapsec": "MAPSEC_SEAFOAM_ISLANDS"
   },
   "140": {
    "en": "Pokémon Tower",
    "de": "Pokémon Turm",
+   "es": "Torre Pokémon",
+   "fr": "Tour Pokémon",
+   "it": "Torre Pokémon",
    "mapsec": "MAPSEC_POKEMON_TOWER"
   },
   "141": {
    "en": "Cerulean Cave",
    "de": "Azuria-Höhle",
+   "es": "Cueva Celeste",
+   "fr": "Caverne Azurée",
+   "it": "Grotta Celeste",
    "mapsec": "MAPSEC_CERULEAN_CAVE"
   },
   "142": {
    "en": "Power Plant",
    "de": "Kraftwerk",
+   "es": "Central Energía",
+   "fr": "Centrale",
+   "it": "Centrale Elett.",
    "mapsec": "MAPSEC_POWER_PLANT"
   },
   "143": {
    "en": "One Island",
    "de": "Eiland Eins",
+   "es": "Isla Prima",
+   "fr": "Île 1",
+   "it": "Primisola",
    "mapsec": "MAPSEC_ONE_ISLAND"
   },
   "144": {
    "en": "Two Island",
    "de": "Eiland Zwei",
+   "es": "Isla Secunda",
+   "fr": "Île 2",
+   "it": "Secondisola",
    "mapsec": "MAPSEC_TWO_ISLAND"
   },
   "145": {
    "en": "Three Island",
    "de": "Eiland Drei",
+   "es": "Isla Tera",
+   "fr": "Île 3",
+   "it": "Terzisola",
    "mapsec": "MAPSEC_THREE_ISLAND"
   },
   "146": {
    "en": "Four Island",
    "de": "Eiland Vier",
+   "es": "Isla Quarta",
+   "fr": "Île 4",
+   "it": "Quartisola",
    "mapsec": "MAPSEC_FOUR_ISLAND"
   },
   "147": {
    "en": "Five Island",
    "de": "Eiland Fünf",
+   "es": "Isla Inta",
+   "fr": "Île 5",
+   "it": "Quintisola",
    "mapsec": "MAPSEC_FIVE_ISLAND"
   },
   "148": {
    "en": "Seven Island",
    "de": "Eiland Sieben",
+   "es": "Isla Sétima",
+   "fr": "Île 7",
+   "it": "Settimisola",
    "mapsec": "MAPSEC_SEVEN_ISLAND"
   },
   "149": {
    "en": "Six Island",
    "de": "Eiland Sechs",
+   "es": "Isla Exta",
+   "fr": "Île 6",
+   "it": "Sestisola",
    "mapsec": "MAPSEC_SIX_ISLAND"
   },
   "150": {
    "en": "Kindle Road",
    "de": "Glühweg",
+   "es": "Camino Candente",
+   "fr": "Route Tison",
+   "it": "Via Vulcanica",
    "mapsec": "MAPSEC_KINDLE_ROAD"
   },
   "151": {
    "en": "Treasure Beach",
    "de": "Schatzgestade",
+   "es": "Playa Tesoro",
+   "fr": "Plage Trésor",
+   "it": "Riva del Tesoro",
    "mapsec": "MAPSEC_TREASURE_BEACH"
   },
   "152": {
    "en": "Cape Brink",
    "de": "Kap Kante",
+   "es": "Cabo Extremo",
+   "fr": "Cap Falaise",
+   "it": "Capo Estremo",
    "mapsec": "MAPSEC_CAPE_BRINK"
   },
   "153": {
    "en": "Bond Bridge",
    "de": "Bundbrücke",
+   "es": "Puente Unión",
+   "fr": "Pont du Lien",
+   "it": "Ponte Abbraccio",
    "mapsec": "MAPSEC_BOND_BRIDGE"
   },
   "154": {
    "en": "Three Isle Port",
    "de": "Tri-Eiland Hafen",
+   "es": "Puerto Isla Tera",
+   "fr": "Port Île 3",
+   "it": "Porto Terzisola",
    "mapsec": "MAPSEC_THREE_ISLE_PORT"
   },
   "155": {
    "en": "Sevii Isle 6",
    "de": "Sevii Eiland 6",
+   "es": "Exta Archi7",
+   "fr": "Île Sevii 6",
+   "it": "Settipelago 6",
    "mapsec": "MAPSEC_SEVII_ISLE_6"
   },
   "156": {
    "en": "Sevii Isle 7",
    "de": "Sevii Eiland 7",
+   "es": "Sétima Archi7",
+   "fr": "Île Sevii 7",
+   "it": "Settipelago 7",
    "mapsec": "MAPSEC_SEVII_ISLE_7"
   },
   "157": {
    "en": "Sevii Isle 8",
    "de": "Sevii Eiland 8",
+   "es": "Uctava Archi7",
+   "fr": "Île Sevii 8",
+   "it": "Settipelago 8",
    "mapsec": "MAPSEC_SEVII_ISLE_8"
   },
   "158": {
    "en": "Sevii Isle 9",
    "de": "Sevii Eiland 9",
+   "es": "Ovena Archi7",
+   "fr": "Île Sevii 9",
+   "it": "Settipelago 9",
    "mapsec": "MAPSEC_SEVII_ISLE_9"
   },
   "159": {
    "en": "Resort Gorgeous",
    "de": "Ferienparadies",
+   "es": "Lugar de Recreo",
+   "fr": "Camp de Vacances",
+   "it": "Perla dei Mari",
    "mapsec": "MAPSEC_RESORT_GORGEOUS"
   },
   "160": {
    "en": "Water Labyrinth",
    "de": "Wasserirrgarten",
+   "es": "Aquarinto",
+   "fr": "Labyrinthe d'O",
+   "it": "Labirinto Marino",
    "mapsec": "MAPSEC_WATER_LABYRINTH"
   },
   "161": {
    "en": "Five Isle Meadow",
    "de": "Eiland 5-Weide",
+   "es": "Prado Isla Inta",
+   "fr": "Pré de l'Île 5",
+   "it": "Prato Quintisola",
    "mapsec": "MAPSEC_FIVE_ISLE_MEADOW"
   },
   "162": {
    "en": "Memorial Pillar",
    "de": "Gedenksäule",
+   "es": "Pilar Recuerdo",
+   "fr": "Mémorial",
+   "it": "Colonna Rocciosa",
    "mapsec": "MAPSEC_MEMORIAL_PILLAR"
   },
   "163": {
    "en": "Outcast Island",
    "de": "Fern-Eiland",
+   "es": "Isla Aislada",
+   "fr": "Île du Lointain",
+   "it": "Isola Solitaria",
    "mapsec": "MAPSEC_OUTCAST_ISLAND"
   },
   "164": {
    "en": "Green Path",
    "de": "Grüner Pfad",
+   "es": "Vía Verde",
+   "fr": "Chemin Vert",
+   "it": "Via Verde",
    "mapsec": "MAPSEC_GREEN_PATH"
   },
   "165": {
    "en": "Water Path",
    "de": "Wasserweg",
+   "es": "Vía Acuática",
+   "fr": "Agualcanal",
+   "it": "Via Marina",
    "mapsec": "MAPSEC_WATER_PATH"
   },
   "166": {
    "en": "Ruin Valley",
    "de": "Ruinental",
+   "es": "Valle Ruinas",
+   "fr": "Vallée Ruine",
+   "it": "Valle Antica",
    "mapsec": "MAPSEC_RUIN_VALLEY"
   },
   "167": {
    "en": "Trainer Tower (exterior)",
    "de": "Trainerturm (Außenbereich)",
+   "es": "Torre Desafío (exterior)",
+   "fr": "Tour Dresseurs (extérieur)",
+   "it": "Torre Allenatori (esterno)",
    "mapsec": "MAPSEC_TRAINER_TOWER"
   },
   "168": {
    "en": "Canyon Entrance",
    "de": "Schluchteingang",
+   "es": "Entrada al Cañón",
+   "fr": "Entrée Canyon",
+   "it": "Ingresso Canyon",
    "mapsec": "MAPSEC_CANYON_ENTRANCE"
   },
   "169": {
    "en": "Sevault Canyon",
    "de": "7-Schatzschlucht",
+   "es": "Cañón Sétano",
+   "fr": "Canyon Sesor",
+   "it": "Canyon Seption",
    "mapsec": "MAPSEC_SEVAULT_CANYON"
   },
   "170": {
    "en": "Tanoby Ruins",
    "de": "Tanibo-Ruinen",
+   "es": "Ruinas Sete",
+   "fr": "Ruines Tanoby",
+   "it": "Rovine Florabeto",
    "mapsec": "MAPSEC_TANOBY_RUINS"
   },
   "171": {
    "en": "Sevii Isle 22",
    "de": "Sevii Eiland 22",
+   "es": "Idos Archi7",
+   "fr": "Île Sevii 22",
+   "it": "Settipelago 22",
    "mapsec": "MAPSEC_SEVII_ISLE_22"
   },
   "172": {
    "en": "Sevii Isle 23",
    "de": "Sevii Eiland 23",
+   "es": "Itres Archi7",
+   "fr": "Île Sevii 23",
+   "it": "Settipelago 23",
    "mapsec": "MAPSEC_SEVII_ISLE_23"
   },
   "173": {
    "en": "Sevii Isle 24",
    "de": "Sevii Eiland 24",
+   "es": "Icuatro Archi7",
+   "fr": "Île Sevii 24",
+   "it": "Settipelago 24",
    "mapsec": "MAPSEC_SEVII_ISLE_24"
   },
   "174": {
    "en": "Navel Rock (FRLG)",
    "de": "Nabelfels (FRBG)",
+   "es": "Roca Ombligo (RFVH)",
+   "fr": "Roc Nombri (RFVF)",
+   "it": "Monte Cordone (RFVF)",
    "mapsec": "MAPSEC_NAVEL_ROCK_FRLG"
   },
   "175": {
    "en": "Mt. Ember",
    "de": "Glutberg",
+   "es": "Mt. Ascuas",
+   "fr": "Mont Braise",
+   "it": "Monte Brace",
    "mapsec": "MAPSEC_MT_EMBER"
   },
   "176": {
    "en": "Berry Forest",
    "de": "Beerenforst",
+   "es": "Bosque Baya",
+   "fr": "Bois Baies",
+   "it": "Bosco Baccoso",
    "mapsec": "MAPSEC_BERRY_FOREST"
   },
   "177": {
    "en": "Icefall Cave",
    "de": "Eiskaskadenhöhle",
+   "es": "Cueva Glaciada",
+   "fr": "Grotte de Glace",
+   "it": "Grotta Gelata",
    "mapsec": "MAPSEC_ICEFALL_CAVE"
   },
   "178": {
    "en": "Rocket Warehouse",
    "de": "Rocket-Lager",
+   "es": "Almacén Rocket",
+   "fr": "Entrepôt",
+   "it": "Magazzino Rocket",
    "mapsec": "MAPSEC_ROCKET_WAREHOUSE"
   },
   "179": {
    "en": "Trainer Tower",
    "de": "Trainerturm",
+   "es": "Torre Desafío",
+   "fr": "Tour Dresseurs",
+   "it": "Torre Allenatori",
    "mapsec": "MAPSEC_TRAINER_TOWER_2"
   },
   "180": {
    "en": "Dotted Hole",
    "de": "Punktloch",
+   "es": "Cueva Punteada",
+   "fr": "Trou Percé",
+   "it": "Cripta dei Punti",
    "mapsec": "MAPSEC_DOTTED_HOLE"
   },
   "181": {
    "en": "Lost Cave",
    "de": "Verlorene Höhle",
+   "es": "Cueva Perdida",
+   "fr": "Grotte Perdue",
+   "it": "Grotta Sperduta",
    "mapsec": "MAPSEC_LOST_CAVE"
   },
   "182": {
    "en": "Pattern Bush",
    "de": "Musterbuschwald",
+   "es": "Bosquejo",
+   "fr": "Forbuissons",
+   "it": "Bosco Disegnato",
    "mapsec": "MAPSEC_PATTERN_BUSH"
   },
   "183": {
    "en": "Altering Cave (FRLG)",
    "de": "Wandelhöhle (FRBG)",
+   "es": "Cueva Cambiante (RFVH)",
+   "fr": "Grotte Métamo (RFVF)",
+   "it": "Grotta Mutevole (RFVF)",
    "mapsec": "MAPSEC_ALTERING_CAVE_FRLG"
   },
   "184": {
    "en": "Tanoby Chambers",
    "de": "Tanibo-Kammer",
+   "es": "Cámaras Sete",
+   "fr": "Chambres Tanoby",
+   "it": "Sale Florabeto",
    "mapsec": "MAPSEC_TANOBY_CHAMBERS"
   },
   "185": {
    "en": "Three Isle Path",
    "de": "Tri-Eiland-Pfad",
+   "es": "Vía Isla Tera",
+   "fr": "Chemin Île 3",
+   "it": "Via Terzisola",
    "mapsec": "MAPSEC_THREE_ISLE_PATH"
   },
   "186": {
    "en": "Tanoby Key",
    "de": "Tanibo-Schlüssel",
+   "es": "Llave Sete",
+   "fr": "Clé Tanoby",
+   "it": "Chiave Florabeto",
    "mapsec": "MAPSEC_TANOBY_KEY"
   },
   "187": {
    "en": "Birth Island (FRLG)",
    "de": "Entstehungsinsel (FRBG)",
+   "es": "Isla Origen (RFVH)",
+   "fr": "Île Aurore (RFVF)",
+   "it": "Isola Materna (RFVF)",
    "mapsec": "MAPSEC_BIRTH_ISLAND_FRLG"
   },
   "188": {
    "en": "Monean Chamber",
    "de": "Einamon-Kammer",
+   "es": "Cámara Anémuna",
+   "fr": "Chambre Anémune",
+   "it": "Sala A-loe",
    "mapsec": "MAPSEC_MONEAN_CHAMBER"
   },
   "189": {
    "en": "Liptoo Chamber",
    "de": "Pezwulp-Kammer",
+   "es": "Cámara Tulipdos",
+   "fr": "Chambre Deulipe",
+   "it": "Sala B-etulla",
    "mapsec": "MAPSEC_LIPTOO_CHAMBER"
   },
   "190": {
    "en": "Weepth Chamber",
    "de": "Dreicke-Kammer",
+   "es": "Cámara Trisante",
+   "fr": "Chambre Prois",
+   "it": "Sala C-iclamino",
    "mapsec": "MAPSEC_WEEPTH_CHAMBER"
   },
   "191": {
    "en": "Dilford Chamber",
    "de": "Vierzisse-Kammer",
+   "es": "Cámara Quarciso",
+   "fr": "Chambre Jonquatr",
+   "it": "Sala D-afne",
    "mapsec": "MAPSEC_DILFORD_CHAMBER"
   },
   "192": {
    "en": "Scufib Chamber",
    "de": "Fünibisku-Kammer",
+   "es": "Cámara Hibinca",
+   "fr": "Chambre Hibicinq",
+   "it": "Sala E-dera",
    "mapsec": "MAPSEC_SCUFIB_CHAMBER"
   },
   "193": {
    "en": "Rixy Chamber",
    "de": "Lilechs-Kammer",
+   "es": "Cámara Seiris",
+   "fr": "Chambre Irix",
+   "it": "Sala F-elce",
    "mapsec": "MAPSEC_RIXY_CHAMBER"
   },
   "194": {
    "en": "Viapois Chamber",
    "de": "Sieborbia-Kammer",
+   "es": "Cámara Pasiete",
+   "fr": "Chambre Poinsept",
+   "it": "Sala G-ardenia",
    "mapsec": "MAPSEC_VIAPOIS_CHAMBER"
   },
   "195": {
    "en": "Ember Spa",
    "de": "Gluttherme",
+   "es": "Balneario Ascuas",
+   "fr": "Source Braise",
+   "it": "Terme Laviche",
    "mapsec": "MAPSEC_EMBER_SPA"
   },
   "196": {
    "en": "Celadon Dept. (FRLG) / Special Area (E)",
    "de": "Prismania Eink. (FRBG)",
+   "es": "CC Azulona (RFVH)",
+   "fr": "Cent. Commercial (RFVF)",
+   "it": "Centro Azzurrop. (RFVF)",
    "mapsec": "MAPSEC_SPECIAL_AREA"
   },
   "197": {
    "en": "Aqua Hideout",
    "de": "Aquas Versteck",
+   "es": "Guarida Aqua",
+   "fr": "Planque Aqua",
+   "it": "Rifugio Idro",
    "mapsec": "MAPSEC_AQUA_HIDEOUT"
   },
   "198": {
    "en": "Magma Hideout",
    "de": "Magmas Versteck",
+   "es": "Guarida Magma",
+   "fr": "Planque Magma",
+   "it": "Rifugio Magma",
    "mapsec": "MAPSEC_MAGMA_HIDEOUT"
   },
   "199": {
    "en": "Mirage Tower",
    "de": "Wunderturm",
+   "es": "Torre Espejismo",
+   "fr": "Tour Mirage",
+   "it": "Torre Miraggio",
    "mapsec": "MAPSEC_MIRAGE_TOWER"
   },
   "200": {
    "en": "Birth Island (E)",
    "de": "Entstehungsinsel (Sm)",
+   "es": "Isla Origen (E)",
+   "fr": "Île Aurore (E)",
+   "it": "Isola Materna (S)",
    "mapsec": "MAPSEC_BIRTH_ISLAND"
   },
   "201": {
    "en": "Faraway Island",
    "de": "Ferneiland",
+   "es": "Isla Suprema",
+   "fr": "Île Lointaine",
+   "it": "Isola Suprema",
    "mapsec": "MAPSEC_FARAWAY_ISLAND"
   },
   "202": {
    "en": "Artisan Cave",
    "de": "Höhlenatelier",
+   "es": "Cueva Taller",
+   "fr": "Grotte Atelier",
+   "it": "Grotta Artistica",
    "mapsec": "MAPSEC_ARTISAN_CAVE"
   },
   "203": {
    "en": "Marine Cave",
    "de": "Ozeanhöhle",
+   "es": "Cueva Marina",
+   "fr": "Grotte Marine",
+   "it": "Grotta Mare",
    "mapsec": "MAPSEC_MARINE_CAVE"
   },
   "204": {
    "en": "Underwater (Marine Cave)",
    "de": "Unterwasser (Ozeanhöhle)",
+   "es": "Bajo el agua (Cueva Marina)",
+   "fr": "Fond marin (Grotte Marine)",
+   "it": "Sott'acqua (Grotta Mare)",
    "mapsec": "MAPSEC_UNDERWATER_MARINE_CAVE"
   },
   "205": {
    "en": "Terra Cave",
    "de": "Terrahöhle",
+   "es": "Cueva Terrena",
+   "fr": "Grotte Terra",
+   "it": "Grotta Terra",
    "mapsec": "MAPSEC_TERRA_CAVE"
   },
   "206": {
    "en": "Underwater (Route 105)",
    "de": "Unterwasser (Route 105)",
+   "es": "Bajo el agua (Ruta 105)",
+   "fr": "Fond marin (Chenal 105)",
+   "it": "Sott'acqua (Percorso 105)",
    "mapsec": "MAPSEC_UNDERWATER_105"
   },
   "207": {
    "en": "Underwater (Route 125)",
    "de": "Unterwasser (Route 125)",
+   "es": "Bajo el agua (Ruta 125)",
+   "fr": "Fond marin (Chenal 125)",
+   "it": "Sott'acqua (Percorso 125)",
    "mapsec": "MAPSEC_UNDERWATER_125"
   },
   "208": {
    "en": "Underwater (Route 129)",
    "de": "Unterwasser (Route 129)",
+   "es": "Bajo el agua (Ruta 129)",
+   "fr": "Fond marin (Chenal 129)",
+   "it": "Sott'acqua (Percorso 129)",
    "mapsec": "MAPSEC_UNDERWATER_129"
   },
   "209": {
    "en": "Desert Underpass",
    "de": "Wüstentunnel",
+   "es": "Gruta Desértica",
+   "fr": "Voie du Désert",
+   "it": "Galleria Deserto",
    "mapsec": "MAPSEC_DESERT_UNDERPASS"
   },
   "210": {
    "en": "Altering Cave (E)",
    "de": "Wandelhöhle (Sm)",
+   "es": "Cueva Cambiante (E)",
+   "fr": "Grotte Métamo (E)",
+   "it": "Grotta Mutevole (S)",
    "mapsec": "MAPSEC_ALTERING_CAVE"
   },
   "211": {
    "en": "Navel Rock (E)",
    "de": "Nabelfels (Sm)",
+   "es": "Roca Ombligo (E)",
+   "fr": "Roc Nombri (E)",
+   "it": "Monte Cordone (S)",
    "mapsec": "MAPSEC_NAVEL_ROCK"
   },
   "212": {
    "en": "Trainer Hill",
    "de": "Trainerberg",
+   "es": "Colina Desafío",
+   "fr": "Mont Dresseurs",
+   "it": "Monte Allenatori",
    "mapsec": "MAPSEC_TRAINER_HILL"
   },
   "253": {
    "en": "(Gift Egg)",
-   "de": "(Ei Geschenk)"
+   "de": "(Ei Geschenk)",
+   "es": "(Huevo regalado)",
+   "fr": "(Œuf reçu en cadeau)",
+   "it": "(Uovo donato)"
   },
   "254": {
    "en": "(In-game Trade)",
-   "de": "(In-game Tausch)"
+   "de": "(In-game Tausch)",
+   "es": "(Intercambio del juego)",
+   "fr": "(Échange in-game)",
+   "it": "(Scambio in gioco)"
   },
   "255": {
    "en": "(Fateful Encounter)",
-   "de": "(Schicksalhafte Begegnung)"
+   "de": "(Schicksalhafte Begegnung)",
+   "es": "(Obtenido de forma curiosa)",
+   "fr": "(Évenèment spécial)",
+   "it": "(Occasione speciale)"
   }
  }
 }

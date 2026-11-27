@@ -17,6 +17,7 @@
   "scripts": {
     "start": "node server/index.mjs",
     "app": "electron .",
+    "app:log": "node scripts/app-log.mjs",
     "test": "node --test --test-timeout=600000 \"test/*.test.mjs\"",
     "lint": "eslint .",
     "jre": "node scripts/fetch-jre.mjs arm64",

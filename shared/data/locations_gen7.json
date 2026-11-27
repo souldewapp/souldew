@@ -4,549 +4,947 @@
  "map": {
   "2": {
    "en": "Mystery Zone",
-   "de": "Mysteriöser Ort"
+   "de": "Mysteriöser Ort",
+   "es": "Lugar misterioso",
+   "fr": "Endroit mystérieux",
+   "it": "Zona misteriosa"
   },
   "4": {
    "en": "Faraway Place",
-   "de": "Ferner Ort"
+   "de": "Ferner Ort",
+   "es": "Lugar lejano",
+   "fr": "Endroit lointain",
+   "it": "Luogo remoto"
   },
   "6": {
-   "en": "Route 1"
+   "en": "Route 1",
+   "es": "Ruta 1",
+   "it": "Percorso 1"
   },
   "8": {
-   "en": "Route 1"
+   "en": "Route 1",
+   "es": "Ruta 1",
+   "it": "Percorso 1"
   },
   "10": {
-   "en": "Route 3"
+   "en": "Route 3",
+   "es": "Ruta 3",
+   "it": "Percorso 3"
   },
   "12": {
-   "en": "Route 2"
+   "en": "Route 2",
+   "es": "Ruta 2",
+   "it": "Percorso 2"
   },
   "14": {
    "en": "Kala’e Bay",
-   "de": "Kala’e-Bucht"
+   "de": "Kala’e-Bucht",
+   "es": "Bahía Kalae",
+   "fr": "Baie de Kala’e",
+   "it": "Baia Kala’e"
   },
   "16": {
    "en": "Melemele Sea",
-   "de": "Meer von Mele-Mele"
+   "de": "Meer von Mele-Mele",
+   "es": "Mar de Melemele",
+   "fr": "Mer de Mele-Mele",
+   "it": "Mare di Mele Mele"
   },
   "18": {
    "en": "Hau’oli City",
-   "de": "Hauholi City"
+   "de": "Hauholi City",
+   "es": "Ciudad Hauoli",
+   "fr": "Ekaeka",
+   "it": "Hau’oli"
   },
   "20": {
    "en": "Hau’oli City",
-   "de": "Hauholi City"
+   "de": "Hauholi City",
+   "es": "Ciudad Hauoli",
+   "fr": "Ekaeka",
+   "it": "Hau’oli"
   },
   "22": {
    "en": "Hau’oli City",
-   "de": "Hauholi City"
+   "de": "Hauholi City",
+   "es": "Ciudad Hauoli",
+   "fr": "Ekaeka",
+   "it": "Hau’oli"
   },
   "24": {
    "en": "Iki Town",
-   "de": "Lili’i"
+   "de": "Lili’i",
+   "es": "Pueblo Lilii",
+   "fr": "Lili’i",
+   "it": "Lili"
   },
   "26": {
    "en": "Mahalo Trail",
-   "de": "Mahalo-Bergpfad"
+   "de": "Mahalo-Bergpfad",
+   "es": "Senda Mahalo",
+   "fr": "Sentier de Mahalo",
+   "it": "Sentiero Mahalo"
   },
   "28": {
    "en": "Mahalo Trail",
-   "de": "Mahalo-Bergpfad"
+   "de": "Mahalo-Bergpfad",
+   "es": "Senda Mahalo",
+   "fr": "Sentier de Mahalo",
+   "it": "Sentiero Mahalo"
   },
   "30": {
    "en": "Ruins of Conflict",
-   "de": "Ruinen des Krieges"
+   "de": "Ruinen des Krieges",
+   "es": "Ruinas de la Guerra",
+   "fr": "Ruines du Conflit",
+   "it": "Tempio del Conflitto"
   },
   "32": {
    "en": "Ruins of Conflict",
-   "de": "Ruinen des Krieges"
+   "de": "Ruinen des Krieges",
+   "es": "Ruinas de la Guerra",
+   "fr": "Ruines du Conflit",
+   "it": "Tempio del Conflitto"
   },
   "34": {
    "en": "Ten Carat Hill",
-   "de": "Tenkarat-Hügel"
+   "de": "Tenkarat-Hügel",
+   "es": "Colina Dequilate",
+   "fr": "Colline Dicarat",
+   "it": "Collina Diecicarati"
   },
   "36": {
    "en": "Ten Carat Hill",
-   "de": "Tenkarat-Hügel"
+   "de": "Tenkarat-Hügel",
+   "es": "Colina Dequilate",
+   "fr": "Colline Dicarat",
+   "it": "Collina Diecicarati"
   },
   "38": {
    "en": "Hau’oli Cemetery",
-   "de": "Hauholi-Friedhof"
+   "de": "Hauholi-Friedhof",
+   "es": "Cementerio de Hauoli",
+   "fr": "Cimetière d’Ekaeka",
+   "it": "Cimitero di Hau’oli"
   },
   "40": {
    "en": "Melemele Meadow",
-   "de": "Mele-Mele-Blumenmeer"
+   "de": "Mele-Mele-Blumenmeer",
+   "es": "Jardines de Melemele",
+   "fr": "Jardin de Mele-Mele",
+   "it": "Prato Mele Mele"
   },
   "42": {
    "en": "Seaward Cave",
-   "de": "Meereshöhle"
+   "de": "Meereshöhle",
+   "es": "Gruta Unemar",
+   "fr": "Grotte Verlamer",
+   "it": "Grotta Pratomare"
   },
   "44": {
    "en": "Berry Fields",
-   "de": "Beerenfelder"
+   "de": "Beerenfelder",
+   "es": "Huerto de Bayas",
+   "fr": "Champ de Baies",
+   "it": "Orto delle Bacche"
   },
   "46": {
    "en": "Verdant Cavern",
-   "de": "Vegetationshöhle"
+   "de": "Vegetationshöhle",
+   "es": "Cueva Sotobosque",
+   "fr": "Grotte Verdoyante",
+   "it": "Grotta Sottobosco"
   },
   "48": {
    "en": "Verdant Cavern",
-   "de": "Vegetationshöhle"
+   "de": "Vegetationshöhle",
+   "es": "Cueva Sotobosque",
+   "fr": "Grotte Verdoyante",
+   "it": "Grotta Sottobosco"
   },
   "50": {
-   "en": "Route 4"
+   "en": "Route 4",
+   "es": "Ruta 4",
+   "it": "Percorso 4"
   },
   "52": {
-   "en": "Route 5"
+   "en": "Route 5",
+   "es": "Ruta 5",
+   "it": "Percorso 5"
   },
   "54": {
-   "en": "Route 6"
+   "en": "Route 6",
+   "es": "Ruta 6",
+   "it": "Percorso 6"
   },
   "56": {
-   "en": "Route 7"
+   "en": "Route 7",
+   "es": "Ruta 7",
+   "it": "Percorso 7"
   },
   "58": {
-   "en": "Route 8"
+   "en": "Route 8",
+   "es": "Ruta 8",
+   "it": "Percorso 8"
   },
   "60": {
-   "en": "Route 9"
+   "en": "Route 9",
+   "es": "Ruta 9",
+   "it": "Percorso 9"
   },
   "62": {
    "en": "Hano Grand Resort",
-   "de": "Hanohano-Resort"
+   "de": "Hanohano-Resort",
+   "es": "Resort Hanohano",
+   "fr": "Club Hano-Hano",
+   "it": "Resort Hanu Hanu"
   },
   "64": {
    "en": "Hano Beach",
-   "de": "Hanohano-Strand"
+   "de": "Hanohano-Strand",
+   "es": "Playa de Hanohano",
+   "fr": "Plage Hano-Hano",
+   "it": "Spiaggia Hanu Hanu"
   },
   "66": {
    "en": "Akala Meadow",
-   "de": "Akala-Blumenmeer"
+   "de": "Akala-Blumenmeer",
+   "es": "Jardines de Akala",
+   "fr": "Jardin d’Akala",
+   "it": "Prato Akala"
   },
   "68": {
    "en": "Paniola Town",
-   "de": "Ohana"
+   "de": "Ohana",
+   "es": "Pueblo Ohana",
+   "fr": "Ohana",
+   "it": "Ohana"
   },
   "70": {
    "en": "Heahea City",
-   "de": "Kantai City"
+   "de": "Kantai City",
+   "es": "Ciudad Kantai",
+   "fr": "Ho’ohale",
+   "it": "Kantai"
   },
   "72": {
-   "en": "Konikoni City"
+   "en": "Konikoni City",
+   "es": "Ciudad Konikoni",
+   "fr": "Konikoni",
+   "it": "Konikoni"
   },
   "74": {
    "en": "Royal Avenue",
-   "de": "Avenue Royale"
+   "de": "Avenue Royale",
+   "es": "Avenida Royale",
+   "fr": "Rue du Dôme Royal",
+   "it": "Viale Royale"
   },
   "76": {
    "en": "Memorial Hill",
-   "de": "Hügel des Gedenkens"
+   "de": "Hügel des Gedenkens",
+   "es": "Colina del Recuerdo",
+   "fr": "Colline Memento",
+   "it": "Colle della Memoria"
   },
   "78": {
    "en": "Paniola Ranch",
-   "de": "Ohana-Farm"
+   "de": "Ohana-Farm",
+   "es": "Rancho Ohana",
+   "fr": "Ranch Ohana",
+   "it": "Fattoria Ohana"
   },
   "82": {
    "en": "Wela Volcano Park",
-   "de": "Wela-Vulkanpark"
+   "de": "Wela-Vulkanpark",
+   "es": "Área Volcánica Wela",
+   "fr": "Parc Volcanique",
+   "it": "Parco Vulcano Wela"
   },
   "84": {
    "en": "Wela Volcano Park",
-   "de": "Wela-Vulkanpark"
+   "de": "Wela-Vulkanpark",
+   "es": "Área Volcánica Wela",
+   "fr": "Parc Volcanique",
+   "it": "Parco Vulcano Wela"
   },
   "86": {
    "en": "Brooklet Hill",
-   "de": "Plätscherhügel"
+   "de": "Plätscherhügel",
+   "es": "Colina Saltagua",
+   "fr": "Colline Clapotis",
+   "it": "Collina Scrosciante"
   },
   "88": {
    "en": "Brooklet Hill",
-   "de": "Plätscherhügel"
+   "de": "Plätscherhügel",
+   "es": "Colina Saltagua",
+   "fr": "Colline Clapotis",
+   "it": "Collina Scrosciante"
   },
   "90": {
    "en": "Lush Jungle",
-   "de": "Schattendschungel"
+   "de": "Schattendschungel",
+   "es": "Jungla Umbría",
+   "fr": "Jungle Sombrefeuille",
+   "it": "Giungla Ombrosa"
   },
   "92": {
    "en": "Ruins of Life",
-   "de": "Ruinen des Lebens"
+   "de": "Ruinen des Lebens",
+   "es": "Ruinas de la Vida",
+   "fr": "Ruines de l’Éveil",
+   "it": "Tempio della Vita"
   },
   "94": {
    "en": "Akala Outskirts",
-   "de": "Akala-Küstenstreifen"
+   "de": "Akala-Küstenstreifen",
+   "es": "Afueras de Akala",
+   "fr": "Côte Reculée d’Akala",
+   "it": "Punta Akala"
   },
   "100": {
    "en": "Diglett’s Tunnel",
-   "de": "Digda-Tunnel"
+   "de": "Digda-Tunnel",
+   "es": "Túnel Diglett",
+   "fr": "Tunnel Taupiqueur",
+   "it": "Tunnel Diglett"
   },
   "102": {
    "en": "Hano Grand Resort",
-   "de": "Hanohano-Resort"
+   "de": "Hanohano-Resort",
+   "es": "Resort Hanohano",
+   "fr": "Club Hano-Hano",
+   "it": "Resort Hanu Hanu"
   },
   "104": {
    "en": "Battle Royal Dome",
-   "de": "Dome Royale"
+   "de": "Dome Royale",
+   "es": "Estadio Royale",
+   "fr": "Dôme Royal",
+   "it": "Stadio Royale"
   },
   "106": {
-   "en": "Route 10"
+   "en": "Route 10",
+   "es": "Ruta 10",
+   "it": "Percorso 10"
   },
   "108": {
-   "en": "Route 11"
+   "en": "Route 11",
+   "es": "Ruta 11",
+   "it": "Percorso 11"
   },
   "110": {
    "en": "Ula’ula Beach",
-   "de": "Strand von Ula-Ula"
+   "de": "Strand von Ula-Ula",
+   "es": "Playa de Ula-Ula",
+   "fr": "Plage d’Ula-Ula",
+   "it": "Spiaggia di Ula Ula"
   },
   "112": {
-   "en": "Route 13"
+   "en": "Route 13",
+   "es": "Ruta 13",
+   "it": "Percorso 13"
   },
   "114": {
    "en": "Tapu Village",
-   "de": "Dorf der Kapu"
+   "de": "Dorf der Kapu",
+   "es": "Aldea Tapu",
+   "fr": "Village Toko",
+   "it": "Villaggio Tapu"
   },
   "116": {
    "en": "Route 15",
-   "de": "Route 15 (Wasserweg)"
+   "de": "Route 15 (Wasserweg)",
+   "es": "Ruta 15",
+   "it": "Percorso 15"
   },
   "118": {
-   "en": "Route 16"
+   "en": "Route 16",
+   "es": "Ruta 16",
+   "it": "Percorso 16"
   },
   "120": {
-   "en": "Route 17"
+   "en": "Route 17",
+   "es": "Ruta 17",
+   "it": "Percorso 17"
   },
   "122": {
-   "en": "Route 12"
+   "en": "Route 12",
+   "es": "Ruta 12",
+   "it": "Percorso 12"
   },
   "124": {
    "en": "Haina Desert",
-   "de": "Haina-Wüste"
+   "de": "Haina-Wüste",
+   "es": "Desierto de Haina",
+   "fr": "Désert Haina",
+   "it": "Deserto Haina"
   },
   "126": {
-   "en": "Route 14"
+   "en": "Route 14",
+   "es": "Ruta 14",
+   "it": "Percorso 14"
   },
   "128": {
    "en": "Ula’ula Meadow",
-   "de": "Ula-Ula-Blumenmeer"
+   "de": "Ula-Ula-Blumenmeer",
+   "es": "Jardines de Ula-Ula",
+   "fr": "Jardin d’Ula-Ula",
+   "it": "Prato Ula Ula"
   },
   "130": {
    "en": "Po Town",
-   "de": "Po’u"
+   "de": "Po’u",
+   "es": "Pueblo Po",
+   "fr": "Kokohio",
+   "it": "Poh"
   },
   "132": {
    "en": "Malie City",
-   "de": "Malihe City"
+   "de": "Malihe City",
+   "es": "Ciudad Malíe",
+   "fr": "Malié",
+   "it": "Malie"
   },
   "134": {
    "en": "Malie Garden",
-   "de": "Malihe-Ziergarten"
+   "de": "Malihe-Ziergarten",
+   "es": "Parque de Malíe",
+   "fr": "Parc de Malié",
+   "it": "Giardino di Malie"
   },
   "136": {
    "en": "Mount Hokulani",
-   "de": "Hokulani-Berg"
+   "de": "Hokulani-Berg",
+   "es": "Pico Hokulani",
+   "fr": "Mont Hokulani",
+   "it": "Picco Hokulani"
   },
   "138": {
    "en": "Blush Mountain",
-   "de": "Glühberg"
+   "de": "Glühberg",
+   "es": "Monte Rubor",
+   "fr": "Mont Ardent",
+   "it": "Monte Tepore"
   },
   "140": {
    "en": "Ruins of Abundance",
-   "de": "Ruinen des Gedeihens"
+   "de": "Ruinen des Gedeihens",
+   "es": "Ruinas de la Cosecha",
+   "fr": "Ruines de l’Essor",
+   "it": "Tempio del Raccolto"
   },
   "142": {
    "en": "Lake of the Sunne",
-   "de": "Sonnenkreis-See"
+   "de": "Sonnenkreis-See",
+   "es": "Lago Corosol",
+   "fr": "Lac du Halo Solaire",
+   "it": "Lago Solare"
   },
   "144": {
    "en": "Lake of the Moone",
-   "de": "Mondscheiben-See"
+   "de": "Mondscheiben-See",
+   "es": "Lago Coroluna",
+   "fr": "Lac du Halo Lunaire",
+   "it": "Lago Lunare"
   },
   "146": {
-   "en": "Mount Lanakila"
+   "en": "Mount Lanakila",
+   "es": "Monte Lanakila",
+   "fr": "Mont Lanakila",
+   "it": "Monte Lanakila"
   },
   "148": {
    "en": "Shady House",
-   "de": "Lottervilla"
+   "de": "Lottervilla",
+   "es": "Mansión Misteriosa",
+   "fr": "Manoir Chelou",
+   "it": "Villa Losca"
   },
   "150": {
    "en": "Thrifty Megamart",
-   "de": "Schnäppchenparadies"
+   "de": "Schnäppchenparadies",
+   "es": "Súper Ultraganga",
+   "fr": "Bradley Prix",
+   "it": "Supermarket Affaroni"
   },
   "152": {
    "en": "Hokulani Observatory",
-   "de": "Hokulani-Sternwarte"
+   "de": "Hokulani-Sternwarte",
+   "es": "Observ. de Hokulani",
+   "fr": "Observatoire",
+   "it": "Osservatorio"
   },
   "154": {
    "en": "Pokémon League",
-   "de": "Pokémon-Liga"
+   "de": "Pokémon-Liga",
+   "es": "Liga Pokémon",
+   "fr": "Ligue Pokémon",
+   "it": "Lega Pokémon"
   },
   "156": {
    "en": "Poni Meadow",
-   "de": "Poni-Blumenmeer"
+   "de": "Poni-Blumenmeer",
+   "es": "Jardines de Poni",
+   "fr": "Jardin de Poni",
+   "it": "Prato Poni"
   },
   "158": {
    "en": "Poni Wilds",
-   "de": "Wildnis von Poni"
+   "de": "Wildnis von Poni",
+   "es": "Prado de Poni",
+   "fr": "Prairie de Poni",
+   "it": "Piana di Poni"
   },
   "160": {
    "en": "Ancient Poni Path",
-   "de": "Alter Pfad von Poni"
+   "de": "Alter Pfad von Poni",
+   "es": "Antiguo Paso de Poni",
+   "fr": "Vieille Route",
+   "it": "Via Antica di Poni"
   },
   "162": {
    "en": "Poni Breaker Coast",
-   "de": "Felsenküste von Poni"
+   "de": "Felsenküste von Poni",
+   "es": "Arrecife de Poni",
+   "fr": "Récif de Poni",
+   "it": "Scogliera di Poni"
   },
   "164": {
    "en": "Poni Grove",
-   "de": "Wald von Poni"
+   "de": "Wald von Poni",
+   "es": "Bosque de Poni",
+   "fr": "Forêt de Poni",
+   "it": "Foresta di Poni"
   },
   "166": {
    "en": "Poni Plains",
-   "de": "Ebene von Poni"
+   "de": "Ebene von Poni",
+   "es": "Llanura de Poni",
+   "fr": "Plaine de Poni",
+   "it": "Prateria di Poni"
   },
   "168": {
    "en": "Poni Coast",
-   "de": "Küste von Poni"
+   "de": "Küste von Poni",
+   "es": "Costa de Poni",
+   "fr": "Côte de Poni",
+   "it": "Costa di Poni"
   },
   "170": {
    "en": "Poni Gauntlet",
-   "de": "Beschwerlicher Pfad"
+   "de": "Beschwerlicher Pfad",
+   "es": "Pendiente de Poni",
+   "fr": "Chemin du Défi",
+   "it": "Erta di Poni"
   },
   "172": {
    "en": "Seafolk Village",
-   "de": "Dorf des Seevolkes"
+   "de": "Dorf des Seevolkes",
+   "es": "Aldea Marina",
+   "fr": "Village Flottant",
+   "it": "Villaggio del Mare"
   },
   "174": {
    "en": "Vast Poni Canyon",
-   "de": "Canyon von Poni"
+   "de": "Canyon von Poni",
+   "es": "Cañón de Poni",
+   "fr": "Grand Canyon de Poni",
+   "it": "Canyon di Poni"
   },
   "176": {
    "en": "Altar of the Sunne",
-   "de": "Sonnenkreis-Podium"
+   "de": "Sonnenkreis-Podium",
+   "es": "Altar del Sol",
+   "fr": "Autel du Soleil",
+   "it": "Altare Solare"
   },
   "178": {
    "en": "Altar of the Moone",
-   "de": "Mondscheiben-Podium"
+   "de": "Mondscheiben-Podium",
+   "es": "Altar de la Luna",
+   "fr": "Autel de la Lune",
+   "it": "Altare Lunare"
   },
   "180": {
    "en": "Ruins of Hope",
-   "de": "Ruinen der Heimkehr"
+   "de": "Ruinen der Heimkehr",
+   "es": "Ruinas del Tránsito",
+   "fr": "Ruines de l’Au-Delà",
+   "it": "Tempio del Passaggio"
   },
   "182": {
    "en": "Resolution Cave",
-   "de": "Finalhöhle"
+   "de": "Finalhöhle",
+   "es": "Gruta Desenlace",
+   "fr": "Caverne Coda",
+   "it": "Caverna Climax"
   },
   "184": {
    "en": "Exeggutor Island",
-   "de": "Kokowei-Eiland"
+   "de": "Kokowei-Eiland",
+   "es": "Isla Exeggutor",
+   "fr": "Île Noadkoko",
+   "it": "Isola Exeggutor"
   },
   "186": {
    "en": "Battle Tree",
-   "de": "Kampfbaum"
+   "de": "Kampfbaum",
+   "es": "Árbol de Combate",
+   "fr": "Arbre de Combat",
+   "it": "Albero della Lotta"
   },
   "188": {
    "en": "Aether Paradise",
-   "de": "Æther-Paradies"
+   "de": "Æther-Paradies",
+   "es": "Paraíso Æther",
+   "fr": "Paradis Æther",
+   "it": "Æther Paradise"
   },
   "190": {
    "en": "Ultra Deep Sea",
-   "de": "Ultratiefsee"
+   "de": "Ultratiefsee",
+   "es": "Ultraabismo",
+   "fr": "Ultra-Abysses",
+   "it": "Ultrabisso"
   },
   "192": {
    "en": "Malie City",
-   "de": "Malihe City"
+   "de": "Malihe City",
+   "es": "Ciudad Malíe",
+   "fr": "Malié",
+   "it": "Malie"
   },
   "194": {
    "en": "Melemele",
-   "de": "Mele-Mele"
+   "de": "Mele-Mele",
+   "fr": "Mele-Mele",
+   "it": "Mele Mele"
   },
   "196": {
    "en": "Ula’ula",
-   "de": "Ula-Ula"
+   "de": "Ula-Ula",
+   "es": "Ula-Ula",
+   "fr": "Ula-Ula",
+   "it": "Ula Ula"
   },
   "198": {
-   "en": "Big Wave Beach"
+   "en": "Big Wave Beach",
+   "es": "Playa Big Wave",
+   "fr": "Plage Big Wave",
+   "it": "Spiaggia Big Wave"
   },
   "200": {
    "en": "Sandy Cave",
-   "de": "Strandhöhle"
+   "de": "Strandhöhle",
+   "es": "Cueva Costera",
+   "fr": "Grotte de la Plage",
+   "it": "Caverna Costiera"
   },
   "202": {
    "en": "Heahea Beach",
-   "de": "Kantai-Strand"
+   "de": "Kantai-Strand",
+   "es": "Playa de Kantai",
+   "fr": "Plage d’Ho’ohale",
+   "it": "Spiaggia di Kantai"
   },
   "204": {
    "en": "Poni Beach",
-   "de": "Strand von Poni"
+   "de": "Strand von Poni",
+   "es": "Playa de Poni",
+   "fr": "Plage de Poni",
+   "it": "Spiaggia di Poni"
   },
   "206": {
    "en": "Ultra Megalopolis",
-   "de": "Ultrametropolis"
+   "de": "Ultrametropolis",
+   "es": "Ultrópolis",
+   "fr": "Ultra-Mégalopole",
+   "it": "Ultramegalopoli"
   },
   "208": {
    "en": "Megalo Tower",
-   "de": "Metropo Tower"
+   "de": "Metropo Tower",
+   "es": "Torre Ultrópolis",
+   "fr": "Tour Mégalopole",
+   "it": "Torre Megalopoli"
   },
   "210": {
    "en": "Ultra Plant",
-   "de": "Ultrakraftwerk"
+   "de": "Ultrakraftwerk",
+   "es": "Ultragenerador",
+   "fr": "Ultra-Centrale",
+   "it": "Ultracentrale"
   },
   "212": {
    "en": "Ultra Crater",
-   "de": "Ultratal"
+   "de": "Ultratal",
+   "es": "Ultravalle",
+   "fr": "Ultra-Vallée",
+   "it": "Ultravalle"
   },
   "214": {
    "en": "Ultra Desert",
-   "de": "Ultrawüste"
+   "de": "Ultrawüste",
+   "es": "Ultradesierto",
+   "fr": "Ultra-Désert",
+   "it": "Ultradeserto"
   },
   "216": {
    "en": "Ultra Forest",
-   "de": "Ultrawald"
+   "de": "Ultrawald",
+   "es": "Ultrabosque",
+   "fr": "Ultra-Forêt",
+   "it": "Ultraforesta"
   },
   "218": {
    "en": "Ultra Jungle",
-   "de": "Ultradschungel"
+   "de": "Ultradschungel",
+   "es": "Ultrajungla",
+   "fr": "Ultra-Jungle",
+   "it": "Ultragiungla"
   },
   "220": {
    "en": "Ultra Ruin",
-   "de": "Ultrawolkenkratzer"
+   "de": "Ultrawolkenkratzer",
+   "es": "Ultraurbe",
+   "fr": "Ultra-Gratte-Ciel",
+   "it": "Ultragglomerato"
   },
   "222": {
    "en": "Ultra Space Wilds",
-   "de": "Ultradimension Zero"
+   "de": "Ultradimension Zero",
+   "es": "Ultraespacio Cero",
+   "fr": "Ultra-Dimension Zéro",
+   "it": "Ultramondo Ignoto"
   },
   "224": {
    "en": "Team Rocket’s Castle",
-   "de": "Rocket-Schloss"
+   "de": "Rocket-Schloss",
+   "es": "Castillo Team Rocket",
+   "fr": "Château Rocket",
+   "it": "Castello Team Rocket"
   },
   "226": {
    "en": "Plains Grotto",
-   "de": "Tunnel in der Ebene"
+   "de": "Tunnel in der Ebene",
+   "es": "Gruta de la Llanura",
+   "fr": "Grotte de la Plaine",
+   "it": "Grotta Prateria"
   },
   "228": {
    "en": "Pikachu Valley",
-   "de": "Pikachu-Tal"
+   "de": "Pikachu-Tal",
+   "es": "Valle de los Pikachu",
+   "fr": "Plaine des Pikachu",
+   "it": "Valle dei Pikachu"
   },
   "230": {
-   "en": "Route 1"
+   "en": "Route 1",
+   "es": "Ruta 1",
+   "it": "Percorso 1"
   },
   "232": {
    "en": "Dividing Peak Tunnel",
-   "de": "Spaltberg-Tunnel"
+   "de": "Spaltberg-Tunnel",
+   "es": "Túnel del Volcán",
+   "fr": "Tunnel Perce-Mont",
+   "it": "Tunnel del Vulcano"
   },
   "30001": {
    "en": "a Link Trade",
-   "de": "Link-Tausch"
+   "de": "Link-Tausch",
+   "es": "Intercambio en conexión",
+   "fr": "Échanges Link",
+   "it": "Scambio in link"
   },
   "30002": {
    "en": "a Link Trade",
-   "de": "Link-Tausch"
+   "de": "Link-Tausch",
+   "es": "Intercambio en conexión",
+   "fr": "Échanges Link",
+   "it": "Scambio in link"
   },
   "30003": {
    "en": "the Kanto region",
-   "de": "Kanto-Region"
+   "de": "Kanto-Region",
+   "es": "Kanto",
+   "fr": "Kanto",
+   "it": "Kanto"
   },
   "30004": {
    "en": "the Johto region",
-   "de": "Johto-Region"
+   "de": "Johto-Region",
+   "es": "Johto",
+   "fr": "Johto",
+   "it": "Johto"
   },
   "30005": {
    "en": "the Hoenn region",
-   "de": "Hoenn-Region"
+   "de": "Hoenn-Region",
+   "es": "Hoenn",
+   "fr": "Hoenn",
+   "it": "Hoenn"
   },
   "30006": {
    "en": "the Sinnoh region",
-   "de": "Sinnoh-Region"
+   "de": "Sinnoh-Region",
+   "es": "Sinnoh",
+   "fr": "Sinnoh",
+   "it": "Sinnoh"
   },
   "30007": {
    "en": "a distant land",
-   "de": "Fernes Land"
+   "de": "Fernes Land",
+   "es": "Tierra lejana",
+   "fr": "Pays lointain",
+   "it": "Terra lontana"
   },
   "30008": {
-   "en": "——————",
-   "de": "－－－－－－－－－－"
+   "en": "——————"
   },
   "30009": {
    "en": "the Unova region",
-   "de": "Einall-Region"
+   "de": "Einall-Region",
+   "es": "Teselia",
+   "fr": "Unys",
+   "it": "Unima"
   },
   "30010": {
    "en": "the Kalos region",
-   "de": "Kalos-Region"
+   "de": "Kalos-Region",
+   "es": "Kalos",
+   "fr": "Kalos",
+   "it": "Kalos"
   },
   "30011": {
    "en": "Pokémon Link",
-   "de": "Pokémon-Link"
+   "de": "Pokémon-Link",
+   "es": "Nexo Pokémon",
+   "fr": "Poké Lien"
   },
   "30012": {
    "en": "Pokémon GO"
   },
   "30013": {
    "en": "the Kanto region",
-   "de": "Kanto-Region"
+   "de": "Kanto-Region",
+   "es": "Kanto",
+   "fr": "Kanto",
+   "it": "Kanto"
   },
   "30014": {
    "en": "the Hoenn region",
-   "de": "Hoenn-Region"
+   "de": "Hoenn-Region",
+   "es": "Hoenn",
+   "fr": "Hoenn",
+   "it": "Hoenn"
   },
   "30015": {
    "en": "the Alola region",
-   "de": "Alola-Region"
+   "de": "Alola-Region",
+   "es": "Alola",
+   "fr": "Alola",
+   "it": "Alola"
   },
   "30016": {
    "en": "Poké Pelago",
-   "de": "Pokémon-Resort"
+   "de": "Pokémon-Resort",
+   "es": "Poké Resort",
+   "fr": "Poké Loisir",
+   "it": "Poké Resort"
   },
   "30017": {
    "en": "the Johto region",
-   "de": "Johto-Region"
+   "de": "Johto-Region",
+   "es": "Johto",
+   "fr": "Johto",
+   "it": "Johto"
   },
   "40001": {
    "en": "a lovely place",
-   "de": "Netter Ort"
+   "de": "Netter Ort",
+   "es": "Lugar encantador",
+   "fr": "Endroit superbe",
+   "it": "Luogo grazioso"
   },
   "40002": {
    "en": "a faraway place",
-   "de": "Ferner Ort"
+   "de": "Ferner Ort",
+   "es": "Lugar lejano",
+   "fr": "Endroit lointain",
+   "it": "Luogo remoto"
   },
   "40003": {
    "en": "a Pokémon movie",
-   "de": "Pokémon-Film"
+   "de": "Pokémon-Film",
+   "es": "Película Pokémon",
+   "fr": "Film Pokémon",
+   "it": "Film Pokémon"
   },
   "40004": {
    "en": "2016 Pokémon Movie",
-   "de": "Pokémon-Film 2016"
+   "de": "Pokémon-Film 2016",
+   "es": "Película Pokémon 2016",
+   "fr": "Film Pokémon 2016",
+   "it": "Film Pokémon 2016"
   },
   "40005": {
    "en": "2017 Pokémon Movie",
-   "de": "Pokémon-Film 2017"
+   "de": "Pokémon-Film 2017",
+   "es": "Película Pokémon 2017",
+   "fr": "Film Pokémon 2017",
+   "it": "Film Pokémon 2017"
   },
   "40006": {
    "en": "2018 Pokémon Movie",
-   "de": "Pokémon-Film 2018"
+   "de": "Pokémon-Film 2018",
+   "es": "Película Pokémon 2018",
+   "fr": "Film Pokémon 2018",
+   "it": "Film Pokémon 2018"
   },
   "40007": {
    "en": "2019 Pokémon Movie",
-   "de": "Pokémon-Film 2019"
+   "de": "Pokémon-Film 2019",
+   "es": "Película Pokémon 2019",
+   "fr": "Film Pokémon 2019",
+   "it": "Film Pokémon 2019"
   },
   "40008": {
    "en": "2020 Pokémon Movie",
-   "de": "Pokémon-Film 2020"
+   "de": "Pokémon-Film 2020",
+   "es": "Película Pokémon 2020",
+   "fr": "Film Pokémon 2020",
+   "it": "Film Pokémon 2020"
   },
   "40009": {
    "en": "2021 Pokémon Movie",
-   "de": "Pokémon-Film 2021"
+   "de": "Pokémon-Film 2021",
+   "es": "Película Pokémon 2021",
+   "fr": "Film Pokémon 2021",
+   "it": "Film Pokémon 2021"
   },
   "40010": {
    "en": "a Pokémon Center",
-   "de": "Pokémon Center"
+   "de": "Pokémon Center",
+   "es": "Pokémon Center",
+   "fr": "Centre Pokémon",
+   "it": "Pokémon Center"
   },
   "40011": {
    "en": "the Pokémon animated show",
-   "de": "Pokémon-Zeichentrickserie"
+   "de": "Pokémon-Zeichentrickserie",
+   "es": "Dibujos animados Pokémon",
+   "fr": "Dessin animé Pokémon",
+   "it": "Cartone animato Pokémon"
   },
   "40012": {
    "en": "Pokémon Ctr. MEGA TOKYO",
-   "de": "Pokémon Center MEGA TOKYO"
+   "de": "Pokémon Center MEGA TOKYO",
+   "es": "Pokémon Center MEGA TOKYO",
+   "fr": "Pokémon Center MEGA TOKYO",
+   "it": "Pokémon Center MEGA TOKYO"
   },
   "40013": {
    "en": "Pokémon Center Osaka"
@@ -580,11 +978,17 @@
   },
   "40023": {
    "en": "a Pokémon Store",
-   "de": "Pokémon Store"
+   "de": "Pokémon Store",
+   "es": "Pokémon Store",
+   "fr": "Pokémon Store",
+   "it": "Pokémon Store"
   },
   "40024": {
    "en": "a WCS",
-   "de": "WCS"
+   "de": "WCS",
+   "es": "WCS",
+   "fr": "WCS",
+   "it": "WCS"
   },
   "40025": {
    "en": "WCS 2016"
@@ -609,133 +1013,235 @@
   },
   "40032": {
    "en": "2016 Worlds",
-   "de": "Worlds 2016"
+   "de": "Worlds 2016",
+   "es": "Worlds 2016",
+   "fr": "Worlds 2016",
+   "it": "Worlds 2016"
   },
   "40033": {
    "en": "2017 Worlds",
-   "de": "Worlds 2017"
+   "de": "Worlds 2017",
+   "es": "Worlds 2017",
+   "fr": "Worlds 2017",
+   "it": "Worlds 2017"
   },
   "40034": {
    "en": "2018 Worlds",
-   "de": "Worlds 2018"
+   "de": "Worlds 2018",
+   "es": "Worlds 2018",
+   "fr": "Worlds 2018",
+   "it": "Worlds 2018"
   },
   "40035": {
    "en": "2019 Worlds",
-   "de": "Worlds 2019"
+   "de": "Worlds 2019",
+   "es": "Worlds 2019",
+   "fr": "Worlds 2019",
+   "it": "Worlds 2019"
   },
   "40036": {
    "en": "2020 Worlds",
-   "de": "Worlds 2020"
+   "de": "Worlds 2020",
+   "es": "Worlds 2020",
+   "fr": "Worlds 2020",
+   "it": "Worlds 2020"
   },
   "40037": {
    "en": "2021 Worlds",
-   "de": "Worlds 2021"
+   "de": "Worlds 2021",
+   "es": "Worlds 2021",
+   "fr": "Worlds 2021",
+   "it": "Worlds 2021"
   },
   "40038": {
    "en": "a VGE",
-   "de": "VGE"
+   "de": "VGE",
+   "es": "Evento de Videojuegos",
+   "fr": "Événement Jeu Vidéo",
+   "it": "Evento di gioco"
   },
   "40039": {
-   "en": "VGE 2016"
+   "en": "VGE 2016",
+   "es": "Evento Videojuegos 2016",
+   "fr": "Événement Jeu Vidéo 2016",
+   "it": "Evento di gioco 2016"
   },
   "40040": {
-   "en": "VGE 2017"
+   "en": "VGE 2017",
+   "es": "Evento Videojuegos 2017",
+   "fr": "Événement Jeu Vidéo 2017",
+   "it": "Evento di gioco 2017"
   },
   "40041": {
-   "en": "VGE 2018"
+   "en": "VGE 2018",
+   "es": "Evento Videojuegos 2018",
+   "fr": "Événement Jeu Vidéo 2018",
+   "it": "Evento di gioco 2018"
   },
   "40042": {
-   "en": "VGE 2019"
+   "en": "VGE 2019",
+   "es": "Evento Videojuegos 2019",
+   "fr": "Événement Jeu Vidéo 2019",
+   "it": "Evento di gioco 2019"
   },
   "40043": {
-   "en": "VGE 2020"
+   "en": "VGE 2020",
+   "es": "Evento Videojuegos 2020",
+   "fr": "Événement Jeu Vidéo 2020",
+   "it": "Evento di gioco 2020"
   },
   "40044": {
-   "en": "VGE 2021"
+   "en": "VGE 2021",
+   "es": "Evento Videojuegos 2021",
+   "fr": "Événement Jeu Vidéo 2021",
+   "it": "Evento di gioco 2021"
   },
   "40045": {
    "en": "a Pokémon event",
-   "de": "Pokémon-Veranstaltung"
+   "de": "Pokémon-Veranstaltung",
+   "es": "Evento Pokémon",
+   "fr": "Événement Pokémon",
+   "it": "Evento Pokémon"
   },
   "40046": {
    "en": "a Battle Competition",
-   "de": "Kampfturnier"
+   "de": "Kampfturnier",
+   "es": "Torneo",
+   "fr": "Compétition",
+   "it": "Gara"
   },
   "40047": {
    "en": "a game event",
-   "de": "Videospiel-Veranstaltung"
+   "de": "Videospiel-Veranstaltung",
+   "es": "Evento de Videojuegos",
+   "fr": "Événement",
+   "it": "Evento di gioco"
   },
   "40048": {
    "en": "the Pokémon Daisuki Club",
-   "de": "Pokémon Daisuki Club"
+   "de": "Pokémon Daisuki Club",
+   "es": "Pokémon Daisuki Club",
+   "fr": "Pokémon Daisuki Club",
+   "it": "Pokémon Daisuki Club"
   },
   "40049": {
    "en": "a Pokémon TV program",
-   "de": "Pokémon-TV-Programm"
+   "de": "Pokémon-TV-Programm",
+   "es": "Programa sobre Pokémon",
+   "fr": "Émission Pokémon",
+   "it": "Programma TV Pokémon"
   },
   "40050": {
    "en": "a concert",
-   "de": "Konzert"
+   "de": "Konzert",
+   "es": "Concierto",
+   "fr": "Concert",
+   "it": "Concerto"
   },
   "40051": {
    "en": "an online present",
-   "de": "Online-Geschenk"
+   "de": "Online-Geschenk",
+   "es": "Regalo en línea",
+   "fr": "Cadeau téléchargeable",
+   "it": "Regalo online"
   },
   "40052": {
    "en": "the PGL",
-   "de": "PGL"
+   "de": "PGL",
+   "es": "Pokémon Global Link",
+   "fr": "Pokémon Global Link",
+   "it": "PGL"
   },
   "40053": {
    "en": "a 2016 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2016"
+   "de": "Pokémon-Veranstaltung 2016",
+   "es": "Evento Pokémon 2016",
+   "fr": "Événement Pokémon 2016",
+   "it": "Evento Pokémon 2016"
   },
   "40054": {
    "en": "a 2017 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2017"
+   "de": "Pokémon-Veranstaltung 2017",
+   "es": "Evento Pokémon 2017",
+   "fr": "Événement Pokémon 2017",
+   "it": "Evento Pokémon 2017"
   },
   "40055": {
    "en": "a 2018 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2018"
+   "de": "Pokémon-Veranstaltung 2018",
+   "es": "Evento Pokémon 2018",
+   "fr": "Événement Pokémon 2018",
+   "it": "Evento Pokémon 2018"
   },
   "40056": {
    "en": "a 2019 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2019"
+   "de": "Pokémon-Veranstaltung 2019",
+   "es": "Evento Pokémon 2019",
+   "fr": "Événement Pokémon 2019",
+   "it": "Evento Pokémon 2019"
   },
   "40057": {
    "en": "a 2020 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2020"
+   "de": "Pokémon-Veranstaltung 2020",
+   "es": "Evento Pokémon 2020",
+   "fr": "Événement Pokémon 2020",
+   "it": "Evento Pokémon 2020"
   },
   "40058": {
    "en": "a 2021 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2021"
+   "de": "Pokémon-Veranstaltung 2021",
+   "es": "Evento Pokémon 2021",
+   "fr": "Événement Pokémon 2021",
+   "it": "Evento Pokémon 2021"
   },
   "40059": {
    "en": "a Pokémon event",
-   "de": "Pokémon-Veranstaltung"
+   "de": "Pokémon-Veranstaltung",
+   "es": "Evento Pokémon",
+   "fr": "Pokémon Festa",
+   "it": "Evento Pokémon"
   },
   "40060": {
    "en": "a 2016 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2016"
+   "de": "Pokémon-Veranstaltung 2016",
+   "es": "Evento Pokémon 2016",
+   "fr": "Pokémon Festa 2016",
+   "it": "Evento Pokémon 2016"
   },
   "40061": {
    "en": "a 2017 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2017"
+   "de": "Pokémon-Veranstaltung 2017",
+   "es": "Evento Pokémon 2017",
+   "fr": "Pokémon Festa 2017",
+   "it": "Evento Pokémon 2017"
   },
   "40062": {
    "en": "a 2018 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2018"
+   "de": "Pokémon-Veranstaltung 2018",
+   "es": "Evento Pokémon 2018",
+   "fr": "Pokémon Festa 2018",
+   "it": "Evento Pokémon 2018"
   },
   "40063": {
    "en": "a 2019 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2019"
+   "de": "Pokémon-Veranstaltung 2019",
+   "es": "Evento Pokémon 2019",
+   "fr": "Pokémon Festa 2019",
+   "it": "Evento Pokémon 2019"
   },
   "40064": {
    "en": "a 2020 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2020"
+   "de": "Pokémon-Veranstaltung 2020",
+   "es": "Evento Pokémon 2020",
+   "fr": "Pokémon Festa 2020",
+   "it": "Evento Pokémon 2020"
   },
   "40065": {
    "en": "a 2021 Pokémon event",
-   "de": "Pokémon-Veranstaltung 2021"
+   "de": "Pokémon-Veranstaltung 2021",
+   "es": "Evento Pokémon 2021",
+   "fr": "Pokémon Festa 2021",
+   "it": "Evento Pokémon 2021"
   },
   "40066": {
    "en": "PokéPark"
@@ -760,79 +1266,130 @@
   },
   "40073": {
    "en": "an event site",
-   "de": "Veranstaltung"
+   "de": "Veranstaltung",
+   "es": "Evento",
+   "fr": "Lieu d’Événement",
+   "it": "Evento"
   },
   "40074": {
    "en": "GAME FREAK"
   },
   "40075": {
    "en": "a stadium",
-   "de": "Stadion"
+   "de": "Stadion",
+   "es": "Estadio",
+   "fr": "Stade",
+   "it": "Stadio"
   },
   "40076": {
    "en": "VGC"
   },
   "40077": {
    "en": "the VGC 2016",
-   "de": "VGC 2016"
+   "de": "VGC 2016",
+   "es": "VGC 2016",
+   "fr": "VGC 2016",
+   "it": "VGC 2016"
   },
   "40078": {
    "en": "the VGC 2017",
-   "de": "VGC 2017"
+   "de": "VGC 2017",
+   "es": "VGC 2017",
+   "fr": "VGC 2017",
+   "it": "VGC 2017"
   },
   "40079": {
    "en": "the VGC 2018",
-   "de": "VGC 2018"
+   "de": "VGC 2018",
+   "es": "VGC 2018",
+   "fr": "VGC 2018",
+   "it": "VGC 2018"
   },
   "40080": {
    "en": "the VGC 2019",
-   "de": "VGC 2019"
+   "de": "VGC 2019",
+   "es": "VGC 2019",
+   "fr": "VGC 2019",
+   "it": "VGC 2019"
   },
   "40081": {
    "en": "the VGC 2020",
-   "de": "VGC 2020"
+   "de": "VGC 2020",
+   "es": "VGC 2020",
+   "fr": "VGC 2020",
+   "it": "VGC 2020"
   },
   "40082": {
    "en": "the VGC 2021",
-   "de": "VGC 2021"
+   "de": "VGC 2021",
+   "es": "VGC 2021",
+   "fr": "VGC 2021",
+   "it": "VGC 2021"
   },
   "40083": {
    "en": "a Virtual Console game",
-   "de": "Virtual Console"
+   "de": "Virtual Console",
+   "es": "Consola Virtual",
+   "fr": "Console Virtuelle",
+   "it": "Virtual Console"
   },
   "40084": {
    "en": "Pokémon GO"
   },
   "40085": {
-   "en": "Pokémon Bank"
+   "en": "Pokémon Bank",
+   "es": "Banco de Pokémon",
+   "fr": "Banque Pokémon",
+   "it": "Banca Pokémon"
   },
   "40086": {
    "en": "a Pokémon shop",
-   "de": "Pokémon-Geschäft"
+   "de": "Pokémon-Geschäft",
+   "es": "Establecimiento Pokémon",
+   "fr": "Boutique Pokémon",
+   "it": "Negozio Pokémon"
   },
   "40087": {
    "en": "a demo version",
-   "de": "Demo-Version"
+   "de": "Demo-Version",
+   "es": "versión de prueba",
+   "fr": "Démo",
+   "it": "Demo"
   },
   "40088": {
    "en": "the Pokémon Trainer Club",
-   "de": "Pokémon Trainer Club"
+   "de": "Pokémon Trainer Club",
+   "es": "Club de Entrenadores Pokémon",
+   "fr": "Club des Dresseurs Pokémon",
+   "it": "Club Allenatori di Pokémon"
   },
   "60001": {
    "en": "a stranger",
-   "de": "Ferne Person"
+   "de": "Ferne Person",
+   "es": "Persona lejana",
+   "fr": "Personne lointaine",
+   "it": "Persona lontana"
   },
   "60002": {
    "en": "Nursery helpers",
-   "de": "Hortleiterinnen"
+   "de": "Hortleiterinnen",
+   "es": "Cuidados Pokémon",
+   "fr": "Responsable de la Garderie",
+   "it": "Ostello Pokémon"
   },
   "60003": {
    "en": "a treasure hunter",
-   "de": "Schatzsucher"
+   "de": "Schatzsucher",
+   "es": "Buscatesoros",
+   "fr": "Chercheur de Trésors",
+   "it": "Cercatesori"
   },
   "60004": {
    "en": "an old hot-springs visitor",
-   "de": "Dame der Heißen Quellen"
+   "de": "Dame der Heißen Quellen",
+   "es": "Anciana del Balneario",
+   "fr": "Dame des Eaux Thermales",
+   "it": "Vecchina delle terme"
   }
  }
 }
