@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 import { listZip, readZipEntry, extractZipEntry, entryFileName, freeBytes, inflateRatioTooHigh } from './zip.mjs';
 import { APP_ROOT, DATA_DIR, DEV, LIBRARY_DIR, SHARED_DIR } from './paths.mjs';
 import { crc32Hex } from '../../shared/checksum.mjs';
-import { writeFileAtomic, httpError, safeFileName, isInside, samePath, renameRetry } from './fsutil.mjs';
+import { writeFileAtomic, httpError, safeFileName, isInside, realInside, samePath, renameRetry } from './fsutil.mjs';
 import { identifyRom, matchCatalog, matchHackHeader, ROM_EXTENSIONS, PATCH_EXTENSIONS, CTR_EXTENSIONS, isCtrExt } from '../../shared/romid.mjs';
 import { identifyCtr, identifyCtrBytes } from '../../shared/ctr.mjs';
 import { gameTitleIdOf, updateStatus, pickUpdate } from '../../shared/ctr/update.mjs';
@@ -72,7 +72,9 @@ export function resolveId(id, config = {}) {
   const entry = cut < 0 ? undefined : s.slice(cut + 2);
   const abs = resolve(file);
   const roots = libraryRoots(config);
-  if (!roots.some((r) => isInside(abs, r))) throw httpError(403, 'The file is not in a library folder', 'notInLibrary');
+  // follow links (same as approvedImportPath / insideAny) – a symlink under a library root that points
+  // elsewhere must not pass a lexical isInside check and then serve /api/library/rom outside the root
+  if (!roots.some((r) => realInside(abs, r))) throw httpError(403, 'The file is not in a library folder', 'notInLibrary');
   if (!existsSync(abs)) throw httpError(404, `File not found: ${basename(abs)}`, 'fileNotFoundNamed', { name: basename(abs) });
   return { abs, entry };
 }
