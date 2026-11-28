@@ -66,7 +66,7 @@ the sticker layers are separated by difference matting against two skins. The UI
   button in the nav (a `<details>`, so it opens without JavaScript too). The download section keeps its three
   platform panels in the same order.
 - `site.js` asks `https://api.github.com/repos/souldewapp/souldew/releases/latest` (cached for 30 minutes in
-  `sessionStorage`) and picks the assets by name: `souldew-<v>-arm64.dmg`, `souldew-<v>-win-x64-setup.exe`,
+  `sessionStorage`) and picks the assets by name: `souldew-<v>-arm64.dmg`, `souldew-<v>-x64.dmg` (Intel Mac), `souldew-<v>-win-x64-setup.exe`,
   `souldew-<v>-linux-x86_64.AppImage` and `souldew-<v>-linux-amd64.deb`. Tiles, menu and panels then link straight
   to the files and show their size; the version goes next to "Free · open source". A file a release lacks keeps
   its link to the releases page.

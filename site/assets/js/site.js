@@ -156,7 +156,7 @@
   // The links point at the releases page until the GitHub API names the files; a missing file keeps that link.
   const mb = (bytes) => `${Math.round(bytes / 1048576)} MB`;
   const apply = (rel) => {
-    for (const key of ['mac', 'win', 'linux', 'deb']) {
+    for (const key of ['mac', 'macx64', 'win', 'linux', 'deb']) {
       const asset = rel[key];
       for (const a of $$(`[data-dl="${key}"]`)) a.href = asset ? asset.url : RELEASES;
       for (const m of $$(`[data-dl-size="${key}"]`)) m.textContent = asset ? mb(asset.size) : '';
@@ -173,7 +173,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.open) { close(); $('summary', menu).focus(); } });
     for (const a of $$('a', menu)) a.addEventListener('click', close);
   }
-  const CACHE_KEY = 'souldew-release-v3'; // v3: with the Linux assets
+  const CACHE_KEY = 'souldew-release-v4'; // v4: with the Intel Mac DMG
   const load = async () => {
     try {
       const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
@@ -184,7 +184,7 @@
     const data = await res.json();
     const assets = Array.isArray(data.assets) ? data.assets : [];
     const find = (re) => { const x = assets.find((a) => re.test(a.name)); return x ? { url: x.browser_download_url, size: x.size, name: x.name } : null; };
-    const rel = { version: String(data.tag_name || '').replace(/^v/, ''), mac: find(/^souldew-.+-arm64\.dmg$/i), win: find(/^souldew-.+-win-x64-setup\.exe$/i),
+    const rel = { version: String(data.tag_name || '').replace(/^v/, ''), mac: find(/^souldew-.+-arm64\.dmg$/i), macx64: find(/^souldew-.+-x64\.dmg$/i), win: find(/^souldew-.+-win-x64-setup\.exe$/i),
       linux: find(/^souldew-.+-linux-x86_64\.AppImage$/i), deb: find(/^souldew-.+-linux-amd64\.deb$/i) };
     try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), rel })); } catch { /* fine */ }
     return rel;
