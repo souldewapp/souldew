@@ -56,4 +56,16 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/support.html"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/support.html"/>
   </url>
+  <url>
+    <loc>https://souldew.app/community.html</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/community.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/community.html"/>
+  </url>
+  <url>
+    <loc>https://souldew.app/de/community.html</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://souldew.app/community.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://souldew.app/de/community.html"/>
+  </url>
 </urlset>
