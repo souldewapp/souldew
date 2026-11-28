@@ -2,9 +2,11 @@
 "id": "ruby-sapphire",
 "entries": [
 "ruby_us",
-"sapphire_us"
+"sapphire_us",
+"ruby_eu",
+"sapphire_eu"
 ],
-"note": "Ruby/Sapphire (US/EU): same route as Emerald (the rival stands one tile further left)",
+"note": "Ruby/Sapphire (US/EU, and the French, Italian and Spanish games – checked with the Italian Ruby): same route as Emerald (the rival stands one tile further left)",
 "pos": "((b)=>[b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16])(read(0x02025734,6))",
 "steps": [
 {

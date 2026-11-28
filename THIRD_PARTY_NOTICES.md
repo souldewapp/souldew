@@ -64,7 +64,10 @@ Chromium's and Node.js's own notices), electron-builder (MIT), ESLint (MIT).
   [PokeAPI](https://pokeapi.co) (BSD-3-Clause for the PokeAPI code; the underlying game data belongs to its owners),
   the [pret](https://github.com/pret) disassemblies, [libretro-database](https://github.com/libretro/libretro-database)
   and community documentation of the supported ROM hacks.
-- Box art in `web/assets/covers/` comes from [libretro-thumbnails](https://github.com/libretro-thumbnails) and is ©
+- Box art in `web/assets/covers/` comes from [libretro-thumbnails](https://github.com/libretro-thumbnails) – the Italian
+  Ruby, Sapphire, FireRed and LeafGreen boxes from [Pokémon Central Wiki](https://wiki.pokemoncentral.it/) and the French
+  Ruby and Sapphire boxes from [Poképédia](https://www.pokepedia.fr/), where libretro-thumbnails only has the English
+  ones under those names – and is ©
   its respective owners (Nintendo / The Pokémon Company). It is used only to identify the games in a player's library.
 - Pokémon and all related names are trademarks of Nintendo, Game Freak, Creatures Inc. and The Pokémon Company. souldew
   is not affiliated with or endorsed by them.

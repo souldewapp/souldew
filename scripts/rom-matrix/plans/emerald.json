@@ -2,12 +2,13 @@
 "id": "emerald",
 "entries": [
 "emerald_us",
-"emerald_de"
+"emerald_de",
+"emerald_eu"
 ],
 "hacks": [
 "emerald-kaizo"
 ],
-"note": "Emerald (US/EU), also Emerald Kaizo: truck \u2192 home \u2192 rival's house \u2192 Route 101, Birch's bag (Torchic) \u2192 the Zigzagoon battle Then a real wild catch with Pok\u00e9 Balls given into the bag (filed under Route 101).",
+"note": "Emerald (US/EU and the German, French, Italian and Spanish game – checked with the Italian ROM), also Emerald Kaizo: truck \u2192 home \u2192 rival's house \u2192 Route 101, Birch's bag (Torchic) \u2192 the Zigzagoon battle Then a real wild catch with Pok\u00e9 Balls given into the bag (filed under Route 101).",
 "pos": "((p)=>{const b=read(p,6);return [b[4]*256+b[5], (b[0]|b[1]<<8)<<16>>16, (b[2]|b[3]<<8)<<16>>16];})(((b=>(b[0]|b[1]<<8|b[2]<<16|b[3]<<24)>>>0)(read(0x03005D8C,4))))",
 "steps": [
 {

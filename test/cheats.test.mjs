@@ -67,9 +67,13 @@ test('which games can get Rare Candies', () => {
     { platform: 'nds', code: 'IRBO' }, { platform: 'nds', code: 'IRDO' }]) {
     assert.ok(cheatSupported(entry(h)), JSON.stringify(h));
   }
-  // no addresses for Spanish Emerald – the cheat isn't offered there (the German one shares the English RAM: offered)
-  assert.equal(cheatSupported(entry({ platform: 'gba', code: 'BPES' })), false);
-  assert.ok(cheatSupported(entry({ platform: 'gba', code: 'BPED' })));
+  // the German Emerald shares the English RAM; the French, Italian and Spanish one keep the bag where the English game
+  // does too (the ROM matrix's catch in the Italian game throws balls this cheat's way put into the bag)
+  for (const code of ['BPED', 'BPEF', 'BPEI', 'BPES']) assert.ok(cheatSupported(entry({ platform: 'gba', code })), code);
+  // the French, Italian and Spanish Ruby/Sapphire keep SaveBlock1 where the English and the German game do
+  for (const code of ['AXVI', 'AXPI', 'AXVF', 'AXPS']) assert.ok(cheatSupported(entry({ platform: 'gba', code })), code);
+  // no addresses for the Japanese Ruby – the cheat isn't offered there
+  assert.equal(cheatSupported(entry({ platform: 'gba', code: 'AXVJ' })), false);
   assert.equal(cheatSupported(null), false);
   assert.deepEqual(addRareCandies(null, memory(), {}), { error: 'unsupported' });
 });
